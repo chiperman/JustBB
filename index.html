@@ -3,7 +3,9 @@
 
 <head>
     <title>x言x语</title>
-
+    <!-- <link rel="shortcut icon" href="./favicon.ico" /> -->
+    <link type="text/css" rel="stylesheet" href="https://at.alicdn.com/t/font_1755564_z4mhxbw13mq.css">
+    </link>
     <link href="https://fonts.loli.net/css?family=Noto+Serif+SC:200,300,900&display=swap&subset=chinese-simplified"
         rel="stylesheet">
     <meta name="viewport"
@@ -32,8 +34,8 @@
             </p>
         </aside>
         <p class="tip">现在总共 x 了 {{count}} 条</p>
-        <section class="item" v-for="item in contents" v-cloak>
-            <p class="item-container" v-html='item.attributes.content'></p>
+        <section class="item" v-bind:class="'type-'+item.attributes.type" v-for="item in contents" v-cloak>
+            <p v-html='item.attributes.content'></p>
             <time v-bind:datetime="item.attributes.time">{{item.attributes.time}}</time>
         </section>
         <div class="load-ctn">
@@ -58,6 +60,7 @@
         appKey: "rk23S7pU7ryqfV9PhpBjoG5O", //你的 leancloud 应用 AppKey （设置-应用keys-AppKey）
     });
 
+    //设定存储数据的 className
     var query = new AV.Query('content');
 
     var app = new Vue({
@@ -74,6 +77,7 @@
         }
     })
 
+    //识别 URL 链接
     function urlToLink(str) {
         var re = /(http|ftp|https):\/\/[\w-]+(.[\w-]+)+([\w-.,@?^=%&:/~+#]*[\w-\@?^=%&/~+#])?/g;;
 
@@ -84,27 +88,29 @@
         return str;
     }
 
+    //获取数据
     function getData(page = 0) {
         query.descending('createdAt').skip(page * 20).limit(20).find().then(function (results) {
-            if (results.length == 0) {
-                alert('没了，想看自己 x 去')
-            } else {
-                let resC = results;
-                reqData = false;
-                resC.forEach((i) => {
-                    let dateTmp = new Date(i.createdAt);
-                    i.attributes.time =
-                        `${dateTmp.getFullYear()}-${(dateTmp.getMonth() + 1) < 10 ? ('0' + (dateTmp.getMonth()+1)) : dateTmp.getMonth()+1}-${(dateTmp.getDate() + 1) < 10 ? ('0' + dateTmp.getDate()) : dateTmp.getDate()} ${(dateTmp.getHours() + 1) <= 10 ? ('0' + dateTmp.getHours()) : dateTmp.getHours()}:${(dateTmp.getMinutes() + 1) <= 10 ? ('0' + dateTmp.getMinutes()) : dateTmp.getMinutes()}`;
-                    i.attributes.content = "<span>" + urlToLink(i.attributes.content) + "</span>";
-                    app.contents.push(i);
-                })
-            }
+                    alert('没了，想看自己 x 去')
+                } else {
+                    let resC = results;
+                    reqData = false;
+                    resC.forEach((i) => {
+                        let dateTmp = new Date(i.createdAt);
+                        i.attributes.time =
+                            `${dateTmp.getFullYear()}-${(dateTmp.getMonth() + 1) < 10 ? ('0' + (dateTmp.getMonth()+1)) : dateTmp.getMonth()+1}-${(dateTmp.getDate() + 1) < 10 ? ('0' + dateTmp.getDate()) : dateTmp.getDate()} ${(dateTmp.getHours() + 1) <= 10 ? ('0' + dateTmp.getHours()) : dateTmp.getHours()}:${(dateTmp.getMinutes() + 1) <= 10 ? ('0' + dateTmp.getMinutes()) : dateTmp.getMinutes()}`;
+                        i.attributes.content = "<span>" + urlToLink(i.attributes.content) + "</span>";
+                        app.contents.push(i);
+                    })
+                }
 
-        }, function (error) {});
+            },
+            function (error) {});
     }
 
     getData(0);
 
+    //计数
     query.count().then(function (count) {
         app.count = count;
     }, function (error) {});
@@ -144,6 +150,14 @@
         body .load-btn:hover:active {
             background: #1DA1F2;
             color: #fff;
+        }
+
+        .type-0 {
+            border-top-color: #046e75 !important;
+        }
+
+        .type-1 {
+            border-top-color: #d04f8e !important;
         }
     }
 
@@ -242,6 +256,14 @@
     .load-btn:hover:active {
         background: #666;
         color: #fff;
+    }
+
+    .type-0 {
+        border-top-color: #2196F3;
+    }
+
+    .type-1 {
+        border-top-color: #FF4081;
     }
 </style>
 

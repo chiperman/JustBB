@@ -33,7 +33,7 @@
         </aside>
         <p class="tip">现在总共 x 了 {{count}} 条</p>
         <section class="item" v-for="item in contents" v-cloak>
-            <p v-html='item.attributes.content'></p>
+            <p class="item-container" v-html='item.attributes.content'></p>
             <time v-bind:datetime="item.attributes.time">{{item.attributes.time}}</time>
         </section>
         <div class="load-ctn">
@@ -49,6 +49,7 @@
 </body>
 <script src="https://cdn.bootcss.com/vue/2.6.11/vue.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.5.3/dist/av-min.js"></script>
+
 <script type="text/javascript">
     var {
         Query

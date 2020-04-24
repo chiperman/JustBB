@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>b言b语</title>
+    <title>x言x语</title>
 
     <link href="https://fonts.loli.net/css?family=Noto+Serif+SC:200,300,900&display=swap&subset=chinese-simplified"
         rel="stylesheet">
@@ -23,22 +23,22 @@
 
 <body>
     <header id="header">
-        <h1>b言b语</h1>
+        <h1>x言x语</h1>
     </header>
     <main id="app">
         <aside>
             <p id="describe">
-                可以在这里简单介绍你自己
+                I love 💻、🎮、🎬 and Science and technology ！
             </p>
         </aside>
-        <p class="tip">现在总共 b 了 {{count}} 条</p>
+        <p class="tip">现在总共 x 了 {{count}} 条</p>
         <section class="item" v-for="item in contents" v-cloak>
             <p v-html='item.attributes.content'></p>
             <time v-bind:datetime="item.attributes.time">{{item.attributes.time}}</time>
         </section>
         <div class="load-ctn">
             <button class="load-btn" v-on:click="loadMore" v-if="contents" v-cloak>再翻翻</button>
-            <p class="tip" v-else>别急，加载呢</p>
+            <p class="tip" v-else>Loading...</p>
         </div>
     </main>
     <footer>

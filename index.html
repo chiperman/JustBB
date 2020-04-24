@@ -33,7 +33,7 @@
         </aside>
         <p class="tip">现在总共 x 了 {{count}} 条</p>
         <section class="item" v-for="item in contents" v-cloak>
-            <p class="item-container" v-html='item.attributes.content'></p>
+            <p v-html='item.attributes.content'></p>
             <time v-bind:datetime="item.attributes.time">{{item.attributes.time}}</time>
         </section>
         <div class="load-ctn">
@@ -49,48 +49,6 @@
 </body>
 <script src="https://cdn.bootcss.com/vue/2.6.11/vue.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.5.3/dist/av-min.js"></script>
-<script>
-    ! function () {
-        let t = document.getElementById("item"),
-            e = document.getElementById("item-container"),
-            o = {
-                _x: 0,
-                _y: 0,
-                x: 0,
-                y: 0,
-                updatePosition: function (t) {
-                    let e = t || window.event;
-                    this.x = e.clientX - this._x, this.y = -1 * (e.clientY - this._y)
-                },
-                setOrigin: function (t) {
-                    this._x = t.offsetLeft + Math.floor(t.offsetWidth / 2), this._y = t.offsetTop + Math.floor(t
-                        .offsetHeight / 2)
-                },
-                show: function () {
-                    return "(" + this.x + ", " + this.y + ")"
-                }
-            };
-        o.setOrigin(t);
-        let n = 0,
-            i = function (t) {
-                o.updatePosition(t), s(o.x / e.offsetWidth, o.y / e.offsetWidth)
-            },
-            s = function (t, o) {
-                let n = `rotateX(${(4*(o+.1)).toFixed(2)}deg) rotateY(${(t/2).toFixed(2)}deg)`,
-                    i =
-                    `${2*-t+2}em ${4*(o+1)}em 6em -2em rgba(0, 0, 0, 0.5), ${1-t}em ${2*(o+1)}em 3.5em -2.5em rgba(0, 0, 0, 0.5)`;
-                e.style.transform = n, e.style.webkitTransform = n, e.style.mozTransform = n, e.style.msTransform = n, e
-                    .style.oTransform = n, e.style.boxShadow = i
-            };
-        t.onmouseenter = function (t) {
-            i(t)
-        }, t.onmouseleave = function () {
-            e.style = ""
-        }, t.onmousemove = function (t) {
-            n++ % 10 == 0 && i(t)
-        }
-    }();
-</script>
 <script type="text/javascript">
     var {
         Query

@@ -27,7 +27,10 @@
 
 <body>
     <header id="header">
-        <h1>x言x语</h1>
+        <div class="logo">
+            <h1>x 言 x 语</h1>
+            <span class="logo__cursor" style=""></span>
+        </div>
     </header>
     <main id="app">
         <aside>
@@ -138,6 +141,7 @@
 
         h1 {
             color: #ffffff;
+            display: inline;
         }
 
         aside {
@@ -266,6 +270,46 @@
 
     .type-1 {
         border-top-color: #FF4081;
+    }
+
+    .logo__cursor {
+        display: inline-block;
+        width: 10px;
+        height: 1.5rem;
+        margin-top: 8px;
+        background: #fe5186;
+        margin-left: 5px;
+        border-radius: 1px;
+        animation: cursor 1s infinite
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+        .logo__cursor {
+            animation: none
+        }
+    }
+
+    @keyframes cursor {
+        0% {
+            opacity: 0
+        }
+
+        50% {
+            opacity: 1
+        }
+
+        100% {
+            opacity: 0
+        }
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        font-weight: 700;
+        font-display: auto;
+        height: 57.6px;
     }
 </style>
 

@@ -42,6 +42,7 @@
         <section class="item" v-bind:class="'type-'+item.attributes.type" v-for="item in contents" v-cloak>
             <p v-html='item.attributes.content'></p>
             <time v-bind:datetime="item.attributes.time">{{item.attributes.time}}</time>
+            <span class="equipment"></span>
         </section>
         <div class="load-ctn">
             <button class="load-btn" v-on:click="loadMore" v-if="contents" v-cloak>再翻翻</button>
@@ -268,8 +269,21 @@
         border-top-color: #2196F3;
     }
 
+    .type-0 .equipment::after {
+        float: right;
+        content: "PC💻";
+        font-size: 15px;
+    }
+
+
     .type-1 {
         border-top-color: #FF4081;
+    }
+
+    .type-1 .equipment::after {
+        float: right;
+        content: "iPhone XR📱";
+        font-size: 15px;
     }
 
     .logo__cursor {

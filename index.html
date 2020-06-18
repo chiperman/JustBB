@@ -29,7 +29,7 @@
     <header id="header">
         <div class="logo">
             <h1>x 言 x 语</h1>
-            <span class="logo__cursor" style=""></span>
+            <!-- <span class="logo__cursor" style=""></span> -->
         </div>
     </header>
     <main id="app">
@@ -41,8 +41,9 @@
         <p class="tip">现在总共 x 了 {{count}} 条</p>
         <section class="item" v-bind:class="'type-'+item.attributes.type" v-for="item in contents" v-cloak>
             <p v-html='item.attributes.content'></p>
-            <time v-bind:datetime="item.attributes.time">{{item.attributes.time}}</time>
+            <tag id="tag" v-html='item.attributes.tag'></tag>
             <span class="equipment"></span>
+            <time v-bind:datetime="item.attributes.time">{{item.attributes.time}}</time>
         </section>
         <div class="load-ctn">
             <button class="load-btn" v-on:click="loadMore" v-if="contents" v-cloak>再翻翻</button>
@@ -121,6 +122,13 @@
         app.count = count;
     }, function (error) {});
 </script>
+<script type="text/javascript">
+    var tag = document.getElementById('tag').innerText;
+    if (tag == "1") {
+        document.getElementById("tag").style.display = "none";
+        alert("是1")
+    }
+</script>
 <style type="text/css">
     @font-face {
         font-family: coca;
@@ -142,7 +150,8 @@
         }
 
         body time {
-            color: #aaa;
+            color: #999;
+            display: inline-block;
         }
 
         h1 {
@@ -236,7 +245,7 @@
 
     time {
         font-weight: 200;
-        color: #bbb;
+        color: #999;
     }
 
     .center-text {
@@ -291,7 +300,7 @@
         font-size: 15px;
     }
 
-    .logo__cursor {
+    /* .logo__cursor {
         display: inline-block;
         width: 10px;
         height: 1.5rem;
@@ -320,7 +329,7 @@
         100% {
             opacity: 0
         }
-    }
+    } */
 
     .logo {
         display: flex;
@@ -330,6 +339,18 @@
         font-display: auto;
         height: 57.6px;
     }
+
+    tag {
+        font-size: 15px;
+        display: block;
+        color: #999;
+    }
+
+    /* tag::before {
+        content: "#";
+        font-size: 15px;
+        color: #999;
+    } */
 </style>
 
 </html>

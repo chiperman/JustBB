@@ -29,7 +29,6 @@
     <header id="header">
         <div class="logo">
             <h1>x 言 x 语</h1>
-            <!-- <span class="logo__cursor" style=""></span> -->
         </div>
     </header>
     <main id="app">
@@ -99,7 +98,7 @@
     function getData(page = 0) {
         query.descending('createdAt').skip(page * 20).limit(20).find().then(function (results) {
             if (results.length == 0) {
-                alert('之前没 b 过了')
+                alert('灵感枯竭了~')
             } else {
                 let resC = results;
                 reqData = false;
@@ -300,37 +299,6 @@
         font-size: 15px;
     }
 
-    /* .logo__cursor {
-        display: inline-block;
-        width: 10px;
-        height: 1.5rem;
-        margin-top: 8px;
-        background: #fe5186;
-        margin-left: 5px;
-        border-radius: 1px;
-        animation: cursor 1s infinite
-    }
-
-    @media(prefers-reduced-motion:reduce) {
-        .logo__cursor {
-            animation: none
-        }
-    }
-
-    @keyframes cursor {
-        0% {
-            opacity: 0
-        }
-
-        50% {
-            opacity: 1
-        }
-
-        100% {
-            opacity: 0
-        }
-    } */
-
     .logo {
         display: flex;
         align-items: center;
@@ -345,12 +313,6 @@
         display: block;
         color: #999;
     }
-
-    /* tag::before {
-        content: "#";
-        font-size: 15px;
-        color: #999;
-    } */
 </style>
 
 </html>

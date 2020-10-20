@@ -77,6 +77,35 @@
         }
     }
 
+    .x-link a {
+        margin-left: 10%;
+        /* margin-top: 10%; */
+        /* margin-left: 100px; */
+        margin-top: 120px;
+        position: absolute;
+        text-decoration: none;
+        color: #CCCCCC;
+    }
+
+    @media(max-width:991px) {
+        .x-link a {
+            margin-left: 10%;
+            /* margin-top: 10%; */
+            /* margin-left: 80px; */
+            margin-top: 120px;
+            position: absolute;
+            text-decoration: none;
+            color: #CCCCCC;
+        }
+    }
+
+    @media(max-width:768px) {
+        .x-link {
+            display: none;
+            text-decoration: none
+        }
+    }
+
     [v-cloak] {
         display: none;
     }
@@ -199,7 +228,7 @@
         font-size: 15px;
     }
 
-    .logo {
+    .title {
         display: flex;
         align-items: center;
         text-decoration: none;
@@ -217,10 +246,14 @@
 
 <body>
     <header id="header">
-        <div class="logo">
+        <div class="title">
             <h1>每日生活</h1>
         </div>
     </header>
+    <div class="x-link">
+        <a href="index.html">X 言 X 语</a>
+        <a href="dream.html">Dream</a>
+    </div>
     <main id="app">
         <aside>
             <p id="describe">

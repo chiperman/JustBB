@@ -1,5 +1,29 @@
 <!DOCTYPE html>
 <html>
+
+<head>
+    <title>XiaoX's Diary</title>
+    <!-- <link rel="shortcut icon" href="./favicon.ico" /> -->
+    <link type="text/css" rel="stylesheet" href="https://at.alicdn.com/t/font_1755564_z4mhxbw13mq.css">
+    </link>
+    <link href="https://fonts.loli.net/css?family=Noto+Serif+SC:200,300,900&display=swap&subset=chinese-simplified"
+        rel="stylesheet">
+    <link rel="apple-touch-icon"
+        href="https://cdn.jsdelivr.net/gh/chiperman/Blog-photos/./img/iocn/avatar.73rry20vdpb.png">
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <meta name="description" content="">
+    <meta name="keywords" content="" />
+    <meta name="author" content="daibor" />
+    <meta charset="utf-8" />
+    <meta name="robots" content="index,follow" />
+    <meta name="google" content="index,follow" />
+    <meta name="googlebot" content="index,follow" />
+    <meta name="verify" content="index,follow" />
+    <meta name="apple-mobile-web-app-title" content="x言x语">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+</head>
 <style type="text/css">
     @font-face {
         font-family: Coke;
@@ -191,43 +215,19 @@
     }
 </style>
 
-<head>
-    <title>XiaoX's Dream</title>
-    <!-- <link rel="shortcut icon" href="./favicon.ico" /> -->
-    <link type="text/css" rel="stylesheet" href="https://at.alicdn.com/t/font_1755564_z4mhxbw13mq.css">
-    </link>
-    <link href="https://fonts.loli.net/css?family=Noto+Serif+SC:200,300,900&display=swap&subset=chinese-simplified"
-        rel="stylesheet">
-    <link rel="apple-touch-icon"
-        href="https://cdn.jsdelivr.net/gh/chiperman/Blog-photos/./img/iocn/avatar.73rry20vdpb.png">
-    <meta name="viewport"
-        content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
-    <meta name="description" content="">
-    <meta name="keywords" content="" />
-    <meta name="author" content="daibor" />
-    <meta charset="utf-8" />
-    <meta name="robots" content="index,follow" />
-    <meta name="google" content="index,follow" />
-    <meta name="googlebot" content="index,follow" />
-    <meta name="verify" content="index,follow" />
-    <meta name="apple-mobile-web-app-title" content="x言x语">
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-</head>
-
 <body>
     <header id="header">
         <div class="logo">
-            <h1>Real dream？</h1>
+            <h1>每日生活</h1>
         </div>
     </header>
     <main id="app">
         <aside>
             <p id="describe">
-                「真实的梦·虚假的现实」
+                「一点一线的生活」
             </p>
         </aside>
-        <p class="tip">现在总共梦了 {{count}} 条</p>
+        <p class="tip">现在总共记了 {{count}} 条</p>
         <section class="item" v-bind:class="'type-'+item.attributes.type" v-for="item in contents" v-cloak>
             <p v-html='item.attributes.content'></p>
             <tag id="tag" v-html='item.attributes.tag'></tag>
@@ -235,7 +235,7 @@
             <time v-bind:datetime="item.attributes.time">{{item.attributes.time}}</time>
         </section>
         <div class="load-ctn">
-            <button class="load-btn" v-on:click="loadMore" v-if="contents" v-cloak>还做了什么</button>
+            <button class="load-btn" v-on:click="loadMore" v-if="contents" v-cloak>再翻翻</button>
             <p class="tip" v-else>Loading...</p>
         </div>
     </main>
@@ -252,8 +252,8 @@
         Query
     } = AV;
     AV.init({
-        appId: "je4Gtuh8wQVMx1DK3QwEQFAN-MdYXbMMI", //你的 leancloud 应用 id （设置-应用keys-AppID）
-        appKey: "WYQKhTRqfF7zFrhEilD3FovC", //你的 leancloud 应用 AppKey （设置-应用keys-AppKey）
+        appId: "e1qXpMMrSwgnJ15kvtIfQKuv-MdYXbMMI", //你的 leancloud 应用 id （设置-应用keys-AppID）
+        appKey: "rk23S7pU7ryqfV9PhpBjoG5O", //你的 leancloud 应用 AppKey （设置-应用keys-AppKey）
     });
 
     //设定存储数据的 className
@@ -288,7 +288,7 @@
     function getData(page = 0) {
         query.descending('createdAt').skip(page * 20).limit(20).find().then(function (results) {
             if (results.length == 0) {
-                alert('睡不着了~')
+                alert('生活太乏味了~')
             } else {
                 let resC = results;
                 reqData = false;
@@ -318,6 +318,5 @@
         alert("是1")
     }
 </script>
-
 
 </html>

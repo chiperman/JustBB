@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>x 言 x 语</title>
+    <title>XiaoX's Dream</title>
     <!-- <link rel="shortcut icon" href="./favicon.ico" /> -->
     <link type="text/css" rel="stylesheet" href="https://at.alicdn.com/t/font_1755564_z4mhxbw13mq.css">
     </link>
@@ -24,10 +24,145 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 </head>
+
+<body>
+    <header id="header">
+        <div class="logo">
+            <h1>Real dream？</h1>
+        </div>
+    </header>
+    <a class="x-link" href="diary.html">首页</a>
+    <main id="app">
+        <aside>
+            <p id="describe">
+                「真实的梦·虚假的现实」
+            </p>
+        </aside>
+        <p class="tip">现在总共梦了 {{count}} 条</p>
+        <section class="item" v-bind:class="'type-'+item.attributes.type" v-for="item in contents" v-cloak>
+            <p v-html='item.attributes.content'></p>
+            <tag id="tag" v-html='item.attributes.tag'></tag>
+            <span class="equipment"></span>
+            <time v-bind:datetime="item.attributes.time">{{item.attributes.time}}</time>
+        </section>
+        <div class="load-ctn">
+            <button class="load-btn" v-on:click="loadMore" v-if="contents" v-cloak>还做了什么</button>
+            <p class="tip" v-else>Loading...</p>
+        </div>
+
+    </main>
+    <footer>
+        <p class="center-text">
+            <b>Crafted with 💔 by <a href="https://chiperman.github.io/about/" target="_blank">chiperman</a></b>
+        </p>
+    </footer>
+</body>
+<script src="https://cdn.bootcss.com/vue/2.6.11/vue.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.5.3/dist/av-min.js"></script>
+<script type="text/javascript">
+    var {
+        Query
+    } = AV;
+    AV.init({
+        appId: "e1qXpMMrSwgnJ15kvtIfQKuv-MdYXbMMI", //你的 leancloud 应用 id （设置-应用keys-AppID）
+        appKey: "rk23S7pU7ryqfV9PhpBjoG5O", //你的 leancloud 应用 AppKey （设置-应用keys-AppKey）
+    });
+
+    //设定存储数据的 className
+    var query = new AV.Query('content');
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            page: 0,
+            count: 0,
+            contents: []
+        },
+        methods: {
+            loadMore: function (event) {
+                getData(++this.page);
+            }
+        }
+    })
+
+    //识别 URL 链接
+    function urlToLink(str) {
+        var re = /(http|ftp|https):\/\/[\w-]+(.[\w-]+)+([\w-.,@?^=%&:/~+#]*[\w-\@?^=%&/~+#])?/g;;
+
+        str = str.replace(re, function (website) {
+            return "<a href='" + website +
+                "' target='_blank'> <i class='iconfont icon-lianjie-copy'></i>链接 </a>";
+        });
+        return str;
+    }
+
+    //获取数据
+    function getData(page = 0) {
+        query.descending('createdAt').skip(page * 20).limit(20).find().then(function (results) {
+            if (results.length == 0) {
+                alert('睡不着了~')
+            } else {
+                let resC = results;
+                reqData = false;
+                resC.forEach((i) => {
+                    let dateTmp = new Date(i.createdAt);
+                    i.attributes.time =
+                        `${dateTmp.getFullYear()}-${(dateTmp.getMonth() + 1) < 10 ? ('0' + (dateTmp.getMonth()+1)) : dateTmp.getMonth()+1}-${(dateTmp.getDate() + 1) < 10 ? ('0' + dateTmp.getDate()) : dateTmp.getDate()} ${(dateTmp.getHours() + 1) <= 10 ? ('0' + dateTmp.getHours()) : dateTmp.getHours()}:${(dateTmp.getMinutes() + 1) <= 10 ? ('0' + dateTmp.getMinutes()) : dateTmp.getMinutes()}`;
+                    i.attributes.content = "<content>" + urlToLink(i.attributes.content) + "</content>";
+                    app.contents.push(i);
+                })
+            }
+
+        }, function (error) {});
+    }
+
+    getData(0);
+
+    //计数
+    query.count().then(function (count) {
+        app.count = count;
+    }, function (error) {});
+</script>
+<script type="text/javascript">
+    var tag = document.getElementById('tag').innerText;
+    if (tag == "1") {
+        document.getElementById("tag").style.display = "none";
+        alert("是1")
+    }
+</script>
 <style type="text/css">
     @font-face {
         font-family: Coke;
         src: url("font/Coca-ColaCareFontKaiTi.TTF")
+    }
+
+
+    .x-link {
+        margin-left: 10%;
+        /* margin-top: 10%; */
+        /* margin-left: 100px; */
+        margin-top: 120px;
+        position: absolute;
+        text-decoration: none
+    }
+
+
+    @media(max-width:991px) {
+        .x-link {
+            margin-left: 10%;
+            /* margin-top: 10%; */
+            /* margin-left: 80px; */
+            margin-top: 120px;
+            position: absolute;
+            text-decoration: none
+        }
+    }
+
+    @media(max-width:768px) {
+        .x-link {
+            display: none;
+            text-decoration: none
+        }
     }
 
     @media (prefers-color-scheme: dark) {
@@ -214,110 +349,5 @@
         color: #999;
     }
 </style>
-
-<body>
-    <header id="header">
-        <div class="logo">
-            <h1>x 言 x 语</h1>
-        </div>
-    </header>
-    <main id="app">
-        <aside>
-            <p id="describe">
-                「论如何逃离微信社交圈」
-            </p>
-        </aside>
-        <p class="tip">现在总共 x 了 {{count}} 条</p>
-        <section class="item" v-bind:class="'type-'+item.attributes.type" v-for="item in contents" v-cloak>
-            <p v-html='item.attributes.content'></p>
-            <tag id="tag" v-html='item.attributes.tag'></tag>
-            <span class="equipment"></span>
-            <time v-bind:datetime="item.attributes.time">{{item.attributes.time}}</time>
-        </section>
-        <div class="load-ctn">
-            <button class="load-btn" v-on:click="loadMore" v-if="contents" v-cloak>再翻翻</button>
-            <p class="tip" v-else>Loading...</p>
-        </div>
-    </main>
-    <footer>
-        <p class="center-text">
-            <b>Crafted with 💔 by <a href="https://chiperman.github.io/about/" target="_blank">chiperman</a></b>
-        </p>
-    </footer>
-</body>
-<script src="https://cdn.bootcss.com/vue/2.6.11/vue.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.5.3/dist/av-min.js"></script>
-<script type="text/javascript">
-    var {
-        Query
-    } = AV;
-    AV.init({
-        appId: "e1qXpMMrSwgnJ15kvtIfQKuv-MdYXbMMI", //你的 leancloud 应用 id （设置-应用keys-AppID）
-        appKey: "rk23S7pU7ryqfV9PhpBjoG5O", //你的 leancloud 应用 AppKey （设置-应用keys-AppKey）
-    });
-
-    //设定存储数据的 className
-    var query = new AV.Query('content');
-
-    var app = new Vue({
-        el: '#app',
-        data: {
-            page: 0,
-            count: 0,
-            contents: []
-        },
-        methods: {
-            loadMore: function (event) {
-                getData(++this.page);
-            }
-        }
-    })
-
-    //识别 URL 链接
-    function urlToLink(str) {
-        var re = /(http|ftp|https):\/\/[\w-]+(.[\w-]+)+([\w-.,@?^=%&:/~+#]*[\w-\@?^=%&/~+#])?/g;;
-
-        str = str.replace(re, function (website) {
-            return "<a href='" + website +
-                "' target='_blank'> <i class='iconfont icon-lianjie-copy'></i>链接 </a>";
-        });
-        return str;
-    }
-
-    //获取数据
-    function getData(page = 0) {
-        query.descending('createdAt').skip(page * 20).limit(20).find().then(function (results) {
-            if (results.length == 0) {
-                alert('灵感枯竭了~')
-            } else {
-                let resC = results;
-                reqData = false;
-                resC.forEach((i) => {
-                    let dateTmp = new Date(i.createdAt);
-                    i.attributes.time =
-                        `${dateTmp.getFullYear()}-${(dateTmp.getMonth() + 1) < 10 ? ('0' + (dateTmp.getMonth()+1)) : dateTmp.getMonth()+1}-${(dateTmp.getDate() + 1) < 10 ? ('0' + dateTmp.getDate()) : dateTmp.getDate()} ${(dateTmp.getHours() + 1) <= 10 ? ('0' + dateTmp.getHours()) : dateTmp.getHours()}:${(dateTmp.getMinutes() + 1) <= 10 ? ('0' + dateTmp.getMinutes()) : dateTmp.getMinutes()}`;
-                    i.attributes.content = "<content>" + urlToLink(i.attributes.content) + "</content>";
-                    app.contents.push(i);
-                })
-            }
-
-        }, function (error) {});
-    }
-
-    getData(0);
-
-    //计数
-    query.count().then(function (count) {
-        app.count = count;
-    }, function (error) {});
-</script>
-<script type="text/javascript">
-    var tag = document.getElementById('tag').innerText;
-    if (tag == "1") {
-        document.getElementById("tag").style.display = "none";
-        alert("是1")
-    }
-</script>
-
 
 </html>

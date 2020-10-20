@@ -53,29 +53,31 @@
         }
     }
 
-    .x-link a {
+    .x-link {
         margin-left: 10%;
-        /* margin-top: 10%; */
-        /* margin-left: 100px; */
         margin-top: 120px;
         position: absolute;
+    }
+
+    .x-link a {
         text-decoration: none;
         color: #CCCCCC;
     }
 
     @media(max-width:991px) {
-        .x-link a {
+        .x-link {
             margin-left: 10%;
-            /* margin-top: 10%; */
-            /* margin-left: 80px; */
             margin-top: 120px;
             position: absolute;
+        }
+
+        .x-link a {
             text-decoration: none;
             color: #CCCCCC;
         }
     }
 
-    @media(max-width:768px) {
+    @media(max-width:950px) {
         .x-link {
             display: none;
             text-decoration: none
@@ -251,8 +253,8 @@
         </div>
     </header>
     <div class="x-link">
-        <a href="index.html">X 言 X 语</a>
-        <a href="diary.html">Diary</a>
+        <div><a href="index.html">X 言 X 语</a></div>
+        <div><a href="diary.html">Diary</a></div>
     </div>
     <main id="app">
         <aside>

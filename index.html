@@ -76,56 +76,15 @@
             border-top-color: #EA4C89 !important;
         }
 
-        .x-link a {
+        .x-link {
             text-decoration: none;
             color: #CCCCCC !important;
         }
     }
 
     .x-link {
-        margin-left: 10%;
-        margin-top: 120px;
-        position: fixed;
-    }
-
-    .x-link div {
-        margin: 10px;
-    }
-
-    .x-link a {
         text-decoration: none;
         color: #333333;
-    }
-
-    @media(max-width:991px) {
-        .x-link {
-            margin-left: 10%;
-            margin-top: 120px;
-            position: fixed;
-        }
-
-        .x-link div {
-            margin: 10px;
-        }
-    }
-
-    @media(max-width:955px) {
-        .x-link {
-            margin-left: 5%;
-            margin-top: 120px;
-            position: fixed;
-        }
-
-        .x-link div {
-            margin: 10px;
-        }
-    }
-
-    @media(max-width:760px) {
-        .x-link {
-            display: none;
-            text-decoration: none
-        }
     }
 
     [v-cloak] {
@@ -276,17 +235,17 @@
             <h1>x 言 x 语</h1>
         </div>
     </header>
-    <div class="x-link">
-        <div><a href="dream.html">Dream</a></div>
-    </div>
     <main id="app">
         <aside>
             <p id="describe">
                 「论如何逃离微信社交圈」
             </p>
         </aside>
-        <p class="tip">现在总共 x 了 {{count}} 条</p>
-        <section class="item" v-bind:class="'type-'+item.attributes.type" v-for="item in contents" v-cloak>
+        <div>
+            <a class="tip" style="width: fit-content;">现在总共 x 了 {{count}} 条</a>
+            <a class="x-link" href="dream.html" style="float: right;">Dream</a>
+        </div>
+        <section class=" item" v-bind:class="'type-'+item.attributes.type" v-for="item in contents" v-cloak>
             <p v-html='item.attributes.content'></p>
             <tag id="tag" v-html='item.attributes.tag'></tag>
             <span class="equipment"></span>

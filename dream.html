@@ -76,56 +76,15 @@
             border-top-color: #EA4C89 !important;
         }
 
-        .x-link a {
+        .x-link {
             text-decoration: none;
             color: #CCCCCC !important;
         }
     }
 
     .x-link {
-        margin-left: 10%;
-        margin-top: 120px;
-        position: fixed;
-    }
-
-    .x-link div {
-        margin: 10px;
-    }
-
-    .x-link a {
         text-decoration: none;
         color: #333333;
-    }
-
-    @media(max-width:991px) {
-        .x-link {
-            margin-left: 10%;
-            margin-top: 120px;
-            position: fixed;
-        }
-
-        .x-link div {
-            margin: 10px;
-        }
-    }
-
-    @media(max-width:955px) {
-        .x-link {
-            margin-left: 5%;
-            margin-top: 120px;
-            position: fixed;
-        }
-
-        .x-link div {
-            margin: 10px;
-        }
-    }
-
-    @media(max-width:760px) {
-        .x-link {
-            display: none;
-            text-decoration: none
-        }
     }
 
     [v-cloak] {
@@ -305,7 +264,10 @@
                 「真实的梦·虚假的现实」
             </p>
         </aside>
-        <p class="tip">现在总共梦了 {{count}} 条</p>
+        <div>
+            <a class="tip" style="width: fit-content;">现在总共 x 了 {{count}} 条</a>
+            <a class="x-link" href="dream.html" style="float: right;">Dream</a>
+        </div>
         <section class="item" v-bind:class="'type-'+item.attributes.type" v-for="item in contents" v-cloak>
             <p v-html='item.attributes.content'></p>
             <tag id="tag" v-html='item.attributes.tag'></tag>

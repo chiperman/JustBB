@@ -249,7 +249,7 @@
             <a class="tip" style="width: fit-content;">现在总共 x 了 {{count}} 条</a>
             <a class="x-link" href="dream.html" style="float: right;">Dream</a>
         </div>
-        <section class=" item" v-bind:class="'type-'+item.attributes.type" v-for="item in contents" v-cloak>
+        <section class="item" v-bind:class="'type-'+item.attributes.type" v-for="item in contents" v-cloak>
             <p v-html='item.attributes.content'></p>
             <tag id="tag" v-html='item.attributes.tag'></tag>
             <span class="equipment"></span>

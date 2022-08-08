@@ -3,15 +3,14 @@
 
 <head>
     <title>XiaoX's Dream</title>
-    <!-- <link rel="shortcut icon" href="./favicon.ico" /> -->
     <link type="text/css" rel="stylesheet" href="https://at.alicdn.com/t/font_1755564_z4mhxbw13mq.css">
     </link>
     <link href="https://fonts.loli.net/css?family=Noto+Serif+SC:200,300,900&display=swap&subset=chinese-simplified"
         rel="stylesheet">
     <link rel="apple-touch-icon"
         href="https://cdn.jsdelivr.net/gh/chiperman/Blog-photos/./img/iocn/avatar.73rry20vdpb.png">
-    <meta name="viewport"
-        content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <meta name="viewport" 
+        content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
     <meta name="description" content="">
     <meta name="keywords" content="" />
     <meta name="author" content="chiperman" />
@@ -68,11 +67,19 @@
         }
 
         body .type-0 {
-            border-top-color: #337AB7;
+            border-top-color: #2196F3;
         }
 
         body .type-1 {
-            border-top-color: #EA4C89;
+            border-top-color: #FF4081;
+        }
+
+        body .type-2 {
+            border-top-color: #94CE5A;
+        }
+
+        body .type-3 {
+            border-top-color: #BDDD22;
         }
 
         body .x-link {
@@ -83,6 +90,7 @@
         body .x-link:hover {
             color: #EA4C89;
         }
+        
     }
 
     .x-link {
@@ -201,7 +209,6 @@
         font-size: 15px;
     }
 
-
     .type-1 {
         border-top-color: #FF4081;
     }
@@ -209,6 +216,26 @@
     .type-1 .equipment::after {
         float: right;
         content: "iPhone XR📱";
+        font-size: 15px;
+    }
+
+    .type-2 {
+        border-top-color: #94CE5A;
+    }
+
+    .type-2 .equipment::after {
+        float: right;
+        content: "MacBook💻";
+        font-size: 15px;
+    }
+
+    .type-3 {
+        border-top-color: #BDDD22;
+    }
+
+    .type-3 .equipment::after {
+        float: right;
+        content: "iPhone 13 mini📱";
         font-size: 15px;
     }
 
@@ -316,13 +343,13 @@
                 resC.forEach((i) => {
                     let dateTmp = new Date(i.createdAt);
                     i.attributes.time =
-                        `${dateTmp.getFullYear()}-${(dateTmp.getMonth() + 1) < 10 ? ('0' + (dateTmp.getMonth()+1)) : dateTmp.getMonth()+1}-${(dateTmp.getDate() + 1) < 10 ? ('0' + dateTmp.getDate()) : dateTmp.getDate()} ${(dateTmp.getHours() + 1) <= 10 ? ('0' + dateTmp.getHours()) : dateTmp.getHours()}:${(dateTmp.getMinutes() + 1) <= 10 ? ('0' + dateTmp.getMinutes()) : dateTmp.getMinutes()}`;
+                        `${dateTmp.getFullYear()}-${(dateTmp.getMonth() + 1) < 10 ? ('0' + (dateTmp.getMonth() + 1)) : dateTmp.getMonth() + 1}-${(dateTmp.getDate() + 1) < 10 ? ('0' + dateTmp.getDate()) : dateTmp.getDate()} ${(dateTmp.getHours() + 1) <= 10 ? ('0' + dateTmp.getHours()) : dateTmp.getHours()}:${(dateTmp.getMinutes() + 1) <= 10 ? ('0' + dateTmp.getMinutes()) : dateTmp.getMinutes()}`;
                     i.attributes.content = "<content>" + urlToLink(i.attributes.content) + "</content>";
                     app.contents.push(i);
                 })
             }
 
-        }, function (error) {});
+        }, function (error) { });
     }
 
     getData(0);
@@ -330,7 +357,7 @@
     //计数
     query.count().then(function (count) {
         app.count = count;
-    }, function (error) {});
+    }, function (error) { });
 </script>
 <script type="text/javascript">
     var tag = document.getElementById('tag').innerText;

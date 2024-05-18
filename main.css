@@ -1,0 +1,241 @@
+@font-face {
+  font-family: Coke;
+  src: url('font/Coca-ColaCareFontKaiTi.TTF');
+}
+
+@media (prefers-color-scheme: dark) {
+  /* 夜间模式 */
+  body {
+    background-color: black;
+    color: white;
+  }
+
+  body .item {
+    background-color: rgb(21, 32, 43);
+    color: #ccc;
+  }
+
+  .item-time {
+    color: #999;
+    display: inline-block;
+  }
+
+  h1 {
+    color: #ffffff;
+    display: inline;
+  }
+
+  .describe {
+    color: #ccc;
+  }
+
+  body .load-btn {
+    background-color: #000;
+    color: #ddd;
+  }
+
+  body .x-link {
+    color: #cccccc;
+  }
+}
+
+.x-link {
+  text-decoration: none;
+  color: #333333;
+}
+
+.x-link:hover {
+  color: #ea4c89;
+}
+
+[v-cloak] {
+  display: none;
+}
+
+html {
+  font-size: 20px;
+}
+
+.item-content {
+  white-space: pre-wrap;
+}
+
+body,
+button {
+  font-family: Coke, serif;
+}
+
+.describe {
+  font-weight: 300;
+  font-style: normal;
+  line-height: 1.8rem;
+}
+
+#app,
+header,
+footer {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+h1 {
+  font-weight: 900;
+}
+
+footer {
+  font-size: 0.8rem;
+  clear: both;
+}
+
+.tip {
+  color: #999;
+}
+
+.item {
+  font-weight: 300;
+  font-style: normal;
+  line-height: 1.8rem;
+  background: #fff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+  margin-top: 20px;
+  text-align: justify;
+  box-shadow: 0em 4em 6em -2em rgba(0, 0, 0, 0.5), 1em 2em 3.5em -2.5em rgba(0, 0, 0, 0.5);
+}
+
+.item a {
+  text-decoration: none;
+  color: #5dafd5;
+}
+
+.item-number {
+  padding: 3px 5px;
+  border-radius: 5px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.item-time {
+  font-weight: 200;
+  color: #999;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.center-text {
+  text-align: center;
+}
+
+.center-text a {
+  color: #ea4c89;
+  text-decoration: none;
+}
+
+.load-ctn {
+  width: 100%;
+}
+
+.load-btn {
+  border: 2px solid #666;
+  width: 130px;
+  outline: none;
+  font-size: 20px;
+  border-radius: 100px;
+  margin: 30px auto;
+  color: #666;
+  line-height: 30px;
+  float: right;
+  background: #fff;
+}
+
+.load-btn:hover {
+  cursor: pointer;
+  background: #1da1f2;
+  color: #fff;
+}
+
+.load-btn:hover:active {
+  background: #666;
+  color: #fff;
+}
+
+.equipment::after {
+  font-size: 15px;
+}
+
+.type-0 .item-number {
+  color: #fff;
+  background-color: #2196f3;
+}
+
+.type-0 .equipment::after {
+  content: 'PC💻';
+}
+
+.type-1 .item-number {
+  color: #fff;
+  background-color: #ff4081;
+}
+
+.type-1 .equipment::after {
+  content: 'iPhone XR📱';
+}
+
+.type-2 .item-number {
+  color: #7c7777;
+  background-color: #94ce5a;
+}
+
+.type-2 .equipment::after {
+  content: 'MacBook💻';
+}
+
+.type-3 .item-number {
+  color: #7c7777;
+  background-color: #bddd22;
+}
+
+.type-3 .equipment::after {
+  content: 'iPhone 13 mini📱';
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  font-weight: 700;
+  font-display: auto;
+  height: 57.6px;
+}
+
+.item-tag {
+  font-size: 15px;
+  display: block;
+  color: #999;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.item-info {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+img {
+  width: 100%;
+}
+
+.item-translate-btn:hover {
+  cursor: pointer;
+}

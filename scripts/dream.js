@@ -64,7 +64,7 @@ async function translateAPI(text) {
     }
 
     // 发送翻译请求
-    const response = await fetch('https://api.deeplx.org/translate', {
+    const response = await fetch('https://translation-proxy.vercel.app/translate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

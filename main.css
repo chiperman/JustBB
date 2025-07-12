@@ -10,7 +10,7 @@
     color: white;
   }
 
-  body .item {
+  .item {
     background-color: rgb(21, 32, 43);
     color: #ccc;
   }
@@ -29,12 +29,12 @@
     color: #ccc;
   }
 
-  body .load-btn {
+  .load-btn {
     background-color: #000;
     color: #ddd;
   }
 
-  body .x-link {
+  .x-link {
     color: #cccccc;
   }
 
@@ -55,7 +55,7 @@
   }
 
   .tags-content-wrapper {
-    background-color: rgba(0, 0, 0, 0.3); 
+    background-color: rgba(0, 0, 0, 0.3);
   }
 
   #tags-container.tags-visible .tag {
@@ -63,6 +63,11 @@
   }
 
   #tags-container.tags-visible .tag:hover {
+  }
+
+  .item-translated-content {
+    color: #ccc;
+    border-left-color: #d4237a;
   }
 }
 
@@ -267,27 +272,12 @@ img {
   cursor: pointer;
 }
 
-#tags-toggle-icon {
-  display: none; 
-  cursor: pointer;
-  position: fixed;
-  top: 15px;
-  right: 20px;
-  z-index: 1000;
-}
-
-#tags-toggle-icon svg {
-  transition: transform 0.3s ease-in-out;
-}
-
-#tags-toggle-icon.is-active svg {
-  transform: rotate(90deg); 
-}
-
-#tags-container {
-  display: flex;
-  flex-wrap: wrap;
-  padding: 10px 0;
+.item-translated-content {
+  border-left: 2px solid #d4237a;
+  padding-left: 10px;
+  margin-top: 10px;
+  font-style: italic;
+  color: #666;
 }
 
 .tag {
@@ -308,65 +298,76 @@ img {
     border-color: rgba(0, 0, 0, 0.2);
 }
 
+/* Toggle Icon and Tags Container Base Styles */
+#tags-toggle-icon {
+  display: block;
+  cursor: pointer;
+  position: fixed;
+  top: 15px;
+  right: 20px;
+  z-index: 1001;
+}
+
+#tags-toggle-icon svg {
+  transition: transform 0.3s ease-in-out;
+}
+
+#tags-toggle-icon.is-active svg {
+  transform: rotate(90deg);
+}
+
+#tags-container {
+  display: none; /* Hidden by default, shown with .tags-visible */
+}
+
+#tags-container.tags-visible {
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+}
+
+#tags-container.tags-visible .tags-content-wrapper {
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  overflow-y: auto;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+#tags-container.tags-visible .tag {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  margin: 5px;
+  padding: 8px 15px;
+  font-size: 1em;
+}
+
+#tags-container.tags-visible .tag:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
 /* Styles for mobile devices */
 @media (max-width: 768px) {
-  #tags-toggle-icon {
-    display: block; 
-    position: fixed;
-    top: 15px;
-    right: 20px;
-    z-index: 1000;
-  }
-
-  #tags-container {
-    display: none; 
-    flex-direction: column;
-    position: absolute;
-    top: 57px;
-    left: 0;
-    right: 0;
-    background-color: inherit; 
-    padding: 50px 20px;
-    z-index: 999;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  #app {
+    padding: 0 15px;
   }
 
   #tags-container.tags-visible {
-    display: flex;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0; 
-    background-color: rgba(0, 0, 0, 0.7); 
-    align-items: flex-start; 
-    z-index: 1000;
-  }
-
-  .tags-content-wrapper {
-    background-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    overflow-y: auto;
-    padding: 10px 20px;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
     align-items: flex-start;
-    width: 90%; 
   }
 
-  #tags-container.tags-visible .tag {
-    background-color: rgba(255, 255, 255, 0.2); 
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    margin: 5px;
-    padding: 8px 15px;
-    font-size: 1em;
-  }
-
-  #tags-container.tags-visible .tag:hover {
-    background-color: rgba(255, 255, 255, 0.4);
+  #tags-container.tags-visible .tags-content-wrapper {
+    padding: 10px 20px;
+    width: 90%;
   }
 
   .item-info {
@@ -374,96 +375,28 @@ img {
   }
 }
 
-/* Styles for desktop devices (aligned with mobile) */
+/* Styles for desktop devices */
 @media (min-width: 769px) {
-  #tags-toggle-icon {
-    display: block;
-    position: fixed;
-    top: 15px;
-    right: 20px;
-    z-index: 1001;
-  }
-
-  #tags-container {
-    display: none;
-  }
-
   #tags-container.tags-visible {
-    display: flex;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
     align-items: center;
     justify-content: center;
-    z-index: 1000;
   }
 
-  .tags-content-wrapper {
-    background-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    overflow-y: auto;
+  #tags-container.tags-visible .tags-content-wrapper {
     padding: 20px;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: flex-start;
     width: 80%;
     max-width: 600px;
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
-
-  #tags-container.tags-visible .tag {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    margin: 5px;
-    padding: 8px 15px;
-    font-size: 1em;
-  }
-
-  #tags-container.tags-visible .tag:hover {
-    background-color: rgba(255, 255, 255, 0.4);
-  }
 }
 
 @media (prefers-color-scheme: dark) and (min-width: 769px) {
-  .tags-content-wrapper {
+  #tags-container.tags-visible .tags-content-wrapper {
     background-color: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  #tags-container.tags-visible .tag {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.5);
   }
 
   #tags-container.tags-visible .tag:hover {
     background-color: rgba(0, 0, 0, 0.6);
   }
-}
-
-.item-translated-content {
-  border-left: 2px solid #d4237a;
-  padding-left: 10px;
-  margin-top: 10px;
-  font-style: italic;
-  color: #666;
-}
-
-@media (prefers-color-scheme: dark) {
-  .item-translated-content {
-    color: #ccc;
-    border-left-color: #d4237a;
-  }
-}
-
-
-main {
-  max-width: 500px;
-  margin: 0 auto;
 }

@@ -18,7 +18,7 @@
       name="viewport"
       content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"
     />
-    <meta
+    <meta 
       name="description"
       content="「论如何逃离微信社交圈」看似一句玩笑，但其实自从这个站点创立以来，我就遵守这个规则，并随心所欲的在这里发表我的灵光闪现和碎碎念。既满足了我那奇怪的社交洁癖，同时也没有社交压力。"
     />
@@ -41,6 +41,16 @@
       </div>
     </header>
     <main id="app">
+      <div id="tags-container" v-bind:class="{ 'tags-visible': tagsVisible }">
+        <div class="tags-content-wrapper">
+          <span class="tag" v-for="tag in tags" v-on:click="filterByTag(tag)">{{ tag }}</span>
+        </div>
+      </div>
+      <div id="tags-toggle-icon" v-on:click="toggleTags" v-bind:class="{ 'is-active': tagsVisible }">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path :d="menuIconPath"></path>
+        </svg>
+      </div>
       <p class="describe">
         「论如何逃离微信社交圈」看似一句玩笑，但其实自从这个站点创立以来，我就遵守这个规则，并随心所欲的在这里发表我的灵光闪现和碎碎念。既满足了我那奇怪的社交洁癖，同时也没有社交压力。
       </p>

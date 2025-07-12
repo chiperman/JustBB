@@ -1,226 +1,213 @@
-var { Query } = AV;
-AV.init({
-  appId: 'e1qXpMMrSwgnJ15kvtIfQKuv-MdYXbMMI', //你的 leancloud 应用 id （设置-应用keys-AppID）
-  appKey: 'rk23S7pU7ryqfV9PhpBjoG5O', //你的 leancloud 应用 AppKey （设置-应用keys-AppKey）
+// Initialize LeanCloud
+const { Query, init } = AV;
+init({
+  appId: "e1qXpMMrSwgnJ15kvtIfQKuv-MdYXbMMI", // Your LeanCloud AppID
+  appKey: "rk23S7pU7ryqfV9PhpBjoG5O", // Your LeanCloud AppKey
 });
 
-var app = new Vue({
-  el: '#app',
+new Vue({
+  el: "#app",
   data: {
     page: 0,
     count: 0,
     contents: [],
-    translatedContent: '',
     tags: [],
     currentTag: null,
     tagsVisible: false,
   },
+  computed: {
+    menuIconPath() {
+      return this.tagsVisible
+        ? "M18 6 L6 18 M6 6 L18 18"
+        : "M3 12 L21 12 M3 6 L21 6 M3 18 L21 18";
+    },
+  },
   methods: {
-    toggleTags: function() {
+    // --- UI Interaction Methods ---
+    toggleTags() {
       this.tagsVisible = !this.tagsVisible;
     },
-    loadMore: function (event) {
-      getData(++this.page, this.currentTag);
-    },
-    translateContent(item) {
-      // 如果翻译内容存在
-      if (item.translatedContent) {
-        // 反转 showTranslatedContent 的值
-        item.showTranslatedContent = !item.showTranslatedContent;
-        item.showContent = !item.showContent;
-      } else {
-        // 如果翻译内容不存在，调用接口进行翻译
-        translateAPI(item.attributes.content)
-          .then((translatedText) => {
-            item.showTranslatedContent = true; // 翻译成功后设置显示标志
-            item.showContent = false;
-            item.translatedContent = translatedText;
-          })
-          .catch((error) => {
-            console.error('翻译失败~', error);
-          });
-      }
-    },
-    filterByTag: function (tag) {
+    filterByTag(tag) {
       this.contents = [];
       this.page = 0;
-      this.currentTag = tag;
-      if (tag === 'All') {
-        this.currentTag = null;
-      }
-      getData(this.page, this.currentTag);
-      updateCount(this.currentTag);
-      this.tagsVisible = false; // Close tags after selection
+      this.currentTag = tag === "All" ? null : tag;
+      this.fetchData();
+      this.fetchCount();
+      this.tagsVisible = false; // Close tags overlay after selection
     },
-    closeTags: function(event) {
-      if (event.target.id === 'tags-container') {
+    closeTags(event) {
+      // Close only if the click is on the container background itself
+      if (event.target.id === "tags-container") {
         this.tagsVisible = false;
       }
+    },
+    loadMore() {
+      this.page++;
+      this.fetchData();
+    },
+
+    // --- Data Fetching Methods ---
+    async fetchData() {
+      try {
+        const query = new AV.Query("content");
+        if (this.currentTag) {
+          query.equalTo("tag", this.currentTag);
+        }
+        const results = await query
+          .descending("createdAt")
+          .skip(this.page * 20)
+          .limit(20)
+          .find();
+
+        if (results.length > 0) {
+          const processedResults = results.map((item) => {
+            const dateTmp = new Date(item.createdAt);
+            const year = dateTmp.getFullYear();
+            const month = String(dateTmp.getMonth() + 1).padStart(2, "0");
+            const day = String(dateTmp.getDate()).padStart(2, "0");
+            const hours = String(dateTmp.getHours()).padStart(2, "0");
+            const minutes = String(dateTmp.getMinutes()).padStart(2, "0");
+
+            // Add processed and reactive properties
+            return {
+              ...item,
+              attributes: {
+                ...item.attributes,
+                time: `${year}-${month}-${day} ${hours}:${minutes}`,
+                content: this.urlToLink(item.attributes.content),
+              },
+              translatedContent: "",
+              showTranslatedContent: false,
+              showContent: true,
+            };
+          });
+          this.contents.push(...processedResults);
+        } else if (this.page > 0) {
+          // Optional: Notify user that all data has been loaded
+          // alert("已加载全部数据");
+        }
+      } catch (error) {
+        console.error("获取数据失败:", error);
+      }
+    },
+    async fetchTags() {
+      try {
+        const query = new AV.Query("content");
+        query.select("tag");
+        query.limit(1000); // Fetch up to 1000 records for tags
+        const results = await query.find();
+        const tags = results.map((item) => item.get("tag"));
+        const uniqueTags = [...new Set(tags)].filter((tag) => tag); // Deduplicate and remove empty tags
+        this.tags = ["All", ...uniqueTags];
+      } catch (error) {
+        console.error("获取 Tag 失败:", error);
+      }
+    },
+    async fetchCount() {
+      try {
+        const query = new AV.Query("content");
+        if (this.currentTag) {
+          query.equalTo("tag", this.currentTag);
+        }
+        this.count = await query.count();
+      } catch (error) {
+        console.error("计数失败:", error);
+      }
+    },
+
+    // --- Translation Methods ---
+    async translateContent(item) {
+      if (item.translatedContent) {
+        item.showTranslatedContent = !item.showTranslatedContent;
+        item.showContent = !item.showContent;
+        return;
+      }
+
+      try {
+        const translatedText = await this.translateAPI(item.attributes.content);
+        item.translatedContent = translatedText;
+        item.showTranslatedContent = true;
+        item.showContent = false;
+      } catch (error) {
+        console.error("翻译失败~", error);
+      }
+    },
+    async translateAPI(text) {
+      try {
+        const sourceLang = this.containsChinese(text) ? "ZH" : "EN";
+        const targetLang = this.containsChinese(text) ? "EN" : "ZH";
+
+        const response = await fetch(
+          "https://translation-proxy.vercel.app/translate",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: text,
+              source_lang: sourceLang,
+              target_lang: targetLang,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`翻译请求失败: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data.data;
+      } catch (error) {
+        console.error("翻译 API 调用失败:", error);
+        throw error; // Re-throw to be caught by the caller
+      }
+    },
+
+    // --- Utility Methods ---
+    containsChinese(text) {
+      if (typeof text !== "string") return false;
+      const chineseRegex = /[\u4e00-\u9fa5]/;
+      return chineseRegex.test(text);
+    },
+    urlToLink(str) {
+      if (typeof str !== "string") {
+        return str;
+      }
+      const urlRegex = /(http|ftp|https):\/\/[\w-]+(\.[\w-]+)+([\w-.,@?^=%&:/~+#]*[\w-@?^=%&/~+#])?/g;
+      const imgRegex = /\bhttps?:\/\/.*?(\.gif|\.jpeg|\.png|\.jpg|\.bmp|\.webp)/gi;
+
+      // First, replace image URLs with <img> tags
+      let processedStr = str.replace(imgRegex, (imgUrl) => {
+        return `<img src="${imgUrl}" alt="用户分享图片" />`;
+      });
+
+      // Then, replace remaining URLs with <a> tags
+      processedStr = processedStr.replace(urlRegex, (website) => {
+        // Avoid re-linking if it's already inside an img tag's src
+        if (processedStr.includes(`src="${website}"`)) {
+            return website;
+        }
+        return `<a href="${website}" target="_blank" rel="noopener noreferrer"> <i class="iconfont icon-lianjie-copy"></i>链接 </a>`;
+      });
+
+      return processedStr;
+    },
+  },
+  async mounted() {
+    // Initial data load
+    await this.fetchTags();
+    await this.fetchData();
+    await this.fetchCount();
+
+    // Set up event listener for closing the tags overlay
+    const tagsContainer = document.getElementById("tags-container");
+    if (tagsContainer) {
+      tagsContainer.addEventListener("click", this.closeTags);
     }
   },
-  computed: {
-    menuIconPath: function() {
-      return this.tagsVisible ? 'M18 6 L6 18 M6 6 L18 18' : 'M3 12 L21 12 M3 6 L21 6 M3 18 L21 18';
+  beforeDestroy() {
+    // Clean up event listener to prevent memory leaks
+    const tagsContainer = document.getElementById("tags-container");
+    if (tagsContainer) {
+      tagsContainer.removeEventListener("click", this.closeTags);
     }
-  }
+  },
 });
-
-// 绑定点击事件到 #tags-container
-document.addEventListener('DOMContentLoaded', () => {
-  const tagsContainer = document.getElementById('tags-container');
-  if (tagsContainer) {
-    tagsContainer.addEventListener('click', app.closeTags);
-  }
-});
-
-// 检测文本中是否包含中文字符
-function containsChinese(text) {
-  const chineseRegex = /[\u4e00-\u9fa5]/;
-  return chineseRegex.test(text);
-}
-
-// 调用翻译 API
-async function translateAPI(text) {
-  try {
-    let sourceLang, targetLang;
-
-    // 根据文本内容动态设置翻译的源语言和目标语言
-    if (containsChinese(text)) {
-      // 如果文本包含中文，则将源语言设为中文，目标语言设为英文
-      sourceLang = 'ZH';
-      targetLang = 'EN';
-    } else {
-      // 如果文本为英文，则将源语言设为英文，目标语言为中文
-      sourceLang = 'EN';
-      targetLang = 'ZH';
-    }
-
-    // 发送翻译请求
-    const response = await fetch('https://translation-proxy.vercel.app/translate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text: text,
-        source_lang: sourceLang,
-        target_lang: targetLang,
-      }),
-    });
-
-    // 检查请求是否成功
-    if (!response.ok) {
-      throw new Error('翻译请求失败');
-    }
-
-    // 解析并返回翻译结果
-    const data = await response.json();
-    return data.data;
-  } catch (error) {
-    // 处理异常情况
-    throw error;
-  }
-}
-
-// 识别 URL 链接和图片链接
-function urlToLink(str) {
-    if (typeof str !== 'string') {
-        return str;
-    }
-  var re = /(http|ftp|https):\/\/[\w-]+(.[\w-]+)+([\w-.,@?^=%&:/~+#]*[\w-\@?^=%&/~+#])?/g;
-  var re_forpic = /\bhttps?:\/\/.*?(\.gif|\.jpeg|\.png|\.jpg|\.bmp|\.webp)/g;
-
-  str = str.replace(re, function (website) {
-    // Don't convert image URLs into regular links
-    if (re_forpic.test(website)) {
-      return website;
-    }
-    return (
-      "<a href='" +
-      website +
-      "' target='_blank'> <i class='iconfont icon-lianjie-copy'></i>链接 </a>"
-    );
-  });
-
-  str = str.replace(re_forpic, function (imgurl) {
-    return "<img src='" + imgurl + "'  /> ";
-  });
-
-  return str;
-}
-
-
-// 获取数据
-async function getData(page, tag) {
-  try {
-    let query = new AV.Query('content');
-    if (tag) {
-      query.equalTo('tag', tag);
-    }
-    const results = await query
-      .descending('createdAt')
-      .skip(page * 20)
-      .limit(20)
-      .find();
-
-    if (results.length === 0) {
-        if(page === 0) {
-            app.contents = [];
-        }
-      alert('已加载全部数据');
-    } else {
-      results.forEach((i) => {
-        let dateTmp = new Date(i.createdAt);
-        i.attributes.time = `${dateTmp.getFullYear()}-${
-          dateTmp.getMonth() + 1 < 10 ? '0' + (dateTmp.getMonth() + 1) : dateTmp.getMonth() + 1
-        }-${dateTmp.getDate() + 1 < 10 ? '0' + dateTmp.getDate() : dateTmp.getDate()} ${
-          dateTmp.getHours() + 1 <= 10 ? '0' + dateTmp.getHours() : dateTmp.getHours()
-        }:${dateTmp.getMinutes() + 1 <= 10 ? '0' + dateTmp.getMinutes() : dateTmp.getMinutes()}`;
-        i.attributes.content = urlToLink(i.attributes.content);
-
-        i.translatedContent = '';
-        i.showTranslatedContent = false;
-        i.showContent = true;
-
-        app.contents.push(i);
-      });
-    }
-  } catch (error) {
-    console.error('获取数据失败:', error);
-  }
-}
-
-// 获取所有不重复的 tag
-async function getTags() {
-  try {
-    const query = new AV.Query('content');
-    query.select('tag'); // 只查询 tag 字段，提高效率
-    query.limit(1000); // 最多获取 1000 条记录
-    const results = await query.find();
-    const tags = results.map(item => item.get('tag'));
-    const uniqueTags = [...new Set(tags)].filter(tag => tag); // 去重并移除空值
-    app.tags = ['All', ...uniqueTags];
-  } catch (error) {
-    console.error('获取 Tag 失败:', error);
-  }
-}
-
-// 更新计数
-function updateCount(tag) {
-    let query = new AV.Query('content');
-    if (tag) {
-        query.equalTo('tag', tag);
-    }
-    query.count().then(
-        function (count) {
-            app.count = count;
-        },
-        function (error) {
-            console.error('计数失败:', error);
-        }
-    );
-}
-
-getTags();
-getData(0);
-updateCount();

@@ -1,148 +1,137 @@
-var { Query } = AV;
-AV.init({
-  appId: 'e1qXpMMrSwgnJ15kvtIfQKuv-MdYXbMMI', //你的 leancloud 应用 id （设置-应用keys-AppID）
-  appKey: 'rk23S7pU7ryqfV9PhpBjoG5O', //你的 leancloud 应用 AppKey （设置-应用keys-AppKey）
+// Initialize LeanCloud
+const { Query, init } = AV;
+init({
+  appId: "e1qXpMMrSwgnJ15kvtIfQKuv-MdYXbMMI", // Your LeanCloud AppID
+  appKey: "rk23S7pU7ryqfV9PhpBjoG5O", // Your LeanCloud AppKey
 });
 
-//设定存储数据的 className
-var query = new AV.Query('dream');
-
-var app = new Vue({
-  el: '#app',
+new Vue({
+  el: "#app",
   data: {
     page: 0,
     count: 0,
     contents: [],
-    translatedContent: '',
   },
   methods: {
-    loadMore: function (event) {
-      getData(++this.page);
+    // --- UI Interaction Methods ---
+    loadMore() {
+      this.page++;
+      this.fetchData();
     },
-    translateContent(item) {
-      // 如果翻译内容存在
-      if (item.translatedContent) {
-        // 反转 showTranslatedContent 的值
-        item.showTranslatedContent = !item.showTranslatedContent;
-        item.showContent = !item.showContent;
-      } else {
-        // 如果翻译内容不存在，调用接口进行翻译
-        translateAPI(item.attributes.content)
-          .then((translatedText) => {
-            item.showTranslatedContent = true; // 翻译成功后设置显示标志
-            item.showContent = false;
-            item.translatedContent = translatedText;
-          })
-          .catch((error) => {
-            console.error('翻译失败~', error);
+
+    // --- Data Fetching Methods ---
+    async fetchData() {
+      try {
+        const query = new AV.Query("dream");
+        const results = await query
+          .descending("createdAt")
+          .skip(this.page * 20)
+          .limit(20)
+          .find();
+
+        if (results.length > 0) {
+          const processedResults = results.map((item) => {
+            const dateTmp = new Date(item.createdAt);
+            const year = dateTmp.getFullYear();
+            const month = String(dateTmp.getMonth() + 1).padStart(2, "0");
+            const day = String(dateTmp.getDate()).padStart(2, "0");
+            const hours = String(dateTmp.getHours()).padStart(2, "0");
+            const minutes = String(dateTmp.getMinutes()).padStart(2, "0");
+
+            return {
+              ...item,
+              attributes: {
+                ...item.attributes,
+                time: `${year}-${month}-${day} ${hours}:${minutes}`,
+                content: this.urlToLink(item.attributes.content),
+              },
+              translatedContent: "",
+              showTranslatedContent: false,
+              showContent: true,
+            };
           });
+          this.contents.push(...processedResults);
+        } else if (this.page > 0) {
+          // alert("已加载全部数据");
+        }
+      } catch (error) {
+        console.error("获取数据失败:", error);
       }
     },
+    async fetchCount() {
+      try {
+        const query = new AV.Query("dream");
+        this.count = await query.count();
+      } catch (error) {
+        console.error("计数失败:", error);
+      }
+    },
+
+    // --- Translation Methods ---
+    async translateContent(item) {
+      if (item.translatedContent) {
+        item.showTranslatedContent = !item.showTranslatedContent;
+        item.showContent = !item.showContent;
+        return;
+      }
+
+      try {
+        const translatedText = await this.translateAPI(item.attributes.content);
+        item.translatedContent = translatedText;
+        item.showTranslatedContent = true;
+        item.showContent = false;
+      } catch (error) {
+        console.error("翻译失败~", error);
+      }
+    },
+    async translateAPI(text) {
+      try {
+        const sourceLang = this.containsChinese(text) ? "ZH" : "EN";
+        const targetLang = this.containsChinese(text) ? "EN" : "ZH";
+
+        const response = await fetch(
+          "https://translation-proxy.vercel.app/translate",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: text,
+              source_lang: sourceLang,
+              target_lang: targetLang,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`翻译请求失败: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data.data;
+      } catch (error) {
+        console.error("翻译 API 调用失败:", error);
+        throw error;
+      }
+    },
+
+    // --- Utility Methods ---
+    containsChinese(text) {
+      if (typeof text !== "string") return false;
+      const chineseRegex = /[\u4e00-\u9fa5]/;
+      return chineseRegex.test(text);
+    },
+    urlToLink(str) {
+      if (typeof str !== "string") {
+        return str;
+      }
+      const urlRegex = /(http|ftp|https):\/\/[\w-]+(\.[\w-]+)+([\w-.,@?^=%&:/~+#]*[\w-@?^=%&/~+#])?/g;
+      return str.replace(urlRegex, (website) => {
+        return `<a href="${website}" target="_blank" rel="noopener noreferrer"> <i class="iconfont icon-lianjie-copy"></i>链接 </a>`;
+      });
+    },
+  },
+  async mounted() {
+    // Initial data load
+    await this.fetchData();
+    await this.fetchCount();
   },
 });
-
-// 检测文本中是否包含中文字符
-function containsChinese(text) {
-  const chineseRegex = /[\u4e00-\u9fa5]/;
-  return chineseRegex.test(text);
-}
-
-// 调用翻译 API
-async function translateAPI(text) {
-  try {
-    let sourceLang, targetLang;
-
-    // 根据文本内容动态设置翻译的源语言和目标语言
-    if (containsChinese(text)) {
-      // 如果文本包含中文，则将源语言设为中文，目标语言设为英文
-      sourceLang = 'ZH';
-      targetLang = 'EN';
-    } else {
-      // 如果文本为英文，则将源语言设为英文，目标语言设为中文
-      sourceLang = 'EN';
-      targetLang = 'ZH';
-    }
-
-    // 发送翻译请求
-    const response = await fetch('https://translation-proxy.vercel.app/translate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text: text,
-        source_lang: sourceLang,
-        target_lang: targetLang,
-      }),
-    });
-
-    // 检查请求是否成功
-    if (!response.ok) {
-      throw new Error('翻译请求失败');
-    }
-
-    // 解析并返回翻译结果
-    const data = await response.json();
-    return data.data;
-  } catch (error) {
-    // 处理异常情况
-    throw error;
-  }
-}
-
-// 识别 URL 链接
-function urlToLink(str) {
-  var re = /(http|ftp|https):\/\/[\w-]+(.[\w-]+)+([\w-.,@?^=%&:/~+#]*[\w-\@?^=%&/~+#])?/g;
-
-  str = str.replace(re, function (website) {
-    return (
-      "<a href='" +
-      website +
-      "' target='_blank'> <i class='iconfont icon-lianjie-copy'></i>链接 </a>"
-    );
-  });
-  return str;
-}
-
-// 获取数据
-async function getData(page) {
-  try {
-    const results = await query
-      .descending('createdAt')
-      .skip(page * 20)
-      .limit(20)
-      .find();
-
-    if (results.length === 0) {
-      alert('已加载全部数据');
-    } else {
-      results.forEach((i) => {
-        let dateTmp = new Date(i.createdAt);
-        i.attributes.time = `${dateTmp.getFullYear()}-${
-          dateTmp.getMonth() + 1 < 10 ? '0' + (dateTmp.getMonth() + 1) : dateTmp.getMonth() + 1
-        }-${dateTmp.getDate() + 1 < 10 ? '0' + dateTmp.getDate() : dateTmp.getDate()} ${
-          dateTmp.getHours() + 1 <= 10 ? '0' + dateTmp.getHours() : dateTmp.getHours()
-        }:${dateTmp.getMinutes() + 1 <= 10 ? '0' + dateTmp.getMinutes() : dateTmp.getMinutes()}`;
-        i.attributes.content = urlToLink(i.attributes.content);
-
-        i.translatedContent = '';
-        i.showTranslatedContent = false;
-        i.showContent = true;
-
-        app.contents.push(i);
-      });
-    }
-  } catch (error) {
-    console.error('获取数据失败:', error);
-  }
-}
-
-getData(0);
-
-// 计数
-query.count().then(
-  function (count) {
-    app.count = count;
-  },
-  function (error) {}
-);

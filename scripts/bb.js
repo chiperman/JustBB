@@ -4,9 +4,6 @@ AV.init({
   appKey: 'rk23S7pU7ryqfV9PhpBjoG5O', //你的 leancloud 应用 AppKey （设置-应用keys-AppKey）
 });
 
-//设定存储数据的 className
-var query = new AV.Query('content');
-
 var app = new Vue({
   el: '#app',
   data: {
@@ -14,10 +11,16 @@ var app = new Vue({
     count: 0,
     contents: [],
     translatedContent: '',
+    tags: [],
+    currentTag: null,
+    tagsVisible: false,
   },
   methods: {
+    toggleTags: function() {
+      this.tagsVisible = !this.tagsVisible;
+    },
     loadMore: function (event) {
-      getData(++this.page);
+      getData(++this.page, this.currentTag);
     },
     translateContent(item) {
       // 如果翻译内容存在
@@ -38,7 +41,36 @@ var app = new Vue({
           });
       }
     },
+    filterByTag: function (tag) {
+      this.contents = [];
+      this.page = 0;
+      this.currentTag = tag;
+      if (tag === 'All') {
+        this.currentTag = null;
+      }
+      getData(this.page, this.currentTag);
+      updateCount(this.currentTag);
+      this.tagsVisible = false; // Close tags after selection
+    },
+    closeTags: function(event) {
+      if (event.target.id === 'tags-container') {
+        this.tagsVisible = false;
+      }
+    }
   },
+  computed: {
+    menuIconPath: function() {
+      return this.tagsVisible ? 'M18 6 L6 18 M6 6 L18 18' : 'M3 12 L21 12 M3 6 L21 6 M3 18 L21 18';
+    }
+  }
+});
+
+// 绑定点击事件到 #tags-container
+document.addEventListener('DOMContentLoaded', () => {
+  const tagsContainer = document.getElementById('tags-container');
+  if (tagsContainer) {
+    tagsContainer.addEventListener('click', app.closeTags);
+  }
 });
 
 // 检测文本中是否包含中文字符
@@ -58,7 +90,7 @@ async function translateAPI(text) {
       sourceLang = 'ZH';
       targetLang = 'EN';
     } else {
-      // 如果文本为英文，则将源语言设为英文，目标语言设为中文
+      // 如果文本为英文，则将源语言设为英文，目标语言为中文
       sourceLang = 'EN';
       targetLang = 'ZH';
     }
@@ -90,40 +122,41 @@ async function translateAPI(text) {
   }
 }
 
-// 识别 URL 链接
+// 识别 URL 链接和图片链接
 function urlToLink(str) {
+    if (typeof str !== 'string') {
+        return str;
+    }
   var re = /(http|ftp|https):\/\/[\w-]+(.[\w-]+)+([\w-.,@?^=%&:/~+#]*[\w-\@?^=%&/~+#])?/g;
-
-  str = str.replace(re, function (website) {
-    return (
-      "<a href='" +
-      website +
-      "' target='_blank'> <i class='iconfont icon-lianjie-copy'></i>链接 </a>"
-    );
-  });
-  return str;
-}
-
-// 识别图片链接
-function urlToLink(str) {
-  var re = /\bhttps?:\/\/(?!\S+(?:jpe?g|png|bmp|gif|webp|gif))\S+/g;
   var re_forpic = /\bhttps?:\/\/.*?(\.gif|\.jpeg|\.png|\.jpg|\.bmp|\.webp)/g;
+
   str = str.replace(re, function (website) {
+    // Don't convert image URLs into regular links
+    if (re_forpic.test(website)) {
+      return website;
+    }
     return (
       "<a href='" +
       website +
       "' target='_blank'> <i class='iconfont icon-lianjie-copy'></i>链接 </a>"
     );
   });
+
   str = str.replace(re_forpic, function (imgurl) {
     return "<img src='" + imgurl + "'  /> ";
   });
+
   return str;
 }
 
+
 // 获取数据
-async function getData(page) {
+async function getData(page, tag) {
   try {
+    let query = new AV.Query('content');
+    if (tag) {
+      query.equalTo('tag', tag);
+    }
     const results = await query
       .descending('createdAt')
       .skip(page * 20)
@@ -131,6 +164,9 @@ async function getData(page) {
       .find();
 
     if (results.length === 0) {
+        if(page === 0) {
+            app.contents = [];
+        }
       alert('已加载全部数据');
     } else {
       results.forEach((i) => {
@@ -154,12 +190,37 @@ async function getData(page) {
   }
 }
 
-getData(0);
+// 获取所有不重复的 tag
+async function getTags() {
+  try {
+    const query = new AV.Query('content');
+    query.select('tag'); // 只查询 tag 字段，提高效率
+    query.limit(1000); // 最多获取 1000 条记录
+    const results = await query.find();
+    const tags = results.map(item => item.get('tag'));
+    const uniqueTags = [...new Set(tags)].filter(tag => tag); // 去重并移除空值
+    app.tags = ['All', ...uniqueTags];
+  } catch (error) {
+    console.error('获取 Tag 失败:', error);
+  }
+}
 
-// 计数
-query.count().then(
-  function (count) {
-    app.count = count;
-  },
-  function (error) {}
-);
+// 更新计数
+function updateCount(tag) {
+    let query = new AV.Query('content');
+    if (tag) {
+        query.equalTo('tag', tag);
+    }
+    query.count().then(
+        function (count) {
+            app.count = count;
+        },
+        function (error) {
+            console.error('计数失败:', error);
+        }
+    );
+}
+
+getTags();
+getData(0);
+updateCount();

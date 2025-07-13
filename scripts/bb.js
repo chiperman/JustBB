@@ -169,8 +169,10 @@ new Vue({
       this.showToast = true;
       setTimeout(() => {
         this.showToast = false;
+      }, 2500); // Start hiding after 2.5 seconds
+      setTimeout(() => {
         this.toastMessage = '';
-      }, 3000); // 3 seconds
+      }, 3000); // Clear message after 3 seconds (animation duration is 0.5s)
     },
     urlToLink(str) {
       if (typeof str !== 'string') {

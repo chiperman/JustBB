@@ -14,13 +14,21 @@ new Vue({
     showNoMoreDataMessage: false,
     showToast: false,
     toastMessage: '',
+    isLoading: false,
+    toastHideTimer: null,
+    toastClearTimer: null,
   },
   methods: {
     loadMore() {
+      if (this.isLoading) return;
       this.page++;
       this.fetchData();
     },
     async fetchData() {
+      if (this.isLoading) return;
+      this.isLoading = true;
+      const startTime = Date.now();
+
       try {
         const query = new AV.Query('dream');
         const results = await query
@@ -57,6 +65,16 @@ new Vue({
         }
       } catch (error) {
         console.error('获取数据失败:', error);
+      } finally {
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = 1000 - elapsedTime;
+        if (remainingTime > 0) {
+          setTimeout(() => {
+            this.isLoading = false;
+          }, remainingTime);
+        } else {
+          this.isLoading = false;
+        }
       }
     },
     async fetchCount() {
@@ -130,12 +148,17 @@ new Vue({
       });
     },
     showToastMessage(message) {
+      clearTimeout(this.toastHideTimer);
+      clearTimeout(this.toastClearTimer);
+
       this.toastMessage = message;
       this.showToast = true;
-      setTimeout(() => {
+
+      this.toastHideTimer = setTimeout(() => {
         this.showToast = false;
       }, 2500); // Start hiding after 2.5 seconds
-      setTimeout(() => {
+
+      this.toastClearTimer = setTimeout(() => {
         this.toastMessage = '';
       }, 3000); // Clear message after 3 seconds (animation duration is 0.5s)
     },

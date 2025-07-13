@@ -56,11 +56,6 @@ footer {
   clear: both;
 }
 
-.tip {
-  color: #999;
-  width: fit-content;
-}
-
 .item {
   font-weight: 300;
   font-style: normal;
@@ -397,7 +392,7 @@ img {
   position: fixed;
   top: 20px;
   left: 50%;
-  transform: translate(-50%, -20px); /* Start off-screen */
+  transform: translate(-50%, -20px);
   background-color: rgba(17, 165, 206, 0.7);
   color: #fff;
   backdrop-filter: blur(5px);
@@ -412,5 +407,5 @@ img {
 .toast-container.show {
   opacity: 1;
   visibility: visible;
-  transform: translate(-50%, 0); /* Move to final position */
+  transform: translate(-50%, 0);
 }

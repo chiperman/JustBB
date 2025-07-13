@@ -302,7 +302,8 @@ img {
 
   #tags-container.tags-visible .tags-content-wrapper {
     padding: 10px 20px;
-    width: 90%;
+    width: 85%;
+    margin: 10px auto 0 auto;
   }
 
   .item-info {

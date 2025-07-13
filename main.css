@@ -244,11 +244,13 @@ img {
 }
 
 #tags-toggle-icon svg {
+  stroke: #333;
   transition: transform 0.3s ease-in-out;
 }
 
 #tags-toggle-icon.is-active svg {
   transform: rotate(90deg);
+  stroke: #fff;
 }
 
 #tags-container {
@@ -303,7 +305,7 @@ img {
   #tags-container.tags-visible .tags-content-wrapper {
     padding: 10px 20px;
     width: 85%;
-    margin: 10px auto 0 auto;
+    margin: 65px auto 0 auto;
   }
 
   .item-info {
@@ -403,6 +405,9 @@ img {
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out, visibility 0.5s;
+  width: fit-content;
+  min-width: 200px;
+  max-width: 90%;
 }
 
 .toast-container.show {

@@ -3,77 +3,10 @@
   src: url('font/Coca-ColaCareFontKaiTi.TTF');
 }
 
-@media (prefers-color-scheme: dark) {
-  /* 夜间模式 */
-  body {
-    background-color: black;
-    color: white;
-  }
-
-  .item {
-    background-color: rgb(21, 32, 43);
-    color: #ccc;
-  }
-
-  .item-time {
-    color: #999;
-    display: inline-block;
-  }
-
-  h1 {
-    color: #ffffff;
-    display: inline;
-  }
-
-  .describe {
-    color: #ccc;
-  }
-
-  .load-btn {
-    background-color: #000;
-    color: #ddd;
-  }
-
-  .x-link {
-    color: #cccccc;
-  }
-
-  .tag {
-    background-color: transparent;
-    color: #999;
-    border: 1px solid #999;
-  }
-
-  .tag:hover {
-    background-color: rgb(37, 51, 65);
-    color: #ccc;
-    border-color: rgb(37, 51, 65);
-  }
-
-  #tags-toggle-icon svg {
-    stroke: white;
-  }
-
-  .tags-content-wrapper {
-    background-color: rgba(0, 0, 0, 0.3);
-  }
-
-  #tags-container.tags-visible .tag {
-    color: white;
-  }
-
-  #tags-container.tags-visible .tag:hover {
-  }
-
-  .item-translated-content {
-    color: #ccc;
-    border-left-color: #d4237a;
-  }
-}
-
 .x-link {
   text-decoration: none;
-  color: #333333;
+  color: #333;
+  float: right;
 }
 
 .x-link:hover {
@@ -124,13 +57,13 @@ footer {
 
 .tip {
   color: #999;
+  width: fit-content;
 }
 
 .item {
   font-weight: 300;
   font-style: normal;
   line-height: 1.8rem;
-  background: #fff;
   padding: 10px 20px;
   border-radius: 5px;
   box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
@@ -281,21 +214,21 @@ img {
 }
 
 .tag {
-    background-color: rgba(0, 0, 0, 0.05);
-    border-radius: 5px;
-    padding: 5px 10px;
-    margin-right: 10px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    color: #555;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+  padding: 5px 10px;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #555;
 }
 
 .tag:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-    color: #333;
-    border-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+  border-color: rgba(0, 0, 0, 0.2);
 }
 
 /* Toggle Icon and Tags Container Base Styles */
@@ -344,7 +277,7 @@ img {
 
 #tags-container.tags-visible .tag {
   background-color: rgba(255, 255, 255, 0.2);
-  color: white;
+  color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.5);
   margin: 5px;
   padding: 8px 15px;
@@ -398,5 +331,61 @@ img {
 
   #tags-container.tags-visible .tag:hover {
     background-color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: black;
+    color: #fff;
+  }
+
+  .item {
+    background-color: #15202b;
+    color: #ccc;
+  }
+
+  .item-time {
+    color: #999;
+    display: inline-block;
+  }
+
+  h1 {
+    color: #fff;
+    display: inline;
+  }
+
+  .describe {
+    color: #ccc;
+  }
+
+  .load-btn {
+    background-color: #000;
+    color: #ddd;
+  }
+
+  .x-link {
+    color: #ccc;
+  }
+
+  .tag {
+    background-color: transparent;
+    color: #999;
+    border: 1px solid #999;
+  }
+
+  .tag:hover {
+    background-color: #253341;
+    color: #ccc;
+    border-color: #253341;
+  }
+
+  #tags-toggle-icon svg {
+    stroke: #fff;
+  }
+
+  .item-translated-content {
+    color: #ccc;
+    border-left-color: #d4237a;
   }
 }

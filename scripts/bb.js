@@ -79,6 +79,7 @@ new Vue({
               translatedContent: "",
               showTranslatedContent: false,
               showContent: true,
+              isTranslating: false,
             };
           });
           this.contents.push(...processedResults);
@@ -124,12 +125,15 @@ new Vue({
       }
 
       try {
+        item.isTranslating = true; // Set translating state to true
         const translatedText = await this.translateAPI(item.attributes.content);
         item.translatedContent = translatedText;
         item.showTranslatedContent = true;
         item.showContent = false;
       } catch (error) {
         console.error("翻译失败~", error);
+      } finally {
+        item.isTranslating = false; // Reset translating state
       }
     },
     async translateAPI(text) {

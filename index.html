@@ -14,6 +14,7 @@
     <link rel="shortcut icon" href="favicon.ico" />
     <link rel="apple-touch-icon" href="favicon.ico" />
     <link rel="stylesheet" href="main.css" />
+    <link rel="preload" href="font/Coca-ColaCareFontKaiTi.woff2" as="font" type="font/woff2" crossorigin>
     <meta
       name="viewport"
       content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"
@@ -65,9 +66,10 @@
         v-cloak
       >
         <span class="item-number">No.{{item.attributes.ID }}</span>
-        <p class="item-content" v-if="item.showContent" v-html="item.attributes.content"></p>
+        <p class="item-content" :class="{ 'blur': item.isTranslating }" v-if="item.showContent" v-html="item.attributes.content"></p>
         <p
           class="item-translated-content"
+          :class="{ 'blur': item.isTranslating }"
           v-if="item.showTranslatedContent"
           v-html="item.translatedContent"
         ></p>

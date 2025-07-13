@@ -1,6 +1,7 @@
 @font-face {
   font-family: Coke;
-  src: url('font/Coca-ColaCareFontKaiTi.TTF');
+  src: url('font/Coca-ColaCareFontKaiTi.woff2') format('woff2');
+  font-display: swap;
 }
 
 .x-link {
@@ -213,6 +214,12 @@ img {
   color: #666;
 }
 
+.item-content.blur,
+.item-translated-content.blur {
+  filter: blur(5px);
+  transition: filter 0.3s ease-in-out;
+}
+
 .tag {
   background-color: rgba(0, 0, 0, 0.05);
   border-radius: 5px;
@@ -304,7 +311,7 @@ img {
   }
 
   .item-info {
-    font-size: 0.8em; /* Smaller font size for mobile to prevent misalignment */
+    font-size: 0.8em;
   }
 }
 
@@ -327,10 +334,6 @@ img {
   #tags-container.tags-visible .tags-content-wrapper {
     background-color: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  #tags-container.tags-visible .tag:hover {
-    background-color: rgba(0, 0, 0, 0.6);
   }
 }
 

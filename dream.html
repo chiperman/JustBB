@@ -39,6 +39,9 @@
       </div>
     </header>
     <main id="app">
+      <div class="toast-container" :class="{ 'show': showToast }" v-if="showToast">
+        <div class="toast-message">{{ toastMessage }}</div>
+      </div>
       <p class="describe">
         「Real Dream？Fake World！」<br />
         「真实的梦境？虚假的现实！」

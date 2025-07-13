@@ -118,14 +118,19 @@ new Vue({
 
     // --- Translation Methods ---
     async translateContent(item) {
+      item.isTranslating = true; // Always set to true at the start
+
       if (item.translatedContent) {
+        // If content is already translated, just toggle visibility after a short delay
+        // to allow blur effect to be seen.
+        await new Promise(resolve => setTimeout(resolve, 300)); // Small delay for blur
         item.showTranslatedContent = !item.showTranslatedContent;
         item.showContent = !item.showContent;
+        item.isTranslating = false; // Reset after toggling
         return;
       }
 
       try {
-        item.isTranslating = true; // Set translating state to true
         const translatedText = await this.translateAPI(item.attributes.content);
         item.translatedContent = translatedText;
         item.showTranslatedContent = true;
@@ -133,7 +138,7 @@ new Vue({
       } catch (error) {
         console.error("翻译失败~", error);
       } finally {
-        item.isTranslating = false; // Reset translating state
+        item.isTranslating = false; // Reset after API call
       }
     },
     async translateAPI(text) {

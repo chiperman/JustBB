@@ -1,12 +1,12 @@
 // Initialize LeanCloud
 const { Query, init } = AV;
 init({
-  appId: "e1qXpMMrSwgnJ15kvtIfQKuv-MdYXbMMI", // Your LeanCloud AppID
-  appKey: "rk23S7pU7ryqfV9PhpBjoG5O", // Your LeanCloud AppKey
+  appId: 'e1qXpMMrSwgnJ15kvtIfQKuv-MdYXbMMI', // Your LeanCloud AppID
+  appKey: 'rk23S7pU7ryqfV9PhpBjoG5O', // Your LeanCloud AppKey
 });
 
 new Vue({
-  el: "#app",
+  el: '#app',
   data: {
     page: 0,
     count: 0,
@@ -14,30 +14,29 @@ new Vue({
     tags: [],
     currentTag: null,
     tagsVisible: false,
+    showNoMoreDataMessage: false,
+    showToast: false,
+    toastMessage: '',
   },
   computed: {
     menuIconPath() {
-      return this.tagsVisible
-        ? "M18 6 L6 18 M6 6 L18 18"
-        : "M3 12 L21 12 M3 6 L21 6 M3 18 L21 18";
+      return this.tagsVisible ? 'M18 6 L6 18 M6 6 L18 18' : 'M3 12 L21 12 M3 6 L21 6 M3 18 L21 18';
     },
   },
   methods: {
-    // --- UI Interaction Methods ---
     toggleTags() {
       this.tagsVisible = !this.tagsVisible;
     },
     filterByTag(tag) {
       this.contents = [];
       this.page = 0;
-      this.currentTag = tag === "All" ? null : tag;
+      this.currentTag = tag === 'All' ? null : tag;
       this.fetchData();
       this.fetchCount();
-      this.tagsVisible = false; // Close tags overlay after selection
+      this.tagsVisible = false;
     },
     closeTags(event) {
-      // Close only if the click is on the container background itself
-      if (event.target.id === "tags-container") {
+      if (event.target.id === 'tags-container') {
         this.tagsVisible = false;
       }
     },
@@ -46,15 +45,14 @@ new Vue({
       this.fetchData();
     },
 
-    // --- Data Fetching Methods ---
     async fetchData() {
       try {
-        const query = new AV.Query("content");
+        const query = new AV.Query('content');
         if (this.currentTag) {
-          query.equalTo("tag", this.currentTag);
+          query.equalTo('tag', this.currentTag);
         }
         const results = await query
-          .descending("createdAt")
+          .descending('createdAt')
           .skip(this.page * 20)
           .limit(20)
           .find();
@@ -63,10 +61,10 @@ new Vue({
           const processedResults = results.map((item) => {
             const dateTmp = new Date(item.createdAt);
             const year = dateTmp.getFullYear();
-            const month = String(dateTmp.getMonth() + 1).padStart(2, "0");
-            const day = String(dateTmp.getDate()).padStart(2, "0");
-            const hours = String(dateTmp.getHours()).padStart(2, "0");
-            const minutes = String(dateTmp.getMinutes()).padStart(2, "0");
+            const month = String(dateTmp.getMonth() + 1).padStart(2, '0');
+            const day = String(dateTmp.getDate()).padStart(2, '0');
+            const hours = String(dateTmp.getHours()).padStart(2, '0');
+            const minutes = String(dateTmp.getMinutes()).padStart(2, '0');
 
             // Add processed and reactive properties
             return {
@@ -76,7 +74,7 @@ new Vue({
                 time: `${year}-${month}-${day} ${hours}:${minutes}`,
                 content: this.urlToLink(item.attributes.content),
               },
-              translatedContent: "",
+              translatedContent: '',
               showTranslatedContent: false,
               showContent: true,
               isTranslating: false,
@@ -84,49 +82,44 @@ new Vue({
           });
           this.contents.push(...processedResults);
         } else if (this.page > 0) {
-          // Optional: Notify user that all data has been loaded
-          // alert("已加载全部数据");
+          this.showToastMessage('🫠Oops~已经到底啦~');
         }
       } catch (error) {
-        console.error("获取数据失败:", error);
+        console.error('获取数据失败:', error);
       }
     },
     async fetchTags() {
       try {
-        const query = new AV.Query("content");
-        query.select("tag");
-        query.limit(1000); // Fetch up to 1000 records for tags
+        const query = new AV.Query('content');
+        query.select('tag');
+        query.limit(1000);
         const results = await query.find();
-        const tags = results.map((item) => item.get("tag"));
-        const uniqueTags = [...new Set(tags)].filter((tag) => tag); // Deduplicate and remove empty tags
-        this.tags = ["All", ...uniqueTags];
+        const tags = results.map((item) => item.get('tag'));
+        const uniqueTags = [...new Set(tags)].filter((tag) => tag);
+        this.tags = ['All', ...uniqueTags];
       } catch (error) {
-        console.error("获取 Tag 失败:", error);
+        console.error('获取 Tag 失败:', error);
       }
     },
     async fetchCount() {
       try {
-        const query = new AV.Query("content");
+        const query = new AV.Query('content');
         if (this.currentTag) {
-          query.equalTo("tag", this.currentTag);
+          query.equalTo('tag', this.currentTag);
         }
         this.count = await query.count();
       } catch (error) {
-        console.error("计数失败:", error);
+        console.error('计数失败:', error);
       }
     },
-
-    // --- Translation Methods ---
     async translateContent(item) {
-      item.isTranslating = true; // Always set to true at the start
+      item.isTranslating = true;
 
       if (item.translatedContent) {
-        // If content is already translated, just toggle visibility after a short delay
-        // to allow blur effect to be seen.
-        await new Promise(resolve => setTimeout(resolve, 300)); // Small delay for blur
+        await new Promise((resolve) => setTimeout(resolve, 300));
         item.showTranslatedContent = !item.showTranslatedContent;
         item.showContent = !item.showContent;
-        item.isTranslating = false; // Reset after toggling
+        item.isTranslating = false;
         return;
       }
 
@@ -136,28 +129,25 @@ new Vue({
         item.showTranslatedContent = true;
         item.showContent = false;
       } catch (error) {
-        console.error("翻译失败~", error);
+        console.error('翻译失败~', error);
       } finally {
-        item.isTranslating = false; // Reset after API call
+        item.isTranslating = false;
       }
     },
     async translateAPI(text) {
       try {
-        const sourceLang = this.containsChinese(text) ? "ZH" : "EN";
-        const targetLang = this.containsChinese(text) ? "EN" : "ZH";
+        const sourceLang = this.containsChinese(text) ? 'ZH' : 'EN';
+        const targetLang = this.containsChinese(text) ? 'EN' : 'ZH';
 
-        const response = await fetch(
-          "https://translation-proxy.vercel.app/translate",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              text: text,
-              source_lang: sourceLang,
-              target_lang: targetLang,
-            }),
-          }
-        );
+        const response = await fetch('https://translation-proxy.vercel.app/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            source_lang: sourceLang,
+            target_lang: targetLang,
+          }),
+        });
 
         if (!response.ok) {
           throw new Error(`翻译请求失败: ${response.statusText}`);
@@ -165,34 +155,38 @@ new Vue({
         const data = await response.json();
         return data.data;
       } catch (error) {
-        console.error("翻译 API 调用失败:", error);
-        throw error; // Re-throw to be caught by the caller
+        console.error('翻译 API 调用失败:', error);
+        throw error;
       }
     },
-
-    // --- Utility Methods ---
     containsChinese(text) {
-      if (typeof text !== "string") return false;
+      if (typeof text !== 'string') return false;
       const chineseRegex = /[\u4e00-\u9fa5]/;
       return chineseRegex.test(text);
     },
+    showToastMessage(message) {
+      this.toastMessage = message;
+      this.showToast = true;
+      setTimeout(() => {
+        this.showToast = false;
+        this.toastMessage = '';
+      }, 3000); // 3 seconds
+    },
     urlToLink(str) {
-      if (typeof str !== "string") {
+      if (typeof str !== 'string') {
         return str;
       }
-      const urlRegex = /(http|ftp|https):\/\/[\w-]+(\.[\w-]+)+([\w-.,@?^=%&:/~+#]*[\w-@?^=%&/~+#])?/g;
+      const urlRegex =
+        /(http|ftp|https):\/\/[\w-]+(\.[\w-]+)+([\w-.,@?^=%&:/~+#]*[\w-@?^=%&/~+#])?/g;
       const imgRegex = /\bhttps?:\/\/.*?(\.gif|\.jpeg|\.png|\.jpg|\.bmp|\.webp)/gi;
 
-      // First, replace image URLs with <img> tags
       let processedStr = str.replace(imgRegex, (imgUrl) => {
         return `<img src="${imgUrl}" alt="用户分享图片" />`;
       });
 
-      // Then, replace remaining URLs with <a> tags
       processedStr = processedStr.replace(urlRegex, (website) => {
-        // Avoid re-linking if it's already inside an img tag's src
         if (processedStr.includes(`src="${website}"`)) {
-            return website;
+          return website;
         }
         return `<a href="${website}" target="_blank" rel="noopener noreferrer"> <i class="iconfont icon-lianjie-copy"></i>链接 </a>`;
       });
@@ -201,22 +195,19 @@ new Vue({
     },
   },
   async mounted() {
-    // Initial data load
     await this.fetchTags();
     await this.fetchData();
     await this.fetchCount();
 
-    // Set up event listener for closing the tags overlay
-    const tagsContainer = document.getElementById("tags-container");
+    const tagsContainer = document.getElementById('tags-container');
     if (tagsContainer) {
-      tagsContainer.addEventListener("click", this.closeTags);
+      tagsContainer.addEventListener('click', this.closeTags);
     }
   },
   beforeDestroy() {
-    // Clean up event listener to prevent memory leaks
-    const tagsContainer = document.getElementById("tags-container");
+    const tagsContainer = document.getElementById('tags-container');
     if (tagsContainer) {
-      tagsContainer.removeEventListener("click", this.closeTags);
+      tagsContainer.removeEventListener('click', this.closeTags);
     }
   },
 });

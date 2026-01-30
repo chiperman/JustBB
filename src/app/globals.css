@@ -4,8 +4,10 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
-  --color-primary: #d97757; /* Terracotta */
-  --color-secondary: #3f6212; /* Deep Olive */
+  --color-primary: #d97757;
+  /* Terracotta */
+  --color-secondary: #3f6212;
+  /* Deep Olive */
   --color-border: #e5e5e0;
 }
 
@@ -24,6 +26,12 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Times New Roman', 'Georgia', serif; /* 默认使用人文衬线体 */
+  font-family: 'Times New Roman', 'Georgia', serif;
+  /* 默认：人文衬线体 */
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.font-sans {
+  font-family: 'Inter', system-ui, sans-serif;
+  /* 无衬线体 */
 }

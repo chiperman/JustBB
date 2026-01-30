@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { deleteMemo, restoreMemo, permanentDeleteMemo } from '@/actions/delete';
 import { updateMemoState } from '@/actions/update';
-import { Trash2, RotateCcw, MoreHorizontal, Share2, MessageSquare, Pin, Lock, LockOpen } from 'lucide-react';
+import { Trash2, RotateCcw, MoreHorizontal, MessageSquare, Pin, Lock, LockOpen } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -12,15 +12,27 @@ import {
     DropdownMenuSeparator,
     DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
+import { MemoShare } from './MemoShare';
 
 interface MemoActionsProps {
     id: string;
     isDeleted: boolean;
     isPinned?: boolean;
     isPrivate?: boolean;
+    content?: string;
+    createdAt?: string;
+    tags?: string[];
 }
 
-export function MemoActions({ id, isDeleted, isPinned = false, isPrivate = false }: MemoActionsProps) {
+export function MemoActions({
+    id,
+    isDeleted,
+    isPinned = false,
+    isPrivate = false,
+    content = '',
+    createdAt = '',
+    tags = []
+}: MemoActionsProps) {
     const [isPending, setIsPending] = useState(false);
 
     const handleDelete = async () => {
@@ -112,9 +124,10 @@ export function MemoActions({ id, isDeleted, isPinned = false, isPrivate = false
             <button className="p-2 hover:bg-muted rounded-full transition-colors" title="回复">
                 <MessageSquare className="w-4 h-4 text-muted-foreground" />
             </button>
-            <button className="p-2 hover:bg-muted rounded-full transition-colors" title="分享">
-                <Share2 className="w-4 h-4 text-muted-foreground" />
-            </button>
+
+            <MemoShare
+                memo={{ id, content, created_at: createdAt, tags }}
+            />
 
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>

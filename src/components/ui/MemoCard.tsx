@@ -90,6 +90,9 @@ export function MemoCard({ memo }: MemoCardProps) {
                         isDeleted={!!memo.deleted_at}
                         isPinned={memo.is_pinned}
                         isPrivate={memo.is_private}
+                        content={memo.content}
+                        createdAt={memo.created_at}
+                        tags={memo.tags}
                     />
                 </div>
             </div>

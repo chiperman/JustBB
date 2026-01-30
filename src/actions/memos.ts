@@ -19,7 +19,7 @@ export async function createMemo(formData: FormData) {
 
     const rawData = {
         content: formData.get('content') as string,
-        tags: (formData.get('tags') as string)?.split(',').filter(Boolean) || [],
+        tags: formData.getAll('tags') as string[],
         is_private: formData.get('is_private') === 'true',
         is_pinned: formData.get('is_pinned') === 'true',
         access_code: formData.get('access_code') as string || undefined,

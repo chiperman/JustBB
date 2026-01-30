@@ -20,6 +20,15 @@ export function LeftSidebar() {
                 <p className="text-xs text-muted-foreground mt-1 font-sans">FRAGMENTED MEMORY</p>
             </div>
 
+            <div className="mb-10">
+                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3 font-sans">
+                    今年记录
+                </h3>
+                <div className="h-24 bg-muted/20 rounded-lg border border-border border-dashed flex items-center justify-center">
+                    <span className="text-[10px] text-muted-foreground">热力图组件待接入</span>
+                </div>
+            </div>
+
             <nav className="flex-1 space-y-2">
                 {navItems.map((item) => (
                     <Link

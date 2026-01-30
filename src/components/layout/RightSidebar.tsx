@@ -8,15 +8,6 @@ export function RightSidebar() {
 
     return (
         <aside className="w-80 h-screen sticky top-0 flex flex-col p-6 border-l border-border bg-background/50 backdrop-blur-md">
-            <div className="mb-10">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-4 font-sans">
-                    记录热力图
-                </h3>
-                <div className="h-32 bg-muted/30 rounded-lg border border-border dashed flex items-center justify-center">
-                    <span className="text-xs text-muted-foreground">此处接入热力图组件</span>
-                </div>
-            </div>
-
             <div className="flex-1">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-6 font-sans">
                     月份归档

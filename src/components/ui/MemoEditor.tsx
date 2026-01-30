@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { createMemo } from '@/actions/memos';
 import { useRouter } from 'next/navigation';
-import { Tag, X } from 'lucide-react';
+import { Tag, X, Pin, Lock, LockOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';;
 
 export function MemoEditor() {
@@ -12,6 +12,8 @@ export function MemoEditor() {
     const [tagInput, setTagInput] = useState('');
     const [isPending, setIsPending] = useState(false);
     const [isTagInputVisible, setIsTagInputVisible] = useState(false);
+    const [isPrivate, setIsPrivate] = useState(false);
+    const [isPinned, setIsPinned] = useState(false);
     const router = useRouter();
 
     const handleAddTag = () => {
@@ -43,15 +45,16 @@ export function MemoEditor() {
         // 处理标签
         tags.forEach(tag => formData.append('tags', tag));
 
-        // 默认非私密、非置顶
-        formData.append('is_private', 'false');
-        formData.append('is_pinned', 'false');
+        formData.append('is_private', String(isPrivate));
+        formData.append('is_pinned', String(isPinned));
 
         const result = await createMemo(formData);
 
         if (result.success) {
             setContent('');
             setTags([]);
+            setIsPrivate(false);
+            setIsPinned(false);
             setIsTagInputVisible(false);
             router.refresh();
         } else {
@@ -98,23 +101,33 @@ export function MemoEditor() {
                         autoFocus
                         onBlur={() => {
                             if (tagInput.trim()) handleAddTag();
-                            // 延时关闭以允许点击发生
-                            // setTagInput(''); 
-                            // setIsTagInputVisible(false); 
                         }}
                     />
                 </div>
             )}
 
             <div className="flex justify-between items-center pt-4 border-t border-border">
-                <div className="flex gap-2">
+                <div className="flex gap-4">
                     <button
                         onClick={() => setIsTagInputVisible(!isTagInputVisible)}
                         className={cn("text-xs flex items-center gap-1 transition-colors", isTagInputVisible ? "text-primary" : "text-muted-foreground hover:text-primary")}
                         title="添加标签"
                     >
-                        <Tag className="w-3.5 h-3.5" />
-                        <span>标签</span>
+                        <Tag className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={() => setIsPrivate(!isPrivate)}
+                        className={cn("text-xs flex items-center gap-1 transition-colors", isPrivate ? "text-primary" : "text-muted-foreground hover:text-primary")}
+                        title={isPrivate ? "私密内容" : "公开内容"}
+                    >
+                        {isPrivate ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
+                    </button>
+                    <button
+                        onClick={() => setIsPinned(!isPinned)}
+                        className={cn("text-xs flex items-center gap-1 transition-colors", isPinned ? "text-primary" : "text-muted-foreground hover:text-primary")}
+                        title={isPinned ? "已置顶" : "置顶"}
+                    >
+                        <Pin className="w-4 h-4" />
                     </button>
                 </div>
                 <button

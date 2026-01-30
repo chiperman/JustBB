@@ -70,7 +70,12 @@ export function MemoCard({ memo }: MemoCardProps) {
                 </div>
 
                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <MemoActions id={memo.id} isDeleted={!!memo.deleted_at} />
+                    <MemoActions
+                        id={memo.id}
+                        isDeleted={!!memo.deleted_at}
+                        isPinned={memo.is_pinned}
+                        isPrivate={memo.is_private}
+                    />
                 </div>
             </div>
 

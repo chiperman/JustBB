@@ -2,6 +2,7 @@
 
 import { LeftSidebar } from "@/components/layout/LeftSidebar";
 import { RightSidebar } from "@/components/layout/RightSidebar";
+import { DataExporter } from "@/components/ui/DataExporter";
 
 export default function AdminPage() {
     return (
@@ -37,6 +38,8 @@ export default function AdminPage() {
                                     </p>
                                 </div>
                             </section>
+
+                            <DataExporter />
                         </div>
                     </div>
                 </main>

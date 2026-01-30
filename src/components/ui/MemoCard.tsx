@@ -1,10 +1,11 @@
 'use client';
 
-import * as React from 'react';
 import { MemoContent } from './MemoContent';
+import { MemoActions } from './MemoActions';
 import { Pin, Lock, Share2, MoreHorizontal, MessageSquare } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -20,10 +21,24 @@ interface MemoCardProps {
         is_private: boolean;
         is_pinned: boolean;
         is_locked: boolean;
+        access_code_hint?: string | null;
+        deleted_at?: string | null;
     };
 }
 
 export function MemoCard({ memo }: MemoCardProps) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    const handleUnlock = () => {
+        const code = prompt(memo.access_code_hint ? `请输入解锁口令\n提示: ${memo.access_code_hint}` : "请输入解锁口令");
+        if (code) {
+            const params = new URLSearchParams(searchParams);
+            params.set('code', code);
+            router.push(`/?${params.toString()}`);
+        }
+    };
+
     return (
         <article className={cn(
             "group relative bg-card border border-border rounded-2xl p-6 transition-all hover:shadow-md",
@@ -81,10 +96,14 @@ export function MemoCard({ memo }: MemoCardProps) {
 
             {/* 锁定覆盖层 (可选) */}
             {memo.is_locked && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/20 backdrop-blur-[2px] rounded-2xl pointer-events-none">
-                    <span className="bg-card border border-border px-4 py-2 rounded-full text-xs font-medium shadow-sm pointer-events-auto cursor-pointer hover:bg-muted transition-colors">
+                <div className="absolute inset-0 flex items-center justify-center bg-background/20 backdrop-blur-[2px] rounded-2xl pointer-events-none z-10">
+                    <button
+                        onClick={handleUnlock}
+                        className="bg-card border border-border px-4 py-2 rounded-full text-xs font-medium shadow-sm pointer-events-auto cursor-pointer hover:bg-muted transition-colors flex items-center gap-2"
+                    >
+                        <Lock className="w-3 h-3" />
                         点击输入口令解锁
-                    </span>
+                    </button>
                 </div>
             )}
         </article>

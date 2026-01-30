@@ -10,7 +10,8 @@ export default async function Home(props: {
 }) {
   const searchParams = await props.searchParams;
   const query = typeof searchParams?.q === 'string' ? searchParams.q : undefined;
-  const memos = (await getMemos({ limit: 20, query })) || [];
+  const adminCode = typeof searchParams?.code === 'string' ? searchParams.code : undefined;
+  const memos = (await getMemos({ limit: 20, query, adminCode })) || [];
 
   return (
     <div className="flex min-h-screen justify-center selection:bg-primary/20">

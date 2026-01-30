@@ -70,12 +70,7 @@ export function MemoCard({ memo }: MemoCardProps) {
                 </div>
 
                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-2 hover:bg-muted rounded-full transition-colors" title="回复">
-                        <MessageSquare className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                    <button className="p-2 hover:bg-muted rounded-full transition-colors" title="分享">
-                        <Share2 className="w-4 h-4 text-muted-foreground" />
-                    </button>
+                    <MemoActions id={memo.id} isDeleted={!!memo.deleted_at} />
                 </div>
             </div>
 

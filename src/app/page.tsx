@@ -1,31 +1,11 @@
-import { MemoCard } from "@/components/ui/MemoCard";
-import { MemoCardSkeleton } from "@/components/ui/MemoCardSkeleton";
+import { getMemos } from "@/actions/fetchMemos";
 import { LeftSidebar } from "@/components/layout/LeftSidebar";
 import { RightSidebar } from "@/components/layout/RightSidebar";
+import { MemoCard } from "@/components/ui/MemoCard";
+import { MemoCardSkeleton } from "@/components/ui/MemoCardSkeleton";
 
-export default function Home() {
-  const mockMemos = [
-    {
-      id: "1",
-      memo_number: 124,
-      content: "重构 JustMemo 的第一天。三栏布局基本搞定，衬线体配合暖白背景确实有种‘纸感’。期待接入数据后的表现。",
-      tags: ["重构日志", "设计系统"],
-      created_at: new Date().toISOString(),
-      is_private: false,
-      is_pinned: true,
-      is_locked: false,
-    },
-    {
-      id: "2",
-      memo_number: 123,
-      content: "这是一条测试私密内容，如果你能看到这段话，说明你有权限。如果没有权限，这段内容应该是模糊的。",
-      tags: ["秘密", "测试"],
-      created_at: new Date(Date.now() - 3600000).toISOString(),
-      is_private: true,
-      is_pinned: false,
-      is_locked: true,
-    }
-  ];
+export default async function Home() {
+  const memos = (await getMemos({ limit: 20 })) || [];
 
   return (
     <div className="flex min-h-screen justify-center selection:bg-primary/20">
@@ -55,10 +35,10 @@ export default function Home() {
 
             {/* 内容列表 */}
             <div className="space-y-8">
-              {mockMemos.map((memo) => (
+              {memos.map((memo: any) => (
                 <MemoCard key={memo.id} memo={memo} />
               ))}
-              <MemoCardSkeleton />
+              {memos.length === 0 && <MemoCardSkeleton />}
             </div>
           </div>
         </main>

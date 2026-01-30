@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { MemoContent } from './MemoContent';
 import { Pin, Lock, Share2, MoreHorizontal, MessageSquare } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -46,11 +47,16 @@ export function MemoCard({ memo }: MemoCardProps) {
             </div>
 
             {/* 内容区域 */}
+            {/* 内容区域 */}
             <div className={cn(
-                "text-base leading-relaxed break-words whitespace-pre-wrap",
+                "w-full",
                 memo.is_locked && "blur-sm select-none"
             )}>
-                {memo.is_locked ? "这一条私密记录已被锁定，输入口令后即可解锁阅读。" : memo.content}
+                {memo.is_locked ? (
+                    <div className="text-base leading-relaxed text-muted-foreground">这一条私密记录已被锁定，输入口令后即可解锁阅读。</div>
+                ) : (
+                    <MemoContent content={memo.content} />
+                )}
             </div>
 
             {/* 底部交互与标签 */}

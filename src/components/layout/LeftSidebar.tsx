@@ -1,7 +1,9 @@
 'use client';
 
+import { Suspense } from 'react';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { FontToggle } from '../ui/FontToggle';
+import { SearchInput } from '../ui/SearchInput';
 import { Home, Tag, Trash2, Settings, Image as GalleryIcon } from 'lucide-react';
 import Link from 'next/link';
 
@@ -19,6 +21,10 @@ export function LeftSidebar() {
                 <h1 className="text-2xl font-bold tracking-tight text-primary">JustMemo</h1>
                 <p className="text-xs text-muted-foreground mt-1 font-sans">FRAGMENTED MEMORY</p>
             </div>
+
+            <Suspense>
+                <SearchInput />
+            </Suspense>
 
             <div className="mb-10">
                 <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3 font-sans">

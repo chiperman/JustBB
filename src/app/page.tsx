@@ -5,8 +5,12 @@ import { MemoCard } from "@/components/ui/MemoCard";
 import { MemoCardSkeleton } from "@/components/ui/MemoCardSkeleton";
 import { MemoEditor } from "@/components/ui/MemoEditor";
 
-export default async function Home() {
-  const memos = (await getMemos({ limit: 20 })) || [];
+export default async function Home(props: {
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const searchParams = await props.searchParams;
+  const query = typeof searchParams?.q === 'string' ? searchParams.q : undefined;
+  const memos = (await getMemos({ limit: 20, query })) || [];
 
   return (
     <div className="flex min-h-screen justify-center selection:bg-primary/20">

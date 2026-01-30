@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { FontToggle } from '../ui/FontToggle';
 import { SearchInput } from '../ui/SearchInput';
+import { TagCloud } from '../ui/TagCloud';
 import { Home, Tag, Trash2, Settings, Image as GalleryIcon } from 'lucide-react';
 import Link from 'next/link';
 
@@ -35,7 +36,7 @@ export function LeftSidebar() {
                 </div>
             </div>
 
-            <nav className="flex-1 space-y-2">
+            <nav className="flex-1 space-y-2 mb-6">
                 {navItems.map((item) => (
                     <Link
                         key={item.label}
@@ -49,6 +50,15 @@ export function LeftSidebar() {
                     </Link>
                 ))}
             </nav>
+
+            <div className="mb-6">
+                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3 font-sans flex items-center gap-2">
+                    <Tag className="w-3 h-3" /> 常用标签
+                </h3>
+                <Suspense fallback={<div className="h-10 animate-pulse bg-muted/20 rounded-md" />}>
+                    <TagCloud />
+                </Suspense>
+            </div>
 
             <div className="mt-auto pt-6 border-t border-border space-y-4">
                 <div className="flex items-center justify-between px-2">

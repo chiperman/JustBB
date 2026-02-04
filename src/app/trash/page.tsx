@@ -1,8 +1,10 @@
 import { getTrashMemos } from "@/actions/fetchTrash";
+import { Suspense } from 'react';
 import { LeftSidebar } from "@/components/layout/LeftSidebar";
 import { RightSidebar } from "@/components/layout/RightSidebar";
 import { MemoCard } from "@/components/ui/MemoCard";
 import { Trash2 } from "lucide-react";
+import { Memo } from "@/types/memo";
 
 export default async function TrashPage() {
     const memos = (await getTrashMemos()) || [];
@@ -10,7 +12,9 @@ export default async function TrashPage() {
     return (
         <div className="flex min-h-screen justify-center selection:bg-primary/20 bg-background/50">
             <div className="flex w-full max-w-(--breakpoint-2xl)">
-                <LeftSidebar />
+                <Suspense fallback={<div className="w-64" />}>
+                    <LeftSidebar />
+                </Suspense>
 
                 <main className="flex-1 min-w-0 bg-background px-4 md:px-8 py-10">
                     <div className="max-w-2xl mx-auto space-y-10">
@@ -28,7 +32,7 @@ export default async function TrashPage() {
                                     垃圾箱空空如也 🍃
                                 </div>
                             ) : (
-                                memos.map((memo: any) => (
+                                memos.map((memo: Memo) => (
                                     <div key={memo.id} className="opacity-75 hover:opacity-100 transition-opacity relative group">
                                         <div className="absolute -left-8 top-6 text-xs text-destructive rotate-[-90deg] hidden lg:block font-mono opacity-50">DELETED</div>
                                         <MemoCard memo={memo} />
@@ -39,7 +43,9 @@ export default async function TrashPage() {
                     </div>
                 </main>
 
-                <RightSidebar />
+                <Suspense fallback={<div className="w-80" />}>
+                    <RightSidebar />
+                </Suspense>
             </div>
         </div>
     );

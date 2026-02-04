@@ -3,7 +3,6 @@
 import * as React from 'react';
 import * as HoverCardPrimitive from '@radix-ui/react-hover-card';
 import { cn } from '@/lib/utils';
-import { getMemos } from '@/actions/fetchMemos';
 import { Loader2 } from 'lucide-react';
 
 const HoverCard = HoverCardPrimitive.Root;
@@ -39,24 +38,15 @@ export function MemoHoverPreview({ memoNumber, children }: MemoHoverPreviewProps
         if (open && !previewContent) {
             setLoading(true);
             try {
-                // We use search by query "#123"? Or logic?
-                // `getMemos` with query might be fuzzy. 
-                // Ideally we need `getMemoByNumber`.
-                // Let's assume we can fetch by query for now or add a specific action.
-                // Re-using fetch logic: query "@memoNumber" might NOT find the memo itself, it finds memos REFERENCING it.
-                // We want to find the memo WITH that number.
-                // So query should be... we don't have a direct "get by number" RPC exposed in fetchMemos easily without changing it.
-                // But wait, search_memos_secure uses `query_text`. 
-                // Does it search memo_number? Probably not unless we check SQL.
-                // Let's creating a specific server action for this to be safe and efficient.
-                const { getMemoByNumber } = await import('@/actions/preview');
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const { getMemoByNumber } = (await import('@/actions/preview')) as any;
                 const memo = await getMemoByNumber(parseInt(memoNumber));
                 if (memo) {
                     setPreviewContent(memo.content);
                 } else {
                     setPreviewContent('Memo not found.');
                 }
-            } catch (e) {
+            } catch {
                 setPreviewContent('Error loading preview.');
             }
             setLoading(false);

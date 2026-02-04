@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { LeftSidebar } from "@/components/layout/LeftSidebar";
 import { RightSidebar } from "@/components/layout/RightSidebar";
 import { DataExporter } from "@/components/ui/DataExporter";
@@ -8,7 +9,9 @@ export default function AdminPage() {
     return (
         <div className="flex min-h-screen justify-center selection:bg-primary/20">
             <div className="flex w-full max-w-(--breakpoint-2xl)">
-                <LeftSidebar />
+                <Suspense fallback={<div className="w-64" />}>
+                    <LeftSidebar />
+                </Suspense>
 
                 <main className="flex-1 min-w-0 bg-background px-4 md:px-8 py-10">
                     <div className="max-w-2xl mx-auto space-y-10">
@@ -44,7 +47,9 @@ export default function AdminPage() {
                     </div>
                 </main>
 
-                <RightSidebar />
+                <Suspense fallback={<div className="w-80" />}>
+                    <RightSidebar />
+                </Suspense>
             </div>
         </div>
     );

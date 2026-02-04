@@ -3,15 +3,14 @@
 import { useEffect, useState } from 'react';
 import { getOnThisDayMemos } from '@/actions/history';
 import { History } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils'; // Assuming cn exists
+import { Memo } from '@/types/memo';
 
 export function OnThisDay() {
-    const [memos, setMemos] = useState<any[]>([]);
+    const [memos, setMemos] = useState<Memo[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getOnThisDayMemos().then(data => {
+        getOnThisDayMemos().then((data: Memo[]) => {
             setMemos(data);
             setLoading(false);
         });

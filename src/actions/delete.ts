@@ -6,8 +6,8 @@ import { revalidatePath } from 'next/cache';
 export async function deleteMemo(id: string) {
     const supabase = getSupabaseAdmin();
     // 软删除: 设置 deleted_at 为当前时间
-    const { error } = await supabase
-        .from('memos')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('memos') as any)
         .update({ deleted_at: new Date().toISOString() })
         .eq('id', id);
 
@@ -23,8 +23,8 @@ export async function deleteMemo(id: string) {
 export async function restoreMemo(id: string) {
     const supabase = getSupabaseAdmin();
     // 恢复: 设置 deleted_at 为 NULL
-    const { error } = await supabase
-        .from('memos')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('memos') as any)
         .update({ deleted_at: null })
         .eq('id', id);
 
@@ -41,8 +41,8 @@ export async function restoreMemo(id: string) {
 export async function permanentDeleteMemo(id: string) {
     const supabase = getSupabaseAdmin();
     // 硬删除
-    const { error } = await supabase
-        .from('memos')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('memos') as any)
         .delete()
         .eq('id', id);
 

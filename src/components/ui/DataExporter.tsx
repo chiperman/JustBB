@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { exportAllMemos } from '@/actions/export';
 import { FileDown, FileJson, Loader2 } from 'lucide-react';
+import { Memo } from '@/types/memo';
 
 export function DataExporter() {
     const [loading, setLoading] = useState(false);
@@ -18,7 +19,7 @@ export function DataExporter() {
             }
 
             let blob: Blob;
-            let filename = `JustMemo-Backup-${new Date().toISOString().slice(0, 10)}`;
+            let filename = `JustBB-Backup-${new Date().toISOString().slice(0, 10)}`;
 
             if (format === 'json') {
                 blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -27,10 +28,10 @@ export function DataExporter() {
                 // Generate CSV
                 try {
                     // Simple CSV conversion
-                    const headers = ['id', 'memo_number', 'content', 'created_at', 'tags', 'is_private', 'deleted_at'];
+                    const headers: (keyof Memo)[] = ['id', 'memo_number', 'content', 'created_at', 'tags', 'is_private', 'deleted_at'];
                     const csvContent = [
                         headers.join(','),
-                        ...data.map((item: any) => {
+                        ...data.map((item: Memo) => {
                             return headers.map(key => {
                                 let val = item[key];
                                 if (Array.isArray(val)) val = val.join(';');

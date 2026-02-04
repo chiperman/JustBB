@@ -7,15 +7,11 @@ import { Tag, X, Pin, Lock, LockOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { updateMemoContent } from '@/actions/update';
 
+import { Memo } from '@/types/memo';
+
 interface MemoEditorProps {
     mode?: 'create' | 'edit';
-    memo?: {
-        id: string;
-        content: string;
-        tags: string[];
-        is_private: boolean;
-        is_pinned: boolean;
-    };
+    memo?: Memo;
     onCancel?: () => void;
     onSuccess?: () => void;
 }

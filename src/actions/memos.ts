@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 import bcrypt from 'bcryptjs';
+import { Memo } from '@/types/memo';
 
 const CreateMemoSchema = z.object({
     content: z.string().min(1, '内容不能为空'),
@@ -14,9 +15,7 @@ const CreateMemoSchema = z.object({
     access_code_hint: z.string().optional(),
 });
 
-export async function createMemo(formData: FormData) {
-    'use server';
-
+export async function createMemo(formData: FormData): Promise<{ success: boolean; error: string | null; data?: Memo }> { // Added return type and data?: Memo
     const rawData = {
         content: formData.get('content') as string,
         tags: formData.getAll('tags') as string[],
@@ -29,10 +28,12 @@ export async function createMemo(formData: FormData) {
     const validated = CreateMemoSchema.safeParse(rawData);
 
     if (!validated.success) {
-        return { error: validated.error.flatten().fieldErrors };
+        // Simplified error return to match the new return type
+        return { success: false, error: validated.error.flatten().fieldErrors.content?.[0] || '输入验证失败' };
     }
 
     const { access_code, ...rest } = validated.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const insertData: any = { ...rest };
 
     if (access_code) {
@@ -41,17 +42,17 @@ export async function createMemo(formData: FormData) {
     }
 
     const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
-        .from('memos')
-        .insert([insertData as any])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.from('memos') as any)
+        .insert([insertData])
         .select()
         .single();
 
     if (error) {
         console.error('Error creating memo:', error);
-        return { error: '创建失败，请稍后重试' };
+        return { success: false, error: '创建失败，请稍后重试' };
     }
 
     revalidatePath('/');
-    return { success: true, data };
+    return { success: true, error: null, data: data as Memo }; // Ensured data is returned as Memo type
 }

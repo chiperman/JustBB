@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "release": "standard-version"
   },
   "dependencies": {
@@ -44,5 +46,10 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.0.18"
+  },
+  "standard-version": {
+    "scripts": {
+      "prerelease": "npm run lint && npm run test && npm run build"
+    }
   }
 }

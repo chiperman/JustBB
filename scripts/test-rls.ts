@@ -64,6 +64,7 @@ async function runTest() {
             console.error('   Error calling RPC:', rpcError);
             process.exit(1);
         } else {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const target = rpcData.find((m: any) => m.id === memo.id);
             if (!target) {
                 console.error('   ⚠️ WARN: Test memo not found in RPC results. (Maybe limit too small?)');

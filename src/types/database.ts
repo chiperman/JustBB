@@ -55,7 +55,7 @@ export type Database = {
                     input_code?: string;
                     limit_val?: number;
                     offset_val?: number;
-                    filters?: any;
+                    filters?: Record<string, unknown>;
                 };
                 Returns: {
                     id: string;

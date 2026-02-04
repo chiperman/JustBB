@@ -1,14 +1,25 @@
 'use server';
 
 import { supabase } from '@/lib/supabase';
+import { Memo } from '@/types/memo';
 
-export async function exportMemos(format: 'json' | 'markdown') {
+export async function exportAllMemos(): Promise<{ data: Memo[] | null; error: string | null }> {
     const { data, error } = await supabase
         .from('memos')
         .select('*')
-        .eq('is_private', false)
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Export error:', error);
+        return { data: null, error: error.message };
+    }
+
+    return { data: data as Memo[], error: null };
+}
+
+export async function exportMemos(format: 'json' | 'markdown'): Promise<string> {
+    const { data, error } = await exportAllMemos();
 
     if (error || !data) {
         throw new Error('Failed to fetch memos');
@@ -22,7 +33,7 @@ export async function exportMemos(format: 'json' | 'markdown') {
             return `---
 id: ${memo.id}
 date: ${date}
-tags: ${memo.tags?.join(', ')}
+tags: ${memo.tags?.join(', ') || ''}
 ---
 
 ${memo.content}

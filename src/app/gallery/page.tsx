@@ -1,4 +1,5 @@
 import { getGalleryMemos } from "@/actions/fetchMemos";
+import { Suspense } from 'react';
 import { LeftSidebar } from "@/components/layout/LeftSidebar";
 import { RightSidebar } from "@/components/layout/RightSidebar";
 import { GalleryGrid } from "@/components/gallery/GalleryGrid";
@@ -10,7 +11,9 @@ export default async function GalleryPage() {
         <div className="flex min-h-screen justify-center selection:bg-primary/20">
             <div className="flex w-full max-w-(--breakpoint-2xl)">
                 {/* 左侧导航 */}
-                <LeftSidebar />
+                <Suspense fallback={<div className="w-64" />}>
+                    <LeftSidebar />
+                </Suspense>
 
                 {/* 内容区域 */}
                 <main className="flex-1 min-w-0 bg-background px-4 md:px-8 py-10">
@@ -25,7 +28,9 @@ export default async function GalleryPage() {
                 </main>
 
                 {/* 右侧边栏 */}
-                <RightSidebar />
+                <Suspense fallback={<div className="w-80" />}>
+                    <RightSidebar />
+                </Suspense>
             </div>
         </div>
     );

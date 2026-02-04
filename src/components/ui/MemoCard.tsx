@@ -13,19 +13,10 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+import { Memo } from '@/types/memo';
+
 interface MemoCardProps {
-    memo: {
-        id: string;
-        memo_number: number;
-        content: string;
-        created_at: string;
-        tags: string[];
-        is_private: boolean;
-        is_pinned: boolean;
-        is_locked: boolean;
-        access_code_hint?: string | null;
-        deleted_at?: string | null;
-    };
+    memo: Memo;
 }
 
 export function MemoCard({ memo }: MemoCardProps) {
@@ -44,7 +35,7 @@ export function MemoCard({ memo }: MemoCardProps) {
     };
 
     const [showBacklinks, setShowBacklinks] = useState(false);
-    const [backlinks, setBacklinks] = useState<any[]>([]);
+    const [backlinks, setBacklinks] = useState<Memo[]>([]);
     const [loadingBacklinks, setLoadingBacklinks] = useState(false);
 
     const toggleBacklinks = async () => {
@@ -142,7 +133,7 @@ export function MemoCard({ memo }: MemoCardProps) {
             {/* 底部交互与标签 */}
             <div className="mt-6 flex items-center justify-between gap-4">
                 <div className="flex flex-wrap gap-2">
-                    {memo.tags.map(tag => (
+                    {memo.tags?.map(tag => (
                         <span key={tag} className="text-xs text-primary bg-primary/5 px-2 py-0.5 rounded-full hover:bg-primary/10 cursor-pointer transition-colors">
                             #{tag}
                         </span>
@@ -157,7 +148,7 @@ export function MemoCard({ memo }: MemoCardProps) {
                         isPrivate={memo.is_private}
                         content={memo.content}
                         createdAt={memo.created_at}
-                        tags={memo.tags}
+                        tags={memo.tags ?? []}
                         onEdit={() => setIsEditing(true)}
                     />
                 </div>

@@ -3,27 +3,20 @@
 import { useState, useRef, useCallback } from 'react';
 import { toPng } from 'html-to-image';
 import { QRCodeSVG } from 'qrcode.react';
-import { Download, Share2, Loader2, Link as LinkIcon, Camera } from 'lucide-react';
+import { Download, Share2, Loader2 } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-    DialogClose,
 } from '@/components/ui/dialog';
-import { MemoContent } from './MemoContent';
-import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { Memo } from '@/types/memo';
 
 interface MemoShareProps {
-    memo: {
-        id: string;
-        content: string;
-        created_at: string;
-        tags: string[];
-    };
+    memo: Memo;
     trigger?: React.ReactNode;
 }
 

@@ -4,6 +4,7 @@ import { RightSidebar } from "@/components/layout/RightSidebar";
 import { MemoCard } from "@/components/ui/MemoCard";
 import { MemoCardSkeleton } from "@/components/ui/MemoCardSkeleton";
 import { MemoEditor } from "@/components/ui/MemoEditor";
+import { Memo } from "@/types/memo";
 import { MemoFeed } from '@/components/ui/MemoFeed';
 
 export default async function Home(props: {
@@ -16,7 +17,7 @@ export default async function Home(props: {
   const yearStr = typeof searchParams?.year === 'string' ? searchParams.year : undefined;
   const monthStr = typeof searchParams?.month === 'string' ? searchParams.month : undefined;
 
-  let memos = [];
+  let memos: Memo[] = [];
   if (yearStr && monthStr) {
     const year = parseInt(yearStr);
     const month = parseInt(monthStr);

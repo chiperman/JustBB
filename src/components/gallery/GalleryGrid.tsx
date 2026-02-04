@@ -1,11 +1,11 @@
 'use client';
 
-import { Memo } from '@/types/database';
+import { Memo } from '@/types/memo';
 import { format } from 'date-fns';
 import Link from 'next/link';
 
 interface GalleryGridProps {
-    memos: any[]; // Using any to avoid strict type issues with Memo type vs RPC return, though they should match mostly
+    memos: Memo[];
 }
 
 export function GalleryGrid({ memos }: GalleryGridProps) {
@@ -35,7 +35,7 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
                     {/* Image */}
                     <div className="aspect-auto w-full relative">
                         <img
-                            src={item.imageUrl}
+                            src={item.imageUrl || ''}
                             alt="Memo Image"
                             className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
                             loading="lazy"

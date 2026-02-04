@@ -10,6 +10,7 @@ export function FontToggle() {
     useEffect(() => {
         const saved = localStorage.getItem('font-preference');
         if (saved === 'sans') {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsSans(true);
             document.body.classList.add('font-sans');
         }

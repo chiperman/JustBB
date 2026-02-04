@@ -12,7 +12,9 @@ import {
     DropdownMenuSeparator,
     DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
+import { MemoCard } from './MemoCard';
 import { MemoShare } from './MemoShare';
+import { Memo } from '@/types/memo';
 
 interface MemoActionsProps {
     id: string;
@@ -128,7 +130,7 @@ export function MemoActions({
             </button>
 
             <MemoShare
-                memo={{ id, content, created_at: createdAt, tags }}
+                memo={{ id, content, created_at: createdAt, tags, is_pinned: isPinned, is_private: isPrivate, memo_number: 0 } as Memo}
             />
 
             <DropdownMenu>

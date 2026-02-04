@@ -29,6 +29,7 @@ export async function updateMemoState(formData: FormData) {
     }
 
     const { id, is_private, is_pinned, access_code, access_code_hint } = validated.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
 
     if (is_private !== undefined) updateData.is_private = is_private;
@@ -42,8 +43,8 @@ export async function updateMemoState(formData: FormData) {
     }
 
     const supabase = getSupabaseAdmin();
-    const { error } = await supabase
-        .from('memos')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('memos') as any)
         .update(updateData)
         .eq('id', id);
 
@@ -52,7 +53,6 @@ export async function updateMemoState(formData: FormData) {
         return { error: '状态更新失败' };
     }
 
-    revalidatePath('/');
     revalidatePath('/');
     return { success: true };
 }
@@ -77,14 +77,14 @@ export async function updateMemoContent(formData: FormData) {
     const validated = UpdateMemoContentSchema.safeParse(rawData);
 
     if (!validated.success) {
-        return { error: '参数校验失败: ' + validated.error.errors[0].message };
+        return { error: '参数校验失败: ' + validated.error.issues[0].message };
     }
 
     const { id, content, tags, is_private, is_pinned } = validated.data;
 
     const supabase = getSupabaseAdmin();
-    const { error } = await supabase
-        .from('memos')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('memos') as any)
         .update({
             content,
             tags,

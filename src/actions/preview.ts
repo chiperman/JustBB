@@ -1,10 +1,11 @@
 'use server';
 
 import { supabase } from '@/lib/supabase';
+import { Memo } from '@/types/memo';
 
-export async function getMemoByNumber(memoNumber: number) {
-    const { data, error } = await supabase
-        .from('memos')
+export async function getMemoByNumber(memoNumber: number): Promise<Memo | null> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.from('memos') as any)
         .select('content')
         .eq('memo_number', memoNumber)
         .eq('is_private', false)
@@ -14,5 +15,5 @@ export async function getMemoByNumber(memoNumber: number) {
     if (error) {
         return null;
     }
-    return data;
+    return data as Memo;
 }

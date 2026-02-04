@@ -2,8 +2,10 @@
 
 import { MemoContent } from './MemoContent';
 import { MemoActions } from './MemoActions';
+import { MemoEditor } from './MemoEditor';
 import { Pin, Lock, Share2, MoreHorizontal, MessageSquare } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
+import { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -30,6 +32,8 @@ export function MemoCard({ memo }: MemoCardProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
+    const [isEditing, setIsEditing] = useState(false);
+
     const handleUnlock = () => {
         const code = prompt(memo.access_code_hint ? `请输入解锁口令\n提示: ${memo.access_code_hint}` : "请输入解锁口令");
         if (code) {
@@ -38,6 +42,34 @@ export function MemoCard({ memo }: MemoCardProps) {
             router.push(`/?${params.toString()}`);
         }
     };
+
+    const [showBacklinks, setShowBacklinks] = useState(false);
+    const [backlinks, setBacklinks] = useState<any[]>([]);
+    const [loadingBacklinks, setLoadingBacklinks] = useState(false);
+
+    const toggleBacklinks = async () => {
+        if (!showBacklinks && backlinks.length === 0) {
+            setLoadingBacklinks(true);
+            const { getBacklinks } = await import('@/actions/references');
+            const data = await getBacklinks(memo.memo_number);
+            setBacklinks(data);
+            setLoadingBacklinks(false);
+        }
+        setShowBacklinks(!showBacklinks);
+    };
+
+    if (isEditing) {
+        return (
+            <article className="bg-card border border-border rounded-2xl p-6 shadow-md ring-2 ring-primary/20">
+                <MemoEditor
+                    mode="edit"
+                    memo={memo}
+                    onCancel={() => setIsEditing(false)}
+                    onSuccess={() => setIsEditing(false)}
+                />
+            </article>
+        );
+    }
 
     return (
         <article className={cn(
@@ -56,9 +88,21 @@ export function MemoCard({ memo }: MemoCardProps) {
                     {memo.is_pinned && <Pin className="w-3.5 h-3.5 text-primary fill-primary" />}
                     {memo.is_private && <Lock className="w-3.5 h-3.5 text-muted-foreground" />}
                 </div>
-                <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded-md transition-all">
-                    <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={toggleBacklinks}
+                        className={cn(
+                            "text-xs px-2 py-1 rounded transition-colors opacity-0 group-hover:opacity-100",
+                            showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground hover:bg-muted"
+                        )}
+                        title="查看引用"
+                    >
+                        refs
+                    </button>
+                    <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded-md transition-all">
+                        <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                </div>
             </div>
 
             {/* 内容区域 */}
@@ -73,6 +117,27 @@ export function MemoCard({ memo }: MemoCardProps) {
                     <MemoContent content={memo.content} />
                 )}
             </div>
+
+            {/* 引用展示区 */}
+            {showBacklinks && (
+                <div className="mt-4 pt-4 border-t border-border animate-in fade-in slide-in-from-top-1">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">Refers to this:</p>
+                    {loadingBacklinks ? (
+                        <div className="text-xs text-muted-foreground">Loading...</div>
+                    ) : backlinks.length > 0 ? (
+                        <div className="space-y-2">
+                            {backlinks.map(link => (
+                                <div key={link.id} className="text-xs bg-muted/30 p-2 rounded flex justify-between items-center group/link">
+                                    <span className="text-muted-foreground truncate max-w-[200px]">{link.content.substring(0, 30)}...</span>
+                                    <a href={`/?q=${link.memo_number}`} className="text-primary hover:underline">#{link.memo_number}</a>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-xs text-muted-foreground italic">No references found.</div>
+                    )}
+                </div>
+            )}
 
             {/* 底部交互与标签 */}
             <div className="mt-6 flex items-center justify-between gap-4">
@@ -93,6 +158,7 @@ export function MemoCard({ memo }: MemoCardProps) {
                         content={memo.content}
                         createdAt={memo.created_at}
                         tags={memo.tags}
+                        onEdit={() => setIsEditing(true)}
                     />
                 </div>
             </div>

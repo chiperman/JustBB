@@ -5,6 +5,8 @@ import { ThemeToggle } from '../ui/ThemeToggle';
 import { FontToggle } from '../ui/FontToggle';
 import { SearchInput } from '../ui/SearchInput';
 import { TagCloud } from '../ui/TagCloud';
+import { Heatmap } from '../ui/Heatmap';
+import { OnThisDay } from '../ui/OnThisDay';
 import { Home, Tag, Trash2, Settings, Image as GalleryIcon } from 'lucide-react';
 import Link from 'next/link';
 
@@ -31,8 +33,8 @@ export function LeftSidebar() {
                 <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3 font-sans">
                     今年记录
                 </h3>
-                <div className="h-24 bg-muted/20 rounded-lg border border-border border-dashed flex items-center justify-center">
-                    <span className="text-[10px] text-muted-foreground">热力图组件待接入</span>
+                <div className="bg-muted/10 rounded-lg border border-border/50 p-2">
+                    <Heatmap />
                 </div>
             </div>
 
@@ -60,18 +62,34 @@ export function LeftSidebar() {
                 </Suspense>
             </div>
 
+            <OnThisDay />
+
             <div className="mt-auto pt-6 border-t border-border space-y-4">
                 <div className="flex items-center justify-between px-2">
                     <ThemeToggle />
                     <FontToggle />
                 </div>
-                <Link
-                    href="/admin"
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-all group"
-                >
-                    <Settings className="w-5 h-5 text-muted-foreground group-hover:text-primary" />
-                    <span className="text-sm font-medium">系统配置</span>
-                </Link>
+                <div className="flex gap-2">
+                    <button
+                        onClick={async () => {
+                            if (!confirm('Download all memos as Markdown?')) return;
+                            const { exportMemos } = await import('@/actions/export');
+                            const data = await exportMemos('markdown');
+                            const blob = new Blob([data], { type: 'text/markdown' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `justbb_export_${new Date().toISOString().slice(0, 10)}.md`;
+                            a.click();
+                        }}
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-all group flex-1"
+                        title="Export Markdown"
+                    >
+                        <Settings className="w-5 h-5 text-muted-foreground group-hover:text-primary" />
+                        <span className="text-sm font-medium">Export</span>
+                    </button>
+                    {/* Admin Link or other settings could go here */}
+                </div>
             </div>
         </aside>
     );

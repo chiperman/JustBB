@@ -53,5 +53,52 @@ export async function updateMemoState(formData: FormData) {
     }
 
     revalidatePath('/');
+    revalidatePath('/');
+    return { success: true };
+}
+
+const UpdateMemoContentSchema = z.object({
+    id: z.string(),
+    content: z.string().min(1, '内容不能为空'),
+    tags: z.array(z.string()).optional(),
+    is_private: z.boolean().optional(),
+    is_pinned: z.boolean().optional(),
+});
+
+export async function updateMemoContent(formData: FormData) {
+    const rawData = {
+        id: formData.get('id') as string,
+        content: formData.get('content') as string,
+        tags: formData.getAll('tags') as string[],
+        is_private: formData.get('is_private') === 'true',
+        is_pinned: formData.get('is_pinned') === 'true',
+    };
+
+    const validated = UpdateMemoContentSchema.safeParse(rawData);
+
+    if (!validated.success) {
+        return { error: '参数校验失败: ' + validated.error.errors[0].message };
+    }
+
+    const { id, content, tags, is_private, is_pinned } = validated.data;
+
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+        .from('memos')
+        .update({
+            content,
+            tags,
+            is_private,
+            is_pinned,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+    if (error) {
+        console.error('Error updating memo content:', error);
+        return { error: '更新失败' };
+    }
+
+    revalidatePath('/');
     return { success: true };
 }

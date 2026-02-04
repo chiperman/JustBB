@@ -4,16 +4,30 @@ import { useState } from 'react';
 import { createMemo } from '@/actions/memos';
 import { useRouter } from 'next/navigation';
 import { Tag, X, Pin, Lock, LockOpen } from 'lucide-react';
-import { cn } from '@/lib/utils';;
+import { cn } from '@/lib/utils';
+import { updateMemoContent } from '@/actions/update';
 
-export function MemoEditor() {
-    const [content, setContent] = useState('');
-    const [tags, setTags] = useState<string[]>([]);
+interface MemoEditorProps {
+    mode?: 'create' | 'edit';
+    memo?: {
+        id: string;
+        content: string;
+        tags: string[];
+        is_private: boolean;
+        is_pinned: boolean;
+    };
+    onCancel?: () => void;
+    onSuccess?: () => void;
+}
+
+export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoEditorProps) {
+    const [content, setContent] = useState(memo?.content || '');
+    const [tags, setTags] = useState<string[]>(memo?.tags || []);
     const [tagInput, setTagInput] = useState('');
     const [isPending, setIsPending] = useState(false);
     const [isTagInputVisible, setIsTagInputVisible] = useState(false);
-    const [isPrivate, setIsPrivate] = useState(false);
-    const [isPinned, setIsPinned] = useState(false);
+    const [isPrivate, setIsPrivate] = useState(memo?.is_private || false);
+    const [isPinned, setIsPinned] = useState(memo?.is_pinned || false);
     const router = useRouter();
 
     const handleAddTag = () => {
@@ -41,24 +55,32 @@ export function MemoEditor() {
         setIsPending(true);
         const formData = new FormData();
         formData.append('content', content);
-
-        // 处理标签
         tags.forEach(tag => formData.append('tags', tag));
-
         formData.append('is_private', String(isPrivate));
         formData.append('is_pinned', String(isPinned));
 
-        const result = await createMemo(formData);
+        let result;
+        if (mode === 'edit' && memo) {
+            formData.append('id', memo.id);
+            result = await updateMemoContent(formData);
+        } else {
+            result = await createMemo(formData);
+        }
 
         if (result.success) {
-            setContent('');
-            setTags([]);
-            setIsPrivate(false);
-            setIsPinned(false);
-            setIsTagInputVisible(false);
-            router.refresh();
+            if (mode === 'create') {
+                setContent('');
+                setTags([]);
+                setIsPrivate(false);
+                setIsPinned(false);
+                setIsTagInputVisible(false);
+                router.refresh();
+            } else {
+                onSuccess?.();
+                router.refresh();
+            }
         } else {
-            alert(typeof result.error === 'string' ? result.error : '发布失败');
+            alert(typeof result.error === 'string' ? result.error : '操作失败');
         }
         setIsPending(false);
     };
@@ -71,6 +93,12 @@ export function MemoEditor() {
                 rows={3}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                onKeyDown={(e) => {
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                        e.preventDefault();
+                        handlePublish();
+                    }
+                }}
                 disabled={isPending}
             />
 
@@ -130,13 +158,23 @@ export function MemoEditor() {
                         <Pin className="w-4 h-4" />
                     </button>
                 </div>
-                <button
-                    onClick={handlePublish}
-                    disabled={isPending || !content.trim()}
-                    className="bg-primary text-white px-6 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
-                >
-                    {isPending ? '发布中...' : '发布'}
-                </button>
+                <div className="flex gap-2">
+                    {mode === 'edit' && (
+                        <button
+                            onClick={onCancel}
+                            className="text-muted-foreground px-4 py-2 rounded-full text-sm font-medium hover:bg-muted transition-colors"
+                        >
+                            取消
+                        </button>
+                    )}
+                    <button
+                        onClick={handlePublish}
+                        disabled={isPending || !content.trim()}
+                        className="bg-primary text-white px-6 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+                    >
+                        {isPending ? (mode === 'edit' ? '更新中...' : '发布中...') : (mode === 'edit' ? '更新' : '发布')}
+                    </button>
+                </div>
             </div>
         </section>
     );

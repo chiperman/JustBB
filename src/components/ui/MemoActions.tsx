@@ -22,6 +22,7 @@ interface MemoActionsProps {
     content?: string;
     createdAt?: string;
     tags?: string[];
+    onEdit?: () => void;
 }
 
 export function MemoActions({
@@ -31,7 +32,8 @@ export function MemoActions({
     isPrivate = false,
     content = '',
     createdAt = '',
-    tags = []
+    tags = [],
+    onEdit
 }: MemoActionsProps) {
     const [isPending, setIsPending] = useState(false);
 
@@ -136,6 +138,12 @@ export function MemoActions({
                     </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                    {!isDeleted && (
+                        <DropdownMenuItem onClick={onEdit}>
+                            <MessageSquare className="w-4 h-4 mr-2" />
+                            编辑
+                        </DropdownMenuItem>
+                    )}
                     <DropdownMenuCheckboxItem
                         checked={isPinned}
                         onCheckedChange={handleTogglePin}

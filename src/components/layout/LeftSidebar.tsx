@@ -44,7 +44,7 @@ export function LeftSidebar() {
                 )}
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-primary shrink-0"
+                    className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-primary shrink-0 cursor-pointer"
                     aria-label={isCollapsed ? "展开侧边栏" : "收起侧边栏"}
                 >
                     {isCollapsed ? <PanelLeftOpen className="w-5 h-5" aria-hidden="true" /> : <PanelLeftClose className="w-5 h-5" aria-hidden="true" />}
@@ -116,7 +116,7 @@ export function LeftSidebar() {
                                 a.download = `justbb_export_${new Date().toISOString().slice(0, 10)}.md`;
                                 a.click();
                             }}
-                            className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted transition-all group w-full text-left"
+                            className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted transition-all group w-full text-left cursor-pointer"
                             aria-label="导出数据"
                         >
                             <Settings className="w-5 h-5 text-muted-foreground group-hover:text-primary shrink-0" aria-hidden="true" />

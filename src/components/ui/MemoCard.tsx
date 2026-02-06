@@ -75,7 +75,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                     <button
                         onClick={toggleBacklinks}
                         className={cn(
-                            "text-xs px-2 py-1 rounded transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
+                            "text-xs px-2 py-1 rounded transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-primary/20 cursor-pointer",
                             showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground hover:bg-muted",
                             !shouldReduceMotion && "active:scale-95"
                         )}

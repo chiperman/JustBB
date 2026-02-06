@@ -122,7 +122,7 @@ export function RightSidebar() {
                                                         key={day}
                                                         href={`#${linkId}`}
                                                         className={cn(
-                                                            "text-xs transition-colors block py-0.5 pl-2 border-l-2 -ml-[17px]",
+                                                            "text-xs transition-colors block py-0.5 pl-2 border-l-2 -ml-[17px] cursor-pointer",
                                                             isActive
                                                                 ? "border-primary text-primary font-medium"
                                                                 : "border-transparent text-muted-foreground/60 hover:text-primary"

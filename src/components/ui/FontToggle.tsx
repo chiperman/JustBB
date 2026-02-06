@@ -31,7 +31,7 @@ export function FontToggle() {
     return (
         <button
             onClick={toggleFont}
-            className="p-2 w-10 h-10 flex items-center justify-center border border-border rounded-full hover:bg-muted transition-colors"
+            className="p-2 w-10 h-10 flex items-center justify-center border border-border rounded-full hover:bg-muted transition-colors cursor-pointer"
             title={`当前字体: ${isSans ? '无衬线' : '衬线'}`}
             aria-label={`切换字体，当前: ${isSans ? '无衬线' : '衬线'}`}
         >

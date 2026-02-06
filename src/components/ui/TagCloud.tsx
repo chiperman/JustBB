@@ -33,11 +33,8 @@ export const TagCloud = memo(function TagCloud() {
 
     if (tags.length === 0) {
         return (
-            <div className="h-24 bg-muted/20 rounded-lg border border-border dashed flex items-center justify-center">
-                <div className="text-center">
-                    <Tag className="w-4 h-4 text-muted-foreground mx-auto mb-1 opacity-50" />
-                    <span className="text-[10px] text-muted-foreground">暂无标签</span>
-                </div>
+            <div className="text-xs text-muted-foreground/50 py-2">
+                暂无标签
             </div>
         );
     }

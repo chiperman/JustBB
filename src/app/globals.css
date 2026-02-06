@@ -47,18 +47,19 @@
   --heatmap-4: #39d353;
 }
 
-html {
-  overflow-x: hidden;
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Times New Roman', 'Georgia', serif;
   /* 默认：人文衬线体 */
   transition: background-color 0.3s ease, color 0.3s ease;
-  width: 100vw;
-  overflow-x: hidden;
+}
+
+html,
+body {
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+  scroll-behavior: smooth;
 }
 
 body.font-sans {

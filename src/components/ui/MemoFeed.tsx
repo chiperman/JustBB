@@ -81,11 +81,26 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
     return (
         <div className="space-y-6">
             <div className="columns-1 gap-4 space-y-4">
-                {memos.map((memo) => (
-                    <div key={memo.id} className="break-inside-avoid">
-                        <MemoCard memo={memo} />
-                    </div>
-                ))}
+                {memos.map((memo, index) => {
+                    const currentDate = new Date(memo.created_at).toISOString().split('T')[0];
+                    const prevDate = index > 0
+                        ? new Date(memos[index - 1].created_at).toISOString().split('T')[0]
+                        : null;
+                    const isFirstOfDay = currentDate !== prevDate;
+
+                    return (
+                        <div key={memo.id} className="break-inside-avoid relative">
+                            {isFirstOfDay && (
+                                <div
+                                    id={`date-${currentDate}`}
+                                    className="absolute -top-20 invisible"
+                                    aria-hidden="true"
+                                />
+                            )}
+                            <MemoCard memo={memo} />
+                        </div>
+                    );
+                })}
             </div>
 
             {hasMore && (

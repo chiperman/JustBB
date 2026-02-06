@@ -31,23 +31,28 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
     return (
         <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
             {galleryItems.map((item) => (
-                <div key={item.id} className="break-inside-avoid group relative rounded-xl overflow-hidden bg-muted/10 border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg">
+                <div
+                    key={item.id}
+                    tabIndex={0}
+                    className="break-inside-avoid group relative rounded-xl overflow-hidden bg-muted/10 border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    aria-label={`查看由 ${format(new Date(item.created_at), 'yyyy-MM-dd')} 发布的图片 Memo`}
+                >
                     {/* Image */}
                     <div className="aspect-auto w-full relative">
                         <img
                             src={item.imageUrl || ''}
-                            alt="Memo Image"
+                            alt="Memo multimedia content"
                             className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
                             loading="lazy"
                         />
                         {/* Overlay Gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
                             <p className="text-white text-xs line-clamp-2 mb-2 font-medium leading-relaxed">
                                 {item.content.replace(/!\[.*?\]\((.*?)\)/g, '').trim() || '图片分享'}
                             </p>
                             <div className="flex justify-between items-center text-[10px] text-white/60">
                                 <span>{format(new Date(item.created_at), 'yyyy-MM-dd')}</span>
-                                <span className="px-2 py-0.5 bg-white/10 rounded-full backdrop-blur-sm">View</span>
+                                <span className="px-2 py-0.5 bg-white/10 rounded-full backdrop-blur-sm" aria-hidden="true">View</span>
                             </div>
                         </div>
                     </div>

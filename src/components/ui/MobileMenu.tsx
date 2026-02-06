@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 interface MobileMenuButtonProps {
     isOpen: boolean;
@@ -17,9 +17,9 @@ export function MobileMenuButton({ isOpen, onClick }: MobileMenuButtonProps) {
             aria-label={isOpen ? '关闭菜单' : '打开菜单'}
         >
             {isOpen ? (
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
             ) : (
-                <Menu className="w-5 h-5" />
+                <Menu className="w-5 h-5" aria-hidden="true" />
             )}
         </button>
     );
@@ -32,6 +32,8 @@ interface MobileMenuOverlayProps {
 }
 
 export function MobileMenuOverlay({ isOpen, onClose, children }: MobileMenuOverlayProps) {
+    const shouldReduceMotion = useReducedMotion();
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -41,17 +43,21 @@ export function MobileMenuOverlay({ isOpen, onClose, children }: MobileMenuOverl
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
                         className="lg:hidden fixed inset-0 bg-black/50 z-40"
                         onClick={onClose}
+                        aria-hidden="true"
                     />
                     {/* 侧边栏 */}
                     <motion.div
                         initial={{ x: '-100%' }}
                         animate={{ x: 0 }}
                         exit={{ x: '-100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                        transition={shouldReduceMotion ? { duration: 0 } : { type: 'spring', damping: 25, stiffness: 300 }}
                         className="lg:hidden fixed left-0 top-0 h-full w-72 z-50 bg-background shadow-xl"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="移动端菜单"
                     >
                         {children}
                     </motion.div>

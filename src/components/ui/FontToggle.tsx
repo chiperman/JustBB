@@ -33,8 +33,9 @@ export function FontToggle() {
             onClick={toggleFont}
             className="p-2 w-10 h-10 flex items-center justify-center border border-border rounded-full hover:bg-muted transition-colors"
             title={`当前字体: ${isSans ? '无衬线' : '衬线'}`}
+            aria-label={`切换字体，当前: ${isSans ? '无衬线' : '衬线'}`}
         >
-            <Type className="w-4 h-4" />
+            <Type className="w-4 h-4" aria-hidden="true" />
         </button>
     );
 }

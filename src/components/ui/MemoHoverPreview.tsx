@@ -64,7 +64,7 @@ export function MemoHoverPreview({ memoNumber, children }: MemoHoverPreviewProps
                     <div className="text-sm">
                         {loading ? (
                             <div className="flex items-center gap-2 text-muted-foreground">
-                                <Loader2 className="w-3 h-3 animate-spin" />
+                                <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
                                 Loading...
                             </div>
                         ) : (

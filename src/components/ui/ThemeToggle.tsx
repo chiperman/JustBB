@@ -35,10 +35,13 @@ export function ThemeToggle() {
     return (
         <button
             onClick={cycleTheme}
-            className="p-2 w-10 h-10 flex items-center justify-center border border-border rounded-full hover:bg-muted transition-colors"
+            className="p-2 w-10 h-10 flex items-center justify-center border border-border rounded-full hover:bg-muted transition-colors focus-visible:ring-2 focus-visible:ring-primary outline-none"
             title={`当前主题: ${currentTheme.label}`}
+            aria-label={`切换主题，当前: ${currentTheme.label}`}
         >
-            {currentTheme.icon}
+            {currentTheme.name === 'light' && <Sun className="w-4 h-4" aria-hidden="true" />}
+            {currentTheme.name === 'dark' && <Moon className="w-4 h-4" aria-hidden="true" />}
+            {currentTheme.name === 'system' && <Monitor className="w-4 h-4" aria-hidden="true" />}
         </button>
     );
 }

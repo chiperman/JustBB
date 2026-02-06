@@ -71,22 +71,27 @@ export function MemoCard({ memo }: MemoCardProps) {
                     <time className="text-xs text-muted-foreground font-sans">
                         {new Date(memo.created_at).toLocaleString('zh-CN', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </time>
-                    {memo.is_pinned && <Pin className="w-3.5 h-3.5 text-primary fill-primary" />}
-                    {memo.is_private && <Lock className="w-3.5 h-3.5 text-muted-foreground" />}
+                    {memo.is_pinned && <Pin className="w-3.5 h-3.5 text-primary fill-primary" aria-hidden="true" />}
+                    {memo.is_private && <Lock className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />}
                 </div>
                 <div className="flex items-center gap-2">
                     <button
                         onClick={toggleBacklinks}
                         className={cn(
-                            "text-xs px-2 py-1 rounded transition-colors opacity-0 group-hover:opacity-100",
+                            "text-xs px-2 py-1 rounded transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
                             showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground hover:bg-muted"
                         )}
+                        aria-expanded={showBacklinks}
+                        aria-label="查看引用"
                         title="查看引用"
                     >
                         refs
                     </button>
-                    <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded-md transition-all">
-                        <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                    <button
+                        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1 hover:bg-muted rounded-md transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+                        aria-label="更多操作"
+                    >
+                        <MoreHorizontal className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                     </button>
                 </div>
             </div>
@@ -135,7 +140,7 @@ export function MemoCard({ memo }: MemoCardProps) {
                     ))}
                 </div>
 
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                     <MemoActions
                         id={memo.id}
                         isDeleted={!!memo.deleted_at}
@@ -156,7 +161,7 @@ export function MemoCard({ memo }: MemoCardProps) {
                         onClick={handleUnlock}
                         className="bg-card border border-border px-4 py-2 rounded-full text-xs font-medium shadow-sm pointer-events-auto cursor-pointer hover:bg-muted transition-colors flex items-center gap-2"
                     >
-                        <Lock className="w-3 h-3" />
+                        <Lock className="w-3 h-3" aria-hidden="true" />
                         点击输入口令解锁
                     </button>
                 </div>

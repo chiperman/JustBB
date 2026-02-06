@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createMemo } from '@/actions/memos';
 import { useRouter } from 'next/navigation';
-import { Tag, X, Pin, Lock, LockOpen } from 'lucide-react';
+import { Tag, X, Pin, Lock, LockOpen, Hash } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { updateMemoContent } from '@/actions/update';
 import { searchMemosForMention } from '@/actions/search';
@@ -206,16 +206,17 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
 
     return (
         <section className="bg-card border border-border rounded-2xl p-6 shadow-sm transition-all focus-within:shadow-md relative">
-            <div className="relative">
+            <div className="relative group">
+                <label htmlFor="memo-content" className="sr-only">Memo内容</label>
                 <textarea
+                    id="memo-content"
                     ref={textareaRef}
-                    className="w-full bg-transparent border-none focus:ring-0 placeholder:text-muted-foreground italic text-sm resize-none mb-2"
-                    placeholder="记录此刻的灵感..."
-                    rows={3}
+                    placeholder="有什么新鲜事？"
                     value={content}
-                    onChange={handleContentChange}
+                    onChange={(e) => setContent(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    disabled={isPending}
+                    className="w-full bg-transparent border-none focus:ring-0 text-lg leading-relaxed resize-none p-0 placeholder:text-muted-foreground/40 font-serif"
+                    rows={mode === 'edit' ? 8 : 4}
                 />
 
                 {showSuggestions && (
@@ -231,64 +232,67 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
 
             {/* 标签展示区 */}
             {tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-3">
+                <div className="flex flex-wrap gap-2 items-center">
                     {tags.map(tag => (
-                        <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                        <span key={tag} className="inline-flex items-center gap-1 bg-primary/5 text-primary text-xs px-2 py-1 rounded-full group/tag animate-in zoom-in-95 duration-200">
                             #{tag}
-                            <button onClick={() => handleRemoveTag(tag)} className="hover:text-destructive">
-                                <X className="w-3 h-3" />
+                            <button
+                                onClick={() => handleRemoveTag(tag)}
+                                className="hover:text-red-500 transition-colors focus:outline-none focus:ring-1 focus:ring-red-400 rounded-full"
+                                aria-label={`删除标签 #${tag}`}
+                            >
+                                <X className="w-3 h-3" aria-hidden="true" />
                             </button>
                         </span>
                     ))}
-                </div>
-            )}
-
-            {/* 标签输入框 */}
-            {isTagInputVisible && (
-                <div className="relative mb-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <input
-                        type="text"
-                        value={tagInput}
-                        onChange={(e) => handleTagInputChange(e.target.value)}
-                        onKeyDown={handleTagInputKeyDown}
-                        placeholder="输入标签并回车..."
-                        className="text-xs bg-muted/50 border border-border rounded px-2 py-1 outline-none focus:ring-1 focus:ring-primary w-32"
-                        autoFocus
-                    />
-                    {showTagSuggestions && (
-                        <div className="absolute top-full left-0 mt-1 z-50">
-                            <SuggestionList
-                                items={tagSuggestions}
-                                activeIndex={activeIndex}
-                                onSelect={handleSelectTag}
+                    <div className="relative">
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 border border-transparent focus-within:border-primary/30 focus-within:bg-background transition-all">
+                            <Hash className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+                            <input
+                                type="text"
+                                placeholder="添加标签..."
+                                value={tagInput}
+                                onChange={(e) => setTagInput(e.target.value)}
+                                onKeyDown={handleTagInputKeyDown}
+                                className="bg-transparent border-none focus:ring-0 text-xs p-0 w-20 placeholder:text-muted-foreground/50"
+                                aria-label="添加标签"
                             />
                         </div>
-                    )}
+                        {showTagSuggestions && (
+                            <div className="absolute top-full left-0 mt-1 z-50">
+                                <SuggestionList
+                                    items={tagSuggestions}
+                                    activeIndex={activeIndex}
+                                    onSelect={handleSelectTag}
+                                />
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 
             <div className="flex justify-between items-center pt-4 border-t border-border">
-                <div className="flex gap-4">
-                    <button
-                        onClick={() => setIsTagInputVisible(!isTagInputVisible)}
-                        className={cn("text-xs flex items-center gap-1 transition-colors", isTagInputVisible ? "text-primary" : "text-muted-foreground hover:text-primary")}
-                        title="添加标签"
-                    >
-                        <Tag className="w-4 h-4" />
-                    </button>
+                <div className="flex items-center gap-4">
                     <button
                         onClick={() => setIsPrivate(!isPrivate)}
-                        className={cn("text-xs flex items-center gap-1 transition-colors", isPrivate ? "text-primary" : "text-muted-foreground hover:text-primary")}
-                        title={isPrivate ? "私密内容" : "公开内容"}
+                        className={cn(
+                            "text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 p-1 rounded",
+                            isPrivate ? "text-primary" : "text-muted-foreground hover:text-primary"
+                        )}
+                        aria-label={isPrivate ? "设为公开内容" : "设为私密内容"}
                     >
-                        {isPrivate ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
+                        {isPrivate ? <Lock className="w-3 h-3" aria-hidden="true" /> : <LockOpen className="w-3 h-3" aria-hidden="true" />}
+                        Private
                     </button>
                     <button
                         onClick={() => setIsPinned(!isPinned)}
-                        className={cn("text-xs flex items-center gap-1 transition-colors", isPinned ? "text-primary" : "text-muted-foreground hover:text-primary")}
-                        title={isPinned ? "已置顶" : "置顶"}
+                        className={cn(
+                            "text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 p-1 rounded",
+                            isPinned ? "text-primary" : "text-muted-foreground hover:text-primary"
+                        )}
+                        aria-label={isPinned ? "取消置顶" : "置顶此内容"}
                     >
-                        <Pin className="w-4 h-4" />
+                        <Pin className="w-3 h-3" aria-hidden="true" /> Pin
                     </button>
                 </div>
                 <div className="flex gap-2">

@@ -81,17 +81,21 @@ export function DataExporter() {
                 <button
                     onClick={() => handleExport('json')}
                     disabled={loading}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 text-sm font-medium transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none"
+                    aria-label="导出完整数据为 JSON 格式"
+                    aria-busy={loading}
                 >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileJson className="w-4 h-4" />}
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <FileJson className="w-4 h-4" aria-hidden="true" />}
                     导出 JSON (完整)
                 </button>
                 <button
                     onClick={() => handleExport('csv')}
                     disabled={loading}
-                    className="flex items-center gap-2 px-4 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md disabled:opacity-50 text-sm font-medium transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md disabled:opacity-50 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none"
+                    aria-label="导出数据为 CSV 格式"
+                    aria-busy={loading}
                 >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <FileDown className="w-4 h-4" aria-hidden="true" />}
                     导出 CSV
                 </button>
             </div>

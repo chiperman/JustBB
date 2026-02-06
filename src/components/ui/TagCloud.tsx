@@ -46,17 +46,19 @@ export function TagCloud() {
                         key={tag_name}
                         onClick={() => handleTagClick(tag_name)}
                         className={cn(
-                            "text-xs px-2 py-1 rounded-md transition-colors flex items-center gap-1.5",
+                            "text-xs px-2 py-1 rounded-md transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20",
                             isActive
                                 ? "bg-primary text-primary-foreground font-medium shadow-sm"
                                 : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
+                        aria-label={`标签 #${tag_name}，共有 ${count} 条记录`}
+                        aria-pressed={isActive}
                     >
-                        <span>#{tag_name}</span>
+                        <span aria-hidden="true">#{tag_name}</span>
                         <span className={cn(
                             "text-[10px]",
                             isActive ? "text-primary-foreground/80" : "text-muted-foreground/60"
-                        )}>{count}</span>
+                        )} aria-hidden="true">{count}</span>
                     </button>
                 );
             })}

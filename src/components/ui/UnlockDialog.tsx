@@ -47,7 +47,7 @@ export function UnlockDialog({ isOpen, onClose, hint }: UnlockDialogProps) {
             <DialogContent className="sm:max-w-md bg-card border-border">
                 <DialogHeader>
                     <div className="flex items-center gap-2 text-primary mb-2">
-                        <Lock className="w-5 h-5" />
+                        <Lock className="w-5 h-5" aria-hidden="true" />
                         <DialogTitle>请输入解锁口令</DialogTitle>
                     </div>
                     {hint && (
@@ -58,7 +58,9 @@ export function UnlockDialog({ isOpen, onClose, hint }: UnlockDialogProps) {
                     )}
                 </DialogHeader>
                 <div className="py-4">
+                    <label htmlFor="unlock-code" className="sr-only">解锁口令</label>
                     <input
+                        id="unlock-code"
                         type="password"
                         placeholder="口令..."
                         className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm"
@@ -67,7 +69,7 @@ export function UnlockDialog({ isOpen, onClose, hint }: UnlockDialogProps) {
                         onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
                         autoFocus
                     />
-                    {error && <p className="text-xs text-red-500 mt-2 ml-1">{error}</p>}
+                    {error && <p className="text-xs text-red-500 mt-2 ml-1" role="alert">{error}</p>}
                 </div>
                 <DialogFooter className="sm:justify-end gap-2">
                     <button

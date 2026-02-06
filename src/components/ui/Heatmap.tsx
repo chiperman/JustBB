@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { getMemoStats } from '@/actions/stats';
-import { subDays, format, eachDayOfInterval, differenceInDays, startOfDay } from 'date-fns';
+import { startOfDay, subDays, format, eachDayOfInterval, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { HeatmapModal } from './HeatmapModal';
+import { useReducedMotion } from 'framer-motion';
 
 // 定义接口以匹配 actions/stats.ts 的返回值
 interface HeatmapStats {
@@ -18,6 +19,7 @@ export function Heatmap() {
     const [stats, setStats] = useState<HeatmapStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [hoveredDate, setHoveredDate] = useState<{ date: string; count: number; left: number; top: number } | null>(null);
+    const shouldReduceMotion = useReducedMotion();
 
     useEffect(() => {
         getMemoStats().then((data) => {
@@ -41,11 +43,11 @@ export function Heatmap() {
 
     // 计算颜色等级 (GitHub 风格)
     const getColorClass = (count: number) => {
-        if (count === 0) return 'bg-[#ebedf0]';
-        if (count <= 2) return 'bg-[#9be9a8]';
-        if (count <= 5) return 'bg-[#40c463]';
-        if (count <= 9) return 'bg-[#30a14e]';
-        return 'bg-[#216e39]';
+        if (count === 0) return 'bg-[#ebedf0] dark:bg-[#2d333b]';
+        if (count <= 2) return 'bg-[#9be9a8] dark:bg-[#0e4429]';
+        if (count <= 5) return 'bg-[#40c463] dark:bg-[#006d32]';
+        if (count <= 9) return 'bg-[#30a14e] dark:bg-[#26a641]';
+        return 'bg-[#216e39] dark:bg-[#39d353]';
     };
 
     if (loading) {
@@ -93,8 +95,12 @@ export function Heatmap() {
                             return (
                                 <div
                                     key={dateStr}
+                                    tabIndex={0}
+                                    role="gridcell"
+                                    aria-label={`${dateStr}: ${count} 记录`}
                                     className={cn(
-                                        "w-[14px] h-[14px] rounded-[4px] transition-all duration-300 cursor-pointer hover:scale-110",
+                                        "w-[14px] h-[14px] rounded-[4px] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 outline-none",
+                                        !shouldReduceMotion && "hover:scale-110",
                                         getColorClass(count)
                                     )}
                                     onMouseEnter={(e) => {
@@ -107,6 +113,24 @@ export function Heatmap() {
                                                 left: rect.left - containerRect.left + 7,
                                                 top: rect.top - containerRect.top
                                             });
+                                        }
+                                    }}
+                                    onFocus={(e) => {
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        const containerRect = e.currentTarget.offsetParent?.getBoundingClientRect();
+                                        if (containerRect) {
+                                            setHoveredDate({
+                                                date: format(date, 'yyyy-MM-dd'),
+                                                count,
+                                                left: rect.left - containerRect.left + 7,
+                                                top: rect.top - containerRect.top
+                                            });
+                                        }
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            // 可以在由于这里是弹窗触发器，所以实际点击行为由 Trigger 包裹实现
                                         }
                                     }}
                                 />

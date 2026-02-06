@@ -17,10 +17,10 @@ export function LeftSidebar() {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     const navItems = [
-        { icon: <Home className="w-5 h-5" />, label: '流信息', href: '/' },
-        { icon: <GalleryIcon className="w-5 h-5" />, label: '画廊', href: '/gallery' },
-        { icon: <Tag className="w-5 h-5" />, label: '标签', href: '/tags' },
-        { icon: <Trash2 className="w-5 h-5" />, label: '垃圾箱', href: '/trash' },
+        { icon: <Home className="w-5 h-5" aria-hidden="true" />, label: '流信息', href: '/' },
+        { icon: <GalleryIcon className="w-5 h-5" aria-hidden="true" />, label: '画廊', href: '/gallery' },
+        { icon: <Tag className="w-5 h-5" aria-hidden="true" />, label: '标签', href: '/tags' },
+        { icon: <Trash2 className="w-5 h-5" aria-hidden="true" />, label: '垃圾箱', href: '/trash' },
     ];
 
     return (
@@ -45,15 +45,16 @@ export function LeftSidebar() {
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
                     className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-primary shrink-0"
+                    aria-label={isCollapsed ? "展开侧边栏" : "收起侧边栏"}
                 >
-                    {isCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
+                    {isCollapsed ? <PanelLeftOpen className="w-5 h-5" aria-hidden="true" /> : <PanelLeftClose className="w-5 h-5" aria-hidden="true" />}
                 </button>
             </div>
 
             <Suspense>
                 {!isCollapsed ? <SearchInput /> : (
                     <div className="w-full flex justify-center mb-6">
-                        <Home className="w-5 h-5 text-muted-foreground opacity-20" />
+                        <Home className="w-5 h-5 text-muted-foreground opacity-20" aria-hidden="true" />
                     </div>
                 )}
             </Suspense>
@@ -97,7 +98,7 @@ export function LeftSidebar() {
             {!isCollapsed && (
                 <div className="mb-8 overflow-hidden">
                     <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 font-sans flex items-center gap-2">
-                        <Tag className="w-3 h-3" /> 常用标签
+                        <Tag className="w-3 h-3" aria-hidden="true" /> 常用标签
                     </h3>
                     <Suspense fallback={<div className="h-10 animate-pulse bg-muted/20 rounded-md" />}>
                         <TagCloud />
@@ -128,8 +129,9 @@ export function LeftSidebar() {
                                 a.click();
                             }}
                             className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted transition-all group w-full text-left"
+                            aria-label="导出数据"
                         >
-                            <Settings className="w-5 h-5 text-muted-foreground group-hover:text-primary shrink-0" />
+                            <Settings className="w-5 h-5 text-muted-foreground group-hover:text-primary shrink-0" aria-hidden="true" />
                             <span className="text-sm font-medium">Export Data</span>
                         </button>
                     </>

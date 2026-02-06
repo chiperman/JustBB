@@ -57,8 +57,8 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
         <Dialog>
             <DialogTrigger asChild>
                 {trigger || (
-                    <button className="p-2 hover:bg-muted rounded-full transition-colors outline-none" title="分享">
-                        <Share2 className="w-4 h-4 text-muted-foreground" />
+                    <button className="p-2 hover:bg-muted rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/20" title="分享" aria-label="生成海报分享">
+                        <Share2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                     </button>
                 )}
             </DialogTrigger>
@@ -128,7 +128,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                         保存图片
                     </button>
                     <button
-                        className="flex-1 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors"
+                        className="flex-1 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
                         onClick={() => {
                             if (navigator.share) {
                                 navigator.share({
@@ -142,8 +142,9 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                                 alert('链接与内容已复制');
                             }
                         }}
+                        aria-label="更多分享方式"
                     >
-                        <Share2 className="w-4 h-4 mr-2" />
+                        <Share2 className="w-4 h-4 mr-2" aria-hidden="true" />
                         更多分享
                     </button>
                 </div>

@@ -83,13 +83,34 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
             <div className="columns-1 gap-4 space-y-4">
                 {memos.map((memo, index) => {
                     const currentDate = new Date(memo.created_at).toISOString().split('T')[0];
-                    const prevDate = index > 0
-                        ? new Date(memos[index - 1].created_at).toISOString().split('T')[0]
-                        : null;
-                    const isFirstOfDay = currentDate !== prevDate;
+                    const currentYear = currentDate.split('-')[0];
+                    const currentMonth = currentDate.split('-')[1];
+
+                    const prevMemo = index > 0 ? memos[index - 1] : null;
+                    const prevDateFull = prevMemo ? new Date(prevMemo.created_at).toISOString().split('T')[0] : null;
+                    const prevYear = prevDateFull ? prevDateFull.split('-')[0] : null;
+                    const prevMonth = prevDateFull ? prevDateFull.split('-')[1] : null;
+
+                    const isFirstOfYear = currentYear !== prevYear;
+                    const isFirstOfMonth = currentMonth !== prevMonth || isFirstOfYear;
+                    const isFirstOfDay = currentDate !== prevDateFull;
 
                     return (
                         <div key={memo.id} className="break-inside-avoid relative animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-backwards" style={{ animationDelay: `${index * 50}ms` }}>
+                            {isFirstOfYear && (
+                                <div
+                                    id={`year-${currentYear}`}
+                                    className="absolute -top-24 invisible"
+                                    aria-hidden="true"
+                                />
+                            )}
+                            {isFirstOfMonth && (
+                                <div
+                                    id={`month-${currentYear}-${parseInt(currentMonth)}`}
+                                    className="absolute -top-20 invisible"
+                                    aria-hidden="true"
+                                />
+                            )}
                             {isFirstOfDay && (
                                 <div
                                     id={`date-${currentDate}`}

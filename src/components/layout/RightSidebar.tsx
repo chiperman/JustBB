@@ -104,12 +104,26 @@ export function RightSidebar() {
                     {timeline.map((yearGroup) => (
                         <TimelineItem key={yearGroup.year}>
                             <TimelineDot />
-                            <TimelineHeading>{yearGroup.year}</TimelineHeading>
+                            <TimelineHeading>
+                                <a
+                                    href={`#year-${yearGroup.year}`}
+                                    className="hover:text-primary transition-colors cursor-pointer"
+                                    onClick={() => setActiveId(`year-${yearGroup.year}`)}
+                                >
+                                    {yearGroup.year}
+                                </a>
+                            </TimelineHeading>
                             <TimelineContent>
                                 {yearGroup.months.map((monthGroup) => (
                                     <div key={monthGroup.month} className="relative">
                                         <h5 className="text-xs font-medium text-muted-foreground mb-2">
-                                            {monthNames[monthGroup.month]}
+                                            <a
+                                                href={`#month-${yearGroup.year}-${monthGroup.month}`}
+                                                className="hover:text-primary transition-colors cursor-pointer"
+                                                onClick={() => setActiveId(`month-${yearGroup.year}-${monthGroup.month}`)}
+                                            >
+                                                {monthNames[monthGroup.month]}
+                                            </a>
                                         </h5>
                                         <div className="flex flex-col gap-1">
                                             {monthGroup.days.map((day) => {

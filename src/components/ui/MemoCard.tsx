@@ -3,15 +3,11 @@
 import { MemoContent } from './MemoContent';
 import { MemoActions } from './MemoActions';
 import { MemoEditor } from './MemoEditor';
-import { Pin, Lock, Share2, MoreHorizontal, MessageSquare } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
+import { Pin, Lock, MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
-import { twMerge } from 'tailwind-merge';
-import { useRouter, useSearchParams } from 'next/navigation';
-
-function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs));
-}
+import { useRouter } from 'next/navigation';
+import { cn, formatDate } from '@/lib/utils';
+import { useReducedMotion } from 'framer-motion';
 
 import { Memo } from '@/types/memo';
 import { UnlockDialog } from './UnlockDialog';
@@ -24,6 +20,7 @@ export function MemoCard({ memo }: MemoCardProps) {
     const router = useRouter();
     const [isEditing, setIsEditing] = useState(false);
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
+    const shouldReduceMotion = useReducedMotion();
 
     const handleUnlock = () => {
         setIsUnlockOpen(true);
@@ -46,7 +43,7 @@ export function MemoCard({ memo }: MemoCardProps) {
 
     if (isEditing) {
         return (
-            <article className="bg-card border border-border rounded-2xl p-6 shadow-md ring-2 ring-primary/20">
+            <article className="bg-card border border-border rounded-2xl p-6 shadow-md ring-2 ring-primary/20 animate-in fade-in duration-200">
                 <MemoEditor
                     mode="edit"
                     memo={memo}
@@ -59,7 +56,7 @@ export function MemoCard({ memo }: MemoCardProps) {
 
     return (
         <article className={cn(
-            "group relative bg-card border border-border rounded-2xl p-6 transition-all hover:shadow-md",
+            "group relative bg-card border border-border rounded-2xl p-6 transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-primary/10",
             memo.is_pinned && "border-primary/30 bg-primary/5"
         )}>
             {/* 顶部元信息 */}
@@ -69,7 +66,7 @@ export function MemoCard({ memo }: MemoCardProps) {
                         #{memo.memo_number}
                     </span>
                     <time className="text-xs text-muted-foreground font-sans">
-                        {new Date(memo.created_at).toLocaleString('zh-CN', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {formatDate(memo.created_at)}
                     </time>
                     {memo.is_pinned && <Pin className="w-3.5 h-3.5 text-primary fill-primary" aria-hidden="true" />}
                     {memo.is_private && <Lock className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />}
@@ -78,8 +75,9 @@ export function MemoCard({ memo }: MemoCardProps) {
                     <button
                         onClick={toggleBacklinks}
                         className={cn(
-                            "text-xs px-2 py-1 rounded transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
-                            showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground hover:bg-muted"
+                            "text-xs px-2 py-1 rounded transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
+                            showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground hover:bg-muted",
+                            !shouldReduceMotion && "active:scale-95"
                         )}
                         aria-expanded={showBacklinks}
                         aria-label="查看引用"
@@ -88,7 +86,10 @@ export function MemoCard({ memo }: MemoCardProps) {
                         refs
                     </button>
                     <button
-                        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1 hover:bg-muted rounded-md transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+                        className={cn(
+                            "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1 hover:bg-muted rounded-md transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
+                            !shouldReduceMotion && "active:scale-90"
+                        )}
                         aria-label="更多操作"
                     >
                         <MoreHorizontal className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
@@ -97,13 +98,12 @@ export function MemoCard({ memo }: MemoCardProps) {
             </div>
 
             {/* 内容区域 */}
-            {/* 内容区域 */}
             <div className={cn(
-                "w-full",
+                "w-full transition-all",
                 memo.is_locked && "blur-sm select-none"
             )}>
                 {memo.is_locked ? (
-                    <div className="text-base leading-relaxed text-muted-foreground">这一条私密记录已被锁定，输入口令后即可解锁阅读。</div>
+                    <div className="text-base leading-relaxed text-muted-foreground italic opacity-60">这一条私密记录已被锁定，输入口令后即可解锁阅读。</div>
                 ) : (
                     <MemoContent content={memo.content} />
                 )}
@@ -111,16 +111,29 @@ export function MemoCard({ memo }: MemoCardProps) {
 
             {/* 引用展示区 */}
             {showBacklinks && (
-                <div className="mt-4 pt-4 border-t border-border animate-in fade-in slide-in-from-top-1">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2">Refers to this:</p>
+                <div
+                    className="mt-4 pt-4 border-t border-border animate-in fade-in slide-in-from-top-1 duration-200"
+                    id={`backlinks-${memo.id}`}
+                    role="region"
+                    aria-label="反向引用列表"
+                >
+                    <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                        <span className="w-1 h-3 bg-primary/30 rounded-full" />
+                        Refered by:
+                    </p>
                     {loadingBacklinks ? (
-                        <div className="text-xs text-muted-foreground">Loading...</div>
+                        <div className="text-xs text-muted-foreground animate-pulse">Loading references...</div>
                     ) : backlinks.length > 0 ? (
                         <div className="space-y-2">
                             {backlinks.map(link => (
-                                <div key={link.id} className="text-xs bg-muted/30 p-2 rounded flex justify-between items-center group/link">
+                                <div key={link.id} className="text-xs bg-muted/30 p-2 rounded-lg flex justify-between items-center group/link hover:bg-muted/50 transition-colors">
                                     <span className="text-muted-foreground truncate max-w-[200px]">{link.content.substring(0, 30)}...</span>
-                                    <a href={`/?q=${link.memo_number}`} className="text-primary hover:underline">#{link.memo_number}</a>
+                                    <a
+                                        href={`/?q=${link.memo_number}`}
+                                        className="text-primary font-mono font-medium hover:underline focus-visible:ring-1 focus-visible:ring-primary/40 rounded px-1"
+                                    >
+                                        #{link.memo_number}
+                                    </a>
                                 </div>
                             ))}
                         </div>
@@ -132,9 +145,14 @@ export function MemoCard({ memo }: MemoCardProps) {
 
             {/* 底部交互与标签 */}
             <div className="mt-6 flex items-center justify-between gap-4">
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2" role="list" aria-label="标签列表">
                     {memo.tags?.map(tag => (
-                        <span key={tag} className="text-xs text-primary bg-primary/5 px-2 py-0.5 rounded-full hover:bg-primary/10 cursor-pointer transition-colors">
+                        <span
+                            key={tag}
+                            role="listitem"
+                            className="text-xs text-primary bg-primary/5 px-2 py-0.5 rounded-full hover:bg-primary/10 cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 outline-none"
+                            tabIndex={0}
+                        >
                             #{tag}
                         </span>
                     ))}
@@ -154,15 +172,19 @@ export function MemoCard({ memo }: MemoCardProps) {
                 </div>
             </div>
 
-            {/* 锁定覆盖层 (可选) */}
+            {/* 锁定覆盖层 */}
             {memo.is_locked && (
                 <div className="absolute inset-0 flex items-center justify-center bg-background/20 backdrop-blur-[2px] rounded-2xl pointer-events-none z-10">
                     <button
                         onClick={handleUnlock}
-                        className="bg-card border border-border px-4 py-2 rounded-full text-xs font-medium shadow-sm pointer-events-auto cursor-pointer hover:bg-muted transition-colors flex items-center gap-2"
+                        className={cn(
+                            "bg-card border border-border px-5 py-2.5 rounded-full text-xs font-medium shadow-md pointer-events-auto cursor-pointer hover:bg-muted hover:shadow-lg transition-all flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ring-offset-2",
+                            !shouldReduceMotion && "active:scale-95"
+                        )}
+                        aria-label="解密内容"
                     >
-                        <Lock className="w-3 h-3" aria-hidden="true" />
-                        点击输入口令解锁
+                        <Lock className="w-3 h-3 text-primary" aria-hidden="true" />
+                        <span>解密记录以阅读正文</span>
                     </button>
                 </div>
             )}

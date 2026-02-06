@@ -4,10 +4,13 @@ import { useEffect, useState } from 'react';
 import { getOnThisDayMemos } from '@/actions/history';
 import { History } from 'lucide-react';
 import { Memo } from '@/types/memo';
+import { cn } from '@/lib/utils';
+import { useReducedMotion } from 'framer-motion';
 
 export function OnThisDay() {
     const [memos, setMemos] = useState<Memo[]>([]);
     const [loading, setLoading] = useState(true);
+    const shouldReduceMotion = useReducedMotion();
 
     useEffect(() => {
         getOnThisDayMemos().then((data: Memo[]) => {
@@ -19,24 +22,37 @@ export function OnThisDay() {
     if (loading || memos.length === 0) return null;
 
     return (
-        <div className="mb-6 animate-in fade-in slide-in-from-left-1 duration-500">
-            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3 font-sans flex items-center gap-2">
-                <History className="w-3 h-3" aria-hidden="true" /> 去年今日
+        <section
+            className="mb-8 animate-in fade-in slide-in-from-left-2 duration-700"
+            aria-labelledby="history-title"
+        >
+            <h3
+                id="history-title"
+                className="text-[10px] font-bold text-primary/70 uppercase tracking-[0.2em] mb-4 font-sans flex items-center gap-2"
+            >
+                <History className="w-3.5 h-3.5" aria-hidden="true" /> 去年今日
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-4" role="list">
                 {memos.map((memo) => (
-                    <li key={memo.id} className="bg-muted/10 border border-border/50 rounded-lg p-3 text-sm hover:bg-muted/20 transition-colors group cursor-default">
-                        <div className="flex justify-between items-center mb-1">
-                            <span className="text-[10px] text-muted-foreground font-mono">
+                    <li
+                        key={memo.id}
+                        className={cn(
+                            "bg-muted/10 border border-border/40 rounded-xl p-4 text-sm hover:bg-muted/20 hover:border-border/80 transition-all group lg:last:hidden xl:last:block outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
+                            !shouldReduceMotion && "hover:translate-x-1"
+                        )}
+                        tabIndex={0}
+                    >
+                        <div className="flex justify-between items-center mb-1.5">
+                            <span className="text-[10px] font-mono font-bold text-primary/40 group-hover:text-primary transition-colors">
                                 {new Date(memo.created_at).getFullYear()}
                             </span>
                         </div>
-                        <p className="line-clamp-3 text-muted-foreground/80 group-hover:text-primary/80 transition-colors text-xs leading-relaxed">
+                        <p className="line-clamp-4 text-muted-foreground/90 group-hover:text-foreground transition-colors text-[13px] leading-relaxed font-serif">
                             {memo.content}
                         </p>
                     </li>
                 ))}
             </ul>
-        </div>
+        </section>
     );
 }

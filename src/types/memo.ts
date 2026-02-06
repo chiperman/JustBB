@@ -12,3 +12,8 @@ export interface Memo {
     updated_at?: string;
     deleted_at?: string | null;
 }
+
+export interface TagStat {
+    tag_name: string;
+    count: number;
+}

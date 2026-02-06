@@ -18,7 +18,7 @@ export function MemoContent({ content, className }: MemoContentProps) {
         const tokens = parseContentTokens(text);
 
         return (
-            <>
+            <div role="presentation">
                 {tokens.map((token, index) => {
                     switch (token.type) {
                         case 'ref':
@@ -27,7 +27,8 @@ export function MemoContent({ content, className }: MemoContentProps) {
                                 <MemoHoverPreview key={`ref-${index}`} memoNumber={memoNum} memoId={memoNum}>
                                     <Link
                                         href={`/?q=${memoNum}`}
-                                        className="text-primary hover:underline cursor-pointer font-mono bg-primary/10 px-1 rounded mx-0.5 inline-block"
+                                        className="text-primary hover:underline cursor-pointer font-mono bg-primary/10 px-1 rounded mx-0.5 inline-block focus-visible:ring-1 focus-visible:ring-primary/30 outline-none"
+                                        aria-label={`查看引用记录 #${memoNum}`}
                                     >
                                         {token.value}
                                     </Link>
@@ -38,30 +39,31 @@ export function MemoContent({ content, className }: MemoContentProps) {
                                 <Link
                                     key={`tag-${index}`}
                                     href={`/?tag=${encodeURIComponent(token.value.slice(1))}`}
-                                    className="text-primary hover:underline mx-0.5"
+                                    className="text-primary hover:underline mx-0.5 focus-visible:ring-1 focus-visible:ring-primary/30 outline-none rounded"
+                                    aria-label={`查看包含 #${token.value.slice(1)} 标签的记录`}
                                 >
                                     {token.value}
                                 </Link>
                             );
                         case 'image':
                             return (
-                                <span key={`img-${index}`} className="block my-2 rounded-lg overflow-hidden border border-border">
+                                <span key={`img-${index}`} className="block my-2 rounded-xl overflow-hidden border border-border bg-muted/5 shadow-sm">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={token.value} alt="memo-image" className="max-h-64 object-contain bg-muted/20 mx-auto" loading="lazy" />
+                                    <img src={token.value} alt="记录中的图片附件" className="max-h-80 object-contain mx-auto transition-transform hover:scale-[1.02] duration-300" loading="lazy" />
                                 </span>
                             );
                         case 'code':
                             return (
-                                <div key={`code-${index}`} className="my-2">
+                                <div key={`code-${index}`} className="my-3 ring-1 ring-border rounded-xl overflow-hidden shadow-sm">
                                     <CodeBlock language={token.lang || "typescript"} value={token.value} />
                                 </div>
                             );
                         case 'text':
                         default:
-                            return <span key={`text-${index}`}>{token.value}</span>;
+                            return <span key={`text-${index}`} className="text-foreground/90">{token.value}</span>;
                     }
                 })}
-            </>
+            </div>
         );
     };
 

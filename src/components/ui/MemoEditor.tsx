@@ -3,14 +3,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { createMemo } from '@/actions/memos';
 import { useRouter } from 'next/navigation';
-import { Tag, X, Pin, Lock, LockOpen, Hash } from 'lucide-react';
+import { X, Pin, Lock, LockOpen, Hash } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { updateMemoContent } from '@/actions/update';
 import { searchMemosForMention } from '@/actions/search';
-import { SuggestionList } from './SuggestionList';
+import { SuggestionList, SuggestionItem } from './SuggestionList';
 import { getAllTags } from '@/actions/tags';
+import { useReducedMotion } from 'framer-motion';
 
-import { Memo } from '@/types/memo';
+import { Memo, TagStat } from '@/types/memo';
 
 interface MemoEditorProps {
     mode?: 'create' | 'edit';
@@ -24,32 +25,32 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
     const [tags, setTags] = useState<string[]>(memo?.tags || []);
     const [tagInput, setTagInput] = useState('');
     const [isPending, setIsPending] = useState(false);
-    const [isTagInputVisible, setIsTagInputVisible] = useState(false);
     const [isPrivate, setIsPrivate] = useState(memo?.is_private || false);
     const [isPinned, setIsPinned] = useState(memo?.is_pinned || false);
+    const [error, setError] = useState<string | null>(null);
 
     // Suggestion system states
-    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Tag autocomplete states
-    const [allTags, setAllTags] = useState<{ tag_name: string, count: number }[]>([]);
-    const [tagSuggestions, setTagSuggestions] = useState<any[]>([]);
+    const [allTags, setAllTags] = useState<TagStat[]>([]);
+    const [tagSuggestions, setTagSuggestions] = useState<SuggestionItem[]>([]);
     const [showTagSuggestions, setShowTagSuggestions] = useState(false);
 
+    const shouldReduceMotion = useReducedMotion();
     const router = useRouter();
 
     useEffect(() => {
-        if (isTagInputVisible) {
-            getAllTags().then(setAllTags);
-        }
-    }, [isTagInputVisible]);
+        getAllTags().then(setAllTags);
+    }, []);
 
     const handleContentChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const val = e.target.value;
         setContent(val);
+        setError(null);
 
         const cursorPosition = e.target.selectionStart;
         const textBeforeCursor = val.slice(0, cursorPosition);
@@ -85,7 +86,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
         }
     };
 
-    const handleSelectSuggestion = (item: any) => {
+    const handleSelectSuggestion = (item: SuggestionItem) => {
         if (!textareaRef.current) return;
         const cursorPosition = textareaRef.current.selectionStart;
         const textBeforeCursor = content.slice(0, cursorPosition);
@@ -97,7 +98,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
         textareaRef.current.focus();
     };
 
-    const handleSelectTag = (item: any) => {
+    const handleSelectTag = (item: SuggestionItem) => {
         const tag = item.id;
         if (!tags.includes(tag)) {
             setTags([...tags, tag]);
@@ -107,7 +108,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
     };
 
     const handleAddTag = () => {
-        const tag = tagInput.trim();
+        const tag = tagInput.trim().replace(/^#/, '');
         if (tag && !tags.includes(tag)) {
             setTags([...tags, tag]);
             setTagInput('');
@@ -172,40 +173,45 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
         if (!content.trim() || isPending) return;
 
         setIsPending(true);
+        setError(null);
         const formData = new FormData();
         formData.append('content', content);
         tags.forEach(tag => formData.append('tags', tag));
         formData.append('is_private', String(isPrivate));
         formData.append('is_pinned', String(isPinned));
 
-        let result;
-        if (mode === 'edit' && memo) {
-            formData.append('id', memo.id);
-            result = await updateMemoContent(formData);
-        } else {
-            result = await createMemo(formData);
-        }
-
-        if (result.success) {
-            if (mode === 'create') {
-                setContent('');
-                setTags([]);
-                setIsPrivate(false);
-                setIsPinned(false);
-                setIsTagInputVisible(false);
-                router.refresh();
+        try {
+            let result;
+            if (mode === 'edit' && memo) {
+                formData.append('id', memo.id);
+                result = await updateMemoContent(formData);
             } else {
-                onSuccess?.();
-                router.refresh();
+                result = await createMemo(formData);
             }
-        } else {
-            alert(typeof result.error === 'string' ? result.error : '操作失败');
+
+            if (result.success) {
+                if (mode === 'create') {
+                    setContent('');
+                    setTags([]);
+                    setIsPrivate(false);
+                    setIsPinned(false);
+                    router.refresh();
+                } else {
+                    onSuccess?.();
+                    router.refresh();
+                }
+            } else {
+                setError(typeof result.error === 'string' ? result.error : '操作失败，请稍后重试');
+            }
+        } catch (err) {
+            setError('服务器连接失败');
+        } finally {
+            setIsPending(false);
         }
-        setIsPending(false);
     };
 
     return (
-        <section className="bg-card border border-border rounded-2xl p-6 shadow-sm transition-all focus-within:shadow-md relative">
+        <section className="bg-card border border-border rounded-2xl p-6 shadow-sm transition-all focus-within:shadow-md focus-within:ring-2 focus-within:ring-primary/5 relative">
             <div className="relative group">
                 <label htmlFor="memo-content" className="sr-only">Memo内容</label>
                 <textarea
@@ -213,9 +219,9 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                     ref={textareaRef}
                     placeholder="有什么新鲜事？"
                     value={content}
-                    onChange={(e) => setContent(e.target.value)}
+                    onChange={handleContentChange}
                     onKeyDown={handleKeyDown}
-                    className="w-full bg-transparent border-none focus:ring-0 text-lg leading-relaxed resize-none p-0 placeholder:text-muted-foreground/40 font-serif"
+                    className="w-full bg-transparent border-none focus:ring-0 text-lg leading-relaxed resize-none p-0 placeholder:text-muted-foreground/30 font-serif min-h-[120px]"
                     rows={mode === 'edit' ? 8 : 4}
                 />
 
@@ -230,56 +236,65 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                 )}
             </div>
 
-            {/* 标签展示区 */}
-            {tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 items-center">
-                    {tags.map(tag => (
-                        <span key={tag} className="inline-flex items-center gap-1 bg-primary/5 text-primary text-xs px-2 py-1 rounded-full group/tag animate-in zoom-in-95 duration-200">
-                            #{tag}
-                            <button
-                                onClick={() => handleRemoveTag(tag)}
-                                className="hover:text-red-500 transition-colors focus:outline-none focus:ring-1 focus:ring-red-400 rounded-full"
-                                aria-label={`删除标签 #${tag}`}
-                            >
-                                <X className="w-3 h-3" aria-hidden="true" />
-                            </button>
-                        </span>
-                    ))}
-                    <div className="relative">
-                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 border border-transparent focus-within:border-primary/30 focus-within:bg-background transition-all">
-                            <Hash className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
-                            <input
-                                type="text"
-                                placeholder="添加标签..."
-                                value={tagInput}
-                                onChange={(e) => setTagInput(e.target.value)}
-                                onKeyDown={handleTagInputKeyDown}
-                                className="bg-transparent border-none focus:ring-0 text-xs p-0 w-20 placeholder:text-muted-foreground/50"
-                                aria-label="添加标签"
+            {/* 标签展示与录入区 */}
+            <div className="flex flex-wrap gap-2 items-center mt-2 min-h-[32px]">
+                {tags.map(tag => (
+                    <span
+                        key={tag}
+                        className="inline-flex items-center gap-1 bg-primary/5 text-primary text-xs px-2.5 py-1 rounded-full group/tag animate-in zoom-in-95 duration-200"
+                    >
+                        #{tag}
+                        <button
+                            onClick={() => handleRemoveTag(tag)}
+                            className="hover:text-red-500 transition-colors focus:outline-none focus:ring-1 focus:ring-red-400 rounded-full p-0.5"
+                            aria-label={`删除标签 #${tag}`}
+                        >
+                            <X className="w-2.5 h-2.5" aria-hidden="true" />
+                        </button>
+                    </span>
+                ))}
+
+                <div className="relative">
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/40 border border-transparent focus-within:border-primary/20 focus-within:bg-background transition-all">
+                        <Hash className="w-3.5 h-3.5 text-muted-foreground/50" aria-hidden="true" />
+                        <input
+                            type="text"
+                            placeholder="添加标签..."
+                            value={tagInput}
+                            onChange={(e) => handleTagInputChange(e.target.value)}
+                            onKeyDown={handleTagInputKeyDown}
+                            className="bg-transparent border-none focus:ring-0 text-xs p-0 w-24 placeholder:text-muted-foreground/40"
+                            aria-label="添加标签"
+                        />
+                    </div>
+                    {showTagSuggestions && (
+                        <div className="absolute top-full left-0 mt-1 z-50">
+                            <SuggestionList
+                                items={tagSuggestions}
+                                activeIndex={activeIndex}
+                                onSelect={handleSelectTag}
                             />
                         </div>
-                        {showTagSuggestions && (
-                            <div className="absolute top-full left-0 mt-1 z-50">
-                                <SuggestionList
-                                    items={tagSuggestions}
-                                    activeIndex={activeIndex}
-                                    onSelect={handleSelectTag}
-                                />
-                            </div>
-                        )}
-                    </div>
+                    )}
+                </div>
+            </div>
+
+            {error && (
+                <div className="mt-3 text-xs text-red-500 bg-red-500/5 px-3 py-2 rounded-lg border border-red-500/10 animate-in fade-in slide-in-from-top-1">
+                    {error}
                 </div>
             )}
 
-            <div className="flex justify-between items-center pt-4 border-t border-border">
+            <div className="flex justify-between items-center pt-5 mt-4 border-t border-border">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => setIsPrivate(!isPrivate)}
                         className={cn(
-                            "text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 p-1 rounded",
-                            isPrivate ? "text-primary" : "text-muted-foreground hover:text-primary"
+                            "text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 p-1.5 rounded-md",
+                            isPrivate ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-primary hover:bg-muted"
                         )}
                         aria-label={isPrivate ? "设为公开内容" : "设为私密内容"}
+                        aria-pressed={isPrivate}
                     >
                         {isPrivate ? <Lock className="w-3 h-3" aria-hidden="true" /> : <LockOpen className="w-3 h-3" aria-hidden="true" />}
                         Private
@@ -287,19 +302,20 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                     <button
                         onClick={() => setIsPinned(!isPinned)}
                         className={cn(
-                            "text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 p-1 rounded",
-                            isPinned ? "text-primary" : "text-muted-foreground hover:text-primary"
+                            "text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 p-1.5 rounded-md",
+                            isPinned ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-primary hover:bg-muted"
                         )}
                         aria-label={isPinned ? "取消置顶" : "置顶此内容"}
+                        aria-pressed={isPinned}
                     >
-                        <Pin className="w-3 h-3" aria-hidden="true" /> Pin
+                        <Pin className={cn("w-3 h-3", isPinned && "fill-primary")} aria-hidden="true" /> Pin
                     </button>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                     {mode === 'edit' && (
                         <button
                             onClick={onCancel}
-                            className="text-muted-foreground px-4 py-2 rounded-full text-sm font-medium hover:bg-muted transition-colors"
+                            className="text-muted-foreground px-5 py-2 rounded-full text-sm font-medium hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/10"
                         >
                             取消
                         </button>
@@ -307,9 +323,20 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                     <button
                         onClick={handlePublish}
                         disabled={isPending || !content.trim()}
-                        className="bg-primary text-white px-6 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+                        className={cn(
+                            "bg-primary text-white px-7 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all disabled:opacity-50 flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2",
+                            !isPending && content.trim() && "hover:opacity-90 hover:shadow-md",
+                            !shouldReduceMotion && "active:scale-95"
+                        )}
                     >
-                        {isPending ? (mode === 'edit' ? '更新中...' : '发布中...') : (mode === 'edit' ? '更新' : '发布')}
+                        {isPending ? (
+                            <>
+                                <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                {mode === 'edit' ? '更新中...' : '发布中...'}
+                            </>
+                        ) : (
+                            mode === 'edit' ? '更新' : '发布'
+                        )}
                     </button>
                 </div>
             </div>

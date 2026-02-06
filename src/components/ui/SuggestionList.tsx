@@ -1,47 +1,59 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 
-interface SuggestionItem {
+export interface SuggestionItem {
     id: string;
     label: string;
     subLabel?: string;
+    count?: number;
+    memo_number?: number;
 }
 
 interface SuggestionListProps {
     items: SuggestionItem[];
-    onSelect: (item: SuggestionItem) => void;
     activeIndex: number;
+    onSelect: (item: SuggestionItem) => void;
 }
 
-export function SuggestionList({ items, onSelect, activeIndex }: SuggestionListProps) {
+export function SuggestionList({ items, activeIndex, onSelect }: SuggestionListProps) {
     if (items.length === 0) return null;
 
     return (
-        <div className="absolute z-50 bg-popover border border-border rounded-xl shadow-xl w-64 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-1">
-                {items.map((item, index) => (
-                    <button
-                        key={item.id}
-                        onClick={() => onSelect(item)}
-                        className={cn(
-                            "w-full text-left px-3 py-2 rounded-lg text-xs flex flex-col gap-0.5 transition-colors",
-                            index === activeIndex ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                        )}
-                    >
-                        <span className="font-medium">{item.label}</span>
+        <ul
+            role="listbox"
+            className="bg-card border border-border rounded-xl shadow-xl overflow-hidden min-w-[240px] py-1 animate-in fade-in zoom-in-95 duration-200"
+        >
+            {items.map((item, index) => (
+                <li
+                    key={item.id}
+                    role="option"
+                    aria-selected={index === activeIndex}
+                    onClick={() => onSelect(item)}
+                    className={cn(
+                        "px-4 py-2 cursor-pointer flex justify-between items-center transition-colors outline-none",
+                        index === activeIndex ? "bg-primary/10 text-primary" : "hover:bg-muted text-muted-foreground"
+                    )}
+                >
+                    <div className="flex flex-col">
+                        <span className="font-medium text-sm">{item.label}</span>
                         {item.subLabel && (
                             <span className={cn(
-                                "text-[10px] line-clamp-1 opacity-70",
-                                index === activeIndex ? "text-primary-foreground" : "text-muted-foreground"
+                                "text-xs line-clamp-1 opacity-70",
+                                index === activeIndex ? "text-primary" : "text-muted-foreground"
                             )}>
                                 {item.subLabel}
                             </span>
                         )}
-                    </button>
-                ))}
-            </div>
-        </div>
+                    </div>
+                    {(item.count !== undefined || item.memo_number !== undefined) && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {item.count !== undefined && <span className="opacity-60">{item.count}</span>}
+                            {item.memo_number !== undefined && <span className="font-mono bg-muted px-1 rounded">#{item.memo_number}</span>}
+                        </div>
+                    )}
+                </li>
+            ))}
+        </ul>
     );
 }

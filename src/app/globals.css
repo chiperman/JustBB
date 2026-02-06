@@ -19,6 +19,13 @@
   --card: #ffffff;
   --success: #40c463;
   --error: #ff6b6b;
+
+  /* Heatmap Colors (Light) */
+  --heatmap-0: #ebedf0;
+  --heatmap-1: #9be9a8;
+  --heatmap-2: #40c463;
+  --heatmap-3: #30a14e;
+  --heatmap-4: #216e39;
 }
 
 .dark {
@@ -27,6 +34,13 @@
   --card: #1e1e1e;
   --success: #3fb950;
   --error: #f85149;
+
+  /* Heatmap Colors (Dark) */
+  --heatmap-0: #2d333b;
+  --heatmap-1: #0e4429;
+  --heatmap-2: #006d32;
+  --heatmap-3: #26a641;
+  --heatmap-4: #39d353;
 }
 
 body {

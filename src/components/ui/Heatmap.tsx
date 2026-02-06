@@ -41,13 +41,13 @@ export function Heatmap() {
         return eachDayOfInterval({ start, end: today });
     }, []);
 
-    // 计算颜色等级 (GitHub 风格)
+    // 计算颜色等级 (使用 CSS 变量以确保主题切换正确)
     const getColorClass = (count: number) => {
-        if (count === 0) return 'bg-[#ebedf0] dark:bg-[#2d333b]';
-        if (count <= 2) return 'bg-[#9be9a8] dark:bg-[#0e4429]';
-        if (count <= 5) return 'bg-[#40c463] dark:bg-[#006d32]';
-        if (count <= 9) return 'bg-[#30a14e] dark:bg-[#26a641]';
-        return 'bg-[#216e39] dark:bg-[#39d353]';
+        if (count === 0) return 'bg-[var(--heatmap-0)]';
+        if (count <= 2) return 'bg-[var(--heatmap-1)]';
+        if (count <= 5) return 'bg-[var(--heatmap-2)]';
+        if (count <= 9) return 'bg-[var(--heatmap-3)]';
+        return 'bg-[var(--heatmap-4)]';
     };
 
     if (loading) {

@@ -52,13 +52,13 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
         return years;
     }, [stats.firstMemoDate]);
 
-    // 计算颜色等级 (GitHub 风格)
+    // 计算颜色等级 (使用 CSS 变量)
     const getColorClass = (count: number) => {
-        if (count === 0) return 'bg-[#ebedf0]';
-        if (count <= 2) return 'bg-[#9be9a8]';
-        if (count <= 5) return 'bg-[#40c463]';
-        if (count <= 9) return 'bg-[#30a14e]';
-        return 'bg-[#216e39]';
+        if (count === 0) return 'bg-[var(--heatmap-0)]';
+        if (count <= 2) return 'bg-[var(--heatmap-1)]';
+        if (count <= 5) return 'bg-[var(--heatmap-2)]';
+        if (count <= 9) return 'bg-[var(--heatmap-3)]';
+        return 'bg-[var(--heatmap-4)]';
     };
 
     return (

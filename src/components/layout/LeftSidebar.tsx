@@ -13,8 +13,11 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
+import { usePathname } from 'next/navigation';
+
 export function LeftSidebar() {
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const pathname = usePathname();
 
     const navItems = [
         { icon: <Home className="w-5 h-5" aria-hidden="true" />, label: '首页', href: '/' },
@@ -62,24 +65,36 @@ export function LeftSidebar() {
             </div>
 
             <nav className="flex-1 space-y-1.5 mb-6">
-                {navItems.map((item) => (
-                    <Link
-                        key={item.label}
-                        href={item.href}
-                        className={cn(
-                            "flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted transition-all group overflow-hidden",
-                            isCollapsed ? "justify-center" : "px-3"
-                        )}
-                        title={item.label}
-                    >
-                        <span className="text-muted-foreground group-hover:text-primary transition-colors shrink-0">
-                            {item.icon}
-                        </span>
-                        {!isCollapsed && (
-                            <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
-                        )}
-                    </Link>
-                ))}
+                {navItems.map((item) => {
+                    const isActive = item.href === '/'
+                        ? pathname === '/'
+                        : pathname.startsWith(item.href);
+
+                    return (
+                        <Link
+                            key={item.label}
+                            href={item.href}
+                            className={cn(
+                                "flex items-center gap-3 p-2.5 rounded-lg transition-all group overflow-hidden",
+                                isCollapsed ? "justify-center" : "px-3",
+                                isActive
+                                    ? "bg-primary/10 text-primary font-medium"
+                                    : "text-muted-foreground hover:bg-muted hover:text-primary"
+                            )}
+                            title={item.label}
+                        >
+                            <span className={cn(
+                                "transition-colors shrink-0",
+                                isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary"
+                            )}>
+                                {item.icon}
+                            </span>
+                            {!isCollapsed && (
+                                <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
+                            )}
+                        </Link>
+                    );
+                })}
             </nav>
 
             <div className={cn("transition-all duration-300", isCollapsed ? "h-0 opacity-0 invisible overflow-hidden" : "h-auto opacity-100 visible mb-8")}>

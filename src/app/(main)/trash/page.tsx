@@ -7,7 +7,7 @@ export default async function TrashPage() {
     const memos = (await getTrashMemos()) || [];
 
     return (
-        <div className="max-w-4xl mx-auto space-y-10">
+        <div className="space-y-10">
             <header className="flex items-center gap-2 text-destructive pb-4 border-b border-border">
                 <Trash2 className="w-6 h-6" />
                 <h2 className="text-2xl font-bold tracking-tight">垃圾箱</h2>

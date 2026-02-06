@@ -9,7 +9,7 @@ export default async function TagsPage() {
     const maxCount = Math.max(...tags.map(t => t.count), 1);
 
     return (
-        <div className="max-w-4xl mx-auto space-y-10">
+        <div className="space-y-10">
             <div className="mb-8">
                 <h1 className="text-2xl font-bold tracking-tight mb-2 flex items-center gap-2">
                     <Tag className="w-6 h-6" /> 标签墙 / Tags

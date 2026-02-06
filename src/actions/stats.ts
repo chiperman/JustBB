@@ -4,27 +4,46 @@ import { supabase } from '@/lib/supabase';
 import { subDays } from 'date-fns';
 
 export async function getMemoStats() {
-    const startDate = subDays(new Date(), 366).toISOString();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from('memos') as any)
-        .select('created_at')
+    // 1. 获取全量基础统计数据 (为了统计总数和标签)
+    // 考虑到数据量，我们只查询关键字段
+    const { data: allData, error: allDataError } = await (supabase.from('memos') as any)
+        .select('created_at, tags')
         .eq('is_private', false)
         .is('deleted_at', null)
-        .gte('created_at', startDate)
         .order('created_at', { ascending: true });
 
-    if (error) {
-        console.error('Error fetching stats:', error);
-        return {};
+    if (allDataError) {
+        console.error('Error fetching comprehensive stats:', allDataError);
+        return {
+            totalMemos: 0,
+            totalTags: 0,
+            firstMemoDate: null,
+            days: {}
+        };
     }
 
     const stats: Record<string, number> = {};
+    const uniqueTags = new Set<string>();
 
-    (data as { created_at: string }[] | null)?.forEach((item) => {
+    (allData as { created_at: string; tags: string[] | null }[])?.forEach((item) => {
+        // 聚合日期
         const date = item.created_at.split('T')[0];
         stats[date] = (stats[date] || 0) + 1;
+
+        // 统计唯一标签
+        if (item.tags && Array.isArray(item.tags)) {
+            item.tags.forEach(tag => uniqueTags.add(tag));
+        }
     });
 
-    return stats;
+    const totalMemos = allData?.length || 0;
+    const totalTags = uniqueTags.size;
+    const firstMemoDate = allData && allData.length > 0 ? allData[0].created_at : null;
+
+    return {
+        totalMemos,
+        totalTags,
+        firstMemoDate,
+        days: stats
+    };
 }

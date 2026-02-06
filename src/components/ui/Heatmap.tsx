@@ -2,90 +2,141 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { getMemoStats } from '@/actions/stats';
-import { subDays, format, eachDayOfInterval, startOfWeek, endOfWeek, isSameDay } from 'date-fns';
-import { cn } from '@/lib/utils'; // Assuming cn utility exists, it usually does in shadcn projects
+import { subDays, format, eachDayOfInterval, differenceInDays, startOfDay } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { HeatmapModal } from './HeatmapModal';
+
+// 定义接口以匹配 actions/stats.ts 的返回值
+interface HeatmapStats {
+    totalMemos: number;
+    totalTags: number;
+    firstMemoDate: string | null;
+    days: Record<string, number>;
+}
 
 export function Heatmap() {
-    const [stats, setStats] = useState<Record<string, number>>({});
+    const [stats, setStats] = useState<HeatmapStats | null>(null);
     const [loading, setLoading] = useState(true);
-    const [hoveredDate, setHoveredDate] = useState<{ date: string; count: number; x: number; y: number } | null>(null);
+    const [hoveredDate, setHoveredDate] = useState<{ date: string; count: number; left: number; top: number } | null>(null);
 
     useEffect(() => {
         getMemoStats().then((data) => {
-            setStats(data);
+            setStats(data as HeatmapStats);
             setLoading(false);
         });
     }, []);
 
-    // 生成过去一年的日期数据
-    const days = useMemo(() => {
-        const today = new Date();
-        const start = subDays(today, 365);
+    // 计算总天数
+    const totalActiveDays = useMemo(() => {
+        if (!stats?.firstMemoDate) return 0;
+        return differenceInDays(new Date(), new Date(stats.firstMemoDate)) + 1;
+    }, [stats]);
+
+    // 生成最近 12 周 (84 天) 的日期数据
+    const heatmapDays = useMemo(() => {
+        const today = startOfDay(new Date());
+        const start = subDays(today, 83); // 12 weeks = 84 days
         return eachDayOfInterval({ start, end: today });
     }, []);
 
-    // 计算颜色等级
+    // 计算颜色等级 (GitHub 风格)
     const getColorClass = (count: number) => {
-        if (count === 0) return 'bg-muted/20 dark:bg-muted/10';
-        if (count <= 1) return 'bg-green-200 dark:bg-green-900/50';
-        if (count <= 3) return 'bg-green-400 dark:bg-green-700/60';
-        if (count <= 5) return 'bg-green-600 dark:bg-green-500/80';
-        return 'bg-green-600 dark:bg-green-400';
+        if (count === 0) return 'bg-[#ebedf0]';
+        if (count <= 2) return 'bg-[#9be9a8]';
+        if (count <= 5) return 'bg-[#40c463]';
+        if (count <= 9) return 'bg-[#30a14e]';
+        return 'bg-[#216e39]';
     };
 
     if (loading) {
         return (
-            <div className="h-24 w-full animate-pulse bg-muted/20 rounded-lg flex items-center justify-center">
-                <span className="text-xs text-muted-foreground">Loading activity...</span>
+            <div className="w-full space-y-4 py-4 px-2">
+                <div className="grid grid-cols-3 gap-4">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="h-12 bg-muted/20 animate-pulse rounded-md" />
+                    ))}
+                </div>
+                <div className="h-32 bg-muted/10 animate-pulse rounded-lg" />
             </div>
         );
     }
 
-    return (
-        <div className="relative w-full mb-6" onMouseLeave={() => setHoveredDate(null)}>
-            <div className="overflow-x-auto pb-3 scrollbar-hide">
-                <div
-                    className="grid grid-rows-7 grid-flow-col gap-[3px]"
-                    style={{ gridTemplateRows: 'repeat(7, 10px)', width: 'fit-content' }}
-                >
-                    {days.length > 0 ? days.map((date) => {
-                        const dateStr = format(date, 'yyyy-MM-dd');
-                        const count = stats[dateStr] || 0;
-
-                        return (
-                            <div
-                                key={dateStr}
-                                className={cn(
-                                    "w-[10px] h-[10px] rounded-[2px] transition-colors duration-200 cursor-help",
-                                    getColorClass(count)
-                                )}
-                                title={`${dateStr}: ${count} 记录`}
-                                onMouseEnter={(e) => {
-                                    const rect = e.currentTarget.getBoundingClientRect();
-                                    setHoveredDate({
-                                        date: format(date, 'yyyy年MM月dd日'),
-                                        count,
-                                        x: rect.left,
-                                        y: rect.top
-                                    });
-                                }}
-                            />
-                        );
-                    }) : (
-                        <div className="text-[10px] text-muted-foreground p-2">未获取到日期数据</div>
-                    )}
+    const Trigger = (
+        <div className="w-full space-y-4 px-1 cursor-pointer group/container outline-none focus:ring-0 relative overflow-visible">
+            {/* 顶栏统计 */}
+            <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-col items-center group-hover/container:opacity-80 transition-opacity">
+                    <span className="text-3xl font-serif tracking-tight">{stats?.totalMemos || 0}</span>
+                    <span className="text-[11px] text-muted-foreground mt-1 font-sans">笔记</span>
+                </div>
+                <div className="flex flex-col items-center border-x border-muted/30 group-hover/container:opacity-80 transition-opacity">
+                    <span className="text-3xl font-serif tracking-tight">{stats?.totalTags || 0}</span>
+                    <span className="text-[11px] text-muted-foreground mt-1 font-sans">标签</span>
+                </div>
+                <div className="flex flex-col items-center group-hover/container:opacity-80 transition-opacity">
+                    <span className="text-3xl font-serif tracking-tight leading-none">{totalActiveDays}</span>
+                    <span className="text-[11px] text-muted-foreground mt-2 font-sans">天</span>
                 </div>
             </div>
 
-            {/* Custom Tooltip */}
-            {hoveredDate && (
-                <div
-                    className="fixed z-50 px-2 py-1 text-[10px] font-medium text-white bg-black/80 rounded shadow-lg pointer-events-none transform -translate-x-1/2 -translate-y-full mt-[-6px]"
-                    style={{ left: hoveredDate.x + 5, top: hoveredDate.y }}
-                >
-                    {hoveredDate.count} 记录 on {hoveredDate.date}
+            {/* 热力图主体 */}
+            <div className="relative pt-2" onMouseLeave={() => setHoveredDate(null)}>
+                <div className="relative overflow-visible">
+                    <div
+                        className="grid grid-rows-7 grid-flow-col gap-[5px] justify-center"
+                        style={{ gridTemplateRows: 'repeat(7, 14px)' }}
+                    >
+                        {heatmapDays.map((date) => {
+                            const dateStr = format(date, 'yyyy-MM-dd');
+                            const count = stats?.days[dateStr] || 0;
+
+                            return (
+                                <div
+                                    key={dateStr}
+                                    className={cn(
+                                        "w-[14px] h-[14px] rounded-[4px] transition-all duration-300 cursor-pointer hover:scale-110",
+                                        getColorClass(count)
+                                    )}
+                                    onMouseEnter={(e) => {
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        const containerRect = e.currentTarget.offsetParent?.getBoundingClientRect();
+                                        if (containerRect) {
+                                            setHoveredDate({
+                                                date: format(date, 'yyyy-MM-dd'),
+                                                count,
+                                                left: rect.left - containerRect.left + 7,
+                                                top: rect.top - containerRect.top
+                                            });
+                                        }
+                                    }}
+                                />
+                            );
+                        })}
+                    </div>
+
+                    {/* Tooltip */}
+                    {hoveredDate && (
+                        <div
+                            className="absolute z-[999] px-2.5 py-1.5 text-[10px] font-medium text-white bg-black/95 backdrop-blur-md rounded-md pointer-events-none transform -translate-x-1/2 -translate-y-full mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-2xl border border-white/20 whitespace-nowrap"
+                            style={{ left: hoveredDate.left, top: hoveredDate.top }}
+                        >
+                            <span className="text-[#9be9a8] font-bold">{hoveredDate.count} 笔记</span>
+                            <span className="mx-1.5 opacity-40">/</span>
+                            <span>{hoveredDate.date}</span>
+                        </div>
+                    )}
                 </div>
-            )}
+
+                {/* Month labels at bottom */}
+                <div className="flex justify-between mt-2 px-1 text-[11px] text-muted-foreground font-sans font-medium opacity-60">
+                    <span className="flex-1 text-center">十一月</span>
+                    <span className="flex-1 text-center">十二月</span>
+                    <span className="flex-1 text-center">一月</span>
+                    <span className="flex-1 text-center">二月</span>
+                </div>
+            </div>
         </div>
     );
+
+    return stats ? <HeatmapModal stats={stats} trigger={Trigger} /> : null;
 }

@@ -54,7 +54,7 @@ export function MemoContent({ content, className }: MemoContentProps) {
                             );
                         case 'code':
                             return (
-                                <div key={`code-${index}`} className="my-3 ring-1 ring-border rounded-xl overflow-hidden shadow-sm">
+                                <div key={`code-${index}`}>
                                     <CodeBlock language={token.lang || "typescript"} value={token.value} />
                                 </div>
                             );

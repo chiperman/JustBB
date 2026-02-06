@@ -66,16 +66,16 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
             <DialogTrigger asChild>
                 {trigger}
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-background/95 backdrop-blur-md border-muted/20">
-                <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-muted/10">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-background/95 backdrop-blur-md border-none">
+                <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-0 border-none">
                     <div className="flex items-center gap-4">
-                        <DialogTitle className="text-xl font-bold tracking-tight">记录统计</DialogTitle>
+                        <DialogTitle className="text-base font-bold tracking-tight">记录统计</DialogTitle>
                         <div className="flex bg-muted/20 p-1 rounded-lg">
                             <button
                                 onClick={() => setViewMode('month')}
                                 className={cn(
                                     "px-3 py-1 text-xs rounded-md transition-all",
-                                    viewMode === 'month' ? "bg-background shadow-sm font-medium" : "text-muted-foreground hover:text-foreground"
+                                    viewMode === 'month' ? "bg-background shadow-sm font-bold text-foreground" : "text-muted-foreground hover:text-foreground font-normal"
                                 )}
                             >
                                 月
@@ -84,7 +84,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                                 onClick={() => setViewMode('year')}
                                 className={cn(
                                     "px-3 py-1 text-xs rounded-md transition-all",
-                                    viewMode === 'year' ? "bg-background shadow-sm font-medium" : "text-muted-foreground hover:text-foreground"
+                                    viewMode === 'year' ? "bg-background shadow-sm font-bold text-foreground" : "text-muted-foreground hover:text-foreground font-normal"
                                 )}
                             >
                                 年
@@ -152,7 +152,7 @@ function MonthCalendar({ date, stats, colorFn }: { date: Date, stats: Record<str
     return (
         <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-                <h3 className="font-bold text-lg">{format(date, 'M月')}</h3>
+                <h3 className="font-bold text-sm">{format(date, 'M月')}</h3>
                 <div className="flex gap-3 text-[10px] text-muted-foreground">
                     <span>{monthStats.count} 笔记</span>
                     <span>{monthStats.daysWithMemos} 记录天数</span>

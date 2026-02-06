@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, memo, useCallback } from 'react';
 import { getMemoStats } from '@/actions/stats';
 import { startOfDay, subDays, format, eachDayOfInterval, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -15,7 +15,45 @@ interface HeatmapStats {
     days: Record<string, number>;
 }
 
-export function Heatmap() {
+// 提取单元格组件以减少重渲染范围
+const HeatmapCell = memo(({
+    dateStr,
+    count,
+    onHover,
+    shouldReduceMotion
+}: {
+    dateStr: string;
+    count: number;
+    onHover: (e: React.MouseEvent | React.FocusEvent, date: string, count: number) => void;
+    shouldReduceMotion: boolean;
+}) => {
+    const getColorClass = (c: number) => {
+        if (c === 0) return 'bg-[var(--heatmap-0)]';
+        if (c <= 2) return 'bg-[var(--heatmap-1)]';
+        if (c <= 5) return 'bg-[var(--heatmap-2)]';
+        if (c <= 9) return 'bg-[var(--heatmap-3)]';
+        return 'bg-[var(--heatmap-4)]';
+    };
+
+    return (
+        <div
+            tabIndex={0}
+            role="gridcell"
+            aria-label={`${dateStr}: ${count} 记录`}
+            className={cn(
+                "w-[14px] h-[14px] rounded-[4px] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 outline-none",
+                !shouldReduceMotion && "hover:scale-110",
+                getColorClass(count)
+            )}
+            onMouseEnter={(e) => onHover(e, dateStr, count)}
+            onFocus={(e) => onHover(e, dateStr, count)}
+        />
+    );
+});
+
+HeatmapCell.displayName = 'HeatmapCell';
+
+export const Heatmap = memo(function Heatmap() {
     const [stats, setStats] = useState<HeatmapStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [hoveredDate, setHoveredDate] = useState<{ date: string; count: number; left: number; top: number } | null>(null);
@@ -32,23 +70,30 @@ export function Heatmap() {
     const totalActiveDays = useMemo(() => {
         if (!stats?.firstMemoDate) return 0;
         return differenceInDays(new Date(), new Date(stats.firstMemoDate)) + 1;
-    }, [stats]);
+    }, [stats?.firstMemoDate]);
 
     // 生成最近 12 周 (84 天) 的日期数据
     const heatmapDays = useMemo(() => {
         const today = startOfDay(new Date());
         const start = subDays(today, 83); // 12 weeks = 84 days
-        return eachDayOfInterval({ start, end: today });
+        return eachDayOfInterval({ start, end: today }).map(d => format(d, 'yyyy-MM-dd'));
     }, []);
 
-    // 计算颜色等级 (使用 CSS 变量以确保主题切换正确)
-    const getColorClass = (count: number) => {
-        if (count === 0) return 'bg-[var(--heatmap-0)]';
-        if (count <= 2) return 'bg-[var(--heatmap-1)]';
-        if (count <= 5) return 'bg-[var(--heatmap-2)]';
-        if (count <= 9) return 'bg-[var(--heatmap-3)]';
-        return 'bg-[var(--heatmap-4)]';
-    };
+    const handleCellHover = useCallback((e: React.MouseEvent | React.FocusEvent, date: string, count: number) => {
+        const target = e.currentTarget as HTMLElement;
+        const rect = target.getBoundingClientRect();
+        const container = target.closest('.heatmap-content-wrapper') as HTMLElement;
+
+        if (container) {
+            const containerRect = container.getBoundingClientRect();
+            setHoveredDate({
+                date,
+                count,
+                left: rect.left - containerRect.left + 7,
+                top: rect.top - containerRect.top
+            });
+        }
+    }, []);
 
     if (loading) {
         return (
@@ -68,74 +113,35 @@ export function Heatmap() {
             {/* 顶栏统计 */}
             <div className="grid grid-cols-3 gap-2">
                 <div className="flex flex-col items-center group-hover/container:opacity-80 transition-opacity">
-                    <span className="text-3xl font-serif tracking-tight">{stats?.totalMemos || 0}</span>
-                    <span className="text-[11px] text-muted-foreground mt-1 font-sans">笔记</span>
-                </div>
-                <div className="flex flex-col items-center border-x border-muted/30 group-hover/container:opacity-80 transition-opacity">
-                    <span className="text-3xl font-serif tracking-tight">{stats?.totalTags || 0}</span>
-                    <span className="text-[11px] text-muted-foreground mt-1 font-sans">标签</span>
+                    <span className="text-3xl tracking-tight">{stats?.totalMemos || 0}</span>
+                    <span className="text-[11px] text-muted-foreground mt-1">笔记</span>
                 </div>
                 <div className="flex flex-col items-center group-hover/container:opacity-80 transition-opacity">
-                    <span className="text-3xl font-serif tracking-tight leading-none">{totalActiveDays}</span>
-                    <span className="text-[11px] text-muted-foreground mt-2 font-sans">天</span>
+                    <span className="text-3xl tracking-tight">{stats?.totalTags || 0}</span>
+                    <span className="text-[11px] text-muted-foreground mt-1">标签</span>
+                </div>
+                <div className="flex flex-col items-center group-hover/container:opacity-80 transition-opacity">
+                    <span className="text-3xl tracking-tight leading-none">{totalActiveDays}</span>
+                    <span className="text-[11px] text-muted-foreground mt-2">天</span>
                 </div>
             </div>
 
             {/* 热力图主体 */}
             <div className="relative pt-2" onMouseLeave={() => setHoveredDate(null)}>
-                <div className="relative overflow-visible">
+                <div className="relative overflow-visible heatmap-content-wrapper">
                     <div
                         className="grid grid-rows-7 grid-flow-col gap-[5px] justify-center"
                         style={{ gridTemplateRows: 'repeat(7, 14px)' }}
                     >
-                        {heatmapDays.map((date) => {
-                            const dateStr = format(date, 'yyyy-MM-dd');
-                            const count = stats?.days[dateStr] || 0;
-
-                            return (
-                                <div
-                                    key={dateStr}
-                                    tabIndex={0}
-                                    role="gridcell"
-                                    aria-label={`${dateStr}: ${count} 记录`}
-                                    className={cn(
-                                        "w-[14px] h-[14px] rounded-[4px] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 outline-none",
-                                        !shouldReduceMotion && "hover:scale-110",
-                                        getColorClass(count)
-                                    )}
-                                    onMouseEnter={(e) => {
-                                        const rect = e.currentTarget.getBoundingClientRect();
-                                        const containerRect = e.currentTarget.offsetParent?.getBoundingClientRect();
-                                        if (containerRect) {
-                                            setHoveredDate({
-                                                date: format(date, 'yyyy-MM-dd'),
-                                                count,
-                                                left: rect.left - containerRect.left + 7,
-                                                top: rect.top - containerRect.top
-                                            });
-                                        }
-                                    }}
-                                    onFocus={(e) => {
-                                        const rect = e.currentTarget.getBoundingClientRect();
-                                        const containerRect = e.currentTarget.offsetParent?.getBoundingClientRect();
-                                        if (containerRect) {
-                                            setHoveredDate({
-                                                date: format(date, 'yyyy-MM-dd'),
-                                                count,
-                                                left: rect.left - containerRect.left + 7,
-                                                top: rect.top - containerRect.top
-                                            });
-                                        }
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                            e.preventDefault();
-                                            // 可以在由于这里是弹窗触发器，所以实际点击行为由 Trigger 包裹实现
-                                        }
-                                    }}
-                                />
-                            );
-                        })}
+                        {heatmapDays.map((dateStr) => (
+                            <HeatmapCell
+                                key={dateStr}
+                                dateStr={dateStr}
+                                count={stats?.days[dateStr] || 0}
+                                onHover={handleCellHover}
+                                shouldReduceMotion={!!shouldReduceMotion}
+                            />
+                        ))}
                     </div>
 
                     {/* Tooltip */}
@@ -152,7 +158,7 @@ export function Heatmap() {
                 </div>
 
                 {/* Month labels at bottom */}
-                <div className="flex justify-between mt-2 px-1 text-[11px] text-muted-foreground font-sans font-medium opacity-60">
+                <div className="flex justify-between mt-2 px-1 text-[11px] text-muted-foreground font-medium opacity-60">
                     <span className="flex-1 text-center">十一月</span>
                     <span className="flex-1 text-center">十二月</span>
                     <span className="flex-1 text-center">一月</span>
@@ -163,4 +169,4 @@ export function Heatmap() {
     );
 
     return stats ? <HeatmapModal stats={stats} trigger={Trigger} /> : null;
-}
+});

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { deleteMemo, restoreMemo, permanentDeleteMemo } from '@/actions/delete';
 import { updateMemoState } from '@/actions/update';
-import { Trash2, RotateCcw, MoreHorizontal, MessageSquare, Pin, Lock, LockOpen } from 'lucide-react';
+import { Trash2, RotateCcw, MoreHorizontal, MessageSquare, Pin, Lock, LockOpen, Share2 } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -130,14 +130,6 @@ export function MemoActions({
 
     return (
         <div className="flex items-center gap-1">
-            <button className="p-2 hover:bg-muted rounded-full transition-colors" title="回复">
-                <MessageSquare className="w-4 h-4 text-muted-foreground" />
-            </button>
-
-            <MemoShare
-                memo={{ id, content, created_at: createdAt, tags, is_pinned: isPinned, is_private: isPrivate, memo_number: 0 } as Memo}
-            />
-
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <button className="p-2 hover:bg-muted rounded-full transition-colors outline-none">
@@ -146,10 +138,21 @@ export function MemoActions({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                     {!isDeleted && (
-                        <DropdownMenuItem onClick={onEdit}>
-                            <MessageSquare className="w-4 h-4 mr-2" />
-                            编辑
-                        </DropdownMenuItem>
+                        <>
+                            <DropdownMenuItem onClick={onEdit}>
+                                <MessageSquare className="w-4 h-4 mr-2" />
+                                编辑
+                            </DropdownMenuItem>
+                            <MemoShare
+                                memo={{ id, content, created_at: createdAt, tags, is_pinned: isPinned, is_private: isPrivate, memo_number: 0 } as Memo}
+                                trigger={
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                        <Share2 className="w-4 h-4 mr-2" />
+                                        分享海报
+                                    </DropdownMenuItem>
+                                }
+                            />
+                        </>
                     )}
                     <DropdownMenuCheckboxItem
                         checked={isPinned}

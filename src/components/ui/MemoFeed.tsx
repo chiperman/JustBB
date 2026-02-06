@@ -80,7 +80,7 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
 
     return (
         <div className="space-y-6">
-            <div className="columns-1 md:columns-2 gap-4 space-y-4">
+            <div className="columns-1 gap-4 space-y-4">
                 {memos.map((memo) => (
                     <div key={memo.id} className="break-inside-avoid">
                         <MemoCard memo={memo} />

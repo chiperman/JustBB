@@ -3,8 +3,8 @@
 import { MemoContent } from './MemoContent';
 import { MemoActions } from './MemoActions';
 import { MemoEditor } from './MemoEditor';
-import { Pin, Lock, MoreHorizontal } from 'lucide-react';
-import { useState } from 'react';
+import { Pin, Lock, MoreHorizontal, Link2 } from 'lucide-react';
+import { memo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn, formatDate } from '@/lib/utils';
 import { useReducedMotion } from 'framer-motion';
@@ -16,7 +16,7 @@ interface MemoCardProps {
     memo: Memo;
 }
 
-export function MemoCard({ memo }: MemoCardProps) {
+export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
     const router = useRouter();
     const [isEditing, setIsEditing] = useState(false);
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
@@ -83,17 +83,18 @@ export function MemoCard({ memo }: MemoCardProps) {
                         aria-label="查看引用"
                         title="查看引用"
                     >
-                        refs
+                        <Link2 className="w-3.5 h-3.5" />
                     </button>
-                    <button
-                        className={cn(
-                            "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1 hover:bg-muted rounded-md transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
-                            !shouldReduceMotion && "active:scale-90"
-                        )}
-                        aria-label="更多操作"
-                    >
-                        <MoreHorizontal className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                    </button>
+                    <MemoActions
+                        id={memo.id}
+                        isDeleted={!!memo.deleted_at}
+                        isPinned={memo.is_pinned}
+                        isPrivate={memo.is_private}
+                        content={memo.content}
+                        createdAt={memo.created_at}
+                        tags={memo.tags ?? []}
+                        onEdit={() => setIsEditing(true)}
+                    />
                 </div>
             </div>
 
@@ -157,19 +158,6 @@ export function MemoCard({ memo }: MemoCardProps) {
                         </span>
                     ))}
                 </div>
-
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                    <MemoActions
-                        id={memo.id}
-                        isDeleted={!!memo.deleted_at}
-                        isPinned={memo.is_pinned}
-                        isPrivate={memo.is_private}
-                        content={memo.content}
-                        createdAt={memo.created_at}
-                        tags={memo.tags ?? []}
-                        onEdit={() => setIsEditing(true)}
-                    />
-                </div>
             </div>
 
             {/* 锁定覆盖层 */}
@@ -196,4 +184,4 @@ export function MemoCard({ memo }: MemoCardProps) {
             />
         </article>
     );
-}
+});

@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import { getAllTags } from '@/actions/tags';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Tag } from 'lucide-react';
 
-export function TagCloud() {
+export const TagCloud = memo(function TagCloud() {
     const [tags, setTags] = useState<{ tag_name: string; count: number }[]>([]);
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -64,4 +64,4 @@ export function TagCloud() {
             })}
         </div>
     );
-}
+});

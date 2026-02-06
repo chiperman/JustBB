@@ -17,6 +17,8 @@
   --background: #fdfcf8;
   --foreground: #191919;
   --card: #ffffff;
+  --popover: #ffffff;
+  --popover-foreground: #191919;
   --success: #40c463;
   --error: #ff6b6b;
 
@@ -32,6 +34,8 @@
   --background: #121212;
   --foreground: #e5e5e5;
   --card: #1e1e1e;
+  --popover: #1e1e1e;
+  --popover-foreground: #e5e5e5;
   --success: #3fb950;
   --error: #f85149;
 

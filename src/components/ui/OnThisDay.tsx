@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import { getOnThisDayMemos } from '@/actions/history';
 import { History } from 'lucide-react';
 import { Memo } from '@/types/memo';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from 'framer-motion';
 
-export function OnThisDay() {
+export const OnThisDay = memo(function OnThisDay() {
     const [memos, setMemos] = useState<Memo[]>([]);
     const [loading, setLoading] = useState(true);
     const shouldReduceMotion = useReducedMotion();
@@ -55,4 +55,4 @@ export function OnThisDay() {
             </ul>
         </section>
     );
-}
+});

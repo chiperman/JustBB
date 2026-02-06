@@ -4,14 +4,13 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { parseContentTokens } from '@/lib/contentParser';
+import { CodeBlock } from './CodeBlock';
+import { MemoHoverPreview } from './MemoHoverPreview';
 
 interface MemoContentProps {
     content: string;
     className?: string;
 }
-
-import { CodeBlock } from './CodeBlock';
-import { MemoHoverPreview } from './MemoHoverPreview';
 
 export function MemoContent({ content, className }: MemoContentProps) {
     // 正则解析逻辑
@@ -19,7 +18,7 @@ export function MemoContent({ content, className }: MemoContentProps) {
         const tokens = parseContentTokens(text);
 
         return (
-            <p>
+            <>
                 {tokens.map((token, index) => {
                     switch (token.type) {
                         case 'ref':
@@ -46,28 +45,23 @@ export function MemoContent({ content, className }: MemoContentProps) {
                             );
                         case 'image':
                             return (
-                                <div key={`img-${index}`} className="my-2 rounded-lg overflow-hidden border border-border">
+                                <span key={`img-${index}`} className="block my-2 rounded-lg overflow-hidden border border-border">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={token.value} alt="memo-image" className="max-h-64 object-contain bg-muted/20" loading="lazy" />
-                                </div>
+                                    <img src={token.value} alt="memo-image" className="max-h-64 object-contain bg-muted/20 mx-auto" loading="lazy" />
+                                </span>
                             );
                         case 'code':
-                            // Parse language if available? 
-                            // contentParser currently returns raw value in code token.
-                            // Usually code block is ```lang\ncode\n```.
-                            // We should update parser to extract lang or just guess?
-                            // If token.value is just the CONTENT of code block, we need language too.
-                            // Let's assume parser provides it or we default to txt.
-                            // Actually parser logic at `src/lib/contentParser.ts` needs check.
                             return (
-                                <CodeBlock key={`code-${index}`} language="typescript" value={token.value} />
+                                <div key={`code-${index}`} className="my-2">
+                                    <CodeBlock language={token.lang || "typescript"} value={token.value} />
+                                </div>
                             );
                         case 'text':
                         default:
                             return <span key={`text-${index}`}>{token.value}</span>;
                     }
                 })}
-            </p>
+            </>
         );
     };
 

@@ -42,16 +42,13 @@ export function Heatmap() {
     }
 
     return (
-        <div className="relative w-full overflow-hidden" onMouseLeave={() => setHoveredDate(null)}>
-            <div className="flex gap-[3px] overflow-x-auto pb-2 scrollbar-hide mask-fade-right">
-                {/* 使用 CSS Grid 实现类似 GitHub 的布局 
-                    需要按周分组，每列为一周，7行
-                */}
+        <div className="relative w-full mb-6" onMouseLeave={() => setHoveredDate(null)}>
+            <div className="overflow-x-auto pb-3 scrollbar-hide">
                 <div
                     className="grid grid-rows-7 grid-flow-col gap-[3px]"
-                    style={{ gridTemplateRows: 'repeat(7, 1fr)' }}
+                    style={{ gridTemplateRows: 'repeat(7, 10px)', width: 'fit-content' }}
                 >
-                    {days.map((date) => {
+                    {days.length > 0 ? days.map((date) => {
                         const dateStr = format(date, 'yyyy-MM-dd');
                         const count = stats[dateStr] || 0;
 
@@ -59,12 +56,12 @@ export function Heatmap() {
                             <div
                                 key={dateStr}
                                 className={cn(
-                                    "w-[10px] h-[10px] rounded-[2px] transition-colors duration-200",
+                                    "w-[10px] h-[10px] rounded-[2px] transition-colors duration-200 cursor-help",
                                     getColorClass(count)
                                 )}
+                                title={`${dateStr}: ${count} 记录`}
                                 onMouseEnter={(e) => {
                                     const rect = e.currentTarget.getBoundingClientRect();
-                                    // 简单的相对位置计算，或者直接用 fixed 定位
                                     setHoveredDate({
                                         date: format(date, 'yyyy年MM月dd日'),
                                         count,
@@ -74,7 +71,9 @@ export function Heatmap() {
                                 }}
                             />
                         );
-                    })}
+                    }) : (
+                        <div className="text-[10px] text-muted-foreground p-2">未获取到日期数据</div>
+                    )}
                 </div>
             </div>
 

@@ -4,7 +4,7 @@ import { DataExporter } from "@/components/ui/DataExporter";
 
 export default function AdminPage() {
     return (
-        <div className="max-w-2xl mx-auto space-y-10">
+        <div className="max-w-4xl mx-auto space-y-10">
             <header>
                 <h2 className="text-3xl font-bold tracking-tight">系统配置</h2>
                 <p className="text-muted-foreground mt-2">管理您的 JustMemo 偏好与安全设置。</p>
@@ -34,6 +34,6 @@ export default function AdminPage() {
 
                 <DataExporter />
             </div>
-        </div>
+        </div >
     );
 }

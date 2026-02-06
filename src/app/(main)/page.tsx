@@ -31,7 +31,7 @@ export default async function Home(props: {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-10">
+    <div className="max-w-4xl mx-auto space-y-10">
       {/* 顶部编辑器 */}
       <MemoEditor />
 

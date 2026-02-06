@@ -17,7 +17,7 @@ export function LeftSidebar() {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     const navItems = [
-        { icon: <Home className="w-5 h-5" aria-hidden="true" />, label: '流信息', href: '/' },
+        { icon: <Home className="w-5 h-5" aria-hidden="true" />, label: '首页', href: '/' },
         { icon: <GalleryIcon className="w-5 h-5" aria-hidden="true" />, label: '画廊', href: '/gallery' },
         { icon: <Tag className="w-5 h-5" aria-hidden="true" />, label: '标签', href: '/tags' },
         { icon: <Trash2 className="w-5 h-5" aria-hidden="true" />, label: '垃圾箱', href: '/trash' },

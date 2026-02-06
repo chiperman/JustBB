@@ -26,7 +26,7 @@ export function LeftSidebar() {
     return (
         <aside
             className={cn(
-                "h-screen sticky top-0 flex flex-col border-r border-border bg-background/50 backdrop-blur-md transition-[width,padding,background-color] duration-300 ease-in-out group/sidebar",
+                "h-screen sticky top-0 flex flex-col border-r border-border bg-background/50 backdrop-blur-md transition-[width,padding,background-color] duration-300 ease-in-out group/sidebar overflow-y-auto scrollbar-hide",
                 isCollapsed ? "w-20 p-4" : "w-72 p-6"
             )}
         >
@@ -84,7 +84,7 @@ export function LeftSidebar() {
 
             <div className={cn("transition-all duration-300", isCollapsed ? "h-0 opacity-0 invisible overflow-hidden" : "h-auto opacity-100 visible mb-8")}>
                 <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 font-sans flex items-center gap-2">
-                    <Tag className="w-3 h-3" aria-hidden="true" /> 常用标签
+                    <Tag className="w-3 h-3" aria-hidden="true" /> 热门标签
                 </h3>
                 <Suspense fallback={<div className="h-10 animate-pulse bg-muted/20 rounded-md" />}>
                     <TagCloud />

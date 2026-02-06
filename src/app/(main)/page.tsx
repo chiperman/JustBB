@@ -18,6 +18,7 @@ export default async function Home(props: {
 
   const yearStr = typeof searchParams?.year === 'string' ? searchParams.year : undefined;
   const monthStr = typeof searchParams?.month === 'string' ? searchParams.month : undefined;
+  const tagStr = typeof searchParams?.tag === 'string' ? searchParams.tag : undefined;
 
   let memos: Memo[] = [];
   if (yearStr && monthStr) {
@@ -27,7 +28,7 @@ export default async function Home(props: {
       memos = (await getArchivedMemos(year, month)) || [];
     }
   } else {
-    memos = (await getMemos({ limit: 20, query, adminCode })) || [];
+    memos = (await getMemos({ limit: 20, query, adminCode, tag: tagStr })) || [];
   }
 
   return (

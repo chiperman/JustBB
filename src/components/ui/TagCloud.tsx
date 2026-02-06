@@ -13,7 +13,12 @@ export const TagCloud = memo(function TagCloud() {
     const currentQuery = searchParams.get('q');
 
     useEffect(() => {
-        getAllTags().then(setTags);
+        getAllTags().then((data) => {
+            const sortedTags = [...data]
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 6);
+            setTags(sortedTags);
+        });
     }, []);
 
     const handleTagClick = (tag: string) => {

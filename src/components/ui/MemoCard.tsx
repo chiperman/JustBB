@@ -71,11 +71,11 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                     {memo.is_pinned && <Pin className="w-3.5 h-3.5 text-primary fill-primary" aria-hidden="true" />}
                     {memo.is_private && <Lock className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 group/actions">
                     <button
                         onClick={toggleBacklinks}
                         className={cn(
-                            "text-xs px-2 py-1 rounded transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-primary/20 cursor-pointer",
+                            "text-xs px-2 py-1 rounded transition-all opacity-0 group-hover/actions:opacity-100 focus-visible:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-primary/20 cursor-pointer",
                             showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground hover:bg-muted",
                             !shouldReduceMotion && "active:scale-95"
                         )}

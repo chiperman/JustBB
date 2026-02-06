@@ -5,7 +5,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "JustMemo - 碎片化人文记录",
   description: "一款追求人文质感与极致隐私的碎片化记录工具。",
+  manifest: "/manifest.json",
 };
+
+import { PWARegistration } from "@/components/providers/PWARegistration";
 
 export default function RootLayout({
   children,
@@ -22,6 +25,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <PWARegistration />
         </ThemeProvider>
       </body>
     </html>

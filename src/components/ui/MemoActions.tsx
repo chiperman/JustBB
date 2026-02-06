@@ -132,7 +132,7 @@ export function MemoActions({
         <div className="flex items-center gap-1">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <button className="p-2 hover:bg-muted rounded-full transition-colors outline-none">
+                    <button className="p-2 hover:bg-muted rounded-full transition-all outline-none opacity-0 group-hover:opacity-100 focus-visible:opacity-100">
                         <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
                     </button>
                 </DropdownMenuTrigger>

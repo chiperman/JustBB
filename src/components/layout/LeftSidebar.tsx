@@ -7,6 +7,7 @@ import { SearchInput } from '../ui/SearchInput';
 import { TagCloud } from '../ui/TagCloud';
 import { Heatmap } from '../ui/Heatmap';
 import { OnThisDay } from '../ui/OnThisDay';
+import { UserStatus } from '../ui/UserStatus';
 import { Home, Tag, Trash2, Settings, Image as GalleryIcon } from 'lucide-react';
 import Link from 'next/link';
 
@@ -65,6 +66,9 @@ export function LeftSidebar() {
             <OnThisDay />
 
             <div className="mt-auto pt-6 border-t border-border space-y-4">
+                {/* 用户登录状态 */}
+                <UserStatus />
+
                 <div className="flex items-center justify-between px-2">
                     <ThemeToggle />
                     <FontToggle />
@@ -88,7 +92,6 @@ export function LeftSidebar() {
                         <Settings className="w-5 h-5 text-muted-foreground group-hover:text-primary" />
                         <span className="text-sm font-medium">Export</span>
                     </button>
-                    {/* Admin Link or other settings could go here */}
                 </div>
             </div>
         </aside>

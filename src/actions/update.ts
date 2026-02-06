@@ -33,7 +33,11 @@ export async function updateMemoState(formData: FormData) {
     const updateData: any = {};
 
     if (is_private !== undefined) updateData.is_private = is_private;
-    if (is_pinned !== undefined) updateData.is_pinned = is_pinned;
+    if (is_pinned !== undefined) {
+        updateData.is_pinned = is_pinned;
+        // 置顶时设置 pinned_at，取消置顶时清空
+        updateData.pinned_at = is_pinned ? new Date().toISOString() : null;
+    }
     if (access_code_hint !== undefined) updateData.access_code_hint = access_code_hint;
 
     // 如果设置了新的 access_code，需要加密存储

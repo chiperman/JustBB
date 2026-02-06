@@ -26,7 +26,7 @@ export function LeftSidebar() {
     return (
         <aside
             className={cn(
-                "h-screen sticky top-0 flex flex-col border-r border-border bg-background/50 backdrop-blur-md transition-[width,padding,background-color] duration-300 ease-in-out group/sidebar overflow-y-auto scrollbar-hide",
+                "h-full flex flex-col border-r border-border bg-background/50 backdrop-blur-md transition-[width,padding,background-color] duration-300 ease-in-out group/sidebar",
                 isCollapsed ? "w-20 p-4" : "w-72 p-6"
             )}
         >

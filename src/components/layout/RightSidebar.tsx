@@ -60,7 +60,7 @@ export function RightSidebar() {
     ];
 
     return (
-        <aside className="hidden xl:flex w-80 h-screen sticky top-0 flex-col p-6 border-l border-border bg-background/50 backdrop-blur-md overflow-y-auto scrollbar-hide">
+        <aside className="hidden xl:flex w-80 h-full flex-col p-6 border-l border-border bg-background/50 backdrop-blur-md">
             <div className="flex-1">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-6 font-sans">
                     月份归档

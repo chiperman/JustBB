@@ -15,7 +15,7 @@ export default function MainLayout({
             <div className="flex min-h-screen justify-center selection:bg-primary/20">
                 <div className="flex w-full max-w-(--breakpoint-2xl)">
                     {/* 左侧导航 - 移动端隐藏 */}
-                    <div className="hidden lg:block">
+                    <div className="hidden lg:block sticky top-0 h-screen overflow-y-auto scrollbar-hide">
                         <Suspense fallback={<div className="w-64" />}>
                             <LeftSidebar />
                         </Suspense>
@@ -29,7 +29,7 @@ export default function MainLayout({
                     </main>
 
                     {/* 右侧边栏 - 移动端隐藏 */}
-                    <div className="hidden xl:block">
+                    <div className="hidden xl:block sticky top-0 h-screen overflow-y-auto scrollbar-hide">
                         <Suspense fallback={<div className="w-80" />}>
                             <RightSidebar />
                         </Suspense>

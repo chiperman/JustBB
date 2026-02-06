@@ -12,24 +12,22 @@ export default function MainLayout({
 }) {
     return (
         <MobileLayoutWrapper>
-            <div className="flex min-h-screen justify-center selection:bg-primary/20">
-                <div className="flex w-full max-w-(--breakpoint-2xl)">
+            <div className="flex h-screen w-full justify-center selection:bg-primary/20 overflow-hidden">
+                <div className="flex w-full max-w-(--breakpoint-2xl) h-full">
                     {/* 左侧导航 - 移动端隐藏 */}
-                    <div className="hidden lg:block sticky top-0 h-screen overflow-y-auto scrollbar-hide">
+                    <div className="hidden lg:block h-full overflow-y-auto scrollbar-hide border-r border-border/40">
                         <Suspense fallback={<div className="w-64" />}>
                             <LeftSidebar />
                         </Suspense>
                     </div>
 
                     {/* 内容流区域 */}
-                    <main className="flex-1 min-w-0 bg-background min-h-screen py-10 pt-16 lg:pt-10">
-                        <div className="max-w-4xl mx-auto px-4 md:px-8">
-                            {children}
-                        </div>
+                    <main className="flex-1 min-w-0 bg-background h-full flex flex-col overflow-hidden">
+                        {children}
                     </main>
 
                     {/* 右侧边栏 - 移动端隐藏 */}
-                    <div className="hidden xl:block sticky top-0 h-screen overflow-y-auto scrollbar-hide">
+                    <div className="hidden xl:block h-full overflow-y-auto scrollbar-hide border-l border-border/40">
                         <Suspense fallback={<div className="w-80" />}>
                             <RightSidebar />
                         </Suspense>

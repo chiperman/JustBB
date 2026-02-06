@@ -57,12 +57,40 @@ body {
 
 html,
 body {
-  overflow-x: visible !important;
-  overflow-y: visible !important;
-  scroll-behavior: smooth;
+  height: 100vh;
+  overflow: hidden;
 }
 
 body.font-sans {
   font-family: 'Inter', system-ui, sans-serif;
   /* 无衬线体 */
+}
+
+/* Custom Scrollbar Styles */
+.scrollbar-hover {
+  overflow-y: auto;
+}
+
+.scrollbar-hover::-webkit-scrollbar {
+  width: 6px;
+  background-color: transparent;
+}
+
+.scrollbar-hover::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 3px;
+}
+
+.scrollbar-hover:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  /* gray-400 with opacity */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

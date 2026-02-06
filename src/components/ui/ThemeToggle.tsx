@@ -5,6 +5,8 @@ import { Moon, Sun, Monitor } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
+import { Skeleton } from './skeleton';
+
 export function ThemeToggle() {
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
@@ -15,7 +17,7 @@ export function ThemeToggle() {
     }, []);
 
     if (!mounted) {
-        return <div className="p-2 w-10 h-10 border border-border rounded-full opacity-0" />;
+        return <Skeleton className="w-10 h-10 rounded-full" />;
     }
 
     const themes = [

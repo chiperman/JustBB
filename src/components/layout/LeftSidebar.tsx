@@ -86,7 +86,13 @@ export function LeftSidebar() {
                 <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 font-sans flex items-center gap-2">
                     <Tag className="w-3 h-3" aria-hidden="true" /> 热门标签
                 </h3>
-                <Suspense fallback={<div className="h-10 animate-pulse bg-muted/20 rounded-md" />}>
+                <Suspense fallback={<div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="h-6 w-12 bg-muted/20 rounded-full animate-pulse" />
+                        ))}
+                    </div>
+                </div>}>
                     <TagCloud />
                 </Suspense>
             </div>

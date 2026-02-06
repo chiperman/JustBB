@@ -22,8 +22,10 @@ export default function MainLayout({
                     </div>
 
                     {/* 内容流区域 */}
-                    <main className="flex-1 min-w-0 bg-background px-4 md:px-8 py-10 pt-16 lg:pt-10">
-                        {children}
+                    <main className="flex-1 min-w-0 bg-background py-10 pt-16 lg:pt-10">
+                        <div className="max-w-4xl mx-auto px-4 md:px-8">
+                            {children}
+                        </div>
                     </main>
 
                     {/* 右侧边栏 - 移动端隐藏 */}

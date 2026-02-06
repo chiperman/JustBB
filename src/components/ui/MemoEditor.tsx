@@ -10,6 +10,13 @@ import { searchMemosForMention } from '@/actions/search';
 import { SuggestionList, SuggestionItem } from './SuggestionList';
 import { getAllTags } from '@/actions/tags';
 import { useReducedMotion } from 'framer-motion';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
 
 import { Memo, TagStat } from '@/types/memo';
 
@@ -26,8 +33,11 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
     const [tagInput, setTagInput] = useState('');
     const [isPending, setIsPending] = useState(false);
     const [isPrivate, setIsPrivate] = useState(memo?.is_private || false);
+    const [accessCode, setAccessCode] = useState('');
+    const [accessHint, setAccessHint] = useState('');
     const [isPinned, setIsPinned] = useState(memo?.is_pinned || false);
     const [error, setError] = useState<string | null>(null);
+    const [showPrivateDialog, setShowPrivateDialog] = useState(false);
 
     // Suggestion system states
     const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
@@ -123,7 +133,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
             e.preventDefault();
-            handlePublish();
+            handlePublishClick();
             return;
         }
 
@@ -169,16 +179,40 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
         }
     };
 
-    const handlePublish = async () => {
+    const handleTogglePrivate = () => {
+        setIsPrivate(!isPrivate);
+        if (!isPrivate) {
+            // Turning on: reset any previous inputs
+            setAccessCode('');
+            setAccessHint('');
+        }
+    };
+
+    const handlePublishClick = () => {
         if (!content.trim() || isPending) return;
 
+        if (isPrivate) {
+            setShowPrivateDialog(true);
+        } else {
+            performPublish();
+        }
+    };
+
+    const performPublish = async () => {
         setIsPending(true);
         setError(null);
+        setShowPrivateDialog(false);
+
         const formData = new FormData();
         formData.append('content', content);
         tags.forEach(tag => formData.append('tags', tag));
         formData.append('is_private', String(isPrivate));
         formData.append('is_pinned', String(isPinned));
+
+        if (isPrivate && accessCode) {
+            formData.append('access_code', accessCode);
+            formData.append('access_code_hint', accessHint);
+        }
 
         try {
             let result;
@@ -194,6 +228,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                     setContent('');
                     setTags([]);
                     setIsPrivate(false);
+                    setAccessCode('');
+                    setAccessHint('');
                     setIsPinned(false);
                     router.refresh();
                 } else {
@@ -288,7 +324,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
             <div className="flex justify-between items-center pt-5 mt-4 border-t border-border">
                 <div className="flex items-center gap-4">
                     <button
-                        onClick={() => setIsPrivate(!isPrivate)}
+                        onClick={handleTogglePrivate}
                         className={cn(
                             "text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 p-1.5 rounded-md",
                             isPrivate ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-primary hover:bg-muted"
@@ -321,7 +357,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                         </button>
                     )}
                     <button
-                        onClick={handlePublish}
+                        onClick={handlePublishClick}
                         disabled={isPending || !content.trim()}
                         className={cn(
                             "bg-primary text-white px-7 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all disabled:opacity-50 flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2",
@@ -340,6 +376,58 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                     </button>
                 </div>
             </div>
+
+            <Dialog open={showPrivateDialog} onOpenChange={setShowPrivateDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>设置访问口令</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-4 py-4">
+                        <div className="space-y-2">
+                            <label htmlFor="access-code" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                访问口令 (可选)
+                            </label>
+                            <input
+                                id="access-code"
+                                type="text"
+                                value={accessCode}
+                                onChange={(e) => setAccessCode(e.target.value)}
+                                placeholder="留空则不设置/保持原样"
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label htmlFor="access-hint" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                口令提示 (可选)
+                            </label>
+                            <input
+                                id="access-hint"
+                                type="text"
+                                value={accessHint}
+                                onChange={(e) => setAccessHint(e.target.value)}
+                                placeholder="用于提示口令内容"
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <button
+                            onClick={() => setShowPrivateDialog(false)}
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                        >
+                            取消
+                        </button>
+                        <button
+                            onClick={performPublish}
+                            disabled={isPending}
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                        >
+                            {isPending ? '提交中...' : '确认发布'}
+                        </button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </section>
     );
 }
+

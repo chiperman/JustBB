@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createMemo } from '@/actions/memos';
 import { useRouter } from 'next/navigation';
 import { Tag, X, Pin, Lock, LockOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { updateMemoContent } from '@/actions/update';
+import { searchMemosForMention } from '@/actions/search';
+import { SuggestionList } from './SuggestionList';
+import { getAllTags } from '@/actions/tags';
 
 import { Memo } from '@/types/memo';
 
@@ -24,7 +27,84 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
     const [isTagInputVisible, setIsTagInputVisible] = useState(false);
     const [isPrivate, setIsPrivate] = useState(memo?.is_private || false);
     const [isPinned, setIsPinned] = useState(memo?.is_pinned || false);
+
+    // Suggestion system states
+    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [activeIndex, setActiveIndex] = useState(0);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // Tag autocomplete states
+    const [allTags, setAllTags] = useState<{ tag_name: string, count: number }[]>([]);
+    const [tagSuggestions, setTagSuggestions] = useState<any[]>([]);
+    const [showTagSuggestions, setShowTagSuggestions] = useState(false);
+
     const router = useRouter();
+
+    useEffect(() => {
+        if (isTagInputVisible) {
+            getAllTags().then(setAllTags);
+        }
+    }, [isTagInputVisible]);
+
+    const handleContentChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const val = e.target.value;
+        setContent(val);
+
+        const cursorPosition = e.target.selectionStart;
+        const textBeforeCursor = val.slice(0, cursorPosition);
+        const mentionMatch = textBeforeCursor.match(/@(\d*)$/);
+
+        if (mentionMatch) {
+            const query = mentionMatch[1];
+            setShowSuggestions(true);
+            const data = await searchMemosForMention(query);
+            setSuggestions(data.map(m => ({
+                id: m.id,
+                label: `@${m.memo_number}`,
+                subLabel: m.content.substring(0, 50),
+                memo_number: m.memo_number
+            })));
+            setActiveIndex(0);
+        } else {
+            setShowSuggestions(false);
+        }
+    };
+
+    const handleTagInputChange = (val: string) => {
+        setTagInput(val);
+        if (val.trim()) {
+            const filtered = allTags
+                .filter(t => t.tag_name.toLowerCase().includes(val.toLowerCase()))
+                .slice(0, 5);
+            setTagSuggestions(filtered.map(t => ({ id: t.tag_name, label: `#${t.tag_name}`, count: t.count })));
+            setShowTagSuggestions(true);
+            setActiveIndex(0);
+        } else {
+            setShowTagSuggestions(false);
+        }
+    };
+
+    const handleSelectSuggestion = (item: any) => {
+        if (!textareaRef.current) return;
+        const cursorPosition = textareaRef.current.selectionStart;
+        const textBeforeCursor = content.slice(0, cursorPosition);
+        const textAfterCursor = content.slice(cursorPosition);
+
+        const newPrefix = textBeforeCursor.replace(/@\d*$/, `@${item.memo_number} `);
+        setContent(newPrefix + textAfterCursor);
+        setShowSuggestions(false);
+        textareaRef.current.focus();
+    };
+
+    const handleSelectTag = (item: any) => {
+        const tag = item.id;
+        if (!tags.includes(tag)) {
+            setTags([...tags, tag]);
+        }
+        setTagInput('');
+        setShowTagSuggestions(false);
+    };
 
     const handleAddTag = () => {
         const tag = tagInput.trim();
@@ -32,13 +112,56 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
             setTags([...tags, tag]);
             setTagInput('');
         }
+        setShowTagSuggestions(false);
     };
 
     const handleRemoveTag = (tagToRemove: string) => {
         setTags(tags.filter(t => t !== tagToRemove));
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+            e.preventDefault();
+            handlePublish();
+            return;
+        }
+
+        if (showSuggestions && suggestions.length > 0) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setActiveIndex((prev) => (prev + 1) % suggestions.length);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setActiveIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSelectSuggestion(suggestions[activeIndex]);
+            } else if (e.key === 'Escape') {
+                setShowSuggestions(false);
+            }
+        }
+    };
+
     const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (showTagSuggestions && tagSuggestions.length > 0) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setActiveIndex((prev) => (prev + 1) % tagSuggestions.length);
+                return;
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setActiveIndex((prev) => (prev - 1 + tagSuggestions.length) % tagSuggestions.length);
+                return;
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSelectTag(tagSuggestions[activeIndex]);
+                return;
+            } else if (e.key === 'Escape') {
+                setShowTagSuggestions(false);
+                return;
+            }
+        }
+
         if (e.key === 'Enter') {
             e.preventDefault();
             handleAddTag();
@@ -82,21 +205,29 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
     };
 
     return (
-        <section className="bg-card border border-border rounded-2xl p-6 shadow-sm transition-all focus-within:shadow-md">
-            <textarea
-                className="w-full bg-transparent border-none focus:ring-0 placeholder:text-muted-foreground italic text-sm resize-none mb-2"
-                placeholder="记录此刻的灵感..."
-                rows={3}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                onKeyDown={(e) => {
-                    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-                        e.preventDefault();
-                        handlePublish();
-                    }
-                }}
-                disabled={isPending}
-            />
+        <section className="bg-card border border-border rounded-2xl p-6 shadow-sm transition-all focus-within:shadow-md relative">
+            <div className="relative">
+                <textarea
+                    ref={textareaRef}
+                    className="w-full bg-transparent border-none focus:ring-0 placeholder:text-muted-foreground italic text-sm resize-none mb-2"
+                    placeholder="记录此刻的灵感..."
+                    rows={3}
+                    value={content}
+                    onChange={handleContentChange}
+                    onKeyDown={handleKeyDown}
+                    disabled={isPending}
+                />
+
+                {showSuggestions && (
+                    <div className="absolute top-full left-0 mt-1 z-50">
+                        <SuggestionList
+                            items={suggestions}
+                            activeIndex={activeIndex}
+                            onSelect={handleSelectSuggestion}
+                        />
+                    </div>
+                )}
+            </div>
 
             {/* 标签展示区 */}
             {tags.length > 0 && (
@@ -114,19 +245,25 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
 
             {/* 标签输入框 */}
             {isTagInputVisible && (
-                <div className="flex items-center gap-2 mb-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="relative mb-3 animate-in fade-in slide-in-from-top-1 duration-200">
                     <input
                         type="text"
                         value={tagInput}
-                        onChange={(e) => setTagInput(e.target.value)}
+                        onChange={(e) => handleTagInputChange(e.target.value)}
                         onKeyDown={handleTagInputKeyDown}
                         placeholder="输入标签并回车..."
                         className="text-xs bg-muted/50 border border-border rounded px-2 py-1 outline-none focus:ring-1 focus:ring-primary w-32"
                         autoFocus
-                        onBlur={() => {
-                            if (tagInput.trim()) handleAddTag();
-                        }}
                     />
+                    {showTagSuggestions && (
+                        <div className="absolute top-full left-0 mt-1 z-50">
+                            <SuggestionList
+                                items={tagSuggestions}
+                                activeIndex={activeIndex}
+                                onSelect={handleSelectTag}
+                            />
+                        </div>
+                    )}
                 </div>
             )}
 

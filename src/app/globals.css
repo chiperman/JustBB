@@ -9,18 +9,24 @@
   --color-secondary: #3f6212;
   /* Deep Olive */
   --color-border: #e5e5e0;
+  --color-success: var(--success);
+  --color-error: var(--error);
 }
 
 :root {
   --background: #fdfcf8;
   --foreground: #191919;
   --card: #ffffff;
+  --success: #40c463;
+  --error: #ff6b6b;
 }
 
 .dark {
   --background: #121212;
   --foreground: #e5e5e5;
   --card: #1e1e1e;
+  --success: #3fb950;
+  --error: #f85149;
 }
 
 body {

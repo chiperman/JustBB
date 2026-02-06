@@ -89,7 +89,7 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
                     const isFirstOfDay = currentDate !== prevDate;
 
                     return (
-                        <div key={memo.id} className="break-inside-avoid relative">
+                        <div key={memo.id} className="break-inside-avoid relative animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-backwards" style={{ animationDelay: `${index * 50}ms` }}>
                             {isFirstOfDay && (
                                 <div
                                     id={`date-${currentDate}`}

@@ -22,7 +22,7 @@ export default function MainLayout({
                     </div>
 
                     {/* 内容流区域 */}
-                    <main className="flex-1 min-w-0 bg-background h-full flex flex-col overflow-hidden">
+                    <main className="flex-1 min-w-0 bg-background h-full flex flex-col overflow-hidden animate-in fade-in duration-500">
                         {children}
                     </main>
 

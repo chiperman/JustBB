@@ -72,8 +72,13 @@ export function MemoActions({
         let accessCode = undefined;
         let hint = undefined;
 
-        // 如果是要设为私密，且当前是非私密，可以询问是否设置口令
-        if (!isPrivate) {
+        // 如果当前是私密，要转为公开，需要二次确认
+        if (isPrivate) {
+            const confirmPublic = confirm('⚠️ 确定要将该内容设为公开吗？\n\n设为公开后，所有人都可以看到此内容。');
+            if (!confirmPublic) {
+                return; // 用户取消
+            }
+        } else if (!isPrivate) {
             const wantCode = confirm('是否要为该条私密内容设置访问口令？\n点击“确定”设置口令，点击“取消”仅设为私密（无额外口令）。');
             if (wantCode) {
                 const code = prompt('请输入访问口令：');

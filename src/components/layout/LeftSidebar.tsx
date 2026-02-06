@@ -55,11 +55,6 @@ export function LeftSidebar() {
                 <div className={cn("transition-all duration-300", isCollapsed ? "h-0 opacity-0 invisible overflow-hidden" : "h-auto opacity-100 visible mb-6")}>
                     <SearchInput />
                 </div>
-                {isCollapsed && (
-                    <div className="w-full flex justify-center mb-6">
-                        <Home className="w-5 h-5 text-muted-foreground opacity-20" aria-hidden="true" />
-                    </div>
-                )}
             </Suspense>
 
             <div className={cn("transition-all duration-300", isCollapsed ? "h-0 opacity-0 invisible overflow-hidden" : "h-auto opacity-100 visible mb-8 px-1")}>

@@ -14,6 +14,7 @@ function cn(...inputs: ClassValue[]) {
 }
 
 import { Memo } from '@/types/memo';
+import { UnlockDialog } from './UnlockDialog';
 
 interface MemoCardProps {
     memo: Memo;
@@ -21,17 +22,11 @@ interface MemoCardProps {
 
 export function MemoCard({ memo }: MemoCardProps) {
     const router = useRouter();
-    const searchParams = useSearchParams();
-
     const [isEditing, setIsEditing] = useState(false);
+    const [isUnlockOpen, setIsUnlockOpen] = useState(false);
 
     const handleUnlock = () => {
-        const code = prompt(memo.access_code_hint ? `请输入解锁口令\n提示: ${memo.access_code_hint}` : "请输入解锁口令");
-        if (code) {
-            const params = new URLSearchParams(searchParams);
-            params.set('code', code);
-            router.push(`/?${params.toString()}`);
-        }
+        setIsUnlockOpen(true);
     };
 
     const [showBacklinks, setShowBacklinks] = useState(false);
@@ -166,6 +161,12 @@ export function MemoCard({ memo }: MemoCardProps) {
                     </button>
                 </div>
             )}
+
+            <UnlockDialog
+                isOpen={isUnlockOpen}
+                onClose={() => setIsUnlockOpen(false)}
+                hint={memo.access_code_hint}
+            />
         </article>
     );
 }

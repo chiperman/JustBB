@@ -1,18 +1,23 @@
 import { getMemos, getArchivedMemos } from "@/actions/fetchMemos";
 import { LeftSidebar } from "@/components/layout/LeftSidebar";
 import { RightSidebar } from "@/components/layout/RightSidebar";
-import { MemoCard } from "@/components/ui/MemoCard";
 import { MemoCardSkeleton } from "@/components/ui/MemoCardSkeleton";
 import { MemoEditor } from "@/components/ui/MemoEditor";
 import { Memo } from "@/types/memo";
 import { MemoFeed } from '@/components/ui/MemoFeed';
+import { cookies } from 'next/headers';
 
 export default async function Home(props: {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const searchParams = await props.searchParams;
+  const cookieStore = await cookies();
+
   const query = typeof searchParams?.q === 'string' ? searchParams.q : undefined;
-  const adminCode = typeof searchParams?.code === 'string' ? searchParams.code : undefined;
+  // 优先从 Cookie 读取口令，如果 URL 中有口令 (用于兼容性或首次设置) 则以 URL 为准
+  const cookieCode = cookieStore.get('memo_access_code')?.value;
+  const urlCode = typeof searchParams?.code === 'string' ? searchParams.code : undefined;
+  const adminCode = urlCode || cookieCode;
 
   const yearStr = typeof searchParams?.year === 'string' ? searchParams.year : undefined;
   const monthStr = typeof searchParams?.month === 'string' ? searchParams.month : undefined;

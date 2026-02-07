@@ -124,25 +124,30 @@ export const Heatmap = memo(function Heatmap() {
         );
     }
 
-    const Trigger = (
-        <div className="w-full space-y-4 px-1 cursor-pointer group/container outline-none focus:ring-0 relative overflow-visible">
-            {/* 顶栏统计 */}
-            <div className="grid grid-cols-3 gap-2">
-                <div className="flex flex-col items-center group-hover/container:opacity-80 transition-opacity">
-                    <span className="text-3xl tracking-tight leading-none">{stats?.totalMemos || 0}</span>
-                    <span className="text-[11px] text-muted-foreground mt-1">笔记</span>
-                </div>
-                <div className="flex flex-col items-center group-hover/container:opacity-80 transition-opacity">
-                    <span className="text-3xl tracking-tight leading-none">{stats?.totalTags || 0}</span>
-                    <span className="text-[11px] text-muted-foreground mt-1">标签</span>
-                </div>
-                <div className="flex flex-col items-center group-hover/container:opacity-80 transition-opacity">
-                    <span className="text-3xl tracking-tight leading-none">{totalActiveDays}</span>
-                    <span className="text-[11px] text-muted-foreground mt-1">天</span>
-                </div>
+    // 顶栏统计 - 仅这部分触发 Modal
+    const StatsTrigger = (
+        <div className="grid grid-cols-3 gap-2 cursor-pointer group/stats hover:opacity-80 transition-opacity">
+            <div className="flex flex-col items-center">
+                <span className="text-3xl tracking-tight leading-none">{stats?.totalMemos || 0}</span>
+                <span className="text-[11px] text-muted-foreground mt-1">笔记</span>
             </div>
+            <div className="flex flex-col items-center">
+                <span className="text-3xl tracking-tight leading-none">{stats?.totalTags || 0}</span>
+                <span className="text-[11px] text-muted-foreground mt-1">标签</span>
+            </div>
+            <div className="flex flex-col items-center">
+                <span className="text-3xl tracking-tight leading-none">{totalActiveDays}</span>
+                <span className="text-[11px] text-muted-foreground mt-1">天</span>
+            </div>
+        </div>
+    );
 
-            {/* 热力图主体 */}
+    return stats ? (
+        <div className="w-full space-y-4 px-1 relative overflow-visible">
+            {/* 顶栏统计 - 包裹在 HeatmapModal 中，点击打开 Modal */}
+            <HeatmapModal stats={stats} trigger={StatsTrigger} />
+
+            {/* 热力图主体 - 不触发 Modal，仅支持日期过滤 */}
             <div className="relative pt-2" onMouseLeave={() => setHoveredDate(null)}>
                 <div className="relative overflow-visible heatmap-content-wrapper">
                     <div
@@ -184,7 +189,5 @@ export const Heatmap = memo(function Heatmap() {
                 </div>
             </div>
         </div>
-    );
-
-    return stats ? <HeatmapModal stats={stats} trigger={Trigger} /> : null;
+    ) : null;
 });

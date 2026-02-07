@@ -122,13 +122,16 @@ export function MemoActions({
         }
     };
 
-    const handlePromptConfirm = async (code: string) => {
+    const handlePromptConfirm = async (code: string, hint: string) => {
         setIsPending(true);
         const formData = new FormData();
         formData.append('id', id);
         formData.append('is_private', 'true');
         if (code) {
             formData.append('access_code', code);
+            if (hint) {
+                formData.append('access_code_hint', hint);
+            }
         }
 
         const result = await updateMemoState(formData);
@@ -267,6 +270,8 @@ export function MemoActions({
                 title="设为私密内容"
                 description="你可以选择设置一个访问口令，或者直接点击确定设为仅自己可见。"
                 placeholder="访问口令 (可选)"
+                showSecondInput={true}
+                secondPlaceholder="口令提示词 (可选)"
                 onConfirm={handlePromptConfirm}
                 onCancel={() => { }}
             />

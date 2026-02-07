@@ -19,7 +19,10 @@ interface PromptDialogProps {
     description?: string
     placeholder?: string
     defaultValue?: string
-    onConfirm: (value: string) => void
+    showSecondInput?: boolean
+    secondPlaceholder?: string
+    secondDefaultValue?: string
+    onConfirm: (value: string, secondValue: string) => void
     onCancel: () => void
 }
 
@@ -30,19 +33,24 @@ export function PromptDialog({
     description,
     placeholder,
     defaultValue = "",
+    showSecondInput = false,
+    secondPlaceholder,
+    secondDefaultValue = "",
     onConfirm,
     onCancel,
 }: PromptDialogProps) {
     const [value, setValue] = React.useState(defaultValue)
+    const [secondValue, setSecondValue] = React.useState(secondDefaultValue)
 
     React.useEffect(() => {
         if (open) {
             setValue(defaultValue)
+            setSecondValue(secondDefaultValue)
         }
-    }, [open, defaultValue])
+    }, [open, defaultValue, secondDefaultValue])
 
     const handleConfirm = () => {
-        onConfirm(value)
+        onConfirm(value, secondValue)
         onOpenChange(false)
     }
 
@@ -70,6 +78,18 @@ export function PromptDialog({
                         }}
                         autoFocus
                     />
+                    {showSecondInput && (
+                        <Input
+                            value={secondValue}
+                            onChange={(e) => setSecondValue(e.target.value)}
+                            placeholder={secondPlaceholder}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    handleConfirm()
+                                }
+                            }}
+                        />
+                    )}
                 </div>
                 <DialogFooter className="gap-2 sm:gap-0">
                     <Button variant="outline" onClick={handleCancel}>

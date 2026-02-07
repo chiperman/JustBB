@@ -28,6 +28,12 @@
 *   **代码 (Mono)**: 'ui-monospace', 'SFMono-Regular', monospace。
 *   **交互逻辑**: 支持用户在前端一键切换 Serif/Sans 字体。
 
-## 4. 交互反馈与动效
-*   **通知**: 使用 **顶部弹窗 (Toast/Popup)** 提醒。
-*   **动效**: 基于 **Framer Motion** 实现瀑布流卡片的平滑加载与渐显。
+## 4. 形状与边限 (Shapes & Borders)
+*   **卡片圆角**: `rounded-2xl` (0.75rem / 12px) - 用于文章卡片、弹窗容器。
+*   **通用圆角**: `rounded-md` (0.375rem / 6px) - **标准化规范**。适用于所有标签 (Tags)、ID 编码、提及 (Mentions)、按钮以及状态标识，确保视觉风格统一，避免不规则形状堆砌。
+*   **图片圆角**: `rounded-xl` (0.75rem / 12px) - 用于正文配图，平衡大容器圆角。
+
+## 5. 交互反馈与动效
+*   **通知系统**: 采用全局 **Toast 通知** 展示操作反馈（成功/警告/错误），取代原生 `alert`。
+*   **对话框**: 所有 `confirm` 与 `prompt` 逻辑均替换为定制化的 **AlertDialog** 与 **PromptDialog**，支持毛玻璃背景 (`backdrop-blur`)。
+*   **动效**: 基于 **Framer Motion** 实现瀑布流卡片的平滑加载与渐显，移除冗余布局抖动。

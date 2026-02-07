@@ -156,7 +156,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                             <span
                                 key={tag}
                                 role="listitem"
-                                className="text-xs text-primary bg-primary/5 px-2 py-0.5 rounded-full hover:bg-primary/10 cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 outline-none"
+                                className="text-xs text-primary bg-primary/5 px-2 py-0.5 rounded-md hover:bg-primary/10 cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 outline-none"
                                 tabIndex={0}
                             >
                                 #{tag}

@@ -52,7 +52,7 @@ export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { is
             <div className={cn("space-y-2", isCollapsed ? "flex flex-col items-center" : "")}>
                 <div
                     className={cn(
-                        "flex items-center gap-2 p-2 bg-muted/40 rounded-xl border border-border/50 group/status transition-all",
+                        "flex items-center gap-2 p-2 bg-muted/40 rounded-md border border-border/50 group/status transition-all",
                         isCollapsed ? "justify-center" : "w-full"
                     )}
                     title={user.email || '管理员'}
@@ -69,7 +69,7 @@ export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { is
                     onClick={handleLogout}
                     disabled={loggingOut}
                     className={cn(
-                        "flex items-center justify-start gap-2 h-auto py-2.5 px-2.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground font-normal",
+                        "flex items-center justify-start gap-2 h-auto py-2.5 px-2.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground font-normal",
                         isCollapsed ? "justify-center px-0 w-10 h-10" : "w-full",
                         loggingOut && "opacity-50 cursor-not-allowed"
                     )}

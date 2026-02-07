@@ -27,7 +27,7 @@ export function MemoContent({ content, className }: MemoContentProps) {
                                 <MemoHoverPreview key={`ref-${index}`} memoNumber={memoNum} memoId={memoNum}>
                                     <Link
                                         href={`/?q=${memoNum}`}
-                                        className="text-primary hover:underline cursor-pointer font-mono bg-primary/10 px-1 rounded-md mx-0.5 inline-block focus-visible:ring-1 focus-visible:ring-primary/30 outline-none"
+                                        className="text-primary hover:underline cursor-pointer font-mono bg-primary/10 px-1 rounded-sm mx-0.5 inline-block focus-visible:ring-1 focus-visible:ring-primary/30 outline-none"
                                         aria-label={`查看引用记录 #${memoNum}`}
                                     >
                                         {token.value}
@@ -39,7 +39,7 @@ export function MemoContent({ content, className }: MemoContentProps) {
                                 <Link
                                     key={`tag-${index}`}
                                     href={`/?tag=${encodeURIComponent(token.value.slice(1))}`}
-                                    className="text-primary hover:underline mx-0.5 focus-visible:ring-1 focus-visible:ring-primary/30 outline-none rounded-md"
+                                    className="text-primary hover:underline mx-0.5 focus-visible:ring-1 focus-visible:ring-primary/30 outline-none rounded-sm"
                                     aria-label={`查看包含 #${token.value.slice(1)} 标签的记录`}
                                 >
                                     {token.value}

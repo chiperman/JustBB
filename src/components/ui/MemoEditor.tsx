@@ -5,6 +5,8 @@ import { createMemo } from '@/actions/memos';
 import { useRouter } from 'next/navigation';
 import { X, Pin, Lock, LockOpen, Hash, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from './button';
+import { Input } from './input';
 import { updateMemoContent } from '@/actions/update';
 import { searchMemosForMention } from '@/actions/search';
 import { Command, CommandList, CommandItem, CommandEmpty, CommandGroup } from './command';
@@ -378,45 +380,49 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
 
             <div className="flex justify-between items-center pt-5 mt-4 border-t border-border">
                 <div className="flex items-center gap-4">
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={handleTogglePrivate}
                         className={cn(
-                            "text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 p-1.5 rounded-md cursor-pointer",
-                            isPrivate ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-primary hover:bg-muted"
+                            "text-[10px] font-bold uppercase tracking-widest",
+                            isPrivate ? "text-primary bg-primary/5" : "text-muted-foreground"
                         )}
                         aria-label={isPrivate ? "设为公开内容" : "设为私密内容"}
                         aria-pressed={isPrivate}
                     >
                         {isPrivate ? <Lock className="w-3 h-3" aria-hidden="true" /> : <LockOpen className="w-3 h-3" aria-hidden="true" />}
                         Private
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setIsPinned(!isPinned)}
                         className={cn(
-                            "text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 p-1.5 rounded-md cursor-pointer",
-                            isPinned ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-primary hover:bg-muted"
+                            "text-[10px] font-bold uppercase tracking-widest",
+                            isPinned ? "text-primary bg-primary/5" : "text-muted-foreground"
                         )}
                         aria-label={isPinned ? "取消置顶" : "置顶此内容"}
                         aria-pressed={isPinned}
                     >
                         <Pin className={cn("w-3 h-3", isPinned && "fill-primary")} aria-hidden="true" /> Pin
-                    </button>
+                    </Button>
                 </div>
                 <div className="flex gap-3">
                     {mode === 'edit' && (
-                        <button
+                        <Button
+                            variant="ghost"
                             onClick={onCancel}
-                            className="text-muted-foreground px-5 py-2 rounded-full text-sm font-medium hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/10 cursor-pointer"
+                            className="rounded-full"
                         >
                             取消
-                        </button>
+                        </Button>
                     )}
-                    <button
+                    <Button
                         onClick={handlePublishClick}
                         disabled={isPending || !content.trim()}
                         className={cn(
-                            "bg-primary text-white px-7 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all disabled:opacity-50 flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 cursor-pointer disabled:cursor-not-allowed",
-                            !isPending && content.trim() && "hover:opacity-90 hover:shadow-md",
+                            "rounded-full px-7",
                             !shouldReduceMotion && "active:scale-95"
                         )}
                     >
@@ -428,7 +434,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                         ) : (
                             mode === 'edit' ? '更新' : '发布'
                         )}
-                    </button>
+                    </Button>
                 </div>
             </div>
 
@@ -443,18 +449,20 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                                 访问口令
                             </label>
                             <div className="relative">
-                                <input
+                                <Input
                                     id="access-code"
                                     type={showAccessCode ? "text" : "password"}
                                     value={accessCode}
                                     onChange={(e) => setAccessCode(e.target.value)}
                                     placeholder="请输入访问口令"
-                                    className="flex h-10 w-full rounded-md border border-input bg-background pl-3 pr-10 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="pr-10"
                                 />
-                                <button
+                                <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() => setShowAccessCode(!showAccessCode)}
-                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                    className="absolute right-0 top-0 h-full"
                                     aria-label={showAccessCode ? "隐藏口令" : "显示口令"}
                                 >
                                     {showAccessCode ? (
@@ -462,41 +470,40 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                                     ) : (
                                         <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                                     )}
-                                </button>
+                                </Button>
                             </div>
                         </div>
                         <div className="space-y-2">
                             <label htmlFor="access-hint" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                 口令提示 (可选)
                             </label>
-                            <input
+                            <Input
                                 id="access-hint"
                                 type="text"
                                 value={accessHint}
                                 onChange={(e) => setAccessHint(e.target.value)}
                                 placeholder="用于提示口令内容"
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             />
                         </div>
                     </div>
                     <DialogFooter className="sm:justify-end gap-2">
-                        <button
+                        <Button
+                            variant="ghost"
                             onClick={() => setShowPrivateDialog(false)}
-                            className="text-muted-foreground px-5 py-2.5 rounded-full text-sm font-medium hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/10"
+                            className="rounded-full"
                         >
                             取消
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             onClick={performPublish}
                             disabled={isPending || !accessCode.trim()}
                             className={cn(
-                                "bg-primary text-white px-7 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all disabled:opacity-50 flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2",
-                                !isPending && accessCode.trim() && "hover:opacity-90 hover:shadow-md",
+                                "rounded-full px-7",
                                 !shouldReduceMotion && "active:scale-95"
                             )}
                         >
                             {isPending ? '提交中...' : '确认发布'}
-                        </button>
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

@@ -8,6 +8,8 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { unlockWithCode } from '@/actions/unlock';
 import { Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -59,11 +61,10 @@ export function UnlockDialog({ isOpen, onClose, hint }: UnlockDialogProps) {
                 </DialogHeader>
                 <div className="py-4">
                     <label htmlFor="unlock-code" className="sr-only">解锁口令</label>
-                    <input
+                    <Input
                         id="unlock-code"
                         type="password"
                         placeholder="口令..."
-                        className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm"
                         value={code}
                         onChange={(e) => setCode(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
@@ -72,19 +73,15 @@ export function UnlockDialog({ isOpen, onClose, hint }: UnlockDialogProps) {
                     {error && <p className="text-xs text-red-500 mt-2 ml-1" role="alert">{error}</p>}
                 </div>
                 <DialogFooter className="sm:justify-end gap-2">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 rounded-xl text-xs font-medium hover:bg-muted transition-colors"
-                    >
+                    <Button variant="ghost" onClick={onClose}>
                         取消
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         disabled={loading || !code}
                         onClick={handleUnlock}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-xl text-xs font-medium transition-all shadow-sm disabled:opacity-50"
                     >
                         {loading ? '解锁中...' : '确认解锁'}
-                    </button>
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

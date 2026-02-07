@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { login } from '@/actions/auth';
 import { useRouter } from 'next/navigation';
 import { Lock, Mail, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function LoginPage() {
     const [loading, setLoading] = useState(false);
@@ -41,14 +43,14 @@ export default function LoginPage() {
                             邮箱
                         </label>
                         <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <input
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                            <Input
                                 id="email"
                                 name="email"
                                 type="email"
                                 required
                                 placeholder="admin@example.com"
-                                className="w-full bg-muted/50 border border-border rounded-xl pl-10 pr-4 py-3 outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                                className="pl-10"
                             />
                         </div>
                     </div>
@@ -58,14 +60,14 @@ export default function LoginPage() {
                             密码
                         </label>
                         <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <input
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                            <Input
                                 id="password"
                                 name="password"
                                 type="password"
                                 required
                                 placeholder="••••••••"
-                                className="w-full bg-muted/50 border border-border rounded-xl pl-10 pr-4 py-3 outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                                className="pl-10"
                             />
                         </div>
                     </div>
@@ -76,10 +78,10 @@ export default function LoginPage() {
                         </div>
                     )}
 
-                    <button
+                    <Button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 rounded-xl font-medium transition-all shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full"
                     >
                         {loading ? (
                             <>
@@ -89,7 +91,7 @@ export default function LoginPage() {
                         ) : (
                             '登录'
                         )}
-                    </button>
+                    </Button>
                 </form>
 
                 <p className="text-center text-xs text-muted-foreground mt-6">

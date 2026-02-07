@@ -41,7 +41,7 @@ const HeatmapCell = memo(({
             role="gridcell"
             aria-label={`${dateStr}: ${count} 记录`}
             className={cn(
-                "w-[14px] h-[14px] rounded-[4px] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 outline-none",
+                "w-[14px] h-[14px] rounded transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 outline-none",
                 !shouldReduceMotion && "hover:scale-110",
                 getColorClass(count)
             )}
@@ -100,10 +100,10 @@ export const Heatmap = memo(function Heatmap() {
             <div className="w-full space-y-4 py-4 px-2">
                 <div className="grid grid-cols-3 gap-4">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="h-12 bg-muted/20 animate-pulse rounded-md" />
+                        <div key={i} className="h-12 bg-muted/20 animate-pulse rounded" />
                     ))}
                 </div>
-                <div className="h-32 bg-muted/10 animate-pulse rounded-lg" />
+                <div className="h-32 bg-muted/10 animate-pulse rounded" />
             </div>
         );
     }
@@ -147,7 +147,7 @@ export const Heatmap = memo(function Heatmap() {
                     {/* Tooltip */}
                     {hoveredDate && (
                         <div
-                            className="absolute z-[999] px-2.5 py-1.5 text-[10px] font-medium text-white bg-black/95 backdrop-blur-md rounded-md pointer-events-none transform -translate-x-1/2 -translate-y-full mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-2xl border border-white/20 whitespace-nowrap"
+                            className="absolute z-[999] px-2.5 py-1.5 text-[10px] font-medium text-white bg-black/95 backdrop-blur-md rounded pointer-events-none transform -translate-x-1/2 -translate-y-full mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-2xl border border-white/20 whitespace-nowrap"
                             style={{ left: hoveredDate.left, top: hoveredDate.top }}
                         >
                             <span className="text-[#9be9a8] font-bold">{hoveredDate.count} 笔记</span>

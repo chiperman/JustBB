@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createMemo } from '@/actions/memos';
 import { useRouter } from 'next/navigation';
 import { X, Pin, Lock, LockOpen, Hash, Eye, EyeOff } from 'lucide-react';
@@ -72,12 +72,12 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
 
         // 重置高度以获取正确的 scrollHeight
         textarea.style.height = 'auto';
-        // 设置新高度，最小 60px，最大 300px
-        const newHeight = Math.min(Math.max(textarea.scrollHeight, 60), 300);
+        // 设置新高度，最小 60px，不再限制最大高度，交由外层容器处理滚动
+        const newHeight = Math.max(textarea.scrollHeight, 60);
         textarea.style.height = `${newHeight}px`;
     };
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         autoResize();
     }, [content]);
 
@@ -265,24 +265,29 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
         <section className="bg-card border border-border rounded-2xl p-6 shadow-sm transition-all focus-within:shadow-md relative">
             <div className="relative group">
                 <label htmlFor="memo-content" className="sr-only">Memo内容</label>
-                {/* 高亮层：显示 @引用 高亮 */}
-                <div
-                    className="absolute inset-0 w-full text-lg leading-relaxed p-0 font-serif pointer-events-none whitespace-pre-wrap break-words overflow-hidden"
-                    style={{ height: textareaRef.current?.style.height || '60px' }}
-                    aria-hidden="true"
-                >
-                    {renderHighlightedContent()}
+
+                <div className="max-h-[300px] overflow-y-auto scrollbar-hover relative">
+                    <div className="relative min-h-full">
+                        {/* 高亮层：显示 @引用 高亮 */}
+                        <div
+                            className="absolute inset-0 w-full text-lg leading-relaxed p-0 font-serif pointer-events-none whitespace-pre-wrap break-words overflow-hidden"
+                            style={{ minHeight: '100%' }}
+                            aria-hidden="true"
+                        >
+                            {renderHighlightedContent()}
+                        </div>
+                        <Textarea
+                            id="memo-content"
+                            ref={textareaRef}
+                            placeholder="有什么新鲜事？"
+                            value={content}
+                            onChange={handleContentChange}
+                            onKeyDown={handleKeyDown}
+                            className="w-full bg-transparent border-none focus:ring-0 text-lg md:text-lg leading-relaxed resize-none p-0 placeholder:text-muted-foreground/30 font-serif overflow-hidden relative text-transparent caret-foreground shadow-none min-h-[60px] focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+                            style={{ height: '60px' }}
+                        />
+                    </div>
                 </div>
-                <Textarea
-                    id="memo-content"
-                    ref={textareaRef}
-                    placeholder="有什么新鲜事？"
-                    value={content}
-                    onChange={handleContentChange}
-                    onKeyDown={handleKeyDown}
-                    className="w-full bg-transparent border-none focus:ring-0 text-lg leading-relaxed resize-none p-0 placeholder:text-muted-foreground/30 font-serif overflow-hidden relative text-transparent caret-foreground shadow-none min-h-[60px] focus-visible:ring-0"
-                    style={{ height: '60px' }}
-                />
 
                 {showSuggestions && suggestions.length > 0 && (
                     <div className="absolute top-full left-0 mt-1 z-50">

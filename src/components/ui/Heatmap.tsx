@@ -113,16 +113,16 @@ export const Heatmap = memo(function Heatmap() {
             {/* 顶栏统计 */}
             <div className="grid grid-cols-3 gap-2">
                 <div className="flex flex-col items-center group-hover/container:opacity-80 transition-opacity">
-                    <span className="text-3xl tracking-tight">{stats?.totalMemos || 0}</span>
+                    <span className="text-3xl tracking-tight leading-none">{stats?.totalMemos || 0}</span>
                     <span className="text-[11px] text-muted-foreground mt-1">笔记</span>
                 </div>
                 <div className="flex flex-col items-center group-hover/container:opacity-80 transition-opacity">
-                    <span className="text-3xl tracking-tight">{stats?.totalTags || 0}</span>
+                    <span className="text-3xl tracking-tight leading-none">{stats?.totalTags || 0}</span>
                     <span className="text-[11px] text-muted-foreground mt-1">标签</span>
                 </div>
                 <div className="flex flex-col items-center group-hover/container:opacity-80 transition-opacity">
                     <span className="text-3xl tracking-tight leading-none">{totalActiveDays}</span>
-                    <span className="text-[11px] text-muted-foreground mt-2">天</span>
+                    <span className="text-[11px] text-muted-foreground mt-1">天</span>
                 </div>
             </div>
 

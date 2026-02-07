@@ -42,7 +42,7 @@ export function MemoActions({
     const [isPending, setIsPending] = useState(false);
 
     const handleDelete = async () => {
-        if (!confirm('确定要删除这条记录吗？它将被移入垃圾箱。')) return;
+        if (!confirm('确定要删除这条记录吗？')) return;
         setIsPending(true);
         await deleteMemo(id);
         setIsPending(false);
@@ -184,7 +184,7 @@ export function MemoActions({
 
                     <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive focus:bg-destructive/5">
                         <Trash2 className="w-4 h-4" />
-                        移入垃圾箱
+                        删除
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>

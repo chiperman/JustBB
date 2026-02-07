@@ -24,7 +24,7 @@ export function LeftSidebar() {
         { icon: <Home className="w-5 h-5" aria-hidden="true" />, label: '首页', href: '/' },
         { icon: <GalleryIcon className="w-5 h-5" aria-hidden="true" />, label: '画廊', href: '/gallery' },
         { icon: <Tag className="w-5 h-5" aria-hidden="true" />, label: '标签', href: '/tags' },
-        { icon: <Trash2 className="w-5 h-5" aria-hidden="true" />, label: '垃圾箱', href: '/trash' },
+        { icon: <Trash2 className="w-5 h-5" aria-hidden="true" />, label: '回收站', href: '/trash' },
     ];
 
     return (

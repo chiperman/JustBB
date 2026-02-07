@@ -6,7 +6,7 @@ import { Memo } from '@/types/memo';
 export async function getTrashMemos(): Promise<Memo[]> {
     const supabase = getSupabaseAdmin();
     // 使用 Admin 客户端直接查询，不依赖 RPC (或创建专用 RPC)
-    // 垃圾箱数据是敏感的，所以必须鉴权。这里 Admin Client 默认拥有所有权限，
+    // 回收站数据是敏感的，所以必须鉴权。这里 Admin Client 默认拥有所有权限，
     // 在真实场景应该校验当前用户 session，但既然是单人版我们假设能调 Action 就是有权限。
     const { data, error } = await supabase
         .from('memos')

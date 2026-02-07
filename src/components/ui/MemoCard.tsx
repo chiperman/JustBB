@@ -57,7 +57,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
 
     return (
         <article className={cn(
-            "group relative bg-card border border-border rounded-2xl p-6 transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-primary/10",
+            "group relative bg-card border border-border rounded p-6 transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-primary/10",
             memo.is_pinned && "border-primary/30 bg-primary/5"
         )}>
             {/* 顶部元信息 */}

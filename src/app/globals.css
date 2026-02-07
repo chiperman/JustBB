@@ -51,7 +51,7 @@
 
 :root {
   --card: oklch(1 0 0);
-  --popover: oklch(1 0 0);
+  --popover: oklch(1 0 0 / 95%);
   --popover-foreground: oklch(0.141 0.005 285.823);
   --success: #40c463;
   --error: #ff6b6b;
@@ -62,8 +62,8 @@
   --heatmap-2: #40c463;
   --heatmap-3: #30a14e;
   --heatmap-4: #216e39;
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
+  --radius: 0.75rem;
+  --background: oklch(0.98 0.001 286.375);
   --foreground: oklch(0.141 0.005 285.823);
   --card-foreground: oklch(0.141 0.005 285.823);
   --primary: oklch(0.21 0.006 285.885);
@@ -106,10 +106,10 @@ button:focus:not(:focus-visible) {
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);
+  --background: oklch(0.12 0.003 285.823);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --popover: oklch(0.21 0.006 285.885);
+  --card: oklch(0.18 0.004 285.885);
+  --popover: oklch(0.18 0.004 285.885 / 95%);
   --popover-foreground: oklch(0.985 0 0);
   --success: #3fb950;
   --error: #f85149;
@@ -130,7 +130,7 @@ button:focus:not(:focus-visible) {
   --accent: oklch(0.274 0.006 286.033);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.552 0.016 285.938);
   --chart-1: oklch(0.488 0.243 264.376);
@@ -138,13 +138,13 @@ button:focus:not(:focus-visible) {
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar: oklch(0.18 0.004 285.885);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.274 0.006 286.033);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-border: oklch(1 0 0 / 12%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
@@ -198,6 +198,7 @@ body.font-sans {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }

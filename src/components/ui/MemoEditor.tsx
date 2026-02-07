@@ -291,7 +291,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
 
                 {showSuggestions && suggestions.length > 0 && (
                     <div className="absolute top-full left-0 mt-1 z-50">
-                        <Command className="rounded-xl border border-border shadow-xl bg-popover min-w-[280px]">
+                        <Command className="min-w-[280px]">
                             <CommandList>
                                 <CommandGroup>
                                     {suggestions.map((item) => (
@@ -354,7 +354,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                     </div>
                     {showTagSuggestions && tagSuggestions.length > 0 && (
                         <div className="absolute top-full left-0 mt-1 z-50">
-                            <Command className="rounded-xl border border-border shadow-xl bg-popover min-w-[200px]">
+                            <Command className="min-w-[200px]">
                                 <CommandList>
                                     <CommandGroup>
                                         {tagSuggestions.map((item) => (

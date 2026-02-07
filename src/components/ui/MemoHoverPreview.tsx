@@ -16,7 +16,7 @@ const HoverCardContent = React.forwardRef<
         align={align}
         sideOffset={sideOffset}
         className={cn(
-            'z-50 w-64 rounded-xl border bg-popover p-4 text-popover-foreground shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
+            'z-50 w-72 rounded-2xl border bg-popover/95 backdrop-blur-md p-5 text-popover-foreground shadow-2xl outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
             className
         )}
         {...props}
@@ -59,16 +59,16 @@ export function MemoHoverPreview({ memoNumber, children }: MemoHoverPreviewProps
                 {children}
             </HoverCardTrigger>
             <HoverCardContent>
-                <div className="space-y-2">
-                    <div className="text-xs text-muted-foreground font-mono">#{memoNumber}</div>
+                <div className="space-y-3">
+                    <div className="text-[10px] text-primary/60 font-mono font-bold uppercase tracking-wider tabular-nums">#{memoNumber}</div>
                     <div className="text-sm">
                         {loading ? (
                             <div className="flex items-center gap-2 text-muted-foreground">
-                                <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
-                                Loading...
+                                <span className="w-3 h-3 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                                <span className="text-xs font-medium animate-pulse">Loading…</span>
                             </div>
                         ) : (
-                            <p className="line-clamp-4 leading-relaxed text-xs">
+                            <p className="line-clamp-6 leading-relaxed text-[13px] text-foreground/90 text-pretty">
                                 {previewContent || 'Preview not available'}
                             </p>
                         )}

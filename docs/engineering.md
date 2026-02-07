@@ -1,10 +1,12 @@
 # JustMemo 工程规范与运维
 
 ## 1. 技术栈
-*   **Frontend**: Next.js 15 (App Router), TypeScript, Tailwind CSS.
-*   **UI Components**: shadcn/ui, Framer Motion.
-*   **Infrastructure**: Supabase (DB/Auth/Storage), Vercel (Hosting).
-*   **Extra**: `next-themes` (主题切换), `next-pwa`.
+*   **Frontend**: Next.js 16.1.6 (App Router), React 19.2.3, TypeScript 5, Tailwind CSS 4.
+*   **UI Components**: Radix UI (Dialog/Dropdown/HoverCard), Framer Motion 12.29.
+*   **Infrastructure**: Supabase 2.93 (DB/Auth/Storage), Vercel (Hosting).
+*   **Extra**: `next-themes` (主题切换), `zod` (数据校验), `bcryptjs` (密码 Hash).
+
+> 完整技术栈详见 [TECH_STACK.md](./TECH_STACK.md)。
 
 ## 2. 目录结构规范
 *   `src/app`: 路由与页面组件。
@@ -30,8 +32,8 @@
     - **Pre-push**: (推荐) 自动运行 `npm run build` 或 `npm test` 确保推送到云端的内容是稳健的。
 
 ## 3. 测试策略
-*   **Unit**: Jest + React Testing Library。
-*   **E2E**: Playwright (重点覆盖发布与解锁流程)。
+*   **Unit**: Vitest 4.0 + React Testing Library。
+*   **E2E**: Playwright 1.58 (重点覆盖发布与解锁流程)。
 
 ## 4. CI/CD
 *   **自动化**: 关联 GitHub 仓库，Vercel 自动部署生产环境。

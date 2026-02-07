@@ -9,6 +9,7 @@
 *   `access_code_hint`: text (口令提示词)
 *   `is_private`: boolean
 *   `is_pinned`: boolean (置顶状态)
+*   `pinned_at`: timestamptz (置顶时间，用于排序)
 *   `deleted_at`: timestamptz (软删除状态，NULL 表示正常)
 *   `created_at`: timestamptz
 

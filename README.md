@@ -14,6 +14,17 @@
 
 如果你也想搭建，可以参考少数派的这篇文章：🔗[保卫表达：用后端 BaaS 快速搭建专属无点赞评论版微博——b言b语](https://sspai.com/post/60024)
 
+## 技术栈 🛠️
+
+| 分类 | 技术 |
+|------|------|
+| **框架** | Next.js 16 + React 19 + TypeScript |
+| **样式** | Tailwind CSS 4 + Framer Motion |
+| **后端** | Supabase (PostgreSQL + Auth) |
+| **部署** | Vercel |
+
+> 完整技术选型详见 [docs/TECH_STACK.md](docs/TECH_STACK.md)
+
 ## 参与贡献 🤝
 
 本项目严格遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范。

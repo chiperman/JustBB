@@ -72,32 +72,34 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                     {memo.is_pinned && <Pin className="w-3.5 h-3.5 text-primary fill-primary" aria-hidden="true" />}
                     {memo.is_private && <Lock className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />}
                 </div>
-                <div className="flex items-center gap-2 group/actions">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={toggleBacklinks}
-                        className={cn(
-                            "h-8 w-8 rounded transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:[background:rgba(0,0,0,0.05)]",
-                            showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground",
-                        )}
-                        aria-expanded={showBacklinks}
-                        aria-label="查看引用"
-                        title="查看引用"
-                    >
-                        <Link2 className="w-4 h-4" />
-                    </Button>
-                    <MemoActions
-                        id={memo.id}
-                        isDeleted={!!memo.deleted_at}
-                        isPinned={memo.is_pinned}
-                        isPrivate={memo.is_private}
-                        content={memo.content}
-                        createdAt={memo.created_at}
-                        tags={memo.tags ?? []}
-                        onEdit={() => setIsEditing(true)}
-                    />
-                </div>
+                {!memo.is_locked && (
+                    <div className="flex items-center gap-2 group/actions">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={toggleBacklinks}
+                            className={cn(
+                                "h-8 w-8 rounded transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:[background:rgba(0,0,0,0.05)]",
+                                showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground",
+                            )}
+                            aria-expanded={showBacklinks}
+                            aria-label="查看引用"
+                            title="查看引用"
+                        >
+                            <Link2 className="w-4 h-4" />
+                        </Button>
+                        <MemoActions
+                            id={memo.id}
+                            isDeleted={!!memo.deleted_at}
+                            isPinned={memo.is_pinned}
+                            isPrivate={memo.is_private}
+                            content={memo.content}
+                            createdAt={memo.created_at}
+                            tags={memo.tags ?? []}
+                            onEdit={() => setIsEditing(true)}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* 内容区域 */}
@@ -147,20 +149,22 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
             )}
 
             {/* 底部交互与标签 */}
-            <div className="mt-6 flex items-center justify-between gap-4">
-                <div className="flex flex-wrap gap-2" role="list" aria-label="标签列表">
-                    {memo.tags?.map(tag => (
-                        <span
-                            key={tag}
-                            role="listitem"
-                            className="text-xs text-primary bg-primary/5 px-2 py-0.5 rounded-full hover:bg-primary/10 cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 outline-none"
-                            tabIndex={0}
-                        >
-                            #{tag}
-                        </span>
-                    ))}
+            {!memo.is_locked && (
+                <div className="mt-6 flex items-center justify-between gap-4">
+                    <div className="flex flex-wrap gap-2" role="list" aria-label="标签列表">
+                        {memo.tags?.map(tag => (
+                            <span
+                                key={tag}
+                                role="listitem"
+                                className="text-xs text-primary bg-primary/5 px-2 py-0.5 rounded-full hover:bg-primary/10 cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 outline-none"
+                                tabIndex={0}
+                            >
+                                #{tag}
+                            </span>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* 锁定覆盖层 */}
             {memo.is_locked && (

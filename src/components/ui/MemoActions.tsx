@@ -12,6 +12,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { MemoCard } from './MemoCard';
 import { MemoShare } from './MemoShare';
 import { Memo } from '@/types/memo';
@@ -108,22 +109,26 @@ export function MemoActions({
     if (isDeleted) {
         return (
             <div className="flex gap-2">
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={handleRestore}
                     disabled={isPending}
-                    className="p-2 hover:bg-muted rounded-full text-green-600 transition-colors"
+                    className="rounded-full text-green-600 hover:text-green-700 hover:bg-green-50"
                     title="恢复"
                 >
                     <RotateCcw className="w-4 h-4" />
-                </button>
-                <button
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={handlePermanentDelete}
                     disabled={isPending}
-                    className="p-2 hover:bg-red-100 rounded-full text-red-600 transition-colors"
+                    className="rounded-full text-red-600 hover:text-red-700 hover:bg-red-50"
                     title="彻底删除"
                 >
                     <Trash2 className="w-4 h-4" />
-                </button>
+                </Button>
             </div>
         );
     }
@@ -132,9 +137,9 @@ export function MemoActions({
         <div className="flex items-center gap-1">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <button className="p-2 hover:[background:rgba(0,0,0,0.05)] rounded transition-all outline-none opacity-0 group-hover:opacity-100 focus-visible:opacity-100 cursor-pointer">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 p-0 hover:bg-[rgba(0,0,0,0.05)] rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all">
                         <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
-                    </button>
+                    </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                     {!isDeleted && (

@@ -22,6 +22,14 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 interface HeatmapStats {
@@ -71,36 +79,46 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                     <div className="flex items-center gap-4">
                         <DialogTitle className="text-base font-bold tracking-tight">记录统计</DialogTitle>
                         <div className="flex bg-muted/20 p-1 rounded-lg">
-                            <button
-                                onClick={() => setViewMode('month')}
-                                className={cn(
-                                    "px-3 py-1 text-xs rounded-md transition-all",
-                                    viewMode === 'month' ? "bg-background shadow-sm font-bold text-foreground" : "text-muted-foreground hover:text-foreground font-normal"
-                                )}
-                            >
-                                月
-                            </button>
-                            <button
-                                onClick={() => setViewMode('year')}
-                                className={cn(
-                                    "px-3 py-1 text-xs rounded-md transition-all",
-                                    viewMode === 'year' ? "bg-background shadow-sm font-bold text-foreground" : "text-muted-foreground hover:text-foreground font-normal"
-                                )}
-                            >
-                                年
-                            </button>
+                            <div className="flex bg-muted/20 p-1 rounded-lg">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setViewMode('month')}
+                                    className={cn(
+                                        "px-3 py-1 text-xs h-7 rounded-md transition-all",
+                                        viewMode === 'month' ? "bg-background shadow-sm font-bold text-foreground hover:bg-background" : "text-muted-foreground hover:text-foreground font-normal hover:bg-transparent"
+                                    )}
+                                >
+                                    月
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setViewMode('year')}
+                                    className={cn(
+                                        "px-3 py-1 text-xs h-7 rounded-md transition-all",
+                                        viewMode === 'year' ? "bg-background shadow-sm font-bold text-foreground hover:bg-background" : "text-muted-foreground hover:text-foreground font-normal hover:bg-transparent"
+                                    )}
+                                >
+                                    年
+                                </Button>
+                            </div>
                         </div>
                     </div>
 
-                    <select
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(Number(e.target.value))}
-                        className="bg-muted/20 border-none text-sm font-medium rounded-md px-2 py-1 focus:ring-1 focus:ring-primary outline-none"
+                    <Select
+                        value={String(selectedYear)}
+                        onValueChange={(val) => setSelectedYear(Number(val))}
                     >
-                        {availableYears.map(year => (
-                            <option key={year} value={year}>{year}年</option>
-                        ))}
-                    </select>
+                        <SelectTrigger className="w-[100px] h-8 text-sm bg-muted/20 border-none focus:ring-1 focus:ring-primary">
+                            <SelectValue>{selectedYear}年</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                            {availableYears.map(year => (
+                                <SelectItem key={year} value={String(year)}>{year}年</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </DialogHeader>
 
                 <div className="py-6">

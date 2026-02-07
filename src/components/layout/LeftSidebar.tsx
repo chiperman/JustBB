@@ -12,6 +12,7 @@ import { Home, Tag, Trash2, Settings, Image as GalleryIcon, ChevronLeft, Chevron
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 import { usePathname } from 'next/navigation';
 
@@ -45,13 +46,15 @@ export function LeftSidebar() {
                         <p className="text-[10px] text-muted-foreground mt-0.5 tracking-[0.2em] font-sans opacity-70">FRAGMENTED MEMORY</p>
                     </motion.div>
                 )}
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-primary shrink-0 cursor-pointer"
+                    className="h-8 w-8 text-muted-foreground hover:text-primary shrink-0"
                     aria-label={isCollapsed ? "展开侧边栏" : "收起侧边栏"}
                 >
                     {isCollapsed ? <PanelLeftOpen className="w-5 h-5" aria-hidden="true" /> : <PanelLeftClose className="w-5 h-5" aria-hidden="true" />}
-                </button>
+                </Button>
             </div>
 
             <Suspense>
@@ -125,7 +128,8 @@ export function LeftSidebar() {
                             <ThemeToggle />
                             <FontToggle />
                         </div>
-                        <button
+                        <Button
+                            variant="ghost"
                             onClick={async () => {
                                 if (!confirm('Download all memos as Markdown?')) return;
                                 const { exportMemos } = await import('@/actions/export');
@@ -137,12 +141,12 @@ export function LeftSidebar() {
                                 a.download = `justbb_export_${new Date().toISOString().slice(0, 10)}.md`;
                                 a.click();
                             }}
-                            className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted transition-all group w-full text-left cursor-pointer"
+                            className="flex items-center justify-start gap-3 h-auto py-2.5 px-2.5 w-full hover:bg-muted font-normal"
                             aria-label="导出数据"
                         >
                             <Settings className="w-5 h-5 text-muted-foreground group-hover:text-primary shrink-0" aria-hidden="true" />
                             <span className="text-sm font-medium">Export Data</span>
-                        </button>
+                        </Button>
                     </>
                 )}
 

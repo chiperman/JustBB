@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { LogIn, LogOut, User, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface UserInfo {
     id: string;
@@ -63,12 +64,13 @@ export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { is
                         </span>
                     )}
                 </div>
-                <button
+                <Button
+                    variant="ghost"
                     onClick={handleLogout}
                     disabled={loggingOut}
                     className={cn(
-                        "flex items-center gap-2 p-2.5 rounded-xl hover:bg-muted transition-all text-sm text-muted-foreground hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
-                        isCollapsed ? "justify-center" : "w-full",
+                        "flex items-center justify-start gap-2 h-auto py-2.5 px-2.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground font-normal",
+                        isCollapsed ? "justify-center px-0 w-10 h-10" : "w-full",
                         loggingOut && "opacity-50 cursor-not-allowed"
                     )}
                     aria-label="退出登录"
@@ -80,7 +82,7 @@ export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { is
                         <LogOut className="w-4 h-4" />
                     )}
                     {!isCollapsed && <span>登出系统</span>}
-                </button>
+                </Button>
             </div>
         );
     }

@@ -5,6 +5,7 @@ import { getAllTags } from '@/actions/tags';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Tag } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export const TagCloud = memo(function TagCloud() {
     const [tags, setTags] = useState<{ tag_name: string; count: number }[]>([]);
@@ -44,24 +45,22 @@ export const TagCloud = memo(function TagCloud() {
             {tags.map(({ tag_name, count }) => {
                 const isActive = currentQuery === tag_name;
                 return (
-                    <button
+                    <Badge
                         key={tag_name}
+                        variant={isActive ? "default" : "secondary"}
                         onClick={() => handleTagClick(tag_name)}
                         className={cn(
-                            "text-xs px-2 py-1 rounded-md transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer",
-                            isActive
-                                ? "bg-primary text-primary-foreground font-medium shadow-sm"
-                                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                            "cursor-pointer px-2 py-1 text-xs gap-1.5 transition-all hover:opacity-80",
+                            !isActive && "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground font-normal"
                         )}
                         aria-label={`标签 #${tag_name}，共有 ${count} 条记录`}
-                        aria-pressed={isActive}
                     >
                         <span aria-hidden="true">#{tag_name}</span>
                         <span className={cn(
                             "text-[10px]",
                             isActive ? "text-primary-foreground/80" : "text-muted-foreground/60"
                         )} aria-hidden="true">{count}</span>
-                    </button>
+                    </Badge>
                 );
             })}
         </div>

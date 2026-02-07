@@ -9,11 +9,15 @@ interface MobileMenuButtonProps {
     onClick: () => void;
 }
 
+import { Button } from '@/components/ui/button';
+
 export function MobileMenuButton({ isOpen, onClick }: MobileMenuButtonProps) {
     return (
-        <button
+        <Button
+            variant="outline"
+            size="icon"
             onClick={onClick}
-            className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-card border border-border rounded-xl shadow-lg"
+            className="lg:hidden fixed top-4 left-4 z-50 rounded-xl shadow-lg h-10 w-10 p-0"
             aria-label={isOpen ? '关闭菜单' : '打开菜单'}
         >
             {isOpen ? (
@@ -21,7 +25,7 @@ export function MobileMenuButton({ isOpen, onClick }: MobileMenuButtonProps) {
             ) : (
                 <Menu className="w-5 h-5" aria-hidden="true" />
             )}
-        </button>
+        </Button>
     );
 }
 

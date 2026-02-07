@@ -8,6 +8,7 @@ import { memo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn, formatDate } from '@/lib/utils';
 import { useReducedMotion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 import { Memo } from '@/types/memo';
 import { UnlockDialog } from './UnlockDialog';
@@ -72,19 +73,20 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                     {memo.is_private && <Lock className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />}
                 </div>
                 <div className="flex items-center gap-2 group/actions">
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={toggleBacklinks}
                         className={cn(
-                            "p-2 rounded transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-primary/20 cursor-pointer hover:[background:rgba(0,0,0,0.05)]",
+                            "h-8 w-8 rounded transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:[background:rgba(0,0,0,0.05)]",
                             showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground",
-                            !shouldReduceMotion && "active:scale-95"
                         )}
                         aria-expanded={showBacklinks}
                         aria-label="查看引用"
                         title="查看引用"
                     >
                         <Link2 className="w-4 h-4" />
-                    </button>
+                    </Button>
                     <MemoActions
                         id={memo.id}
                         isDeleted={!!memo.deleted_at}

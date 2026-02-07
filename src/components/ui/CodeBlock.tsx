@@ -5,6 +5,7 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface CodeBlockProps {
     language: string;
@@ -23,14 +24,16 @@ export function CodeBlock({ language, value }: CodeBlockProps) {
     return (
         <div className="relative group my-4 rounded-lg overflow-hidden border border-border/60 bg-muted/30 shadow-sm">
             <div className="absolute right-2 top-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
+                <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={handleCopy}
-                    className="bg-background/80 backdrop-blur-md p-1.5 rounded-md hover:bg-background hover:text-primary transition-all text-xs flex items-center gap-1 border border-border shadow-sm text-muted-foreground"
+                    className="h-7 px-2 text-xs bg-background/80 hover:bg-background backdrop-blur-md shadow-sm border border-border"
                     title="Copy code"
                 >
                     {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copied && <span className="text-[10px] text-primary font-medium">Copied</span>}
-                </button>
+                    {copied && <span className="text-[10px] text-primary font-medium ml-1">Copied</span>}
+                </Button>
             </div>
             <SyntaxHighlighter
                 language={language || 'text'}

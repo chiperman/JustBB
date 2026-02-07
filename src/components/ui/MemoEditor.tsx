@@ -7,6 +7,7 @@ import { X, Pin, Lock, LockOpen, Hash, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
 import { Input } from './input';
+import { Textarea } from './textarea';
 import { updateMemoContent } from '@/actions/update';
 import { searchMemosForMention } from '@/actions/search';
 import { Command, CommandList, CommandItem, CommandEmpty, CommandGroup } from './command';
@@ -272,14 +273,14 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                 >
                     {renderHighlightedContent()}
                 </div>
-                <textarea
+                <Textarea
                     id="memo-content"
                     ref={textareaRef}
                     placeholder="有什么新鲜事？"
                     value={content}
                     onChange={handleContentChange}
                     onKeyDown={handleKeyDown}
-                    className="w-full bg-transparent border-none focus:ring-0 text-lg leading-relaxed resize-none p-0 placeholder:text-muted-foreground/30 font-serif overflow-hidden relative text-transparent caret-foreground"
+                    className="w-full bg-transparent border-none focus:ring-0 text-lg leading-relaxed resize-none p-0 placeholder:text-muted-foreground/30 font-serif overflow-hidden relative text-transparent caret-foreground shadow-none min-h-[60px] focus-visible:ring-0"
                     style={{ height: '60px' }}
                 />
 

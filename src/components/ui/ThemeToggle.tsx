@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { Moon, Sun, Monitor } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
@@ -35,15 +36,17 @@ export function ThemeToggle() {
     };
 
     return (
-        <button
+        <Button
+            variant="outline"
+            size="icon"
             onClick={cycleTheme}
-            className="p-2 w-10 h-10 flex items-center justify-center border border-border rounded-full hover:bg-muted transition-colors focus-visible:ring-2 focus-visible:ring-primary outline-none cursor-pointer"
+            className="rounded-full w-10 h-10"
             title={`当前主题: ${currentTheme.label}`}
             aria-label={`切换主题，当前: ${currentTheme.label}`}
         >
             {currentTheme.name === 'light' && <Sun className="w-4 h-4" aria-hidden="true" />}
             {currentTheme.name === 'dark' && <Moon className="w-4 h-4" aria-hidden="true" />}
             {currentTheme.name === 'system' && <Monitor className="w-4 h-4" aria-hidden="true" />}
-        </button>
+        </Button>
     );
 }

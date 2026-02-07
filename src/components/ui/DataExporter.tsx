@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { exportAllMemos } from '@/actions/export';
 import { FileDown, FileJson, Loader2 } from 'lucide-react';
 import { Memo } from '@/types/memo';
+import { Button } from '@/components/ui/button';
 
 export function DataExporter() {
     const [loading, setLoading] = useState(false);
@@ -78,26 +79,25 @@ export function DataExporter() {
                 将所有数据导出为本地文件进行备份。
             </p>
             <div className="flex gap-4">
-                <button
+                <Button
                     onClick={() => handleExport('json')}
                     disabled={loading}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none"
+                    className="flex items-center gap-2"
                     aria-label="导出完整数据为 JSON 格式"
-                    aria-busy={loading}
                 >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <FileJson className="w-4 h-4" aria-hidden="true" />}
                     导出 JSON (完整)
-                </button>
-                <button
+                </Button>
+                <Button
+                    variant="outline"
                     onClick={() => handleExport('csv')}
                     disabled={loading}
-                    className="flex items-center gap-2 px-4 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md disabled:opacity-50 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none"
+                    className="flex items-center gap-2"
                     aria-label="导出数据为 CSV 格式"
-                    aria-busy={loading}
                 >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <FileDown className="w-4 h-4" aria-hidden="true" />}
                     导出 CSV
-                </button>
+                </Button>
             </div>
         </section>
     );

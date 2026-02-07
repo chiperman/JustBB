@@ -11,6 +11,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { Memo } from '@/types/memo';
@@ -57,9 +58,9 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
         <Dialog>
             <DialogTrigger asChild>
                 {trigger || (
-                    <button className="p-2 hover:bg-muted rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/20" title="分享" aria-label="生成海报分享">
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted" title="分享" aria-label="生成海报分享">
                         <Share2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                    </button>
+                    </Button>
                 )}
             </DialogTrigger>
             <DialogContent className="max-w-md flex flex-col items-center">
@@ -119,16 +120,17 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
 
                 {/* 操作栏 */}
                 <div className="flex gap-4 w-full mt-2">
-                    <button
+                    <Button
                         onClick={handleDownload}
                         disabled={isGenerating}
-                        className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                        className="flex-1"
                     >
                         {isGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
                         保存图片
-                    </button>
-                    <button
-                        className="flex-1 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+                    </Button>
+                    <Button
+                        variant="outline"
+                        className="flex-1"
                         onClick={() => {
                             if (navigator.share) {
                                 navigator.share({
@@ -146,7 +148,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                     >
                         <Share2 className="w-4 h-4 mr-2" aria-hidden="true" />
                         更多分享
-                    </button>
+                    </Button>
                 </div>
             </DialogContent>
         </Dialog>

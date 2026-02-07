@@ -146,15 +146,13 @@ export function MemoActions({
                     {!isDeleted && (
                         <>
                             <DropdownMenuItem onClick={onEdit}>
-                                <MessageSquare className="w-4 h-4" />
                                 编辑
                             </DropdownMenuItem>
                             <MemoShare
                                 memo={{ id, content, created_at: createdAt, tags, is_pinned: isPinned, is_private: isPrivate, memo_number: 0 } as Memo}
                                 trigger={
                                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                        <Share2 className="w-4 h-4" />
-                                        分享海报
+                                        分享
                                     </DropdownMenuItem>
                                 }
                             />
@@ -164,7 +162,6 @@ export function MemoActions({
                         onClick={handleTogglePin}
                         disabled={isPending}
                     >
-                        <Pin className={cn("w-4 h-4", isPinned && "fill-primary text-primary")} />
                         {isPinned ? '取消置顶' : '置顶'}
                     </DropdownMenuItem>
 
@@ -172,18 +169,12 @@ export function MemoActions({
                         onClick={handleTogglePrivate}
                         disabled={isPending}
                     >
-                        {isPrivate ? (
-                            <Lock className="w-4 h-4 text-primary" />
-                        ) : (
-                            <LockOpen className="w-4 h-4" />
-                        )}
                         {isPrivate ? '取消私密' : '设为私密'}
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
 
                     <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive focus:bg-destructive/5">
-                        <Trash2 className="w-4 h-4" />
                         删除
                     </DropdownMenuItem>
                 </DropdownMenuContent>

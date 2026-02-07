@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createMemo } from '@/actions/memos';
 import { useRouter } from 'next/navigation';
-import { X, Pin, Lock, LockOpen, Hash } from 'lucide-react';
+import { X, Pin, Lock, LockOpen, Hash, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { updateMemoContent } from '@/actions/update';
 import { searchMemosForMention } from '@/actions/search';
@@ -38,6 +38,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
     const [isPinned, setIsPinned] = useState(memo?.is_pinned || false);
     const [error, setError] = useState<string | null>(null);
     const [showPrivateDialog, setShowPrivateDialog] = useState(false);
+    const [showAccessCode, setShowAccessCode] = useState(false);
 
     // Suggestion system states
     const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
@@ -52,6 +53,22 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
 
     const shouldReduceMotion = useReducedMotion();
     const router = useRouter();
+
+    // 自动调整 textarea 高度
+    const autoResize = () => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        // 重置高度以获取正确的 scrollHeight
+        textarea.style.height = 'auto';
+        // 设置新高度，最小 60px，最大 300px
+        const newHeight = Math.min(Math.max(textarea.scrollHeight, 60), 300);
+        textarea.style.height = `${newHeight}px`;
+    };
+
+    useEffect(() => {
+        autoResize();
+    }, [content]);
 
     useEffect(() => {
         getAllTags().then(setAllTags);
@@ -247,7 +264,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
     };
 
     return (
-        <section className="bg-card border border-border rounded-2xl p-6 shadow-sm transition-all focus-within:shadow-md focus-within:ring-2 focus-within:ring-primary/5 relative">
+        <section className="bg-card border border-border rounded-2xl p-6 shadow-sm transition-all focus-within:shadow-md relative">
             <div className="relative group">
                 <label htmlFor="memo-content" className="sr-only">Memo内容</label>
                 <textarea
@@ -257,8 +274,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                     value={content}
                     onChange={handleContentChange}
                     onKeyDown={handleKeyDown}
-                    className="w-full bg-transparent border-none focus:ring-0 text-lg leading-relaxed resize-none p-0 placeholder:text-muted-foreground/30 font-serif min-h-[120px]"
-                    rows={mode === 'edit' ? 8 : 4}
+                    className="w-full bg-transparent border-none focus:ring-0 text-lg leading-relaxed resize-none p-0 placeholder:text-muted-foreground/30 font-serif overflow-hidden"
+                    style={{ height: '60px' }}
                 />
 
                 {showSuggestions && (
@@ -326,7 +343,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                     <button
                         onClick={handleTogglePrivate}
                         className={cn(
-                            "text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 p-1.5 rounded-md",
+                            "text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 p-1.5 rounded-md cursor-pointer",
                             isPrivate ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-primary hover:bg-muted"
                         )}
                         aria-label={isPrivate ? "设为公开内容" : "设为私密内容"}
@@ -338,7 +355,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                     <button
                         onClick={() => setIsPinned(!isPinned)}
                         className={cn(
-                            "text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 p-1.5 rounded-md",
+                            "text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 p-1.5 rounded-md cursor-pointer",
                             isPinned ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-primary hover:bg-muted"
                         )}
                         aria-label={isPinned ? "取消置顶" : "置顶此内容"}
@@ -351,7 +368,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                     {mode === 'edit' && (
                         <button
                             onClick={onCancel}
-                            className="text-muted-foreground px-5 py-2 rounded-full text-sm font-medium hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/10"
+                            className="text-muted-foreground px-5 py-2 rounded-full text-sm font-medium hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/10 cursor-pointer"
                         >
                             取消
                         </button>
@@ -360,7 +377,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                         onClick={handlePublishClick}
                         disabled={isPending || !content.trim()}
                         className={cn(
-                            "bg-primary text-white px-7 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all disabled:opacity-50 flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2",
+                            "bg-primary text-white px-7 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all disabled:opacity-50 flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 cursor-pointer disabled:cursor-not-allowed",
                             !isPending && content.trim() && "hover:opacity-90 hover:shadow-md",
                             !shouldReduceMotion && "active:scale-95"
                         )}
@@ -384,17 +401,31 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                     </DialogHeader>
                     <div className="flex flex-col gap-4 py-4">
                         <div className="space-y-2">
-                            <label htmlFor="access-code" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                访问口令 (可选)
+                            <label htmlFor="access-code" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 after:content-['*'] after:ml-0.5 after:text-red-500">
+                                访问口令
                             </label>
-                            <input
-                                id="access-code"
-                                type="text"
-                                value={accessCode}
-                                onChange={(e) => setAccessCode(e.target.value)}
-                                placeholder="留空则不设置/保持原样"
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            />
+                            <div className="relative">
+                                <input
+                                    id="access-code"
+                                    type={showAccessCode ? "text" : "password"}
+                                    value={accessCode}
+                                    onChange={(e) => setAccessCode(e.target.value)}
+                                    placeholder="请输入访问口令"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background pl-3 pr-10 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAccessCode(!showAccessCode)}
+                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                    aria-label={showAccessCode ? "隐藏口令" : "显示口令"}
+                                >
+                                    {showAccessCode ? (
+                                        <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                    ) : (
+                                        <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                    )}
+                                </button>
+                            </div>
                         </div>
                         <div className="space-y-2">
                             <label htmlFor="access-hint" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -410,17 +441,21 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                             />
                         </div>
                     </div>
-                    <DialogFooter>
+                    <DialogFooter className="sm:justify-end gap-2">
                         <button
                             onClick={() => setShowPrivateDialog(false)}
-                            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                            className="text-muted-foreground px-5 py-2.5 rounded-full text-sm font-medium hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/10"
                         >
                             取消
                         </button>
                         <button
                             onClick={performPublish}
-                            disabled={isPending}
-                            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                            disabled={isPending || !accessCode.trim()}
+                            className={cn(
+                                "bg-primary text-white px-7 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all disabled:opacity-50 flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2",
+                                !isPending && accessCode.trim() && "hover:opacity-90 hover:shadow-md",
+                                !shouldReduceMotion && "active:scale-95"
+                            )}
                         >
                             {isPending ? '提交中...' : '确认发布'}
                         </button>

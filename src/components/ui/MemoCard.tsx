@@ -75,7 +75,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                     <button
                         onClick={toggleBacklinks}
                         className={cn(
-                            "text-xs px-2 py-1 rounded transition-all opacity-0 group-hover/actions:opacity-100 focus-visible:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-primary/20 cursor-pointer",
+                            "p-2 rounded-full transition-all opacity-0 group-hover/actions:opacity-100 focus-visible:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-primary/20 cursor-pointer",
                             showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground hover:bg-muted",
                             !shouldReduceMotion && "active:scale-95"
                         )}
@@ -83,7 +83,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                         aria-label="查看引用"
                         title="查看引用"
                     >
-                        <Link2 className="w-3.5 h-3.5" />
+                        <Link2 className="w-4 h-4" />
                     </button>
                     <MemoActions
                         id={memo.id}
@@ -166,7 +166,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                     <button
                         onClick={handleUnlock}
                         className={cn(
-                            "bg-card border border-border px-5 py-2.5 rounded-full text-xs font-medium shadow-md pointer-events-auto cursor-pointer hover:bg-muted hover:shadow-lg transition-all flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ring-offset-2",
+                            "bg-card px-5 py-2.5 rounded-full text-xs font-medium shadow-md pointer-events-auto cursor-pointer hover:bg-muted hover:shadow-lg transition-all flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ring-offset-2",
                             !shouldReduceMotion && "active:scale-95"
                         )}
                         aria-label="解密内容"

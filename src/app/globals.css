@@ -30,6 +30,18 @@
   --heatmap-4: #216e39;
 }
 
+/* 移除所有输入元素的默认 focus outline，由父容器的 focus-within 样式表示选中状态 */
+textarea:focus,
+input:focus,
+select:focus {
+  outline: none;
+}
+
+/* 对于需要保持可访问性的按钮，使用 focus-visible */
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .dark {
   --background: #121212;
   --foreground: #e5e5e5;

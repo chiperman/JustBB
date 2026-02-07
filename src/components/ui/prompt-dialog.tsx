@@ -22,6 +22,7 @@ interface PromptDialogProps {
     showSecondInput?: boolean
     secondPlaceholder?: string
     secondDefaultValue?: string
+    required?: boolean
     onConfirm: (value: string, secondValue: string) => void
     onCancel: () => void
 }
@@ -36,6 +37,7 @@ export function PromptDialog({
     showSecondInput = false,
     secondPlaceholder,
     secondDefaultValue = "",
+    required = false,
     onConfirm,
     onCancel,
 }: PromptDialogProps) {
@@ -95,7 +97,12 @@ export function PromptDialog({
                     <Button variant="outline" onClick={handleCancel}>
                         取消
                     </Button>
-                    <Button onClick={handleConfirm}>确定</Button>
+                    <Button
+                        onClick={handleConfirm}
+                        disabled={required && !value.trim()}
+                    >
+                        确定
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

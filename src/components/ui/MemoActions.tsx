@@ -268,10 +268,11 @@ export function MemoActions({
                 open={showPrompt}
                 onOpenChange={setShowPrompt}
                 title="设为私密内容"
-                description="你可以选择设置一个访问口令，或者直接点击确定设为仅自己可见。"
-                placeholder="访问口令 (可选)"
+                description="请设置访问口令以保护此内容。设为私密后，查看此记录将需要输入该口令。"
+                placeholder="访问口令 (必填)"
                 showSecondInput={true}
                 secondPlaceholder="口令提示词 (可选)"
+                required={true}
                 onConfirm={handlePromptConfirm}
                 onCancel={() => { }}
             />

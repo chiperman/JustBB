@@ -23,6 +23,7 @@ interface PromptDialogProps {
     secondPlaceholder?: string
     secondDefaultValue?: string
     required?: boolean
+    isPassword?: boolean
     onConfirm: (value: string, secondValue: string) => void
     onCancel: () => void
 }
@@ -38,18 +39,31 @@ export function PromptDialog({
     secondPlaceholder,
     secondDefaultValue = "",
     required = false,
+    isPassword = false,
     onConfirm,
     onCancel,
 }: PromptDialogProps) {
     const [value, setValue] = React.useState(defaultValue)
     const [secondValue, setSecondValue] = React.useState(secondDefaultValue)
+    const [showPassword, setShowPassword] = React.useState(false)
 
     React.useEffect(() => {
         if (open) {
             setValue(defaultValue)
             setSecondValue(secondDefaultValue)
+            setShowPassword(false)
         }
     }, [open, defaultValue, secondDefaultValue])
+
+    const handleValueChange = (v: string) => {
+        if (isPassword) {
+            // 过滤掉所有中文字符
+            const filtered = v.replace(/[\u4e00-\u9fa5]/g, "")
+            setValue(filtered)
+        } else {
+            setValue(v)
+        }
+    }
 
     const handleConfirm = () => {
         onConfirm(value, secondValue)
@@ -69,17 +83,34 @@ export function PromptDialog({
                     {description && <DialogDescription>{description}</DialogDescription>}
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                    <Input
-                        value={value}
-                        onChange={(e) => setValue(e.target.value)}
-                        placeholder={placeholder}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                handleConfirm()
-                            }
-                        }}
-                        autoFocus
-                    />
+                    <div className="relative">
+                        <Input
+                            type={isPassword && !showPassword ? "password" : "text"}
+                            value={value}
+                            onChange={(e) => handleValueChange(e.target.value)}
+                            placeholder={placeholder}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    handleConfirm()
+                                }
+                            }}
+                            autoFocus
+                            className={isPassword ? "pr-10" : ""}
+                        />
+                        {isPassword && (
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                {showPassword ? (
+                                    <EyeOff className="h-4 w-4" />
+                                ) : (
+                                    <Eye className="h-4 w-4" />
+                                )}
+                            </button>
+                        )}
+                    </div>
                     {showSecondInput && (
                         <Input
                             value={secondValue}

@@ -273,6 +273,7 @@ export function MemoActions({
                 showSecondInput={true}
                 secondPlaceholder="口令提示词 (可选)"
                 required={true}
+                isPassword={true}
                 onConfirm={handlePromptConfirm}
                 onCancel={() => { }}
             />

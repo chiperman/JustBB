@@ -75,8 +75,8 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                     <button
                         onClick={toggleBacklinks}
                         className={cn(
-                            "p-2 rounded-full transition-all opacity-0 group-hover/actions:opacity-100 focus-visible:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-primary/20 cursor-pointer",
-                            showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground hover:bg-muted",
+                            "p-2 rounded transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-primary/20 cursor-pointer hover:[background:rgba(0,0,0,0.05)]",
+                            showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground",
                             !shouldReduceMotion && "active:scale-95"
                         )}
                         aria-expanded={showBacklinks}

@@ -81,7 +81,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
 
         const cursorPosition = e.target.selectionStart;
         const textBeforeCursor = val.slice(0, cursorPosition);
-        const mentionMatch = textBeforeCursor.match(/@(\d*)$/);
+        // 匹配 @ 后跟任意非空白字符（支持编号和内容搜索）
+        const mentionMatch = textBeforeCursor.match(/@(\S*)$/);
 
         if (mentionMatch) {
             const query = mentionMatch[1];
@@ -119,7 +120,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
         const textBeforeCursor = content.slice(0, cursorPosition);
         const textAfterCursor = content.slice(cursorPosition);
 
-        const newPrefix = textBeforeCursor.replace(/@\d*$/, `@${item.memo_number} `);
+        // 替换 @ 后跟的所有非空白字符为正确的编号
+        const newPrefix = textBeforeCursor.replace(/@\S*$/, `@${item.memo_number} `);
         setContent(newPrefix + textAfterCursor);
         setShowSuggestions(false);
         textareaRef.current.focus();
@@ -263,10 +265,30 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
         }
     };
 
+    // 渲染带高亮的内容
+    const renderHighlightedContent = () => {
+        // 匹配 @数字 格式的引用
+        const parts = content.split(/(@\d+)/g);
+        return parts.map((part, index) => {
+            if (/^@\d+$/.test(part)) {
+                return <mark key={index} className="bg-primary/20 text-primary rounded px-0.5">{part}</mark>;
+            }
+            return <span key={index}>{part}</span>;
+        });
+    };
+
     return (
         <section className="bg-card border border-border rounded-2xl p-6 shadow-sm transition-all focus-within:shadow-md relative">
             <div className="relative group">
                 <label htmlFor="memo-content" className="sr-only">Memo内容</label>
+                {/* 高亮层：显示 @引用 高亮 */}
+                <div
+                    className="absolute inset-0 w-full text-lg leading-relaxed p-0 font-serif pointer-events-none whitespace-pre-wrap break-words overflow-hidden"
+                    style={{ height: textareaRef.current?.style.height || '60px' }}
+                    aria-hidden="true"
+                >
+                    {renderHighlightedContent()}
+                </div>
                 <textarea
                     id="memo-content"
                     ref={textareaRef}
@@ -274,7 +296,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                     value={content}
                     onChange={handleContentChange}
                     onKeyDown={handleKeyDown}
-                    className="w-full bg-transparent border-none focus:ring-0 text-lg leading-relaxed resize-none p-0 placeholder:text-muted-foreground/30 font-serif overflow-hidden"
+                    className="w-full bg-transparent border-none focus:ring-0 text-lg leading-relaxed resize-none p-0 placeholder:text-muted-foreground/30 font-serif overflow-hidden relative text-transparent caret-foreground"
                     style={{ height: '60px' }}
                 />
 

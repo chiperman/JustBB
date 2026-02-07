@@ -19,6 +19,7 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.29.2",
     "html-to-image": "^1.11.13",

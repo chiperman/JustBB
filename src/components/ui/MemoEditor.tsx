@@ -7,8 +7,17 @@ import { X, Pin, Lock, LockOpen, Hash, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { updateMemoContent } from '@/actions/update';
 import { searchMemosForMention } from '@/actions/search';
-import { SuggestionList, SuggestionItem } from './SuggestionList';
+import { Command, CommandList, CommandItem, CommandEmpty, CommandGroup } from './command';
 import { getAllTags } from '@/actions/tags';
+
+// 建议项类型
+interface SuggestionItem {
+    id: string;
+    label: string;
+    subLabel?: string;
+    count?: number;
+    memo_number?: number;
+}
 import { useReducedMotion } from 'framer-motion';
 import {
     Dialog,
@@ -43,7 +52,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
     // Suggestion system states
     const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const [activeIndex, setActiveIndex] = useState(0);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Tag autocomplete states
@@ -94,7 +102,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                 subLabel: m.content.substring(0, 50),
                 memo_number: m.memo_number
             })));
-            setActiveIndex(0);
         } else {
             setShowSuggestions(false);
         }
@@ -108,7 +115,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                 .slice(0, 5);
             setTagSuggestions(filtered.map(t => ({ id: t.tag_name, label: `#${t.tag_name}`, count: t.count })));
             setShowTagSuggestions(true);
-            setActiveIndex(0);
         } else {
             setShowTagSuggestions(false);
         }
@@ -155,44 +161,19 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
             handlePublishClick();
             return;
         }
-
-        if (showSuggestions && suggestions.length > 0) {
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                setActiveIndex((prev) => (prev + 1) % suggestions.length);
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                setActiveIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length);
-            } else if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSelectSuggestion(suggestions[activeIndex]);
-            } else if (e.key === 'Escape') {
-                setShowSuggestions(false);
-            }
+        // cmdk 内置键盘导航，这里只处理 Escape
+        if (showSuggestions && e.key === 'Escape') {
+            setShowSuggestions(false);
         }
     };
 
     const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (showTagSuggestions && tagSuggestions.length > 0) {
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                setActiveIndex((prev) => (prev + 1) % tagSuggestions.length);
-                return;
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                setActiveIndex((prev) => (prev - 1 + tagSuggestions.length) % tagSuggestions.length);
-                return;
-            } else if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSelectTag(tagSuggestions[activeIndex]);
-                return;
-            } else if (e.key === 'Escape') {
-                setShowTagSuggestions(false);
-                return;
-            }
+        // cmdk 内置键盘导航，这里只处理 Enter 添加新标签和 Escape
+        if (showTagSuggestions && e.key === 'Escape') {
+            setShowTagSuggestions(false);
+            return;
         }
-
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !showTagSuggestions) {
             e.preventDefault();
             handleAddTag();
         }
@@ -300,13 +281,34 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                     style={{ height: '60px' }}
                 />
 
-                {showSuggestions && (
+                {showSuggestions && suggestions.length > 0 && (
                     <div className="absolute top-full left-0 mt-1 z-50">
-                        <SuggestionList
-                            items={suggestions}
-                            activeIndex={activeIndex}
-                            onSelect={handleSelectSuggestion}
-                        />
+                        <Command className="rounded-xl border border-border shadow-xl bg-popover min-w-[280px]">
+                            <CommandList>
+                                <CommandGroup>
+                                    {suggestions.map((item) => (
+                                        <CommandItem
+                                            key={item.id}
+                                            value={item.label}
+                                            onSelect={() => handleSelectSuggestion(item)}
+                                            className="flex justify-between items-center gap-3"
+                                        >
+                                            <div className="flex flex-col">
+                                                <span className="font-medium text-sm">{item.label}</span>
+                                                {item.subLabel && (
+                                                    <span className="text-xs text-muted-foreground line-clamp-1">
+                                                        {item.subLabel}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {item.memo_number !== undefined && (
+                                                <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">#{item.memo_number}</span>
+                                            )}
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </CommandList>
+                        </Command>
                     </div>
                 )}
             </div>
@@ -342,13 +344,27 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                             aria-label="添加标签"
                         />
                     </div>
-                    {showTagSuggestions && (
+                    {showTagSuggestions && tagSuggestions.length > 0 && (
                         <div className="absolute top-full left-0 mt-1 z-50">
-                            <SuggestionList
-                                items={tagSuggestions}
-                                activeIndex={activeIndex}
-                                onSelect={handleSelectTag}
-                            />
+                            <Command className="rounded-xl border border-border shadow-xl bg-popover min-w-[200px]">
+                                <CommandList>
+                                    <CommandGroup>
+                                        {tagSuggestions.map((item) => (
+                                            <CommandItem
+                                                key={item.id}
+                                                value={item.label}
+                                                onSelect={() => handleSelectTag(item)}
+                                                className="flex justify-between items-center"
+                                            >
+                                                <span className="font-medium text-sm">{item.label}</span>
+                                                {item.count !== undefined && (
+                                                    <span className="text-xs text-muted-foreground">{item.count}</span>
+                                                )}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
                         </div>
                     )}
                 </div>

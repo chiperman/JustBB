@@ -5,9 +5,11 @@ import { exportAllMemos } from '@/actions/export';
 import { FileDown, FileJson, Loader2 } from 'lucide-react';
 import { Memo } from '@/types/memo';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 export function DataExporter() {
     const [loading, setLoading] = useState(false);
+    const { toast } = useToast();
 
     const handleExport = async (format: 'json' | 'csv') => {
         try {
@@ -15,7 +17,11 @@ export function DataExporter() {
             const { data, error } = await exportAllMemos();
 
             if (error || !data) {
-                alert('Export failed: ' + (error || 'No data'));
+                toast({
+                    title: "导出失败",
+                    description: error || "未获取到数据",
+                    variant: "destructive"
+                });
                 return;
             }
 
@@ -50,7 +56,11 @@ export function DataExporter() {
                     filename += '.csv';
                 } catch (e) {
                     console.error('CSV Generation Error', e);
-                    alert('CSV Generation Error');
+                    toast({
+                        title: "导出失败",
+                        description: "生成 CSV 时发生错误",
+                        variant: "destructive"
+                    });
                     return;
                 }
             }
@@ -64,9 +74,19 @@ export function DataExporter() {
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
+
+            toast({
+                title: "导出成功",
+                description: `已生成 ${filename}`,
+                variant: "success"
+            });
         } catch (e) {
             console.error(e);
-            alert('Export Error');
+            toast({
+                title: "导出错误",
+                description: "系统内部错误",
+                variant: "destructive"
+            });
         } finally {
             setLoading(false);
         }

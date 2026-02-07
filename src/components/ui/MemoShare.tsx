@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { Memo } from '@/types/memo';
+import { useToast } from '@/hooks/use-toast';
 
 interface MemoShareProps {
     memo: Memo;
@@ -24,6 +25,7 @@ interface MemoShareProps {
 export function MemoShare({ memo, trigger }: MemoShareProps) {
     const posterRef = useRef<HTMLDivElement>(null);
     const [isGenerating, setIsGenerating] = useState(false);
+    const { toast } = useToast();
     // 生成链接：假设首页即详情页，通过 search query 定位
     const shareUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/?q=${encodeURIComponent(memo.content.slice(0, 10))}`
@@ -48,7 +50,11 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
             link.click();
         } catch (err) {
             console.error('Generarte poster failed', err);
-            alert('生成海报失败，请重试');
+            toast({
+                title: "生成海报失败",
+                description: "请重试或检查控制台错误",
+                variant: "destructive"
+            });
         } finally {
             setIsGenerating(false);
         }
@@ -141,7 +147,10 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                             } else {
                                 // fallback copy
                                 navigator.clipboard.writeText(`${memo.content}\n${shareUrl}`);
-                                alert('链接与内容已复制');
+                                toast({
+                                    title: "分享",
+                                    description: "链接与内容已复制",
+                                });
                             }
                         }}
                         aria-label="更多分享方式"

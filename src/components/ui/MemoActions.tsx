@@ -3,18 +3,27 @@
 import { useState } from 'react';
 import { deleteMemo, restoreMemo, permanentDeleteMemo } from '@/actions/delete';
 import { updateMemoState } from '@/actions/update';
-import { Trash2, RotateCcw, MoreHorizontal, MessageSquare, Pin, Lock, LockOpen, Share2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Trash2, RotateCcw, MoreHorizontal } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
     DropdownMenuSeparator,
-    DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MemoCard } from './MemoCard';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { PromptDialog } from '@/components/ui/prompt-dialog';
+import { useToast } from '@/hooks/use-toast';
 import { MemoShare } from './MemoShare';
 import { Memo } from '@/types/memo';
 
@@ -40,25 +49,42 @@ export function MemoActions({
     onEdit
 }: MemoActionsProps) {
     const [isPending, setIsPending] = useState(false);
+    const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+    const [showPermanentDeleteAlert, setShowPermanentDeleteAlert] = useState(false);
+    const [showPublicConfirm, setShowPublicConfirm] = useState(false);
+    const [showPrompt, setShowPrompt] = useState(false);
+    const { toast } = useToast();
 
     const handleDelete = async () => {
-        if (!confirm('确定要删除这条记录吗？')) return;
         setIsPending(true);
         await deleteMemo(id);
         setIsPending(false);
+        toast({
+            title: "已删除",
+            description: "记录已移至回收站",
+        });
     };
 
     const handleRestore = async () => {
         setIsPending(true);
         await restoreMemo(id);
         setIsPending(false);
+        toast({
+            title: "已恢复",
+            description: "记录已恢复至首页",
+            variant: "success"
+        });
     };
 
     const handlePermanentDelete = async () => {
-        if (!confirm('确定要彻底销毁吗？操作不可逆！')) return;
         setIsPending(true);
         await permanentDeleteMemo(id);
         setIsPending(false);
+        toast({
+            title: "彻底销毁",
+            description: "该记录已从数据库物理删除",
+            variant: "destructive"
+        });
     };
 
     const handleTogglePin = async () => {
@@ -68,41 +94,48 @@ export function MemoActions({
         formData.append('is_pinned', String(!isPinned));
         await updateMemoState(formData);
         setIsPending(false);
+        toast({
+            title: !isPinned ? "已置顶" : "已取消置顶",
+        });
     };
 
-    const handleTogglePrivate = async () => {
-        let accessCode = undefined;
-        let hint = undefined;
-
-        // 如果当前是私密，要转为公开，需要二次确认
-        if (isPrivate) {
-            const confirmPublic = confirm('⚠️ 确定要将该内容设为公开吗？\n\n设为公开后，所有人都可以看到此内容。');
-            if (!confirmPublic) {
-                return; // 用户取消
-            }
-        } else if (!isPrivate) {
-            const wantCode = confirm('是否要为该条私密内容设置访问口令？\n点击“确定”设置口令，点击“取消”仅设为私密（无额外口令）。');
-            if (wantCode) {
-                const code = prompt('请输入访问口令：');
-                if (code) {
-                    accessCode = code;
-                    hint = prompt('请输入口令提示词 (可选)：') || '';
-                }
-            }
-        }
-
+    const confirmMakePublic = async () => {
         setIsPending(true);
         const formData = new FormData();
         formData.append('id', id);
-        formData.append('is_private', String(!isPrivate));
-        if (accessCode) {
-            formData.append('access_code', accessCode);
-            formData.append('access_code_hint', hint || '');
+        formData.append('is_private', 'false');
+        const result = await updateMemoState(formData);
+        if (result?.error) {
+            toast({ title: "错误", description: result.error, variant: "destructive" });
+        } else {
+            toast({ title: "已公开", description: "该记录现在所有人可见" });
+        }
+        setIsPending(false);
+    };
+
+    const handleTogglePrivate = async () => {
+        if (isPrivate) {
+            setShowPublicConfirm(true);
+        } else {
+            // 直接弹出口令询问
+            setShowPrompt(true);
+        }
+    };
+
+    const handlePromptConfirm = async (code: string) => {
+        setIsPending(true);
+        const formData = new FormData();
+        formData.append('id', id);
+        formData.append('is_private', 'true');
+        if (code) {
+            formData.append('access_code', code);
         }
 
         const result = await updateMemoState(formData);
         if (result?.error) {
-            alert(result.error);
+            toast({ title: "错误", description: result.error, variant: "destructive" });
+        } else {
+            toast({ title: "已设为私密", description: code ? "已启用口令保护" : "已设为仅自己可见" });
         }
         setIsPending(false);
     };
@@ -123,13 +156,28 @@ export function MemoActions({
                 <Button
                     variant="ghost"
                     size="icon"
-                    onClick={handlePermanentDelete}
+                    onClick={() => setShowPermanentDeleteAlert(true)}
                     disabled={isPending}
                     className="rounded-full text-red-600 hover:text-red-700 hover:bg-red-50"
                     title="彻底删除"
                 >
                     <Trash2 className="w-4 h-4" />
                 </Button>
+
+                <AlertDialog open={showPermanentDeleteAlert} onOpenChange={setShowPermanentDeleteAlert}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>确定要彻底销毁吗？</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                此操作不可逆，该记录将从数据库中物理删除。
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>取消</AlertDialogCancel>
+                            <AlertDialogAction onClick={handlePermanentDelete} className="bg-red-600 hover:bg-red-700">彻底销毁</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
         );
     }
@@ -174,11 +222,54 @@ export function MemoActions({
 
                     <DropdownMenuSeparator />
 
-                    <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive focus:bg-destructive/5">
+                    <DropdownMenuItem onClick={() => setShowDeleteAlert(true)} className="text-destructive focus:text-destructive focus:bg-destructive/5">
                         删除
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Delete Alert */}
+            <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>确定要删除这条记录吗？</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            记录将被移至回收站，你可以在 30 天内恢复它。
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">确定删除</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Public Confirm Alert */}
+            <AlertDialog open={showPublicConfirm} onOpenChange={setShowPublicConfirm}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>确定要设为公开吗？</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            设为公开后，所有人都可以看到此内容。
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmMakePublic}>确定公开</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Private Prompt Dialog */}
+            <PromptDialog
+                open={showPrompt}
+                onOpenChange={setShowPrompt}
+                title="设为私密内容"
+                description="你可以选择设置一个访问口令，或者直接点击确定设为仅自己可见。"
+                placeholder="访问口令 (可选)"
+                onConfirm={handlePromptConfirm}
+                onCancel={() => { }}
+            />
         </div>
     );
 }

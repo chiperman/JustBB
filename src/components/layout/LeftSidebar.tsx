@@ -13,6 +13,17 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 import { usePathname } from 'next/navigation';
 
@@ -128,25 +139,41 @@ export function LeftSidebar() {
                             <ThemeToggle />
                             <FontToggle />
                         </div>
-                        <Button
-                            variant="ghost"
-                            onClick={async () => {
-                                if (!confirm('Download all memos as Markdown?')) return;
-                                const { exportMemos } = await import('@/actions/export');
-                                const data = await exportMemos('markdown');
-                                const blob = new Blob([data], { type: 'text/markdown' });
-                                const url = URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = `justbb_export_${new Date().toISOString().slice(0, 10)}.md`;
-                                a.click();
-                            }}
-                            className="flex items-center justify-start gap-3 h-auto py-2.5 px-2.5 w-full hover:bg-muted font-normal"
-                            aria-label="导出数据"
-                        >
-                            <Settings className="w-5 h-5 text-muted-foreground group-hover:text-primary shrink-0" aria-hidden="true" />
-                            <span className="text-sm font-medium">Export Data</span>
-                        </Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    className="flex items-center justify-start gap-3 h-auto py-2.5 px-2.5 w-full hover:bg-muted font-normal"
+                                    aria-label="导出数据"
+                                >
+                                    <Settings className="w-5 h-5 text-muted-foreground group-hover:text-primary shrink-0" aria-hidden="true" />
+                                    <span className="text-sm font-medium">导出数据 (MD)</span>
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>确认导出数据？</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        系统将处理所有记录并生成一个 Markdown 格式的备份文件供你下载。
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>取消</AlertDialogCancel>
+                                    <AlertDialogAction onClick={async () => {
+                                        const { exportMemos } = await import('@/actions/export');
+                                        const data = await exportMemos('markdown');
+                                        const blob = new Blob([data], { type: 'text/markdown' });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = `justbb_export_${new Date().toISOString().slice(0, 10)}.md`;
+                                        a.click();
+                                    }}>
+                                        确认导出
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </>
                 )}
 

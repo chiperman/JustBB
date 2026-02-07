@@ -26,8 +26,10 @@ export async function getMemoStats() {
     const uniqueTags = new Set<string>();
 
     (allData as { created_at: string; tags: string[] | null }[])?.forEach((item) => {
-        // 聚合日期
-        const date = item.created_at.split('T')[0];
+        // 聚合日期 - 使用本地时区 (Asia/Shanghai, UTC+8)
+        const utcDate = new Date(item.created_at);
+        const localDate = new Date(utcDate.getTime() + 8 * 60 * 60 * 1000);
+        const date = localDate.toISOString().split('T')[0];
         stats[date] = (stats[date] || 0) + 1;
 
         // 统计唯一标签

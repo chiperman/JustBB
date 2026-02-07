@@ -13,6 +13,7 @@ interface MemoFeedProps {
         tag?: string;
         year?: string;
         month?: string;
+        date?: string;
         code?: string;
     };
     adminCode?: string;
@@ -36,11 +37,12 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
         if (loading || !hasMore) return;
 
         setLoading(true);
-        const { query, tag } = searchParams;
+        const { query, tag, date } = searchParams;
 
         const moreMemos = await getMemos({
             query,
             tag,
+            date,
             adminCode,
             limit: 20,
             offset: offsetRef.current
@@ -80,6 +82,30 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
 
     return (
         <div className="space-y-6">
+            {searchParams.date && (
+                <div className="flex items-center justify-between px-1 py-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-0.5 rounded text-xs font-medium">
+                            日期: {searchParams.date}
+                        </span>
+                        <span>的记录</span>
+                    </div>
+                    <button
+                        onClick={() => {
+                            const url = new URL(window.location.href);
+                            url.searchParams.delete('date');
+                            window.history.pushState({}, '', url.toString());
+                            // 触发重新渲染。在 Next.js 中通常使用 router.push， 
+                            // 但这里我们是在客户端组件中，且 searchParams 是通过 props 传进来的。
+                            // 刷新页面是最简单的方式，或者让父组件处理。
+                            window.location.reload();
+                        }}
+                        className="text-xs text-primary hover:underline"
+                    >
+                        清除筛选
+                    </button>
+                </div>
+            )}
             <div className="columns-1 gap-4 space-y-4">
                 {memos.map((memo, index) => {
                     const currentDate = new Date(memo.created_at).toISOString().split('T')[0];

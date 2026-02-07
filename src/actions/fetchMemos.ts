@@ -8,8 +8,14 @@ export async function getMemos(params: {
     limit?: number;
     offset?: number;
     tag?: string;
+    date?: string;
 }) {
-    const { query = '', adminCode = '', limit: limitSize = 20, offset: offsetVal = 0, tag = null } = params;
+    const { query = '', adminCode = '', limit: limitSize = 20, offset: offsetVal = 0, tag = null, date = null } = params;
+
+    const filters: Record<string, unknown> = tag ? { tag } : {};
+    if (date) {
+        filters.date = date;
+    }
 
     // 调用我们在 [DB-4] 中定义的 RPC 函数
     const { data, error } = await supabase.rpc('search_memos_secure', {
@@ -17,7 +23,7 @@ export async function getMemos(params: {
         input_code: adminCode,
         limit_val: limitSize,
         offset_val: offsetVal,
-        filters: (tag ? { tag } : {}) as Record<string, unknown>,
+        filters: filters as Record<string, unknown>,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 

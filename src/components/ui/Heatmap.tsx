@@ -6,6 +6,7 @@ import { startOfDay, subDays, format, eachDayOfInterval, differenceInDays } from
 import { cn } from '@/lib/utils';
 import { HeatmapModal } from './HeatmapModal';
 import { useReducedMotion } from 'framer-motion';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // 定义接口以匹配 actions/stats.ts 的返回值
 interface HeatmapStats {
@@ -19,12 +20,16 @@ interface HeatmapStats {
 const HeatmapCell = memo(({
     dateStr,
     count,
+    isActive,
     onHover,
+    onClick,
     shouldReduceMotion
 }: {
     dateStr: string;
     count: number;
+    isActive?: boolean;
     onHover: (e: React.MouseEvent | React.FocusEvent, date: string, count: number) => void;
+    onClick: (e: React.MouseEvent, date: string) => void;
     shouldReduceMotion: boolean;
 }) => {
     const getColorClass = (c: number) => {
@@ -43,10 +48,12 @@ const HeatmapCell = memo(({
             className={cn(
                 "w-[14px] h-[14px] rounded transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 outline-none",
                 !shouldReduceMotion && "hover:scale-110",
+                isActive && "ring-2 ring-primary ring-offset-1 z-10",
                 getColorClass(count)
             )}
             onMouseEnter={(e) => onHover(e, dateStr, count)}
             onFocus={(e) => onHover(e, dateStr, count)}
+            onClick={(e) => onClick(e, dateStr)}
         />
     );
 });
@@ -58,6 +65,9 @@ export const Heatmap = memo(function Heatmap() {
     const [loading, setLoading] = useState(true);
     const [hoveredDate, setHoveredDate] = useState<{ date: string; count: number; left: number; top: number } | null>(null);
     const shouldReduceMotion = useReducedMotion();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const activeDate = searchParams.get('date');
 
     useEffect(() => {
         getMemoStats().then((data) => {
@@ -94,6 +104,12 @@ export const Heatmap = memo(function Heatmap() {
             });
         }
     }, []);
+
+    const handleCellClick = useCallback((e: React.MouseEvent, date: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        router.push(`/?date=${date}`);
+    }, [router]);
 
     if (loading) {
         return (
@@ -138,7 +154,9 @@ export const Heatmap = memo(function Heatmap() {
                                 key={dateStr}
                                 dateStr={dateStr}
                                 count={stats?.days[dateStr] || 0}
+                                isActive={activeDate === dateStr}
                                 onHover={handleCellHover}
+                                onClick={handleCellClick}
                                 shouldReduceMotion={!!shouldReduceMotion}
                             />
                         ))}

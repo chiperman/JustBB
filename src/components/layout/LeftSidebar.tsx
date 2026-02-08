@@ -85,17 +85,17 @@ export function LeftSidebar() {
                             key={item.label}
                             href={item.href}
                             className={cn(
-                                "flex items-center gap-3 p-2.5 rounded-lg transition-all group overflow-hidden",
+                                "flex items-center gap-3 p-2.5 rounded-sm transition-all group overflow-hidden",
                                 isCollapsed ? "justify-center" : "px-3",
                                 isActive
                                     ? "bg-primary/10 text-primary font-medium"
-                                    : "text-muted-foreground hover:bg-muted hover:text-primary"
+                                    : "text-muted-foreground hover:bg-accent"
                             )}
                             title={item.label}
                         >
                             <span className={cn(
                                 "transition-colors shrink-0",
-                                isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary"
+                                isActive ? "text-primary" : "text-muted-foreground"
                             )}>
                                 {item.icon}
                             </span>

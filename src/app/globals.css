@@ -171,18 +171,17 @@ body.font-sans {
 }
 
 .scrollbar-hover::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
   background-color: transparent;
 }
 
 .scrollbar-hover::-webkit-scrollbar-thumb {
   background-color: transparent;
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 .scrollbar-hover:hover::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.5);
-  /* gray-400 with opacity */
+  background-color: rgba(156, 163, 175, 0.4);
 }
 
 .scrollbar-hide::-webkit-scrollbar {

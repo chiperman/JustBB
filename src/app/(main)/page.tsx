@@ -35,7 +35,7 @@ export default async function Home(props: {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* 顶部编辑器 - 固定 */}
-      <div className="flex-none z-10 bg-background/95 backdrop-blur pb-4 pt-4 px-4 md:px-8 border-b border-border/40">
+      <div className="flex-none z-10 bg-background/95 backdrop-blur pb-4 pt-4 pl-4 pr-[calc(1rem+4px)] md:pl-8 md:pr-[calc(2rem+4px)] border-b border-border/40">
         <div className="max-w-4xl mx-auto w-full">
           <MemoEditor />
         </div>

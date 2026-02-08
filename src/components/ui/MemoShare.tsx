@@ -64,7 +64,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
         <Dialog>
             <DialogTrigger asChild>
                 {trigger || (
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted" title="分享" aria-label="生成海报分享">
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-accent" title="分享" aria-label="生成海报分享">
                         <Share2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                     </Button>
                 )}

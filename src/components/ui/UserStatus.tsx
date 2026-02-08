@@ -69,7 +69,7 @@ export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { is
                     onClick={handleLogout}
                     disabled={loggingOut}
                     className={cn(
-                        "flex items-center justify-start gap-2 h-auto py-2.5 px-2.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground font-normal",
+                        "flex items-center justify-start gap-2 h-auto py-2.5 px-2.5 rounded hover:bg-accent text-muted-foreground font-normal",
                         isCollapsed ? "justify-center px-0 w-10 h-10" : "w-full",
                         loggingOut && "opacity-50 cursor-not-allowed"
                     )}
@@ -91,7 +91,7 @@ export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { is
         <Link
             href="/admin/login"
             className={cn(
-                "flex items-center gap-2 p-2.5 rounded hover:bg-muted transition-all text-sm text-muted-foreground hover:text-primary outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
+                "flex items-center gap-2 p-2.5 rounded hover:bg-accent transition-all text-sm text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
                 isCollapsed ? "justify-center" : "w-full"
             )}
             title={isCollapsed ? "管理员登录" : undefined}

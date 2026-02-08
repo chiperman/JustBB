@@ -85,7 +85,7 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
             {searchParams.date && (
                 <div className="flex items-center justify-between px-1 py-1">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-0.5 rounded text-xs font-medium">
+                        <span className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-0.5 rounded-sm text-xs font-medium">
                             日期: {searchParams.date}
                         </span>
                         <span>的记录</span>

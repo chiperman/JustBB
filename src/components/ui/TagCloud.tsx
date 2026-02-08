@@ -51,7 +51,7 @@ export const TagCloud = memo(function TagCloud() {
                         onClick={() => handleTagClick(tag_name)}
                         className={cn(
                             "cursor-pointer px-2 py-1 text-xs gap-1.5 transition-all hover:opacity-80",
-                            !isActive && "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground font-normal"
+                            !isActive && "bg-muted/50 text-muted-foreground hover:bg-accent font-normal"
                         )}
                         aria-label={`标签 #${tag_name}，共有 ${count} 条记录`}
                     >

@@ -63,7 +63,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
             {/* 顶部元信息 */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                    <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded-sm">
+                    <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded-sm">
                         #{memo.memo_number}
                     </span>
                     <time className="text-xs text-muted-foreground font-sans">
@@ -156,7 +156,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                             <span
                                 key={tag}
                                 role="listitem"
-                                className="text-xs text-primary bg-primary/5 px-2 py-0.5 rounded-sm hover:bg-accent cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 outline-none"
+                                className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-sm hover:bg-primary/20 cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 outline-none"
                                 tabIndex={0}
                             >
                                 #{tag}
@@ -172,7 +172,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                     <button
                         onClick={handleUnlock}
                         className={cn(
-                            "bg-card px-5 py-2.5 rounded-sm text-xs font-medium shadow-md pointer-events-auto cursor-pointer hover:bg-muted hover:shadow-lg transition-all flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ring-offset-2",
+                            "bg-card px-5 py-2.5 rounded-sm text-xs font-medium shadow-md pointer-events-auto cursor-pointer hover:bg-accent hover:shadow-lg transition-all flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ring-offset-2",
                             !shouldReduceMotion && "active:scale-95"
                         )}
                         aria-label="解密内容"

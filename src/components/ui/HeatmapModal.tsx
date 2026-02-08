@@ -86,7 +86,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                                     onClick={() => setViewMode('month')}
                                     className={cn(
                                         "px-3 py-1 text-xs h-7 rounded-md transition-all",
-                                        viewMode === 'month' ? "bg-background shadow-sm font-bold text-foreground hover:bg-background" : "text-muted-foreground hover:text-foreground font-normal hover:bg-transparent"
+                                        viewMode === 'month' ? "bg-background shadow-sm font-bold text-foreground hover:bg-background" : "text-muted-foreground hover:text-foreground font-normal hover:bg-accent"
                                     )}
                                 >
                                     月
@@ -97,7 +97,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                                     onClick={() => setViewMode('year')}
                                     className={cn(
                                         "px-3 py-1 text-xs h-7 rounded-md transition-all",
-                                        viewMode === 'year' ? "bg-background shadow-sm font-bold text-foreground hover:bg-background" : "text-muted-foreground hover:text-foreground font-normal hover:bg-transparent"
+                                        viewMode === 'year' ? "bg-background shadow-sm font-bold text-foreground hover:bg-background" : "text-muted-foreground hover:text-foreground font-normal hover:bg-accent"
                                     )}
                                 >
                                     年

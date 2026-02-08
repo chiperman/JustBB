@@ -262,7 +262,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
     };
 
     return (
-        <section className="bg-card border border-border rounded-2xl p-6 shadow-sm transition-all focus-within:shadow-md relative">
+        <section className="bg-card border border-border rounded-sm p-6 shadow-sm transition-all focus-within:shadow-md relative">
             <div className="relative group">
                 <label htmlFor="memo-content" className="sr-only">Memo内容</label>
 
@@ -326,12 +326,12 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                 {tags.map(tag => (
                     <span
                         key={tag}
-                        className="inline-flex items-center gap-1 bg-primary/5 text-primary text-xs px-2.5 py-1 rounded-full group/tag animate-in zoom-in-95 duration-200"
+                        className="inline-flex items-center gap-1 bg-primary/5 text-primary text-xs px-2.5 py-1 rounded-sm group/tag animate-in zoom-in-95 duration-200"
                     >
                         #{tag}
                         <button
                             onClick={() => handleRemoveTag(tag)}
-                            className="hover:text-red-500 transition-colors focus:outline-none focus:ring-1 focus:ring-red-400 rounded-full p-0.5"
+                            className="hover:text-red-500 transition-colors focus:outline-none focus:ring-1 focus:ring-red-400 rounded-sm p-0.5"
                             aria-label={`删除标签 #${tag}`}
                         >
                             <X className="w-2.5 h-2.5" aria-hidden="true" />
@@ -340,7 +340,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                 ))}
 
                 <div className="relative">
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/40 border border-transparent focus-within:border-primary/20 focus-within:bg-background transition-all">
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-sm bg-muted/40 border border-transparent focus-within:border-primary/20 focus-within:bg-background transition-all">
                         <Hash className="w-3.5 h-3.5 text-muted-foreground/50" aria-hidden="true" />
                         <input
                             type="text"
@@ -414,12 +414,12 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                         <Pin className={cn("w-3 h-3", isPinned && "fill-primary")} aria-hidden="true" /> Pin
                     </Button>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-4">
                     {mode === 'edit' && (
                         <Button
                             variant="ghost"
                             onClick={onCancel}
-                            className="rounded-full"
+                            className="rounded-sm"
                         >
                             取消
                         </Button>
@@ -428,7 +428,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                         onClick={handlePublishClick}
                         disabled={isPending || !content.trim()}
                         className={cn(
-                            "rounded-full px-7",
+                            "rounded-sm px-7",
                             !shouldReduceMotion && "active:scale-95"
                         )}
                     >
@@ -496,7 +496,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                         <Button
                             variant="ghost"
                             onClick={() => setShowPrivateDialog(false)}
-                            className="rounded-full"
+                            className="rounded-sm"
                         >
                             取消
                         </Button>
@@ -504,7 +504,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess }: MemoE
                             onClick={performPublish}
                             disabled={isPending || !accessCode.trim()}
                             className={cn(
-                                "rounded-full px-7",
+                                "rounded-sm px-7",
                                 !shouldReduceMotion && "active:scale-95"
                             )}
                         >

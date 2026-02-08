@@ -44,7 +44,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
 
     if (isEditing) {
         return (
-            <article className="bg-card border border-border rounded-2xl p-6 shadow-md ring-2 ring-primary/20 animate-in fade-in duration-200">
+            <article className="bg-card border border-border rounded-sm p-6 shadow-md ring-2 ring-primary/20 animate-in fade-in duration-200">
                 <MemoEditor
                     mode="edit"
                     memo={memo}
@@ -57,13 +57,13 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
 
     return (
         <article className={cn(
-            "group relative bg-card border border-border rounded p-6 transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-primary/10",
+            "group relative bg-card border border-border rounded-sm p-6 transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-primary/10",
             memo.is_pinned && "border-primary/30 bg-primary/5"
         )}>
             {/* 顶部元信息 */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                    <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded">
+                    <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded-sm">
                         #{memo.memo_number}
                     </span>
                     <time className="text-xs text-muted-foreground font-sans">
@@ -79,7 +79,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                             size="icon"
                             onClick={toggleBacklinks}
                             className={cn(
-                                "h-8 w-8 rounded transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:[background:rgba(0,0,0,0.05)]",
+                                "h-8 w-8 rounded-sm transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
                                 showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground",
                             )}
                             aria-expanded={showBacklinks}
@@ -131,7 +131,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                     ) : backlinks.length > 0 ? (
                         <div className="space-y-2">
                             {backlinks.map(link => (
-                                <div key={link.id} className="text-xs bg-muted/30 p-2 rounded-lg flex justify-between items-center group/link hover:bg-muted/50 transition-colors">
+                                <div key={link.id} className="text-xs bg-muted/30 p-2 rounded-sm flex justify-between items-center group/link hover:bg-accent transition-colors">
                                     <span className="text-muted-foreground truncate max-w-[200px]">{link.content.substring(0, 30)}...</span>
                                     <a
                                         href={`/?q=${link.memo_number}`}
@@ -156,7 +156,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                             <span
                                 key={tag}
                                 role="listitem"
-                                className="text-xs text-primary bg-primary/5 px-2 py-0.5 rounded hover:bg-primary/10 cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 outline-none"
+                                className="text-xs text-primary bg-primary/5 px-2 py-0.5 rounded-sm hover:bg-accent cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 outline-none"
                                 tabIndex={0}
                             >
                                 #{tag}
@@ -168,11 +168,11 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
 
             {/* 锁定覆盖层 */}
             {memo.is_locked && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/20 backdrop-blur-[2px] rounded-2xl pointer-events-none z-10">
+                <div className="absolute inset-0 flex items-center justify-center bg-background/20 backdrop-blur-[2px] rounded-sm pointer-events-none z-10">
                     <button
                         onClick={handleUnlock}
                         className={cn(
-                            "bg-card px-5 py-2.5 rounded-full text-xs font-medium shadow-md pointer-events-auto cursor-pointer hover:bg-muted hover:shadow-lg transition-all flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ring-offset-2",
+                            "bg-card px-5 py-2.5 rounded-sm text-xs font-medium shadow-md pointer-events-auto cursor-pointer hover:bg-muted hover:shadow-lg transition-all flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ring-offset-2",
                             !shouldReduceMotion && "active:scale-95"
                         )}
                         aria-label="解密内容"

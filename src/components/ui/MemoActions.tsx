@@ -151,7 +151,7 @@ export function MemoActions({
                     size="icon"
                     onClick={handleRestore}
                     disabled={isPending}
-                    className="rounded-full text-green-600 hover:text-green-700 hover:bg-green-50"
+                    className="rounded-sm text-green-600 hover:text-green-700 hover:bg-green-50"
                     title="恢复"
                 >
                     <RotateCcw className="w-4 h-4" />
@@ -161,7 +161,7 @@ export function MemoActions({
                     size="icon"
                     onClick={() => setShowPermanentDeleteAlert(true)}
                     disabled={isPending}
-                    className="rounded-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="rounded-sm text-red-600 hover:text-red-700 hover:bg-red-50"
                     title="彻底删除"
                 >
                     <Trash2 className="w-4 h-4" />

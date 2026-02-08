@@ -40,20 +40,23 @@ const HeatmapCell = memo(({
         return 'bg-[var(--heatmap-4)]';
     };
 
+    const hasData = count > 0;
+
     return (
         <div
-            tabIndex={0}
+            tabIndex={hasData ? 0 : -1}
             role="gridcell"
             aria-label={`${dateStr}: ${count} 记录`}
             className={cn(
-                "w-[14px] h-[14px] rounded transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 outline-none",
-                !shouldReduceMotion && "hover:scale-110",
+                "w-[14px] h-[14px] rounded transition-all outline-none",
+                hasData && "cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+                hasData && !shouldReduceMotion && "hover:scale-110",
                 isActive && "ring-2 ring-primary ring-offset-1 z-10",
                 getColorClass(count)
             )}
             onMouseEnter={(e) => onHover(e, dateStr, count)}
-            onFocus={(e) => onHover(e, dateStr, count)}
-            onClick={(e) => onClick(e, dateStr)}
+            onFocus={(e) => hasData && onHover(e, dateStr, count)}
+            onClick={(e) => hasData && onClick(e, dateStr)}
         />
     );
 });
@@ -63,7 +66,7 @@ HeatmapCell.displayName = 'HeatmapCell';
 export const Heatmap = memo(function Heatmap() {
     const [stats, setStats] = useState<HeatmapStats | null>(null);
     const [loading, setLoading] = useState(true);
-    const [hoveredDate, setHoveredDate] = useState<{ date: string; count: number; left: number; top: number } | null>(null);
+    const [hoveredDate, setHoveredDate] = useState<{ date: string; count: number; left: number; top: number; align: 'left' | 'center' | 'right' } | null>(null);
     const shouldReduceMotion = useReducedMotion();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -96,11 +99,19 @@ export const Heatmap = memo(function Heatmap() {
 
         if (container) {
             const containerRect = container.getBoundingClientRect();
+            const relX = rect.left - containerRect.left + 7;
+            const containerWidth = containerRect.width;
+
+            let align: 'left' | 'center' | 'right' = 'center';
+            if (relX < 60) align = 'left';
+            else if (relX > containerWidth - 60) align = 'right';
+
             setHoveredDate({
                 date,
                 count,
-                left: rect.left - containerRect.left + 7,
-                top: rect.top - containerRect.top
+                left: relX,
+                top: rect.top - containerRect.top,
+                align
             });
         }
     }, []);
@@ -170,7 +181,12 @@ export const Heatmap = memo(function Heatmap() {
                     {/* Tooltip */}
                     {hoveredDate && (
                         <div
-                            className="absolute z-[999] px-2.5 py-1.5 text-[10px] font-medium text-white bg-black/95 backdrop-blur-md rounded pointer-events-none transform -translate-x-1/2 -translate-y-full mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-2xl border border-white/20 whitespace-nowrap"
+                            className={cn(
+                                "absolute z-[999] px-2.5 py-1.5 text-[10px] font-medium text-white bg-black/95 backdrop-blur-md rounded pointer-events-none mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-2xl border border-white/20 whitespace-nowrap",
+                                hoveredDate.align === 'center' && "-translate-x-1/2 -translate-y-full",
+                                hoveredDate.align === 'left' && "-translate-y-full ml-[-7px]",
+                                hoveredDate.align === 'right' && "-translate-x-full -translate-y-full mr-[-7px]"
+                            )}
                             style={{ left: hoveredDate.left, top: hoveredDate.top }}
                         >
                             <span className="text-[#9be9a8] font-bold">{hoveredDate.count} 笔记</span>

@@ -1,40 +1,26 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import { ThemeToggle } from '../ui/ThemeToggle';
-import { FontToggle } from '../ui/FontToggle';
 import { SearchInput } from '../ui/SearchInput';
 import { TagCloud } from '../ui/TagCloud';
 import { Heatmap } from '../ui/Heatmap';
 import { OnThisDay } from '../ui/OnThisDay';
-import { UserStatus } from '../ui/UserStatus';
-import { Home, Tag, Trash2, Settings, Image as GalleryIcon, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Home, Tag, Trash2, Image as GalleryIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-
 import { usePathname } from 'next/navigation';
+import { SidebarSettings } from "./SidebarSettings";
 
 export function LeftSidebar() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const pathname = usePathname();
 
     const navItems = [
-        { icon: <Home className="w-5 h-5" aria-hidden="true" />, label: '首页', href: '/' },
-        { icon: <GalleryIcon className="w-5 h-5" aria-hidden="true" />, label: '画廊', href: '/gallery' },
-        { icon: <Tag className="w-5 h-5" aria-hidden="true" />, label: '标签', href: '/tags' },
-        { icon: <Trash2 className="w-5 h-5" aria-hidden="true" />, label: '回收站', href: '/trash' },
+        { icon: <Home className="w-5 h-5" />, label: '首页', href: '/' },
+        { icon: <GalleryIcon className="w-5 h-5" />, label: '画廊', href: '/gallery' },
+        { icon: <Tag className="w-5 h-5" />, label: '标签', href: '/tags' },
+        { icon: <Trash2 className="w-5 h-5" />, label: '回收站', href: '/trash' },
     ];
 
     return (
@@ -60,7 +46,7 @@ export function LeftSidebar() {
                     className="h-8 w-8 text-muted-foreground hover:text-primary shrink-0"
                     aria-label={isCollapsed ? "展开侧边栏" : "收起侧边栏"}
                 >
-                    {isCollapsed ? <PanelLeftOpen className="w-5 h-5" aria-hidden="true" /> : <PanelLeftClose className="w-5 h-5" aria-hidden="true" />}
+                    {isCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
                 </Button>
             </div>
 
@@ -110,7 +96,7 @@ export function LeftSidebar() {
 
             <div className={cn("transition-all duration-300", isCollapsed ? "h-0 opacity-0 invisible overflow-hidden" : "h-auto opacity-100 visible mb-8")}>
                 <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 font-sans flex items-center gap-2">
-                    <Tag className="w-3 h-3" aria-hidden="true" /> 热门标签
+                    <Tag className="w-3 h-3" /> 热门标签
                 </h3>
                 <Suspense fallback={<div className="space-y-2">
                     <div className="flex flex-wrap gap-2">
@@ -127,55 +113,8 @@ export function LeftSidebar() {
                 <OnThisDay />
             </div>
 
-            <div className={cn("mt-auto pt-6 border-t border-border space-y-4", isCollapsed ? "flex flex-col items-center gap-6" : "")}>
-                <UserStatus isCollapsed={isCollapsed} />
-
-                <div className={cn(
-                    "transition-all duration-300 overflow-hidden",
-                    isCollapsed ? "max-h-0 opacity-0" : "max-h-40 opacity-100"
-                )}>
-                    <div className="flex items-center justify-between px-2 mb-4">
-                        <ThemeToggle />
-                        <FontToggle />
-                    </div>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                className="flex items-center justify-start gap-3 h-auto py-2.5 px-2.5 w-full hover:bg-muted font-normal"
-                                aria-label="导出数据"
-                            >
-                                <Settings className="w-5 h-5 text-muted-foreground group-hover:text-primary shrink-0" aria-hidden="true" />
-                                <span className="text-sm font-medium">导出数据 (MD)</span>
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>确认导出数据？</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    系统将处理所有记录并生成一个 Markdown 格式的备份文件供你下载。
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>取消</AlertDialogCancel>
-                                <AlertDialogAction onClick={async () => {
-                                    const { exportMemos } = await import('@/actions/export');
-                                    const data = await exportMemos('markdown');
-                                    const blob = new Blob([data], { type: 'text/markdown' });
-                                    const url = URL.createObjectURL(blob);
-                                    const a = document.createElement('a');
-                                    a.href = url;
-                                    a.download = `justbb_export_${new Date().toISOString().slice(0, 10)}.md`;
-                                    a.click();
-                                }}>
-                                    确认导出
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </div>
-
-                {isCollapsed && <ThemeToggle />}
+            <div className={cn("mt-auto pt-4 border-t border-border", isCollapsed ? "pb-4" : "p-1")}>
+                <SidebarSettings isCollapsed={isCollapsed} />
             </div>
         </aside>
     );

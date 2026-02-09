@@ -79,7 +79,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                     {memo.is_pinned && <Pin className="w-3.5 h-3.5 text-primary fill-primary" aria-hidden="true" />}
                     {memo.is_private && <Lock className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />}
                     {memo.word_count !== undefined && (
-                        <span className="text-[10px] text-muted-foreground/60 bg-muted/30 px-1.5 py-0.5 rounded-sm">
+                        <span className="text-[10px] text-muted-foreground/60">
                             {memo.word_count} 字
                         </span>
                     )}

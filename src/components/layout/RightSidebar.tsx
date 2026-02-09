@@ -6,10 +6,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
     Timeline,
     TimelineContent,
+    TimelineLine,
     TimelineDot,
     TimelineHeading,
     TimelineItem
 } from '@/components/ui/timeline';
+import { DailyTimeline } from './DailyTimeline';
 
 export function RightSidebar() {
     const [allDays, setAllDays] = useState<Record<string, number>>({});
@@ -141,80 +143,98 @@ export function RightSidebar() {
     return (
         <aside className="hidden xl:flex w-80 h-full flex-col p-6 border-l border-border bg-background/50 backdrop-blur-md">
             <div className="flex-1">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest font-sans">
-                        时间轴
-                    </h3>
-                </div>
-                <Timeline>
-                    {fullTimeline.map((yearGroup) => (
-                        <TimelineItem key={yearGroup.year}>
-                            <TimelineDot className={cn(
-                                "transition-colors duration-300",
-                                isYearActive(yearGroup.year) ? "bg-primary ring-primary/20" : "bg-border"
-                            )} />
-                            <TimelineHeading>
-                                <a
-                                    href={`/?year=${yearGroup.year}`}
-                                    className={cn(
-                                        "transition-colors cursor-pointer",
+                {dateFilter ? (
+                    <DailyTimeline date={dateFilter} />
+                ) : (
+                    <>
+                        <div className="flex items-center justify-between mb-8">
+                            <h3 className="text-sm font-bold text-foreground uppercase tracking-widest font-mono border-b-2 border-primary/20 pb-1.5 flex-1">
+                                时间轴
+                            </h3>
+                        </div>
+                        <Timeline className="pl-6">
+                            {fullTimeline.map((yearGroup) => (
+                                <TimelineItem key={yearGroup.year} className="pb-8 overflow-visible">
+                                    <TimelineLine active={isYearActive(yearGroup.year)} />
+                                    <TimelineDot className={cn(
+                                        "transition-all duration-300 top-1.5",
                                         isYearActive(yearGroup.year)
-                                            ? "text-primary font-semibold"
-                                            : "hover:text-primary"
-                                    )}
-                                    onClick={(e) => handleYearClick(e, yearGroup.year)}
-                                >
-                                    {yearGroup.year}
-                                </a>
-                            </TimelineHeading>
-                            <TimelineContent>
-                                {yearGroup.months.map((monthGroup) => (
-                                    <div key={monthGroup.month} className="relative">
-                                        <h5 className={cn(
-                                            "text-xs font-medium mb-2 pl-2 -ml-[19px] border-l-2 py-0.5 transition-colors cursor-pointer block",
-                                            isMonthActive(yearGroup.year, monthGroup.month)
-                                                ? "border-primary text-primary"
-                                                : "border-transparent text-muted-foreground hover:text-primary"
-                                        )}>
-                                            <a
-                                                href={`/?year=${yearGroup.year}&month=${monthGroup.month}`}
-                                                className="block w-full"
-                                                onClick={(e) => handleMonthClick(e, yearGroup.year, monthGroup.month)}
-                                            >
-                                                {monthNames[monthGroup.month]}
-                                            </a>
-                                        </h5>
-                                        <div className="flex flex-col gap-1">
-                                            {monthGroup.days.map((day) => {
-                                                const dateStr = `${yearGroup.year}-${String(monthGroup.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                                                const isActive = isDayActive(dateStr);
-
-                                                return (
+                                            ? "bg-primary border-primary ring-primary/10 shadow-[0_0_10px_rgba(var(--primary),0.3)] scale-110"
+                                            : "bg-background border-border"
+                                    )} />
+                                    <TimelineHeading className="mb-6">
+                                        <a
+                                            href={`/?year=${yearGroup.year}`}
+                                            className={cn(
+                                                "transition-colors cursor-pointer text-sm font-bold font-mono tracking-tighter",
+                                                isYearActive(yearGroup.year)
+                                                    ? "text-primary"
+                                                    : "text-foreground hover:text-primary"
+                                            )}
+                                            onClick={(e) => handleYearClick(e, yearGroup.year)}
+                                        >
+                                            {yearGroup.year}
+                                        </a>
+                                    </TimelineHeading>
+                                    <TimelineContent className="pl-1">
+                                        {yearGroup.months.map((monthGroup) => (
+                                            <div key={monthGroup.month} className="relative mb-6 last:mb-0">
+                                                <TimelineLine
+                                                    active={isMonthActive(yearGroup.year, monthGroup.month)}
+                                                    className="-left-[29px]"
+                                                />
+                                                <h5 className={cn(
+                                                    "text-[11px] font-bold mb-3 pl-3 transition-colors cursor-pointer block uppercase tracking-wide",
+                                                    isMonthActive(yearGroup.year, monthGroup.month)
+                                                        ? "text-primary"
+                                                        : "text-muted-foreground/80 hover:text-primary"
+                                                )}>
                                                     <a
-                                                        key={day}
-                                                        href={`/?date=${dateStr}`}
-                                                        className={cn(
-                                                            "text-xs transition-colors block py-0.5 pl-2 border-l-2 -ml-[17px] cursor-pointer",
-                                                            isActive
-                                                                ? "border-primary text-primary font-medium"
-                                                                : "border-transparent text-muted-foreground/60 hover:text-primary"
-                                                        )}
-                                                        onClick={(e) => handleDayClick(e, dateStr)}
+                                                        href={`/?year=${yearGroup.year}&month=${monthGroup.month}`}
+                                                        className="block w-full"
+                                                        onClick={(e) => handleMonthClick(e, yearGroup.year, monthGroup.month)}
                                                     >
-                                                        {day}日
+                                                        {monthNames[monthGroup.month]}
                                                     </a>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                ))}
-                            </TimelineContent>
-                        </TimelineItem>
-                    ))}
-                    {fullTimeline.length === 0 && (
-                        <div className="text-sm text-muted-foreground pl-2">暂无数据</div>
-                    )}
-                </Timeline>
+                                                </h5>
+                                                <div className="flex flex-col gap-1.5">
+                                                    {monthGroup.days.map((day) => {
+                                                        const dateStr = `${yearGroup.year}-${String(monthGroup.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                                        const isActive = isDayActive(dateStr);
+
+                                                        return (
+                                                            <div key={day} className="relative">
+                                                                <TimelineLine
+                                                                    active={isActive}
+                                                                    className="-left-[29px]"
+                                                                />
+                                                                <a
+                                                                    href={`/?date=${dateStr}`}
+                                                                    className={cn(
+                                                                        "text-[10px] transition-colors block py-0.5 pl-3 cursor-pointer font-mono font-bold tracking-tight",
+                                                                        isActive
+                                                                            ? "text-primary"
+                                                                            : "text-muted-foreground/50 hover:text-primary/70"
+                                                                    )}
+                                                                    onClick={(e) => handleDayClick(e, dateStr)}
+                                                                >
+                                                                    #{day}
+                                                                </a>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </TimelineContent>
+                                </TimelineItem>
+                            ))}
+                            {fullTimeline.length === 0 && (
+                                <div className="text-sm text-muted-foreground pl-2">暂无数据</div>
+                            )}
+                        </Timeline>
+                    </>
+                )}
             </div>
         </aside>
     );

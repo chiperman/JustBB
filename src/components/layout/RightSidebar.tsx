@@ -176,7 +176,7 @@ export function RightSidebar() {
                             transition={{ duration: 0.3, ease: "easeOut" }}
                             className="h-full flex flex-col"
                         >
-                            <Timeline className="pl-6">
+                            <Timeline>
                                 {Object.keys(allDays).length > 0 ? (
                                     fullTimeline.map((yearGroup) => (
                                         <TimelineItem key={yearGroup.year} className="pb-8 overflow-visible" id={`nav-year-${yearGroup.year}`}>
@@ -201,16 +201,18 @@ export function RightSidebar() {
                                                     {yearGroup.year}
                                                 </a>
                                             </TimelineHeading>
-                                            <TimelineContent className="pl-1">
+                                            <TimelineContent>
                                                 {yearGroup.months.map((monthGroup) => (
                                                     <div key={monthGroup.month} className="relative mb-6 last:mb-0" id={`nav-month-${yearGroup.year}-${monthGroup.month}`}>
                                                         <div className="relative mb-3">
-                                                            <TimelineLine
-                                                                active={isMonthActive(yearGroup.year, monthGroup.month)}
-                                                                className="-left-[29px]"
-                                                            />
+                                                            {isMonthActive(yearGroup.year, monthGroup.month) && (
+                                                                <TimelineLine
+                                                                    active={true}
+                                                                    className="-left-[25px]"
+                                                                />
+                                                            )}
                                                             <h5 className={cn(
-                                                                "text-[11px] font-bold pl-3 transition-colors cursor-pointer block uppercase tracking-wide",
+                                                                "text-[11px] font-bold pl-1 transition-colors cursor-pointer block uppercase tracking-wide",
                                                                 isMonthActive(yearGroup.year, monthGroup.month)
                                                                     ? "text-primary"
                                                                     : "text-muted-foreground/80 hover:text-primary"
@@ -231,14 +233,16 @@ export function RightSidebar() {
 
                                                                 return (
                                                                     <div key={day} className="relative" id={`nav-date-${dateStr}`}>
-                                                                        <TimelineLine
-                                                                            active={isActive}
-                                                                            className="-left-[29px]"
-                                                                        />
+                                                                        {isActive && (
+                                                                            <TimelineLine
+                                                                                active={true}
+                                                                                className="-left-[25px]"
+                                                                            />
+                                                                        )}
                                                                         <a
                                                                             href={`/?date=${dateStr}`}
                                                                             className={cn(
-                                                                                "text-[10px] transition-colors block py-0.5 pl-3 cursor-pointer font-mono font-bold tracking-tight",
+                                                                                "text-[10px] transition-colors block py-0.5 pl-1 cursor-pointer font-mono font-bold tracking-tight",
                                                                                 isActive
                                                                                     ? "text-primary"
                                                                                     : "text-muted-foreground/50 hover:text-primary/70"
@@ -263,10 +267,10 @@ export function RightSidebar() {
                                                 <TimelineLine className="bg-muted/20" />
                                                 <TimelineDot className="bg-muted/20 border-muted/20" />
                                                 <Skeleton className="h-4 w-16 mb-6" />
-                                                <div className="pl-1 space-y-6">
+                                                <div className="pl-4 space-y-6">
                                                     <div className="space-y-3">
                                                         <Skeleton className="h-3 w-12" />
-                                                        <div className="pl-3 space-y-2">
+                                                        <div className="space-y-2">
                                                             <Skeleton className="h-2 w-10" />
                                                             <Skeleton className="h-2 w-8" />
                                                         </div>

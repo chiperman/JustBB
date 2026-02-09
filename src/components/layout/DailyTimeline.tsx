@@ -50,14 +50,14 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
                 <div className="flex items-center justify-between mb-8">
                     <Skeleton className="h-5 w-20" />
                 </div>
-                <Timeline className="pl-6">
+                <Timeline>
                     <TimelineItem className="pb-4 overflow-visible">
                         <TimelineLine />
                         <TimelineDot className="bg-muted/30 border-muted/30" />
                         <TimelineHeading className="mb-6">
                             <Skeleton className="h-4 w-32" />
                         </TimelineHeading>
-                        <TimelineContent className="pl-1">
+                        <TimelineContent>
                             <div className="flex flex-col gap-3">
                                 <Skeleton className="h-3 w-40" />
                                 <Skeleton className="h-3 w-32" />
@@ -77,7 +77,7 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
             exit={{ opacity: 0, x: -10 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
         >
-            <Timeline className="pl-6">
+            <Timeline>
                 <TimelineItem className="pb-4 overflow-visible">
                     <TimelineLine />
                     <TimelineDot className="bg-background border-border" />
@@ -87,9 +87,9 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
                         </span>
                     </TimelineHeading>
 
-                    <TimelineContent className="pl-1">
+                    <TimelineContent>
                         {memos.length === 0 ? (
-                            <div className="text-sm text-muted-foreground pl-3 italic">该日无记录</div>
+                            <div className="text-muted-foreground italic">该日无记录</div>
                         ) : (
                             <div className="flex flex-col gap-1.5">
                                 {memos.map((memo) => {
@@ -103,15 +103,17 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
 
                                     return (
                                         <div key={memo.id} className="relative">
-                                            <TimelineLine
-                                                active={isActive}
-                                                className="-left-[29px]"
-                                            />
+                                            {isActive && (
+                                                <TimelineLine
+                                                    active={true}
+                                                    className="-left-[25px]"
+                                                />
+                                            )}
                                             <a
                                                 href={`#memo-${memo.id}`}
                                                 onClick={(e) => handleMemoClick(e, memo.id)}
                                                 className={cn(
-                                                    "text-[10px] transition-colors block py-0.5 pl-3 cursor-pointer font-mono font-bold tracking-tight",
+                                                    "text-[10px] transition-colors block py-0.5 pl-1 cursor-pointer font-mono font-bold tracking-tight",
                                                     isActive
                                                         ? "text-primary"
                                                         : "text-muted-foreground/50 hover:text-primary/70"

@@ -7,6 +7,7 @@ import { getMemos } from '@/actions/fetchMemos';
 import { Loader2 } from 'lucide-react';
 import { Memo } from '@/types/memo';
 import { ChevronDown, CheckCircle, ArrowUpDown } from 'lucide-react';
+import { useTimeline } from '@/context/TimelineContext';
 
 interface MemoFeedProps {
     initialMemos: Memo[];
@@ -62,6 +63,8 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
         setLoading(false);
     }, [loading, hasMore, searchParams, adminCode]);
 
+    const { setActiveId, isManualClick } = useTimeline();
+
     useEffect(() => {
         const observer = new IntersectionObserver(
             (entries) => {
@@ -83,6 +86,34 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
             }
         };
     }, [loadMore]);
+
+    // Scroll Spy Logic
+    useEffect(() => {
+        if (isManualClick) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        setActiveId(entry.target.id);
+                    }
+                });
+            },
+            {
+                // 检测由于滚动位于视野上半部分（接近顶部）的项目
+                rootMargin: '-80px 0px -80% 0px',
+                threshold: 0
+            }
+        );
+
+        // 查找所有锚点 div
+        const anchors = document.querySelectorAll('[id^="date-"], [id^="month-"], [id^="year-"]');
+        anchors.forEach((anchor) => observer.observe(anchor));
+
+        return () => {
+            anchors.forEach((anchor) => observer.unobserve(anchor));
+        };
+    }, [isManualClick, setActiveId, memos]); // memos 变化时重新绑定（因为瀑布流懒加载）
 
     return (
         <div className="space-y-6">

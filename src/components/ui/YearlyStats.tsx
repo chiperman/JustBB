@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { format, eachMonthOfInterval, startOfYear, endOfYear, getYear } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { Share } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface DayStats {
     count: number;
@@ -12,6 +13,29 @@ interface YearlyStatsProps {
     stats: Record<string, DayStats>;
     firstMemoDate: string | null;
 }
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1
+        }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            type: "spring",
+            stiffness: 300,
+            damping: 24
+        } as const
+    }
+};
 
 export function YearlyStats({ stats, firstMemoDate }: YearlyStatsProps) {
     const availableYears = useMemo(() => {
@@ -26,11 +50,18 @@ export function YearlyStats({ stats, firstMemoDate }: YearlyStatsProps) {
     }, [firstMemoDate]);
 
     return (
-        <div className="flex flex-col gap-12">
+        <motion.div
+            className="flex flex-col gap-12"
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+        >
             {availableYears.map(year => (
-                <YearlyStatsItem key={year} year={year} stats={stats} />
+                <motion.div key={year} variants={itemVariants}>
+                    <YearlyStatsItem year={year} stats={stats} />
+                </motion.div>
             ))}
-        </div>
+        </motion.div>
     );
 }
 
@@ -84,32 +115,43 @@ function YearlyStatsItem({ year, stats }: { year: number; stats: Record<string, 
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatCard
-                    title="条笔记"
-                    total={totals.memos}
-                    data={monthlyData.map(d => d.memoCount)}
-                    color="bg-[#4F46E5]" // Indigo-600
-                    maxScale={30}
-                    labels={monthlyData.map(d => d.monthLabel)}
-                />
-                <StatCard
-                    title="字"
-                    total={totals.words}
-                    data={monthlyData.map(d => d.wordCount)}
-                    color="bg-[#10B981]" // Emerald-500
-                    maxScale={100}
-                    labels={monthlyData.map(d => d.monthLabel)}
-                />
-                <StatCard
-                    title="天"
-                    total={totals.days}
-                    data={monthlyData.map(d => d.activeDays)}
-                    color="bg-[#EF4444]" // Red-500
-                    maxScale={2}
-                    labels={monthlyData.map(d => d.monthLabel)}
-                />
-            </div>
+            <motion.div
+                className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+            >
+                <motion.div variants={itemVariants}>
+                    <StatCard
+                        title="条笔记"
+                        total={totals.memos}
+                        data={monthlyData.map(d => d.memoCount)}
+                        color="bg-[#4F46E5]" // Indigo-600
+                        maxScale={30}
+                        labels={monthlyData.map(d => d.monthLabel)}
+                    />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                    <StatCard
+                        title="字"
+                        total={totals.words}
+                        data={monthlyData.map(d => d.wordCount)}
+                        color="bg-[#10B981]" // Emerald-500
+                        maxScale={100}
+                        labels={monthlyData.map(d => d.monthLabel)}
+                    />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                    <StatCard
+                        title="天"
+                        total={totals.days}
+                        data={monthlyData.map(d => d.activeDays)}
+                        color="bg-[#EF4444]" // Red-500
+                        maxScale={2}
+                        labels={monthlyData.map(d => d.monthLabel)}
+                    />
+                </motion.div>
+            </motion.div>
         </div>
     );
 }
@@ -203,13 +245,15 @@ function StatCard({
                                     <div className="absolute inset-x-0 bottom-0 top-0 w-[90%] mx-auto bg-black/[0.03] rounded-sm pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
 
                                     {/* Bar */}
-                                    <div
+                                    <motion.div
                                         className={cn(
-                                            "w-[90%] rounded-sm transition-all duration-300 relative z-10",
+                                            "w-[90%] rounded-sm relative z-10",
                                             color,
                                             val === 0 ? "opacity-0" : "opacity-80 group-hover:opacity-100"
                                         )}
-                                        style={{ height: `${height}%` }}
+                                        initial={{ height: 0 }}
+                                        animate={{ height: `${height}%` }}
+                                        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} // smooth easeOutCubic
                                     />
                                 </div>
                             );

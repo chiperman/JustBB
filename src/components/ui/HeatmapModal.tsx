@@ -33,12 +33,14 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { YearlyStats } from './YearlyStats';
 
 interface DayStats {
     count: number;
     wordCount: number;
+    date: string;
 }
 
 interface HeatmapStats {
@@ -52,6 +54,48 @@ interface HeatmapModalProps {
     stats: HeatmapStats;
     trigger: React.ReactNode;
 }
+
+// Animation Variants
+const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.03,
+            delayChildren: 0.1
+        }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    show: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            type: "spring",
+            stiffness: 300,
+            damping: 24
+        } as const
+    }
+};
+
+const viewVariants = {
+    enter: (direction: number) => ({
+        x: direction > 0 ? 20 : -20,
+        opacity: 0
+    }),
+    center: {
+        zIndex: 1,
+        x: 0,
+        opacity: 1
+    },
+    exit: (direction: number) => ({
+        zIndex: 0,
+        x: direction < 0 ? 20 : -20,
+        opacity: 0
+    })
+};
 
 export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
     const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
@@ -87,84 +131,127 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
             <DialogTrigger asChild>
                 {trigger}
             </DialogTrigger>
-            <DialogContent className="max-w-6xl h-[90vh] flex flex-col bg-[#F9F9F9] border-none p-0 !duration-0 !animate-none data-[state=open]:!animate-none data-[state=closed]:!animate-none [&>button]:hidden">
-                <div className="flex-none sticky top-0 z-50 bg-[#F9F9F9]/80 backdrop-blur-xl px-10 py-6 flex items-center justify-between border-b border-black/5">
-                    <DialogTitle className="text-lg font-bold tracking-tight">记录统计</DialogTitle>
+            <DialogContent className="max-w-6xl h-[90vh] flex flex-col bg-[#F9F9F9] border-none p-0 overflow-hidden 
+                !animate-none !duration-0 !transition-none
+                [&>button]:hidden text-foreground">
 
-                    <div className="absolute left-1/2 -translate-x-1/2 flex bg-black/5 p-1 rounded-xl">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setViewMode('month')}
-                            className={cn(
-                                "px-6 py-1 text-sm h-8 rounded-lg transition-all",
-                                viewMode === 'month' ? "bg-white shadow-sm font-bold text-foreground hover:bg-white" : "text-muted-foreground hover:text-foreground font-medium hover:bg-transparent"
-                            )}
-                        >
-                            月
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setViewMode('year')}
-                            className={cn(
-                                "px-6 py-1 text-sm h-8 rounded-lg transition-all",
-                                viewMode === 'year' ? "bg-white shadow-sm font-bold text-foreground hover:bg-white" : "text-muted-foreground hover:text-foreground font-medium hover:bg-transparent"
-                            )}
-                        >
-                            年
-                        </Button>
+                <div className="flex-none sticky top-0 z-50 bg-[#F9F9F9]/80 backdrop-blur-xl px-10 py-6 flex items-center justify-between border-b border-black/5">
+                    <DialogTitle className="text-lg font-bold tracking-tight z-10">记录统计</DialogTitle>
+
+                    {/* Centered Toggle Switch */}
+                    <div className="absolute left-0 right-0 top-0 bottom-0 flex items-center justify-center pointer-events-none">
+                        <div className="bg-black/5 p-1 rounded-xl pointer-events-auto flex relative">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setViewMode('month')}
+                                className={cn(
+                                    "relative z-10 px-6 py-1 text-sm h-8 rounded-lg transition-colors hover:bg-transparent",
+                                    viewMode === 'month' ? "font-bold text-foreground" : "text-muted-foreground hover:text-foreground font-medium"
+                                )}
+                            >
+                                {viewMode === 'month' && (
+                                    <motion.div
+                                        layoutId="activeTab"
+                                        className="absolute inset-0 bg-white shadow-sm rounded-lg"
+                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    />
+                                )}
+                                <span className="relative z-10">月</span>
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setViewMode('year')}
+                                className={cn(
+                                    "relative z-10 px-6 py-1 text-sm h-8 rounded-lg transition-colors hover:bg-transparent",
+                                    viewMode === 'year' ? "font-bold text-foreground" : "text-muted-foreground hover:text-foreground font-medium"
+                                )}
+                            >
+                                {viewMode === 'year' && (
+                                    <motion.div
+                                        layoutId="activeTab"
+                                        className="absolute inset-0 bg-white shadow-sm rounded-lg"
+                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    />
+                                )}
+                                <span className="relative z-10">年</span>
+                            </Button>
+                        </div>
                     </div>
 
                     <DialogClose asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-black/5">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-black/5 z-10">
                             <X className="h-4 w-4" />
                         </Button>
                     </DialogClose>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-10 flex flex-col gap-6">
-                    {viewMode === 'month' && (
-                        <div className="flex items-center mb-6">
-                            <Select value={selectedYear} onValueChange={setSelectedYear}>
-                                <SelectTrigger variant="ghost" className="w-auto p-0 h-auto text-2xl font-bold tracking-tight gap-2 hover:bg-transparent px-0 data-[state=open]:bg-transparent focus:ring-0 focus:ring-offset-0">
-                                    <SelectValue placeholder="年份" />
-                                </SelectTrigger>
-                                <SelectContent position="popper" side="bottom" align="start" sideOffset={4} className="min-w-[100px]">
-                                    {availableYears.map(year => (
-                                        <SelectItem key={year} value={String(year)}>{year}年</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    )}
+                <div className="flex-1 overflow-y-auto px-10 pt-6 pb-10 flex flex-col">
+                    <AnimatePresence mode="wait" initial={false}>
+                        {viewMode === 'month' ? (
+                            <motion.div
+                                key="month-view"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2 }}
+                                className="flex flex-col gap-6"
+                            >
+                                <div className="flex items-center mb-2">
+                                    <Select value={selectedYear} onValueChange={setSelectedYear}>
+                                        <SelectTrigger variant="ghost" className="w-auto p-0 h-auto text-2xl font-bold tracking-tight gap-2 hover:bg-transparent px-0 data-[state=open]:bg-transparent focus:ring-0 focus:ring-offset-0">
+                                            <SelectValue placeholder="年份" />
+                                        </SelectTrigger>
+                                        <SelectContent position="popper" side="bottom" align="start" sideOffset={4} className="min-w-[100px]">
+                                            {availableYears.map(year => (
+                                                <SelectItem key={year} value={String(year)}>{year}年</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
 
-                    {viewMode === 'month' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 pb-20">
-                            {(() => {
-                                const targetYear = Number(selectedYear);
-                                const isCurrentYear = targetYear === new Date().getFullYear();
-                                const months: Date[] = eachMonthOfInterval({
-                                    start: startOfYear(new Date(targetYear, 0, 1)),
-                                    end: isCurrentYear ? new Date() : endOfYear(new Date(targetYear, 0, 1))
-                                }).reverse();
-                                return months;
-                            })().map((month) => {
-                                return (
-                                    <MonthCalendar
-                                        key={month.toISOString()}
-                                        date={month}
-                                        stats={stats.days}
-                                        colorFn={getColorClass}
-                                    />
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <YearlyStats stats={stats.days} firstMemoDate={stats.firstMemoDate} />
-                    )}
+                                <motion.div
+                                    key={selectedYear}
+                                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 pb-20"
+                                    variants={containerVariants}
+                                    initial="hidden"
+                                    animate="show"
+                                >
+                                    {(() => {
+                                        const targetYear = Number(selectedYear);
+                                        const isCurrentYear = targetYear === new Date().getFullYear();
+                                        const months: Date[] = eachMonthOfInterval({
+                                            start: startOfYear(new Date(targetYear, 0, 1)),
+                                            end: isCurrentYear ? new Date() : endOfYear(new Date(targetYear, 0, 1))
+                                        }).reverse();
+                                        return months;
+                                    })().map((month) => {
+                                        return (
+                                            <motion.div key={month.toISOString()} variants={itemVariants}>
+                                                <MonthCalendar
+                                                    date={month}
+                                                    stats={stats.days}
+                                                    colorFn={getColorClass}
+                                                />
+                                            </motion.div>
+                                        );
+                                    })}
+                                </motion.div>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="year-view"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <YearlyStats stats={stats.days} firstMemoDate={stats.firstMemoDate} />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
-
             </DialogContent>
         </Dialog>
     );
@@ -211,10 +298,15 @@ function MonthCalendar({ date, stats, colorFn }: { date: Date, stats: Record<str
                     const isCurrentMonth = isSameMonth(day, monthStart);
 
                     return (
-                        <div key={dateStr} className="relative group/day aspect-square flex items-center justify-center">
+                        <motion.div
+                            key={dateStr}
+                            className="relative group/day aspect-square flex items-center justify-center cursor-default"
+                            whileHover={isCurrentMonth && count > 0 ? { scale: 1.2, zIndex: 10 } : {}}
+                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                        >
                             <div
                                 className={cn(
-                                    "w-full h-full rounded-[6px] transition-all duration-200",
+                                    "w-full h-full rounded-[6px] transition-colors duration-200",
                                     !isCurrentMonth ? "opacity-0 pointer-events-none" : colorFn(count)
                                 )}
                             />
@@ -227,12 +319,12 @@ function MonthCalendar({ date, stats, colorFn }: { date: Date, stats: Record<str
                                 </span>
                             )}
                             {count > 0 && (
-                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/90 backdrop-blur-md text-white text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover/day:opacity-100 transition-all scale-95 group-hover/day:scale-100 whitespace-nowrap z-10 pointer-events-none shadow-xl border border-white/10">
+                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/90 backdrop-blur-md text-white text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover/day:opacity-100 transition-all scale-95 group-hover/day:scale-100 whitespace-nowrap z-20 pointer-events-none shadow-xl border border-white/10">
                                     <div className="font-bold">{count} 笔记</div>
                                     <div className="text-[9px] opacity-60 text-center">{dayStat?.wordCount || 0} 字</div>
                                 </div>
                             )}
-                        </div>
+                        </motion.div>
                     );
                 })}
             </div>

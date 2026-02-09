@@ -117,7 +117,7 @@ export function RightSidebar() {
                     {(dateFilter || yearFilter || monthFilter) && (
                         <button
                             onClick={() => router.push('/')}
-                            className="text-xs text-primary hover:underline"
+                            className="text-xs text-primary hover:underline cursor-pointer"
                         >
                             清除筛选
                         </button>

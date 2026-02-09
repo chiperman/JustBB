@@ -63,7 +63,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
             {/* 顶部元信息 */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                    <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded-sm">
+                    <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded-sm">
                         #{memo.memo_number}
                     </span>
                     <time className="text-xs text-muted-foreground font-sans">

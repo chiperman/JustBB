@@ -1,3 +1,11 @@
+export type Json =
+    | string
+    | number
+    | boolean
+    | null
+    | { [key: string]: Json | undefined }
+    | Json[]
+
 export type Memo = {
     id: string;
     memo_number: number;
@@ -52,6 +60,10 @@ export type Database = {
             [_ in never]: never;
         };
         Functions: {
+            get_memo_stats_v2: {
+                Args: Record<string, never>;
+                Returns: Json;
+            };
             search_memos_secure: {
                 Args: {
                     query_text?: string;
@@ -59,6 +71,7 @@ export type Database = {
                     limit_val?: number;
                     offset_val?: number;
                     filters?: Record<string, unknown>;
+                    sort_order?: string;
                 };
                 Returns: {
                     id: string;
@@ -66,10 +79,12 @@ export type Database = {
                     content: string;
                     created_at: string;
                     tags: string[];
-                    access_code_hint: string;
+                    access_code_hint: string | null;
                     is_private: boolean;
                     is_pinned: boolean;
+                    pinned_at: string | null;
                     is_locked: boolean;
+                    word_count: number;
                 }[];
             };
         };

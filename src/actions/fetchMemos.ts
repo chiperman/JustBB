@@ -34,8 +34,7 @@ export async function getMemos(params: {
         offset_val: offsetVal,
         filters: filters as Record<string, unknown>,
         sort_order: sort
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
+    });
 
     if (error) {
         console.error('Error fetching memos via RPC:', {

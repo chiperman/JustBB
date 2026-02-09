@@ -91,8 +91,8 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                             size="icon"
                             onClick={toggleBacklinks}
                             className={cn(
-                                "h-8 w-8 rounded-sm transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
-                                showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground",
+                                "h-8 w-8 rounded-sm transition-all group-hover:opacity-100 focus-visible:opacity-100",
+                                showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground opacity-0",
                             )}
                             aria-expanded={showBacklinks}
                             aria-label="查看引用"

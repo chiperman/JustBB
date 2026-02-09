@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -26,6 +27,11 @@ export function FeedHeader() {
     const pathname = usePathname();
     const currentSort = searchParams.get('sort') || 'newest';
     const activeDate = searchParams.get('date');
+
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleSortChange = (value: string) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -54,34 +60,36 @@ export function FeedHeader() {
                     )}
                 </div>
 
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-sm transition-all focus-visible:ring-0" aria-label="更多选项">
-                            <ChevronDown className="w-4 h-4 transition-transform group-data-[state=open]:rotate-180" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" side="bottom" className="w-48">
-                        <DropdownMenuItem className="cursor-pointer gap-2">
-                            <CheckCircle className="w-4 h-4" />
-                            <span>选择笔记</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger className="cursor-pointer gap-2">
-                                <ArrowUpDown className="w-4 h-4" />
-                                <span>排序方式</span>
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    <DropdownMenuRadioGroup value={currentSort} onValueChange={handleSortChange}>
-                                        <DropdownMenuRadioItem value="newest" className="cursor-pointer">创建时间，从新到旧</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="oldest" className="cursor-pointer">创建时间，从旧到新</DropdownMenuRadioItem>
-                                    </DropdownMenuRadioGroup>
-                                </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                {mounted && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-sm transition-all focus-visible:ring-0" aria-label="更多选项">
+                                <ChevronDown className="w-4 h-4 transition-transform group-data-[state=open]:rotate-180" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" side="bottom" className="w-48">
+                            <DropdownMenuItem className="cursor-pointer gap-2">
+                                <CheckCircle className="w-4 h-4" />
+                                <span>选择笔记</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger className="cursor-pointer gap-2">
+                                    <ArrowUpDown className="w-4 h-4" />
+                                    <span>排序方式</span>
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuPortal>
+                                    <DropdownMenuSubContent>
+                                        <DropdownMenuRadioGroup value={currentSort} onValueChange={handleSortChange}>
+                                            <DropdownMenuRadioItem value="newest" className="cursor-pointer">创建时间，从新到旧</DropdownMenuRadioItem>
+                                            <DropdownMenuRadioItem value="oldest" className="cursor-pointer">创建时间，从旧到新</DropdownMenuRadioItem>
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuPortal>
+                            </DropdownMenuSub>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
             </div>
 
             <div className="flex-1 max-w-sm">

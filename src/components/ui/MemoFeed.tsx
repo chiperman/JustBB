@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { MemoCard } from './MemoCard';
 import { getMemos } from '@/actions/fetchMemos';
 import { Loader2 } from 'lucide-react';
@@ -25,6 +26,8 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
     const [loading, setLoading] = useState(false);
     const observerTarget = useRef<HTMLDivElement>(null);
     const offsetRef = useRef(initialMemos.length);
+    const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -92,13 +95,8 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
                     </div>
                     <button
                         onClick={() => {
-                            const url = new URL(window.location.href);
-                            url.searchParams.delete('date');
-                            window.history.pushState({}, '', url.toString());
-                            // 触发重新渲染。在 Next.js 中通常使用 router.push， 
-                            // 但这里我们是在客户端组件中，且 searchParams 是通过 props 传进来的。
-                            // 刷新页面是最简单的方式，或者让父组件处理。
-                            window.location.reload();
+                            // 使用 Next.js 的 router.push 进行客户端导航，不刷新页面
+                            router.push(pathname);
                         }}
                         className="text-xs text-primary hover:underline"
                     >

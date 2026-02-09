@@ -32,11 +32,18 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
+import { YearlyStats } from './YearlyStats';
+
+interface DayStats {
+    count: number;
+    wordCount: number;
+}
+
 interface HeatmapStats {
     totalMemos: number;
     totalTags: number;
     firstMemoDate: string | null;
-    days: Record<string, number>;
+    days: Record<string, DayStats>;
 }
 
 interface HeatmapModalProps {
@@ -45,20 +52,7 @@ interface HeatmapModalProps {
 }
 
 export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
-
-    // 获取所有存在的年份
-    const availableYears = useMemo(() => {
-        if (!stats.firstMemoDate) return [new Date().getFullYear()];
-        const startYear = getYear(new Date(stats.firstMemoDate));
-        const currentYear = new Date().getFullYear();
-        const years = [];
-        for (let y = currentYear; y >= startYear; y--) {
-            years.push(y);
-        }
-        return years;
-    }, [stats.firstMemoDate]);
 
     // 计算颜色等级 (使用 CSS 变量)
     const getColorClass = (count: number) => {
@@ -74,74 +68,71 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
             <DialogTrigger asChild>
                 {trigger}
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-background/95 backdrop-blur-md border-none">
-                <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-0 border-none">
-                    <div className="flex items-center gap-4">
-                        <DialogTitle className="text-base font-bold tracking-tight">记录统计</DialogTitle>
-                        <div className="flex bg-muted/20 p-1 rounded-lg">
-                            <div className="flex bg-muted/20 p-1 rounded-lg">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setViewMode('month')}
-                                    className={cn(
-                                        "px-3 py-1 text-xs h-7 rounded-md transition-all",
-                                        viewMode === 'month' ? "bg-background shadow-sm font-bold text-foreground hover:bg-background" : "text-muted-foreground hover:text-foreground font-normal hover:bg-accent"
-                                    )}
-                                >
-                                    月
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setViewMode('year')}
-                                    className={cn(
-                                        "px-3 py-1 text-xs h-7 rounded-md transition-all",
-                                        viewMode === 'year' ? "bg-background shadow-sm font-bold text-foreground hover:bg-background" : "text-muted-foreground hover:text-foreground font-normal hover:bg-accent"
-                                    )}
-                                >
-                                    年
-                                </Button>
-                            </div>
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-[#F9F9F9] border-none p-0 gap-0">
+                <div className="sticky top-0 z-50 bg-[#F9F9F9]/80 backdrop-blur-xl px-10 py-6 flex items-center justify-between border-b border-black/5">
+                    <div className="flex items-center gap-6">
+                        <DialogTitle className="text-lg font-bold tracking-tight">记录统计</DialogTitle>
+                        <div className="flex bg-black/5 p-1 rounded-xl">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setViewMode('month')}
+                                className={cn(
+                                    "px-6 py-1 text-sm h-8 rounded-lg transition-all",
+                                    viewMode === 'month' ? "bg-white shadow-sm font-bold text-foreground hover:bg-white" : "text-muted-foreground hover:text-foreground font-medium hover:bg-transparent"
+                                )}
+                            >
+                                月
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setViewMode('year')}
+                                className={cn(
+                                    "px-6 py-1 text-sm h-8 rounded-lg transition-all",
+                                    viewMode === 'year' ? "bg-white shadow-sm font-bold text-foreground hover:bg-white" : "text-muted-foreground hover:text-foreground font-medium hover:bg-transparent"
+                                )}
+                            >
+                                年
+                            </Button>
                         </div>
                     </div>
+                </div>
 
-                    <Select
-                        value={String(selectedYear)}
-                        onValueChange={(val) => setSelectedYear(Number(val))}
-                    >
-                        <SelectTrigger className="w-[100px] h-8 text-sm bg-muted/20 border-none focus:ring-1 focus:ring-primary">
-                            <SelectValue>{selectedYear}年</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                            {availableYears.map(year => (
-                                <SelectItem key={year} value={String(year)}>{year}年</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </DialogHeader>
-
-                <div className="py-6">
+                <div className="p-10">
                     {viewMode === 'month' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {eachMonthOfInterval({
-                                start: startOfYear(new Date(selectedYear, 0, 1)),
-                                end: endOfYear(new Date(selectedYear, 0, 1))
-                            }).reverse().map((month) => (
-                                <MonthCalendar
-                                    key={month.toISOString()}
-                                    date={month}
-                                    stats={stats.days}
-                                    colorFn={getColorClass}
-                                />
-                            ))}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+                            {/* For simplicity in month view, we show months from current and previous years if they have data */}
+                            {(() => {
+                                const currentYear = new Date().getFullYear();
+                                const startYear = stats.firstMemoDate ? getYear(new Date(stats.firstMemoDate)) : currentYear;
+                                const months: Date[] = [];
+                                for (let y = currentYear; y >= startYear; y--) {
+                                    const yearMonths = eachMonthOfInterval({
+                                        start: startOfYear(new Date(y, 0, 1)),
+                                        end: endOfYear(new Date(y, 0, 1))
+                                    }).reverse();
+                                    months.push(...yearMonths);
+                                }
+                                return months;
+                            })().map((month) => {
+                                // Only show months that have data or are in the current year
+                                const monthStr = format(month, 'yyyy-MM');
+                                const hasData = Object.keys(stats.days).some(d => d.startsWith(monthStr));
+                                if (!hasData && getYear(month) < new Date().getFullYear()) return null;
+
+                                return (
+                                    <MonthCalendar
+                                        key={month.toISOString()}
+                                        date={month}
+                                        stats={stats.days}
+                                        colorFn={getColorClass}
+                                    />
+                                );
+                            })}
                         </div>
                     ) : (
-                        <YearHeatmap
-                            year={selectedYear}
-                            stats={stats.days}
-                            colorFn={getColorClass}
-                        />
+                        <YearlyStats stats={stats.days} firstMemoDate={stats.firstMemoDate} />
                     )}
                 </div>
             </DialogContent>
@@ -149,7 +140,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
     );
 }
 
-function MonthCalendar({ date, stats, colorFn }: { date: Date, stats: Record<string, number>, colorFn: (c: number) => string }) {
+function MonthCalendar({ date, stats, colorFn }: { date: Date, stats: Record<string, DayStats>, colorFn: (c: number) => string }) {
     const monthStart = startOfMonth(date);
     const monthEnd = endOfMonth(date);
     const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
@@ -160,84 +151,58 @@ function MonthCalendar({ date, stats, colorFn }: { date: Date, stats: Record<str
         let count = 0;
         let daysWithMemos = 0;
         eachDayOfInterval({ start: monthStart, end: monthEnd }).forEach(d => {
-            const c = stats[format(d, 'yyyy-MM-dd')] || 0;
-            count += c;
-            if (c > 0) daysWithMemos++;
+            const dayStat = stats[format(d, 'yyyy-MM-dd')];
+            if (dayStat) {
+                count += dayStat.count;
+                if (dayStat.count > 0) daysWithMemos++;
+            }
         });
         return { count, daysWithMemos };
     }, [stats, monthStart, monthEnd]);
 
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-                <h3 className="font-bold text-sm">{format(date, 'M月')}</h3>
-                <div className="flex gap-3 text-[10px] text-muted-foreground">
+                <h3 className="font-bold text-base">{getYear(date) !== new Date().getFullYear() ? format(date, 'yyyy年 M月') : format(date, 'M月')}</h3>
+                <div className="flex gap-3 text-xs text-muted-foreground/60 font-medium">
                     <span>{monthStats.count} 笔记</span>
                     <span>{monthStats.daysWithMemos} 记录天数</span>
                 </div>
             </div>
 
-            <div className="grid grid-cols-7 gap-1 text-center">
+            <div className="grid grid-cols-7 gap-1.5 text-center">
                 {['一', '二', '三', '四', '五', '六', '日'].map(d => (
-                    <span key={d} className="text-[10px] pb-1 opacity-40">{d}</span>
+                    <span key={d} className="text-[10px] pb-1 font-bold text-muted-foreground/30">{d}</span>
                 ))}
                 {days.map((day) => {
                     const dateStr = format(day, 'yyyy-MM-dd');
-                    const count = stats[dateStr] || 0;
+                    const dayStat = stats[dateStr];
+                    const count = dayStat?.count || 0;
                     const isCurrentMonth = isSameMonth(day, monthStart);
 
                     return (
                         <div key={dateStr} className="relative group/day aspect-square flex items-center justify-center">
                             <div
                                 className={cn(
-                                    "w-full h-full rounded-[4px] transition-all duration-200",
+                                    "w-full h-full rounded-[6px] transition-all duration-200",
                                     !isCurrentMonth ? "opacity-0 pointer-events-none" : colorFn(count)
                                 )}
                             />
                             {isCurrentMonth && (
                                 <span className={cn(
-                                    "absolute text-[9px] font-medium pointer-events-none",
-                                    count > 5 ? "text-white" : "text-foreground/60"
+                                    "absolute text-[10px] font-bold pointer-events-none",
+                                    count > 5 ? "text-white" : "text-foreground/40"
                                 )}>
                                     {format(day, 'd')}
                                 </span>
                             )}
                             {count > 0 && (
-                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover/day:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
-                                    {count} 笔记
+                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/90 backdrop-blur-md text-white text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover/day:opacity-100 transition-all scale-95 group-hover/day:scale-100 whitespace-nowrap z-10 pointer-events-none shadow-xl border border-white/10">
+                                    <div className="font-bold">{count} 笔记</div>
+                                    <div className="text-[9px] opacity-60 text-center">{dayStat?.wordCount || 0} 字</div>
                                 </div>
                             )}
                         </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-}
-
-function YearHeatmap({ year, stats, colorFn }: { year: number, stats: Record<string, number>, colorFn: (c: number) => string }) {
-    const startDate = startOfYear(new Date(year, 0, 1));
-    const endDate = endOfYear(new Date(year, 0, 1));
-    const days = eachDayOfInterval({ start: startDate, end: endDate });
-
-    return (
-        <div className="w-full overflow-x-auto pb-4 scrollbar-hide">
-            <div
-                className="grid grid-rows-7 grid-flow-col gap-[5px]"
-                style={{ gridTemplateRows: 'repeat(7, 14px)' }}
-            >
-                {days.map(date => {
-                    const dateStr = format(date, 'yyyy-MM-dd');
-                    const count = stats[dateStr] || 0;
-                    return (
-                        <div
-                            key={dateStr}
-                            className={cn(
-                                "w-[14px] h-[14px] rounded-[4px] cursor-help transition-colors",
-                                colorFn(count)
-                            )}
-                            title={`${dateStr}: ${count} 笔记`}
-                        />
                     );
                 })}
             </div>

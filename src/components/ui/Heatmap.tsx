@@ -13,7 +13,7 @@ interface HeatmapStats {
     totalMemos: number;
     totalTags: number;
     firstMemoDate: string | null;
-    days: Record<string, number>;
+    days: Record<string, { count: number; wordCount: number }>;
 }
 
 // 提取单元格组件以减少重渲染范围
@@ -169,7 +169,7 @@ export const Heatmap = memo(function Heatmap() {
                             <HeatmapCell
                                 key={dateStr}
                                 dateStr={dateStr}
-                                count={stats?.days[dateStr] || 0}
+                                count={stats?.days[dateStr]?.count || 0}
                                 isActive={activeDate === dateStr}
                                 onHover={handleCellHover}
                                 onClick={handleCellClick}

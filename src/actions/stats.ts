@@ -7,7 +7,7 @@ export async function getMemoStats() {
     // 1. 获取全量基础统计数据 (为了统计总数和标签)
     // 考虑到数据量，我们只查询关键字段
     const { data: allData, error: allDataError } = await (supabase.from('memos') as any)
-        .select('created_at, tags')
+        .select('created_at, tags, word_count')
         .eq('is_private', false)
         .is('deleted_at', null)
         .order('created_at', { ascending: true });
@@ -22,15 +22,20 @@ export async function getMemoStats() {
         };
     }
 
-    const stats: Record<string, number> = {};
+    const stats: Record<string, { count: number; wordCount: number }> = {};
     const uniqueTags = new Set<string>();
 
-    (allData as { created_at: string; tags: string[] | null }[])?.forEach((item) => {
+    (allData as { created_at: string; tags: string[] | null; word_count: number | null }[])?.forEach((item) => {
         // 聚合日期 - 使用本地时区 (Asia/Shanghai, UTC+8)
         const utcDate = new Date(item.created_at);
         const localDate = new Date(utcDate.getTime() + 8 * 60 * 60 * 1000);
         const date = localDate.toISOString().split('T')[0];
-        stats[date] = (stats[date] || 0) + 1;
+        
+        if (!stats[date]) {
+            stats[date] = { count: 0, wordCount: 0 };
+        }
+        stats[date].count += 1;
+        stats[date].wordCount += (item.word_count || 0);
 
         // 统计唯一标签
         if (item.tags && Array.isArray(item.tags)) {

@@ -9,8 +9,17 @@ export async function getMemos(params: {
     offset?: number;
     tag?: string;
     date?: string;
+    sort?: string;
 }) {
-    const { query = '', adminCode = '', limit: limitSize = 20, offset: offsetVal = 0, tag = null, date = null } = params;
+    const {
+        query = '',
+        adminCode = '',
+        limit: limitSize = 20,
+        offset: offsetVal = 0,
+        tag = null,
+        date = null,
+        sort = 'newest'
+    } = params;
 
     const filters: Record<string, unknown> = tag ? { tag } : {};
     if (date) {
@@ -24,6 +33,7 @@ export async function getMemos(params: {
         limit_val: limitSize,
         offset_val: offsetVal,
         filters: filters as Record<string, unknown>,
+        sort_order: sort
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 

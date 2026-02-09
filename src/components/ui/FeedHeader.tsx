@@ -17,7 +17,19 @@ import { Button } from '@/components/ui/button';
 import { SearchInput } from './SearchInput';
 import { ChevronDown, CheckCircle, ArrowUpDown } from 'lucide-react';
 
+import { useRouter, useSearchParams } from 'next/navigation';
+
 export function FeedHeader() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const currentSort = searchParams.get('sort') || 'newest';
+
+    const handleSortChange = (value: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('sort', value);
+        router.push(`?${params.toString()}`);
+    };
+
     return (
         <div className="flex items-center justify-between gap-4 py-1">
             <div className="flex items-center gap-1 group">
@@ -41,10 +53,9 @@ export function FeedHeader() {
                             </DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                                 <DropdownMenuSubContent>
-                                    <DropdownMenuRadioGroup value="newest">
+                                    <DropdownMenuRadioGroup value={currentSort} onValueChange={handleSortChange}>
                                         <DropdownMenuRadioItem value="newest" className="cursor-pointer">创建时间，从新到旧</DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="oldest" className="cursor-pointer">创建时间，从旧到新</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="updated" className="cursor-pointer">编辑时间，从新到旧</DropdownMenuRadioItem>
                                     </DropdownMenuRadioGroup>
                                 </DropdownMenuSubContent>
                             </DropdownMenuPortal>

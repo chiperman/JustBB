@@ -18,6 +18,7 @@ interface MemoFeedProps {
         month?: string;
         date?: string;
         code?: string;
+        sort?: string;
     };
     adminCode?: string;
 }
@@ -42,12 +43,13 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
         if (loading || !hasMore) return;
 
         setLoading(true);
-        const { query, tag, date } = searchParams;
+        const { query, tag, date, sort } = searchParams;
 
         const moreMemos = await getMemos({
             query,
             tag,
             date,
+            sort,
             adminCode,
             limit: 20,
             offset: offsetRef.current

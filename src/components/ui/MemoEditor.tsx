@@ -449,23 +449,28 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                         取消
                                     </Button>
                                 )}
-                                <Button
-                                    onClick={handlePublishClick}
-                                    disabled={isPending || !content.trim()}
-                                    className={cn(
-                                        "rounded-sm px-7",
-                                        !shouldReduceMotion && "active:scale-95"
-                                    )}
-                                >
-                                    {isPending ? (
-                                        <>
-                                            <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            {mode === 'edit' ? '更新中...' : '发布中...'}
-                                        </>
-                                    ) : (
-                                        mode === 'edit' ? '更新' : '发布'
-                                    )}
-                                </Button>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-[11px] text-muted-foreground/50 tabular-nums">
+                                        {content.trim().length} 字
+                                    </span>
+                                    <Button
+                                        onClick={handlePublishClick}
+                                        disabled={isPending || !content.trim()}
+                                        className={cn(
+                                            "rounded-sm px-7",
+                                            !shouldReduceMotion && "active:scale-95"
+                                        )}
+                                    >
+                                        {isPending ? (
+                                            <>
+                                                <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                {mode === 'edit' ? '更新中...' : '发布中...'}
+                                            </>
+                                        ) : (
+                                            mode === 'edit' ? '更新' : '发布'
+                                        )}
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </motion.div>

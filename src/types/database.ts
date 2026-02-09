@@ -10,6 +10,7 @@ export type Memo = {
     created_at: string;
     updated_at: string;
     deleted_at: string | null;
+    word_count: number;
 };
 
 export type Database = {
@@ -29,6 +30,7 @@ export type Database = {
                     created_at?: string;
                     updated_at?: string;
                     deleted_at?: string | null;
+                    word_count?: number;
                 };
                 Update: {
                     id?: string;
@@ -42,6 +44,7 @@ export type Database = {
                     created_at?: string;
                     updated_at?: string;
                     deleted_at?: string | null;
+                    word_count?: number;
                 };
             };
         };

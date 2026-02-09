@@ -94,7 +94,8 @@ export async function updateMemoContent(formData: FormData) {
             tags,
             is_private,
             is_pinned,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            word_count: content.trim().length
         })
         .eq('id', id);
 

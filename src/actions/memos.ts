@@ -41,6 +41,9 @@ export async function createMemo(formData: FormData): Promise<{ success: boolean
         insertData.access_code = bcrypt.hashSync(access_code, salt);
     }
 
+    // 计算字数
+    insertData.word_count = validated.data.content.trim().length;
+
     const supabase = getSupabaseAdmin();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from('memos') as any)

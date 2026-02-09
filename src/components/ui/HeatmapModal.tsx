@@ -21,7 +21,9 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
+    DialogClose,
 } from "@/components/ui/dialog";
+import { X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
     Select,
@@ -85,47 +87,50 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
             <DialogTrigger asChild>
                 {trigger}
             </DialogTrigger>
-            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-[#F9F9F9] border-none p-0 gap-0">
-                <div className="sticky top-0 z-50 bg-[#F9F9F9]/80 backdrop-blur-xl px-10 py-6 flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                        <DialogTitle className="text-lg font-bold tracking-tight">记录统计</DialogTitle>
-                        <div className="flex items-center gap-4">
-                            <div className="flex bg-black/5 p-1 rounded-xl">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setViewMode('month')}
-                                    className={cn(
-                                        "px-6 py-1 text-sm h-8 rounded-lg transition-all",
-                                        viewMode === 'month' ? "bg-white shadow-sm font-bold text-foreground hover:bg-white" : "text-muted-foreground hover:text-foreground font-medium hover:bg-transparent"
-                                    )}
-                                >
-                                    月
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setViewMode('year')}
-                                    className={cn(
-                                        "px-6 py-1 text-sm h-8 rounded-lg transition-all",
-                                        viewMode === 'year' ? "bg-white shadow-sm font-bold text-foreground hover:bg-white" : "text-muted-foreground hover:text-foreground font-medium hover:bg-transparent"
-                                    )}
-                                >
-                                    年
-                                </Button>
-                            </div>
-                        </div>
+            <DialogContent className="max-w-6xl h-[90vh] flex flex-col bg-[#F9F9F9] border-none p-0 !duration-0 !animate-none data-[state=open]:!animate-none data-[state=closed]:!animate-none [&>button]:hidden">
+                <div className="flex-none sticky top-0 z-50 bg-[#F9F9F9]/80 backdrop-blur-xl px-10 py-6 flex items-center justify-between border-b border-black/5">
+                    <DialogTitle className="text-lg font-bold tracking-tight">记录统计</DialogTitle>
+
+                    <div className="absolute left-1/2 -translate-x-1/2 flex bg-black/5 p-1 rounded-xl">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setViewMode('month')}
+                            className={cn(
+                                "px-6 py-1 text-sm h-8 rounded-lg transition-all",
+                                viewMode === 'month' ? "bg-white shadow-sm font-bold text-foreground hover:bg-white" : "text-muted-foreground hover:text-foreground font-medium hover:bg-transparent"
+                            )}
+                        >
+                            月
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setViewMode('year')}
+                            className={cn(
+                                "px-6 py-1 text-sm h-8 rounded-lg transition-all",
+                                viewMode === 'year' ? "bg-white shadow-sm font-bold text-foreground hover:bg-white" : "text-muted-foreground hover:text-foreground font-medium hover:bg-transparent"
+                            )}
+                        >
+                            年
+                        </Button>
                     </div>
+
+                    <DialogClose asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-black/5">
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </DialogClose>
                 </div>
 
-                <div className="p-10 flex flex-col gap-6">
+                <div className="flex-1 overflow-y-auto p-10 flex flex-col gap-6">
                     {viewMode === 'month' && (
-                        <div className="flex items-center">
+                        <div className="flex items-center mb-6">
                             <Select value={selectedYear} onValueChange={setSelectedYear}>
-                                <SelectTrigger variant="ghost" className="w-auto p-0 h-auto text-2xl font-bold tracking-tight gap-2 hover:bg-transparent">
+                                <SelectTrigger variant="ghost" className="w-auto p-0 h-auto text-2xl font-bold tracking-tight gap-2 hover:bg-transparent px-0 data-[state=open]:bg-transparent focus:ring-0 focus:ring-offset-0">
                                     <SelectValue placeholder="年份" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent position="popper" side="bottom" align="start" sideOffset={4} className="min-w-[100px]">
                                     {availableYears.map(year => (
                                         <SelectItem key={year} value={String(year)}>{year}年</SelectItem>
                                     ))}
@@ -135,21 +140,16 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                     )}
 
                     {viewMode === 'month' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-                            {/* For simplicity in month view, we show months from current and previous years if they have data */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 pb-20">
                             {(() => {
                                 const targetYear = Number(selectedYear);
+                                const isCurrentYear = targetYear === new Date().getFullYear();
                                 const months: Date[] = eachMonthOfInterval({
                                     start: startOfYear(new Date(targetYear, 0, 1)),
-                                    end: endOfYear(new Date(targetYear, 0, 1))
+                                    end: isCurrentYear ? new Date() : endOfYear(new Date(targetYear, 0, 1))
                                 }).reverse();
                                 return months;
                             })().map((month) => {
-                                // Only show months that have data or are in the current year
-                                const monthStr = format(month, 'yyyy-MM');
-                                const hasData = Object.keys(stats.days).some(d => d.startsWith(monthStr));
-                                if (!hasData && getYear(month) < new Date().getFullYear()) return null;
-
                                 return (
                                     <MonthCalendar
                                         key={month.toISOString()}
@@ -164,8 +164,9 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                         <YearlyStats stats={stats.days} firstMemoDate={stats.firstMemoDate} />
                     )}
                 </div>
+
             </DialogContent>
-        </Dialog >
+        </Dialog>
     );
 }
 

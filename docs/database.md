@@ -12,6 +12,7 @@
 *   `pinned_at`: timestamptz (置顶时间，用于排序)
 *   `deleted_at`: timestamptz (软删除状态，NULL 表示正常)
 *   `created_at`: timestamptz
+*   `word_count`: integer (字数统计，默认 0)
 
 ## 2. 核心安全函数 (RPC)
 
@@ -34,7 +35,8 @@ RETURNS TABLE (
   is_private BOOLEAN,
   is_pinned BOOLEAN,
   pinned_at TIMESTAMPTZ,
-  is_locked BOOLEAN
+  is_locked BOOLEAN,
+  word_count INT
 ) AS $$
 BEGIN
   RETURN QUERY

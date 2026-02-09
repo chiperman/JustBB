@@ -21,6 +21,7 @@ import {
     DropdownMenuSub,
     DropdownMenuSubContent,
     DropdownMenuSubTrigger,
+    DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import {
@@ -155,7 +156,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         )}
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent side="right" align="end" className="w-64 rounded-sm border-border/40 backdrop-blur-md bg-popover/90 p-1 shadow-2xl">
+                <DropdownMenuContent side="top" align="start" className="w-64 rounded-sm border-border/40 backdrop-blur-md bg-popover/90 p-1 shadow-2xl">
                     <DropdownMenuLabel className="font-normal px-3 py-3">
                         <div className="flex flex-col space-y-2">
                             <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-sans opacity-60">Identity / 身份</p>
@@ -188,20 +189,22 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                 <Sun className="mr-2 h-4 w-4" />
                                 <span>外观主题</span>
                             </DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent className="rounded-sm ml-1">
-                                <DropdownMenuItem className="rounded-sm" onClick={() => setTheme('light')}>
-                                    <Sun className="mr-2 h-4 w-4" />
-                                    <span>浅色模式</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="rounded-sm" onClick={() => setTheme('dark')}>
-                                    <Moon className="mr-2 h-4 w-4" />
-                                    <span>深色模式</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="rounded-sm" onClick={() => setTheme('system')}>
-                                    <Monitor className="mr-2 h-4 w-4" />
-                                    <span>跟随系统</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuSubContent>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent className="rounded-sm ml-1">
+                                    <DropdownMenuItem className="rounded-sm" onClick={() => setTheme('light')}>
+                                        <Sun className="mr-2 h-4 w-4" />
+                                        <span>浅色模式</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="rounded-sm" onClick={() => setTheme('dark')}>
+                                        <Moon className="mr-2 h-4 w-4" />
+                                        <span>深色模式</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="rounded-sm" onClick={() => setTheme('system')}>
+                                        <Monitor className="mr-2 h-4 w-4" />
+                                        <span>跟随系统</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
                         </DropdownMenuSub>
 
                         <DropdownMenuItem className="rounded-sm" onClick={toggleFont}>

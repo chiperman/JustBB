@@ -51,20 +51,25 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
                     <Skeleton className="h-5 w-20" />
                 </div>
                 <Timeline>
-                    <TimelineItem className="pb-4 overflow-visible">
-                        <TimelineLine />
-                        <TimelineDot className="bg-muted/30 border-muted/30" />
-                        <TimelineHeading className="mb-6">
-                            <Skeleton className="h-4 w-32" />
-                        </TimelineHeading>
-                        <TimelineContent>
-                            <div className="flex flex-col gap-3">
-                                <Skeleton className="h-3 w-40" />
-                                <Skeleton className="h-3 w-32" />
-                                <Skeleton className="h-3 w-48" />
-                            </div>
-                        </TimelineContent>
-                    </TimelineItem>
+                    {[1, 2, 3].map((i) => (
+                        <TimelineItem key={i} className="pb-4 overflow-visible">
+                            <TimelineLine />
+                            <TimelineDot className="bg-[var(--heatmap-0)] border-[var(--heatmap-0)]" />
+                            <TimelineHeading className="mb-6">
+                                <Skeleton className={cn(
+                                    "h-4",
+                                    i % 2 === 0 ? "w-32" : "w-28"
+                                )} />
+                            </TimelineHeading>
+                            <TimelineContent>
+                                <div className="flex flex-col gap-3">
+                                    <Skeleton className="h-3 w-40" />
+                                    <Skeleton className="h-3 w-32" />
+                                    <Skeleton className="h-3 w-48" />
+                                </div>
+                            </TimelineContent>
+                        </TimelineItem>
+                    ))}
                 </Timeline>
             </div>
         );

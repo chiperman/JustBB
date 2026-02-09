@@ -262,14 +262,20 @@ export function RightSidebar() {
                                     ))
                                 ) : (
                                     <div className="space-y-8">
-                                        {[1, 2].map((i) => (
+                                        {[1, 2, 3, 4].map((i) => (
                                             <div key={i} className="relative">
-                                                <TimelineLine className="bg-muted/20" />
-                                                <TimelineDot className="bg-muted/20 border-muted/20" />
-                                                <Skeleton className="h-4 w-16 mb-6" />
+                                                <TimelineLine className="bg-[var(--heatmap-0)]" />
+                                                <TimelineDot className="bg-[var(--heatmap-0)] border-[var(--heatmap-0)]" />
+                                                <Skeleton className={cn(
+                                                    "h-4 mb-6",
+                                                    i % 2 === 0 ? "w-16" : "w-12"
+                                                )} />
                                                 <div className="pl-4 space-y-6">
                                                     <div className="space-y-3">
-                                                        <Skeleton className="h-3 w-12" />
+                                                        <Skeleton className={cn(
+                                                            "h-3",
+                                                            i % 2 === 0 ? "w-12" : "w-14"
+                                                        )} />
                                                         <div className="space-y-2">
                                                             <Skeleton className="h-2 w-10" />
                                                             <Skeleton className="h-2 w-8" />
@@ -285,6 +291,6 @@ export function RightSidebar() {
                     )}
                 </AnimatePresence>
             </div>
-        </aside>
+        </aside >
     );
 }

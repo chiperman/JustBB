@@ -67,7 +67,14 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                         #{memo.memo_number}
                     </span>
                     <time className="text-xs text-muted-foreground font-sans">
-                        {formatDate(memo.created_at)}
+                        {new Date(memo.created_at).toLocaleString('zh-CN', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false
+                        }).replace(/\//g, '-')}
                     </time>
                     {memo.is_pinned && <Pin className="w-3.5 h-3.5 text-primary fill-primary" aria-hidden="true" />}
                     {memo.is_private && <Lock className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />}

@@ -122,41 +122,45 @@ export const Heatmap = memo(function Heatmap() {
         router.push(`/?date=${date}`);
     }, [router]);
 
-    if (loading) {
-        return (
-            <div className="w-full space-y-4 py-4 px-2">
-                <div className="grid grid-cols-3 gap-4">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="h-12 bg-muted/20 animate-pulse rounded" />
-                    ))}
-                </div>
-                <div className="h-32 bg-muted/10 animate-pulse rounded" />
-            </div>
-        );
-    }
+    // If loading, stats will be null, and we'll use placeholder data
+    const displayStats = stats || {
+        totalMemos: 0,
+        totalTags: 0,
+        firstMemoDate: null,
+        days: {}
+    };
+
+    const displayTotalActiveDays = stats ? totalActiveDays : 0;
 
     // 顶栏统计 - 仅这部分触发 Modal
     const StatsTrigger = (
-        <div className="grid grid-cols-3 gap-2 cursor-pointer group/stats hover:opacity-80 transition-opacity">
+        <div className={cn(
+            "grid grid-cols-3 gap-2 transition-opacity",
+            loading ? "opacity-40 animate-pulse cursor-default" : "cursor-pointer group/stats hover:opacity-80"
+        )}>
             <div className="flex flex-col items-center">
-                <span className="text-3xl tracking-tight leading-none">{stats?.totalMemos || 0}</span>
+                <span className="text-3xl tracking-tight leading-none">{displayStats.totalMemos}</span>
                 <span className="text-[11px] text-muted-foreground mt-1">笔记</span>
             </div>
             <div className="flex flex-col items-center">
-                <span className="text-3xl tracking-tight leading-none">{stats?.totalTags || 0}</span>
+                <span className="text-3xl tracking-tight leading-none">{displayStats.totalTags}</span>
                 <span className="text-[11px] text-muted-foreground mt-1">标签</span>
             </div>
             <div className="flex flex-col items-center">
-                <span className="text-3xl tracking-tight leading-none">{totalActiveDays}</span>
+                <span className="text-3xl tracking-tight leading-none">{displayTotalActiveDays}</span>
                 <span className="text-[11px] text-muted-foreground mt-1">天</span>
             </div>
         </div>
     );
 
-    return stats ? (
+    return (
         <div className="w-full space-y-4 px-1 relative overflow-visible">
-            {/* 顶栏统计 - 包裹在 HeatmapModal 中，点击打开 Modal */}
-            <HeatmapModal stats={stats} trigger={StatsTrigger} />
+            {/* 顶栏统计 - 加载时不响应点击 */}
+            {loading ? (
+                StatsTrigger
+            ) : (
+                <HeatmapModal stats={displayStats} trigger={StatsTrigger} />
+            )}
 
             {/* 热力图主体 - 不触发 Modal，仅支持日期过滤 */}
             <div className="relative pt-2" onMouseLeave={() => setHoveredDate(null)}>
@@ -169,7 +173,7 @@ export const Heatmap = memo(function Heatmap() {
                             <HeatmapCell
                                 key={dateStr}
                                 dateStr={dateStr}
-                                count={stats?.days[dateStr]?.count || 0}
+                                count={displayStats.days[dateStr]?.count || 0}
                                 isActive={activeDate === dateStr}
                                 onHover={handleCellHover}
                                 onClick={handleCellClick}
@@ -177,6 +181,11 @@ export const Heatmap = memo(function Heatmap() {
                             />
                         ))}
                     </div>
+
+                    {/* Loading overlay for the grid if still counting animation is desired */}
+                    {loading && (
+                        <div className="absolute inset-0 bg-transparent animate-pulse pointer-events-none" />
+                    )}
 
                     {/* Tooltip */}
                     {hoveredDate && (
@@ -205,5 +214,5 @@ export const Heatmap = memo(function Heatmap() {
                 </div>
             </div>
         </div>
-    ) : null;
+    );
 });

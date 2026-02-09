@@ -107,12 +107,23 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
             )}
             <div className="columns-1 gap-6 space-y-6">
                 {memos.map((memo, index) => {
-                    const currentDate = new Date(memo.created_at).toISOString().split('T')[0];
+                    // 使用与 stats.ts 一致的本地时区逻辑 (UTC+8) 构建日期 ID
+                    // 否则 00:00-08:00 的记录会被归到前一天，导致锚点 ID 不匹配
+                    const utcDate = new Date(memo.created_at);
+                    const localDate = new Date(utcDate.getTime() + 8 * 60 * 60 * 1000);
+                    const currentDate = localDate.toISOString().split('T')[0];
+
                     const currentYear = currentDate.split('-')[0];
                     const currentMonth = currentDate.split('-')[1];
 
                     const prevMemo = index > 0 ? memos[index - 1] : null;
-                    const prevDateFull = prevMemo ? new Date(prevMemo.created_at).toISOString().split('T')[0] : null;
+                    let prevDateFull = null;
+                    if (prevMemo) {
+                        const prevUtcDate = new Date(prevMemo.created_at);
+                        const prevLocalDate = new Date(prevUtcDate.getTime() + 8 * 60 * 60 * 1000);
+                        prevDateFull = prevLocalDate.toISOString().split('T')[0];
+                    }
+
                     const prevYear = prevDateFull ? prevDateFull.split('-')[0] : null;
                     const prevMonth = prevDateFull ? prevDateFull.split('-')[1] : null;
 
@@ -121,25 +132,25 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
                     const isFirstOfDay = currentDate !== prevDateFull;
 
                     return (
-                        <div key={memo.id} className="break-inside-avoid relative animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-backwards" style={{ animationDelay: `${index * 50}ms` }}>
+                        <div key={memo.id} id={`memo-${memo.id}`} className="break-inside-avoid relative animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-backwards scroll-mt-4" style={{ animationDelay: `${index * 50}ms` }}>
                             {isFirstOfYear && (
                                 <div
                                     id={`year-${currentYear}`}
-                                    className="absolute -top-32 invisible"
+                                    className="absolute -top-4 invisible"
                                     aria-hidden="true"
                                 />
                             )}
                             {isFirstOfMonth && (
                                 <div
                                     id={`month-${currentYear}-${parseInt(currentMonth)}`}
-                                    className="absolute -top-28 invisible"
+                                    className="absolute -top-4 invisible"
                                     aria-hidden="true"
                                 />
                             )}
                             {isFirstOfDay && (
                                 <div
                                     id={`date-${currentDate}`}
-                                    className="absolute -top-28 invisible"
+                                    className="absolute -top-4 invisible"
                                     aria-hidden="true"
                                 />
                             )}

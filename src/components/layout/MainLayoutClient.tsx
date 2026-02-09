@@ -27,7 +27,7 @@ export function MainLayoutClient({ memos, searchParams, adminCode }: MainLayoutC
     return (
         <div className="flex flex-col h-screen overflow-hidden bg-accent/20 font-sans">
             {/* 固定顶部区域 - 品牌、搜索 & 编辑器 */}
-            <div className="flex-none bg-background/60 backdrop-blur-xl z-30 shadow-none px-4 md:px-10 dark:bg-background/40 transition-all duration-300">
+            <div className="flex-none bg-background/60 backdrop-blur-xl z-30 shadow-none px-4 md:px-10 dark:bg-background/40 transition-all duration-300 md:pr-[calc(2.5rem+4px)]">
                 <div className="max-w-4xl mx-auto w-full pt-10 pb-6">
                     <div className="space-y-4">
                         <FeedHeader />

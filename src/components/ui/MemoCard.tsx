@@ -57,8 +57,8 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
 
     return (
         <article className={cn(
-            "group relative bg-card rounded-sm p-6 transition-all focus-within:ring-2 focus-within:ring-primary/10",
-            memo.is_pinned && "bg-primary/5"
+            "group relative bg-card rounded-sm p-6 transition-all border border-border focus-within:ring-2 focus-within:ring-primary/10",
+            memo.is_pinned && "bg-primary/5 border-primary/20"
         )}>
             {/* 顶部元信息 */}
             <div className="flex items-center justify-between mb-4">

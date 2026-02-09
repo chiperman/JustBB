@@ -95,11 +95,13 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
 
         const observer = new IntersectionObserver(
             (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        setActiveId(entry.target.id);
-                    }
-                });
+                // 查找当前最顶部的可见元素
+                const intersectingEntries = entries.filter(e => e.isIntersecting);
+                if (intersectingEntries.length > 0) {
+                    // 按比例排序或直接取第一个
+                    const topEntry = intersectingEntries[0];
+                    setActiveId(topEntry.target.id);
+                }
             },
             {
                 // 检测由于滚动位于视野上半部分（接近顶部）的项目
@@ -108,14 +110,20 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
             }
         );
 
-        // 查找所有锚点 div
-        const anchors = document.querySelectorAll('[id^="date-"], [id^="month-"], [id^="year-"]');
-        anchors.forEach((anchor) => observer.observe(anchor));
+        // 使用属性选择器查找所有锚点
+        const refreshObservers = () => {
+            const anchors = document.querySelectorAll('div[id^="date-"], div[id^="month-"], div[id^="year-"]');
+            anchors.forEach((anchor) => observer.observe(anchor));
+            return anchors;
+        };
+
+        const currentAnchors = refreshObservers();
 
         return () => {
-            anchors.forEach((anchor) => observer.unobserve(anchor));
+            currentAnchors.forEach((anchor) => observer.unobserve(anchor));
+            observer.disconnect();
         };
-    }, [isManualClick, setActiveId, memos]); // memos 变化时重新绑定（因为瀑布流懒加载）
+    }, [isManualClick, setActiveId, memos]); // memos 即使变化，ID 也是稳定的，但新加载的需要被观察
 
     return (
         <div className="space-y-6">

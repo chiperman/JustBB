@@ -4,16 +4,12 @@ import { supabase } from '@/lib/supabase';
 import { subDays } from 'date-fns';
 
 export async function getMemoStats() {
-    // 1. 获取全量基础统计数据 (为了统计总数和标签)
-    // 考虑到数据量，我们只查询关键字段
-    const { data: allData, error: allDataError } = await (supabase.from('memos') as any)
-        .select('created_at, tags, word_count')
-        .eq('is_private', false)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: true });
+    // 调用我们在数据库中定义的新 RPC 函数 get_memo_stats_v2
+    // 该函数直接在服务端完成聚合，返回精简的统计数据，极大提高加载速度
+    const { data, error } = await supabase.rpc('get_memo_stats_v2');
 
-    if (allDataError) {
-        console.error('Error fetching comprehensive stats:', allDataError);
+    if (error) {
+        console.error('Error fetching memo stats via RPC v2:', error);
         return {
             totalMemos: 0,
             totalTags: 0,
@@ -22,35 +18,5 @@ export async function getMemoStats() {
         };
     }
 
-    const stats: Record<string, { count: number; wordCount: number }> = {};
-    const uniqueTags = new Set<string>();
-
-    (allData as { created_at: string; tags: string[] | null; word_count: number | null }[])?.forEach((item) => {
-        // 聚合日期 - 使用本地时区 (Asia/Shanghai, UTC+8)
-        const utcDate = new Date(item.created_at);
-        const localDate = new Date(utcDate.getTime() + 8 * 60 * 60 * 1000);
-        const date = localDate.toISOString().split('T')[0];
-        
-        if (!stats[date]) {
-            stats[date] = { count: 0, wordCount: 0 };
-        }
-        stats[date].count += 1;
-        stats[date].wordCount += (item.word_count || 0);
-
-        // 统计唯一标签
-        if (item.tags && Array.isArray(item.tags)) {
-            item.tags.forEach(tag => uniqueTags.add(tag));
-        }
-    });
-
-    const totalMemos = allData?.length || 0;
-    const totalTags = uniqueTags.size;
-    const firstMemoDate = allData && allData.length > 0 ? allData[0].created_at : null;
-
-    return {
-        totalMemos,
-        totalTags,
-        firstMemoDate,
-        days: stats
-    };
+    return data;
 }

@@ -36,16 +36,16 @@ export default async function Home(props: {
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-accent/20">
       {/* 固定顶部区域 - 品牌、搜索 & 编辑器 */}
-      <div className="flex-none bg-background/60 backdrop-blur-xl border-b border-border/40 z-30 shadow-sm px-4 md:px-10 dark:bg-background/40">
-        <div className="max-w-4xl mx-auto w-full py-4 space-y-4">
+      <div className="flex-none bg-background/60 backdrop-blur-xl z-30 shadow-none px-4 md:px-10 dark:bg-background/40">
+        <div className="max-w-4xl mx-auto w-full pt-10 pb-6 space-y-6">
           <FeedHeader />
           <MemoEditor />
         </div>
       </div>
 
       {/* 滚动内容流区域 */}
-      <div className="flex-1 overflow-y-auto scrollbar-hover p-4 md:px-10 md:py-8">
-        <div className="max-w-4xl mx-auto w-full space-y-6 pb-20">
+      <div className="flex-1 overflow-y-auto scrollbar-hover p-4 md:px-10 md:pt-0 md:pb-8">
+        <div className="max-w-4xl mx-auto w-full pb-20">
           <MemoFeed
             initialMemos={memos ?? []}
             searchParams={{

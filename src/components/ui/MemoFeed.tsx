@@ -105,7 +105,7 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
                     </button>
                 </div>
             )}
-            <div className="columns-1 gap-4 space-y-4">
+            <div className="columns-1 gap-6 space-y-6">
                 {memos.map((memo, index) => {
                     const currentDate = new Date(memo.created_at).toISOString().split('T')[0];
                     const currentYear = currentDate.split('-')[0];

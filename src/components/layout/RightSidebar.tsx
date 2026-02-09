@@ -155,7 +155,7 @@ export function RightSidebar() {
                         <Timeline className="pl-6">
                             {fullTimeline.map((yearGroup) => (
                                 <TimelineItem key={yearGroup.year} className="pb-8 overflow-visible">
-                                    <TimelineLine active={isYearActive(yearGroup.year)} />
+                                    <TimelineLine active={false} />
                                     <TimelineDot className={cn(
                                         "transition-all duration-300 top-1.5",
                                         isYearActive(yearGroup.year)
@@ -179,24 +179,26 @@ export function RightSidebar() {
                                     <TimelineContent className="pl-1">
                                         {yearGroup.months.map((monthGroup) => (
                                             <div key={monthGroup.month} className="relative mb-6 last:mb-0">
-                                                <TimelineLine
-                                                    active={isMonthActive(yearGroup.year, monthGroup.month)}
-                                                    className="-left-[29px]"
-                                                />
-                                                <h5 className={cn(
-                                                    "text-[11px] font-bold mb-3 pl-3 transition-colors cursor-pointer block uppercase tracking-wide",
-                                                    isMonthActive(yearGroup.year, monthGroup.month)
-                                                        ? "text-primary"
-                                                        : "text-muted-foreground/80 hover:text-primary"
-                                                )}>
-                                                    <a
-                                                        href={`/?year=${yearGroup.year}&month=${monthGroup.month}`}
-                                                        className="block w-full"
-                                                        onClick={(e) => handleMonthClick(e, yearGroup.year, monthGroup.month)}
-                                                    >
-                                                        {monthNames[monthGroup.month]}
-                                                    </a>
-                                                </h5>
+                                                <div className="relative mb-3">
+                                                    <TimelineLine
+                                                        active={isMonthActive(yearGroup.year, monthGroup.month)}
+                                                        className="-left-[29px]"
+                                                    />
+                                                    <h5 className={cn(
+                                                        "text-[11px] font-bold pl-3 transition-colors cursor-pointer block uppercase tracking-wide",
+                                                        isMonthActive(yearGroup.year, monthGroup.month)
+                                                            ? "text-primary"
+                                                            : "text-muted-foreground/80 hover:text-primary"
+                                                    )}>
+                                                        <a
+                                                            href={`/?year=${yearGroup.year}&month=${monthGroup.month}`}
+                                                            className="block w-full"
+                                                            onClick={(e) => handleMonthClick(e, yearGroup.year, monthGroup.month)}
+                                                        >
+                                                            {monthNames[monthGroup.month]}
+                                                        </a>
+                                                    </h5>
+                                                </div>
                                                 <div className="flex flex-col gap-1.5">
                                                     {monthGroup.days.map((day) => {
                                                         const dateStr = `${yearGroup.year}-${String(monthGroup.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -218,7 +220,7 @@ export function RightSidebar() {
                                                                     )}
                                                                     onClick={(e) => handleDayClick(e, dateStr)}
                                                                 >
-                                                                    #{day}
+                                                                    {day}号
                                                                 </a>
                                                             </div>
                                                         );

@@ -37,3 +37,13 @@
 *   **通知系统**: 采用全局 **Toast 通知** 展示操作反馈（成功/警告/错误），取代原生 `alert`。
 *   **对话框**: 所有 `confirm` 与 `prompt` 逻辑均替换为定制化的 **AlertDialog** 与 **PromptDialog**，支持毛玻璃背景 (`backdrop-blur`)。
 *   **动效**: 基于 **Framer Motion** 实现瀑布流卡片的平滑加载与渐显，移除冗余布局抖动。
+
+## 6. 组件规范 (Component Standards)
+
+### 6.1 下拉菜单 (Dropdowns & Selects)
+*   **统一质感**: 所有浮层菜单（DropdownMenu, SelectContent）必须保持一致的 "Premium" 质感。
+    *   **圆角 (Radius)**: `rounded-sm` (2px)。
+    *   **背景 (Background)**: `bg-popover/90` 配合 `backdrop-blur-md` (毛玻璃效果)。
+    *   **阴影 (Shadow)**: `shadow-2xl` (深邃阴影)。
+    *   **边框 (Border)**: `border-border/40` (柔和边框)。
+*   **极简触发器 (Minimalist Trigger)**: 对于上下文明确的选择器（如年份切换），推荐使用 `variant="ghost"` 的无边框文本样式，通过排版（大字号/加粗）来体现层级，而非传统的输入框样式。

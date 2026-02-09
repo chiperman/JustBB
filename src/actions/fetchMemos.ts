@@ -38,7 +38,12 @@ export async function getMemos(params: {
     } as any);
 
     if (error) {
-        console.error('Error fetching memos via RPC:', error);
+        console.error('Error fetching memos via RPC:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+        });
         return [];
     }
 

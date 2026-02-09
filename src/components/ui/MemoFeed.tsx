@@ -119,25 +119,6 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
 
     return (
         <div className="space-y-6">
-            {searchParams.date && (
-                <div className="flex items-center justify-between px-1 py-1">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-0.5 rounded-sm text-xs font-medium">
-                            日期: {searchParams.date}
-                        </span>
-                        <span>的记录</span>
-                    </div>
-                    <button
-                        onClick={() => {
-                            // 使用 Next.js 的 router.push 进行客户端导航，不刷新页面
-                            router.push(pathname);
-                        }}
-                        className="text-xs text-primary hover:underline cursor-pointer"
-                    >
-                        清除筛选
-                    </button>
-                </div>
-            )}
             <div className="columns-1 gap-6 space-y-6">
                 {memos.map((memo, index) => {
                     // 使用与 stats.ts 一致的本地时区逻辑 (UTC+8) 构建日期 ID

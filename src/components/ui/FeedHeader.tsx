@@ -17,12 +17,15 @@ import { Button } from '@/components/ui/button';
 import { SearchInput } from './SearchInput';
 import { ChevronDown, CheckCircle, ArrowUpDown } from 'lucide-react';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import Link from 'next/link';
 
 export function FeedHeader() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const pathname = usePathname();
     const currentSort = searchParams.get('sort') || 'newest';
+    const activeDate = searchParams.get('date');
 
     const handleSortChange = (value: string) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -32,12 +35,29 @@ export function FeedHeader() {
 
     return (
         <div className="flex items-center justify-between gap-4 py-1">
-            <div className="flex items-center gap-1 group">
+            <div className="flex items-center gap-1">
+                <div className="flex items-center">
+                    <Link
+                        href="/"
+                        className="text-xl font-bold tracking-tight text-primary hover:opacity-80 transition-opacity p-1 text-balance"
+                    >
+                        JustMemo
+                    </Link>
+
+                    {activeDate && (
+                        <div className="flex items-center text-sm font-medium text-muted-foreground">
+                            <span className="mx-1 opacity-40">/</span>
+                            <span className="bg-primary/5 text-primary/80 px-2 py-0.5 rounded-sm text-xs font-mono tracking-tight tabular-nums">
+                                {activeDate}
+                            </span>
+                        </div>
+                    )}
+                </div>
+
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-auto p-1 px-2 gap-1 hover:bg-accent rounded-sm transition-all focus-visible:ring-0">
-                            <span className="text-xl font-bold tracking-tight text-primary">JustMemo</span>
-                            <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-sm transition-all focus-visible:ring-0" aria-label="更多选项">
+                            <ChevronDown className="w-4 h-4 transition-transform group-data-[state=open]:rotate-180" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" side="bottom" className="w-48">

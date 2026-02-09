@@ -6,6 +6,7 @@ import { MemoCard } from './MemoCard';
 import { getMemos } from '@/actions/fetchMemos';
 import { Loader2 } from 'lucide-react';
 import { Memo } from '@/types/memo';
+import { ChevronDown, CheckCircle, ArrowUpDown } from 'lucide-react';
 
 interface MemoFeedProps {
     initialMemos: Memo[];
@@ -98,7 +99,7 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
                             // 使用 Next.js 的 router.push 进行客户端导航，不刷新页面
                             router.push(pathname);
                         }}
-                        className="text-xs text-primary hover:underline"
+                        className="text-xs text-primary hover:underline cursor-pointer"
                     >
                         清除筛选
                     </button>

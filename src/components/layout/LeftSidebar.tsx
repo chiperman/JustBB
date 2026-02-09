@@ -30,15 +30,13 @@ export function LeftSidebar() {
                 isCollapsed ? "w-20 p-4" : "w-72 p-6"
             )}
         >
-            {/* Header with Toggle */}
-            <div className={cn("flex items-center justify-between mb-8", isCollapsed && "flex-col gap-4")}>
-                <div className={cn(
-                    "overflow-hidden transition-all duration-300",
-                    isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
-                )}>
-                    <h1 className="text-2xl font-bold tracking-tight text-primary whitespace-nowrap">JustMemo</h1>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 tracking-[0.2em] font-sans opacity-70 whitespace-nowrap">FRAGMENTED MEMORY</p>
-                </div>
+            {/* SidebarSettings 移动到顶部 */}
+            <div className={cn("mb-6", isCollapsed ? "pb-4" : "p-1")}>
+                <SidebarSettings isCollapsed={isCollapsed} />
+            </div>
+
+            {/* Toggle 按钮保留在顶部下方 */}
+            <div className={cn("flex items-center justify-start mb-4", isCollapsed && "flex-col gap-4")}>
                 <Button
                     variant="ghost"
                     size="icon"
@@ -49,12 +47,6 @@ export function LeftSidebar() {
                     {isCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
                 </Button>
             </div>
-
-            <Suspense>
-                <div className={cn("transition-all duration-300", isCollapsed ? "h-0 opacity-0 invisible overflow-hidden" : "h-auto opacity-100 visible mb-6")}>
-                    <SearchInput />
-                </div>
-            </Suspense>
 
             <div className={cn("transition-all duration-300", isCollapsed ? "h-0 opacity-0 invisible overflow-hidden" : "h-auto opacity-100 visible mb-8 px-1")}>
                 <Heatmap />
@@ -113,9 +105,6 @@ export function LeftSidebar() {
                 <OnThisDay />
             </div>
 
-            <div className={cn("mt-auto pt-4 border-t border-border", isCollapsed ? "pb-4" : "p-1")}>
-                <SidebarSettings isCollapsed={isCollapsed} />
-            </div>
         </aside>
     );
 }

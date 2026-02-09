@@ -20,3 +20,16 @@ export async function getMemoStats() {
 
     return data;
 }
+
+export async function getTimelineStats() {
+    const { data, error } = await supabase.rpc('get_timeline_stats');
+
+    if (error) {
+        console.error('Error fetching timeline stats via RPC:', error);
+        return {
+            days: {}
+        };
+    }
+
+    return data;
+}

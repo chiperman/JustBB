@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { getMemoStats } from '@/actions/stats';
+import { getTimelineStats } from '@/actions/stats';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     Timeline,
@@ -17,7 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTimeline } from '@/context/TimelineContext';
 
 export function RightSidebar() {
-    const [allDays, setAllDays] = useState<Record<string, { count: number; wordCount: number }>>({});
+    const [allDays, setAllDays] = useState<Record<string, { count: number }>>({});
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -29,7 +29,7 @@ export function RightSidebar() {
     const { activeId, setActiveId, setManualClick } = useTimeline();
 
     useEffect(() => {
-        getMemoStats().then((data) => {
+        getTimelineStats().then((data) => {
             setAllDays(data.days || {});
         });
     }, []);

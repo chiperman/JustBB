@@ -1,10 +1,7 @@
 import { getMemos, getArchivedMemos } from "@/actions/fetchMemos";
-import { MemoEditor } from "@/components/ui/MemoEditor";
 import { Memo } from "@/types/memo";
-import { MemoFeed } from '@/components/ui/MemoFeed';
 import { cookies } from 'next/headers';
-import { MemoCardSkeleton } from "@/components/ui/MemoCardSkeleton";
-import { FeedHeader } from "@/components/ui/FeedHeader";
+import { MainLayoutClient } from "@/components/layout/MainLayoutClient";
 
 export default async function Home(props: {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -33,34 +30,20 @@ export default async function Home(props: {
     memos = (await getMemos({ limit: 20, query, adminCode, tag: tagStr, date: dateStr })) || [];
   }
 
-  return (
-    <div className="flex flex-col h-screen overflow-hidden bg-accent/20">
-      {/* 固定顶部区域 - 品牌、搜索 & 编辑器 */}
-      <div className="flex-none bg-background/60 backdrop-blur-xl z-30 shadow-none px-4 md:px-10 dark:bg-background/40">
-        <div className="max-w-4xl mx-auto w-full pt-10 pb-6 space-y-6">
-          <FeedHeader />
-          <MemoEditor />
-        </div>
-      </div>
+  const flattenedSearchParams = {
+    query: Array.isArray(searchParams?.q) ? searchParams.q[0] : searchParams?.q,
+    tag: Array.isArray(searchParams?.tag) ? searchParams.tag[0] : searchParams?.tag,
+    year: Array.isArray(searchParams?.year) ? searchParams.year[0] : searchParams?.year,
+    month: Array.isArray(searchParams?.month) ? searchParams.month[0] : searchParams?.month,
+    date: Array.isArray(searchParams?.date) ? searchParams.date[0] : searchParams?.date,
+    code: Array.isArray(searchParams?.code) ? searchParams.code[0] : searchParams?.code
+  };
 
-      {/* 滚动内容流区域 */}
-      <div className="flex-1 overflow-y-auto scrollbar-hover p-4 md:px-10 md:pt-0 md:pb-8">
-        <div className="max-w-4xl mx-auto w-full pb-20">
-          <MemoFeed
-            initialMemos={memos ?? []}
-            searchParams={{
-              query: Array.isArray(searchParams?.q) ? searchParams.q[0] : searchParams?.q,
-              tag: Array.isArray(searchParams?.tag) ? searchParams.tag[0] : searchParams?.tag,
-              year: Array.isArray(searchParams?.year) ? searchParams.year[0] : searchParams?.year,
-              month: Array.isArray(searchParams?.month) ? searchParams.month[0] : searchParams?.month,
-              date: Array.isArray(searchParams?.date) ? searchParams.date[0] : searchParams?.date,
-              code: Array.isArray(searchParams?.code) ? searchParams.code[0] : searchParams?.code
-            }}
-            adminCode={adminCode}
-          />
-          {memos.length === 0 && <MemoCardSkeleton />}
-        </div>
-      </div>
-    </div>
+  return (
+    <MainLayoutClient
+      memos={memos}
+      searchParams={flattenedSearchParams}
+      adminCode={adminCode}
+    />
   );
 }

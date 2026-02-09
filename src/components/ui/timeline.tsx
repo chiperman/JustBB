@@ -7,7 +7,7 @@ const Timeline = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <div
         ref={ref}
-        className={cn("relative border-l border-border ml-2 pl-4 py-2", className)}
+        className={cn("relative ml-[11px] pl-6 py-2", className)}
         {...props}
     />
 ))
@@ -17,9 +17,25 @@ const TimelineItem = React.forwardRef<
     HTMLDivElement,
     React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("relative pb-8 last:pb-0", className)} {...props} />
+    <div ref={ref} className={cn("relative pb-6 last:pb-0 group/item", className)} {...props} />
 ))
 TimelineItem.displayName = "TimelineItem"
+
+const TimelineLine = React.forwardRef<
+    HTMLDivElement,
+    React.HTMLAttributes<HTMLDivElement> & { active?: boolean }
+>(({ className, active, ...props }, ref) => (
+    <div
+        ref={ref}
+        className={cn(
+            "absolute -left-[25px] top-0 h-full w-[2px] bg-border/30 transition-colors duration-300",
+            active && "bg-primary",
+            className
+        )}
+        {...props}
+    />
+))
+TimelineLine.displayName = "TimelineLine"
 
 const TimelineDot = React.forwardRef<
     HTMLDivElement,
@@ -28,7 +44,7 @@ const TimelineDot = React.forwardRef<
     <div
         ref={ref}
         className={cn(
-            "absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-border ring-4 ring-background",
+            "absolute -left-[30px] top-2 h-3 w-3 rounded-full border-2 border-border bg-background ring-4 ring-transparent transition-all duration-300 z-10",
             className
         )}
         {...props}
@@ -43,7 +59,7 @@ const TimelineHeading = React.forwardRef<
     <h4
         ref={ref}
         className={cn(
-            "text-base font-bold leading-none text-foreground/80 mb-3",
+            "text-base font-bold font-mono leading-none text-foreground/90 mb-4",
             className
         )}
         {...props}
@@ -59,4 +75,4 @@ const TimelineContent = React.forwardRef<
 ))
 TimelineContent.displayName = "TimelineContent"
 
-export { Timeline, TimelineItem, TimelineDot, TimelineHeading, TimelineContent }
+export { Timeline, TimelineItem, TimelineLine, TimelineDot, TimelineHeading, TimelineContent }

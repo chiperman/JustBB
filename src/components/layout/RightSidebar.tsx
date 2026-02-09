@@ -21,11 +21,24 @@ export function RightSidebar() {
     const yearFilter = searchParams.get('year');
     const monthFilter = searchParams.get('month');
 
+    const [localActiveId, setLocalActiveId] = useState<string | null>(null);
+
     useEffect(() => {
         getMemoStats().then((data) => {
             setAllDays(data.days || {});
         });
     }, []);
+
+    // 当 URL 参数变化时（热力图筛选），同步本地高亮状态
+    useEffect(() => {
+        if (dateFilter) {
+            setLocalActiveId(`date-${dateFilter}`);
+        } else if (yearFilter && monthFilter) {
+            setLocalActiveId(`month-${yearFilter}-${monthFilter}`);
+        } else if (yearFilter) {
+            setLocalActiveId(`year-${yearFilter}`);
+        }
+    }, [dateFilter, yearFilter, monthFilter]);
 
     // 构建时间轴数据结构（始终基于全量数据）
     const fullTimeline = useMemo(() => {
@@ -64,22 +77,26 @@ export function RightSidebar() {
             });
     }, [allDays]);
 
-    // 计算高亮状态 - 只有精确匹配的才高亮
+    // 计算高亮状态 - 优先使用本地状态，如果没有则根据 URL 参数判断
     const isYearActive = (year: number) => {
-        // 只有在 year 筛选模式且没有 month/date 时才高亮年份
-        if (dateFilter) return false;
-        if (monthFilter) return false;
-        return yearFilter === String(year);
+        if (localActiveId === `year-${year}`) return true;
+        // 如果没有本地手动选中的，则看 URL 参数
+        if (!localActiveId && yearFilter === String(year) && !monthFilter && !dateFilter) return true;
+        return false;
     };
 
     const isMonthActive = (year: number, month: number) => {
-        // 只有在 year+month 筛选模式且没有 date 时才高亮月份
-        if (dateFilter) return false;
-        return yearFilter === String(year) && monthFilter === String(month);
+        const id = `month-${year}-${month}`;
+        if (localActiveId === id) return true;
+        if (!localActiveId && yearFilter === String(year) && monthFilter === String(month) && !dateFilter) return true;
+        return false;
     };
 
     const isDayActive = (dateStr: string) => {
-        return dateFilter === dateStr;
+        const id = `date-${dateStr}`;
+        if (localActiveId === id) return true;
+        if (!localActiveId && dateFilter === dateStr) return true;
+        return false;
     };
 
     const monthNames = [
@@ -91,20 +108,34 @@ export function RightSidebar() {
         return classes.filter(Boolean).join(' ');
     };
 
-    // 点击处理
     const handleYearClick = (e: React.MouseEvent, year: number) => {
         e.preventDefault();
-        router.push(`/?year=${year}`);
+        const id = `year-${year}`;
+        setLocalActiveId(id);
+        const element = document.getElementById(id);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     };
 
     const handleMonthClick = (e: React.MouseEvent, year: number, month: number) => {
         e.preventDefault();
-        router.push(`/?year=${year}&month=${month}`);
+        const id = `month-${year}-${month}`;
+        setLocalActiveId(id);
+        const element = document.getElementById(id);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     };
 
     const handleDayClick = (e: React.MouseEvent, dateStr: string) => {
         e.preventDefault();
-        router.push(`/?date=${dateStr}`);
+        const id = `date-${dateStr}`;
+        setLocalActiveId(id);
+        const element = document.getElementById(id);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     };
 
     return (
@@ -114,19 +145,14 @@ export function RightSidebar() {
                     <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest font-sans">
                         时间轴
                     </h3>
-                    {(dateFilter || yearFilter || monthFilter) && (
-                        <button
-                            onClick={() => router.push('/')}
-                            className="text-xs text-primary hover:underline cursor-pointer"
-                        >
-                            清除筛选
-                        </button>
-                    )}
                 </div>
                 <Timeline>
                     {fullTimeline.map((yearGroup) => (
                         <TimelineItem key={yearGroup.year}>
-                            <TimelineDot />
+                            <TimelineDot className={cn(
+                                "transition-colors duration-300",
+                                isYearActive(yearGroup.year) ? "bg-primary ring-primary/20" : "bg-border"
+                            )} />
                             <TimelineHeading>
                                 <a
                                     href={`/?year=${yearGroup.year}`}
@@ -144,15 +170,15 @@ export function RightSidebar() {
                             <TimelineContent>
                                 {yearGroup.months.map((monthGroup) => (
                                     <div key={monthGroup.month} className="relative">
-                                        <h5 className="text-xs font-medium mb-2">
+                                        <h5 className={cn(
+                                            "text-xs font-medium mb-2 pl-2 -ml-[19px] border-l-2 py-0.5 transition-colors cursor-pointer block",
+                                            isMonthActive(yearGroup.year, monthGroup.month)
+                                                ? "border-primary text-primary"
+                                                : "border-transparent text-muted-foreground hover:text-primary"
+                                        )}>
                                             <a
                                                 href={`/?year=${yearGroup.year}&month=${monthGroup.month}`}
-                                                className={cn(
-                                                    "transition-colors cursor-pointer",
-                                                    isMonthActive(yearGroup.year, monthGroup.month)
-                                                        ? "text-primary font-semibold"
-                                                        : "text-muted-foreground hover:text-primary"
-                                                )}
+                                                className="block w-full"
                                                 onClick={(e) => handleMonthClick(e, yearGroup.year, monthGroup.month)}
                                             >
                                                 {monthNames[monthGroup.month]}

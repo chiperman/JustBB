@@ -125,21 +125,21 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
                             {isFirstOfYear && (
                                 <div
                                     id={`year-${currentYear}`}
-                                    className="absolute -top-24 invisible"
+                                    className="absolute -top-32 invisible"
                                     aria-hidden="true"
                                 />
                             )}
                             {isFirstOfMonth && (
                                 <div
                                     id={`month-${currentYear}-${parseInt(currentMonth)}`}
-                                    className="absolute -top-20 invisible"
+                                    className="absolute -top-28 invisible"
                                     aria-hidden="true"
                                 />
                             )}
                             {isFirstOfDay && (
                                 <div
                                     id={`date-${currentDate}`}
-                                    className="absolute -top-20 invisible"
+                                    className="absolute -top-28 invisible"
                                     aria-hidden="true"
                                 />
                             )}

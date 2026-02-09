@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { getMemos } from '@/actions/fetchMemos';
 import { Memo } from '@/types/memo';
-import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Timeline, TimelineItem, TimelineLine, TimelineDot, TimelineHeading, TimelineContent } from '@/components/ui/timeline';
+import { Skeleton } from '@/components/ui/skeleton';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface DailyTimelineProps {
     date: string;
@@ -45,20 +46,37 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
 
     if (loading) {
         return (
-            <div className="flex justify-center p-8">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <div className="animate-in fade-in duration-500">
+                <div className="flex items-center justify-between mb-8">
+                    <Skeleton className="h-5 w-20" />
+                </div>
+                <Timeline className="pl-6">
+                    <TimelineItem className="pb-4 overflow-visible">
+                        <TimelineLine />
+                        <TimelineDot className="bg-muted/30 border-muted/30" />
+                        <TimelineHeading className="mb-6">
+                            <Skeleton className="h-4 w-32" />
+                        </TimelineHeading>
+                        <TimelineContent className="pl-1">
+                            <div className="flex flex-col gap-3">
+                                <Skeleton className="h-3 w-40" />
+                                <Skeleton className="h-3 w-32" />
+                                <Skeleton className="h-3 w-48" />
+                            </div>
+                        </TimelineContent>
+                    </TimelineItem>
+                </Timeline>
             </div>
         );
     }
 
     return (
-        <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="flex items-center justify-between mb-8">
-                <h3 className="text-sm font-bold text-foreground uppercase tracking-widest font-mono border-b-2 border-primary/20 pb-1.5 flex-1">
-                    时间轴
-                </h3>
-            </div>
-
+        <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+        >
             <Timeline className="pl-6">
                 <TimelineItem className="pb-4 overflow-visible">
                     <TimelineLine />
@@ -109,6 +127,6 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
                     </TimelineContent>
                 </TimelineItem>
             </Timeline>
-        </div>
+        </motion.div>
     );
 }

@@ -36,6 +36,7 @@ interface MemoActionsProps {
     createdAt?: string;
     tags?: string[];
     onEdit?: () => void;
+    onOpenChange?: (open: boolean) => void;
 }
 
 export function MemoActions({
@@ -46,7 +47,8 @@ export function MemoActions({
     content = '',
     createdAt = '',
     tags = [],
-    onEdit
+    onEdit,
+    onOpenChange
 }: MemoActionsProps) {
     const [isPending, setIsPending] = useState(false);
     const [showDeleteAlert, setShowDeleteAlert] = useState(false);
@@ -187,7 +189,7 @@ export function MemoActions({
 
     return (
         <div className="flex items-center gap-1">
-            <DropdownMenu>
+            <DropdownMenu onOpenChange={onOpenChange}>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8 p-0 hover:bg-accent rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 transition-all">
                         <MoreHorizontal className="w-4 h-4 text-muted-foreground" />

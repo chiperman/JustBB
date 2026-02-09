@@ -21,6 +21,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
     const router = useRouter();
     const [isEditing, setIsEditing] = useState(false);
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const shouldReduceMotion = useReducedMotion();
 
     const handleUnlock = () => {
@@ -92,7 +93,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                             onClick={toggleBacklinks}
                             className={cn(
                                 "h-8 w-8 rounded-sm transition-all group-hover:opacity-100 focus-visible:opacity-100",
-                                showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground opacity-0",
+                                (showBacklinks || isMenuOpen) ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground opacity-0",
                             )}
                             aria-expanded={showBacklinks}
                             aria-label="查看引用"
@@ -109,6 +110,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                             createdAt={memo.created_at}
                             tags={memo.tags ?? []}
                             onEdit={() => setIsEditing(true)}
+                            onOpenChange={setIsMenuOpen}
                         />
                     </div>
                 )}

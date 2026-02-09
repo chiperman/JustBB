@@ -18,7 +18,7 @@
 
 | 分类 | 技术 |
 |------|------|
-| **框架** | Next.js 16 + React 19 + TypeScript |
+| **框架** | Next.js 16.1.6 + React 19 + TypeScript |
 | **样式** | Tailwind CSS 4 + Framer Motion |
 | **后端** | Supabase (PostgreSQL + Auth) |
 | **部署** | Vercel |

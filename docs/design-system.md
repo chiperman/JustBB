@@ -47,3 +47,14 @@
     *   **阴影 (Shadow)**: `shadow-2xl` (深邃阴影)。
     *   **边框 (Border)**: `border-border/40` (柔和边框)。
 *   **极简触发器 (Minimalist Trigger)**: 对于上下文明确的选择器（如年份切换），推荐使用 `variant="ghost"` 的无边框文本样式，通过排版（大字号/加粗）来体现层级，而非传统的输入框样式。
+## 7. 时间线规范 (Timeline System)
+
+### 7.1 结构定义
+*   **Timeline**: 容器，设置左边距 `ml-[11px]` 及填充 `pl-6`，为轴线预留空间。
+*   **TimelineLine**: 垂直轴线，宽 `2px`。默认颜色 `bg-border/30`，激活状态为 `bg-primary`。具备 `300ms` 颜色过渡动效。
+*   **TimelineDot**: 节点圆点。宽/高 `12px`，带 `2px` 边框，背景色同页面背景，具备 `ring-4` 悬停/激活光效。
+*   **TimelineHeading**: 时间标题。使用 **Mono 字体**，`text-base` 字号，加粗。
+
+### 7.2 高度对齐
+*   所有节点与轴线必须像素级对齐，确保垂直感官连贯。
+*   文字内容与圆点中心在水平线上对齐。

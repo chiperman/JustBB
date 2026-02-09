@@ -57,7 +57,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
 
     return (
         <article className={cn(
-            "group relative bg-card rounded-sm p-6 transition-all border border-border focus-within:ring-2 focus-within:ring-primary/10",
+            "relative bg-card rounded-sm p-6 transition-all border border-border focus-within:ring-2 focus-within:ring-primary/10",
             memo.is_pinned && "bg-primary/5 border-primary/20"
         )}>
             {/* 顶部元信息 */}
@@ -78,7 +78,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                     )}
                 </div>
                 {!memo.is_locked && (
-                    <div className="flex items-center gap-2 group/actions">
+                    <div className="flex items-center gap-2 group">
                         <Button
                             variant="ghost"
                             size="icon"

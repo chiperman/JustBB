@@ -7,11 +7,18 @@ import { X, Pin, Lock, LockOpen, Hash, Eye, EyeOff, Maximize2, Minimize2 } from 
 import { cn } from '@/lib/utils';
 import { Button } from './button';
 import { Input } from './input';
-import { Textarea } from './textarea';
 import { updateMemoContent } from '@/actions/update';
 import { searchMemosForMention } from '@/actions/search';
 import { Command, CommandList, CommandItem, CommandEmpty, CommandGroup } from './command';
 import { getAllTags } from '@/actions/tags';
+
+// Tiptap imports
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
+import LinkExtension from '@tiptap/extension-link';
+import Mention from '@tiptap/extension-mention';
+import CharacterCount from '@tiptap/extension-character-count';
 
 // 建议项类型
 interface SuggestionItem {
@@ -63,7 +70,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Tag autocomplete states
     const [allTags, setAllTags] = useState<TagStat[]>([]);
@@ -72,51 +78,113 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
     const shouldReduceMotion = useReducedMotion();
     const router = useRouter();
-
-    // 自动调整 textarea 高度
-    const autoResize = () => {
-        const textarea = textareaRef.current;
-        if (!textarea) return;
-
-        // 重置高度以获取正确的 scrollHeight
-        textarea.style.height = 'auto';
-        // 设置新高度，最小 60px，不再限制最大高度，交由外层容器处理滚动
-        const newHeight = Math.max(textarea.scrollHeight, 60);
-        textarea.style.height = `${newHeight}px`;
-    };
-
-    useLayoutEffect(() => {
-        autoResize();
-    }, [content]);
-
     useEffect(() => {
         getAllTags().then(setAllTags);
     }, []);
 
-    const handleContentChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const val = e.target.value;
-        setContent(val);
-        setError(null);
+    const editor = useEditor({
+        extensions: [
+            StarterKit.configure({
+                heading: false,
+                codeBlock: false,
+                bold: false,
+                italic: false,
+            }),
+            Placeholder.configure({
+                placeholder: '有什么新鲜事？',
+                emptyEditorClass: 'is-editor-empty',
+            }),
+            LinkExtension.configure({
+                openOnClick: false,
+            }),
+            CharacterCount.configure({
+                limit: 2000,
+            }),
+            Mention.configure({
+                HTMLAttributes: {
+                    class: 'text-primary font-mono bg-primary/10 px-1 rounded-sm mx-0.5 inline-block decoration-none',
+                },
+                suggestion: {
+                    char: '@',
+                    render: () => {
+                        return {
+                            onStart: (props) => {
+                                setSuggestions([]);
+                                setShowSuggestions(true);
+                                // 这里简化处理，实际可以通过 tippy.js 实现
+                                searchMemosForMention(props.query).then(data => {
+                                    setSuggestions(data.map(m => ({
+                                        id: m.id,
+                                        label: `@${m.memo_number}`,
+                                        subLabel: m.content.substring(0, 50),
+                                        memo_number: m.memo_number
+                                    })));
+                                });
+                            },
+                            onUpdate: (props) => {
+                                searchMemosForMention(props.query).then(data => {
+                                    setSuggestions(data.map(m => ({
+                                        id: m.id,
+                                        label: `@${m.memo_number}`,
+                                        subLabel: m.content.substring(0, 50),
+                                        memo_number: m.memo_number
+                                    })));
+                                });
+                            },
+                            onExit: () => {
+                                setShowSuggestions(false);
+                            },
+                            onKeyDown: (props) => {
+                                if (props.event.key === 'Escape') {
+                                    setShowSuggestions(false);
+                                    return true;
+                                }
+                                return false;
+                            },
+                        };
+                    },
+                },
+            }),
+        ],
+        content: memo?.content || '',
+        onUpdate: ({ editor }) => {
+            const text = editor.getText();
+            setContent(text);
+            setError(null);
 
-        const cursorPosition = e.target.selectionStart;
-        const textBeforeCursor = val.slice(0, cursorPosition);
-        // 匹配 @ 后跟任意非空白字符（支持编号和内容搜索）
-        const mentionMatch = textBeforeCursor.match(/@(\S*)$/);
+            // 处理 #标签 建议触发
+            const { from, to } = editor.state.selection;
+            const textBefore = editor.state.doc.textBetween(Math.max(0, from - 20), from, ' ');
+            const tagMatch = textBefore.match(/#(\S*)$/);
 
-        if (mentionMatch) {
-            const query = mentionMatch[1];
-            setShowSuggestions(true);
-            const data = await searchMemosForMention(query);
-            setSuggestions(data.map(m => ({
-                id: m.id,
-                label: `@${m.memo_number}`,
-                subLabel: m.content.substring(0, 50),
-                memo_number: m.memo_number
-            })));
-        } else {
-            setShowSuggestions(false);
+            if (tagMatch) {
+                const query = tagMatch[1];
+                const filtered = allTags
+                    .filter(t => t.tag_name.toLowerCase().includes(query.toLowerCase()))
+                    .slice(0, 5);
+                setTagSuggestions(filtered.map(t => ({ id: t.tag_name, label: `#${t.tag_name}`, count: t.count })));
+                setShowTagSuggestions(true);
+            } else {
+                setShowTagSuggestions(false);
+            }
+        },
+        onFocus: () => setIsFocused(true),
+        onBlur: () => setIsFocused(false),
+        editorProps: {
+            attributes: {
+                class: cn(
+                    "prose prose-sm max-w-none focus:outline-none min-h-[60px] text-foreground/80 leading-relaxed font-sans tracking-normal",
+                    isActuallyCollapsed ? "text-sm" : "text-base"
+                ),
+            },
+        },
+    });
+
+    useEffect(() => {
+        if (editor && memo?.content && mode === 'edit') {
+            editor.commands.setContent(memo.content);
         }
-    };
+    }, [editor, memo, mode]);
 
     const handleTagInputChange = (val: string) => {
         setTagInput(val);
@@ -132,17 +200,20 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     };
 
     const handleSelectSuggestion = (item: SuggestionItem) => {
-        if (!textareaRef.current) return;
-        const cursorPosition = textareaRef.current.selectionStart;
-        const textBeforeCursor = content.slice(0, cursorPosition);
-        const textAfterCursor = content.slice(cursorPosition);
+        if (!editor) return;
 
-        // 替换 @ 后跟的所有非空白字符为正确的编号
-        const newPrefix = textBeforeCursor.replace(/@\S*$/, `@${item.memo_number} `);
-        setContent(newPrefix + textAfterCursor);
+        editor
+            .chain()
+            .focus()
+            .insertContent({
+                type: 'mention',
+                attrs: { id: item.memo_number, label: item.memo_number },
+            })
+            .insertContent(' ')
+            .run();
+
         setShowSuggestions(false);
         setSelectedIndex(0);
-        textareaRef.current.focus();
     };
 
     const handleSelectTag = (item: SuggestionItem) => {
@@ -167,37 +238,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         setTags(tags.filter(t => t !== tagToRemove));
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-            e.preventDefault();
-            handlePublishClick();
-            return;
-        }
-
-        if (showSuggestions && suggestions.length > 0) {
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                const nextIndex = (selectedIndex + 1) % suggestions.length;
-                setSelectedIndex(nextIndex);
-                return;
-            }
-            if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                const nextIndex = (selectedIndex - 1 + suggestions.length) % suggestions.length;
-                setSelectedIndex(nextIndex);
-                return;
-            }
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSelectSuggestion(suggestions[selectedIndex]);
-                return;
-            }
-            if (e.key === 'Escape') {
-                setShowSuggestions(false);
-                return;
-            }
-        }
-    };
 
     const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         // cmdk 内置键盘导航，这里只处理 Enter 添加新标签和 Escape
@@ -231,12 +271,15 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     };
 
     const performPublish = async () => {
+        const textContent = editor?.getText() || content;
+        if (!textContent.trim() || isPending) return;
+
         setIsPending(true);
         setError(null);
         setShowPrivateDialog(false);
 
         const formData = new FormData();
-        formData.append('content', content);
+        formData.append('content', textContent);
         tags.forEach(tag => formData.append('tags', tag));
         formData.append('is_private', String(isPrivate));
         formData.append('is_pinned', String(isPinned));
@@ -257,6 +300,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
             if (result.success) {
                 if (mode === 'create') {
+                    editor?.commands.setContent('');
                     setContent('');
                     setTags([]);
                     setIsPrivate(false);
@@ -278,17 +322,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         }
     };
 
-    // 渲染带高亮的内容
-    const renderHighlightedContent = () => {
-        // 匹配 @数字 格式的引用
-        const parts = content.split(/(@\d+)/g);
-        return parts.map((part, index) => {
-            if (/^@\d+$/.test(part)) {
-                return <mark key={index} className="bg-primary/20 text-primary rounded px-0.5">{part}</mark>;
-            }
-            return <span key={index}>{part}</span>;
-        });
-    };
 
     return (
         <section className={cn(
@@ -298,35 +331,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             <div className="relative group">
                 <label htmlFor="memo-content" className="sr-only">Memo内容</label>
 
-                <div className="max-h-[300px] overflow-y-auto scrollbar-hover relative">
-                    <div className="relative min-h-full">
-                        {/* 高亮层：显示 @引用 高亮 */}
-                        <div
-                            className={cn(
-                                "absolute inset-0 w-full leading-relaxed p-0 font-sans tracking-normal pointer-events-none whitespace-pre-wrap break-words overflow-hidden transition-all duration-300",
-                                isActuallyCollapsed ? "text-sm md:text-sm" : "text-lg md:text-lg"
-                            )}
-                            style={{ minHeight: '100%' }}
-                            aria-hidden="true"
-                        >
-                            {renderHighlightedContent()}
-                        </div>
-                        <Textarea
-                            id="memo-content"
-                            ref={textareaRef}
-                            placeholder="有什么新鲜事？"
-                            value={content}
-                            onChange={handleContentChange}
-                            onKeyDown={handleKeyDown}
-                            onFocus={() => setIsFocused(true)}
-                            onBlur={() => setIsFocused(false)}
-                            className={cn(
-                                "w-full bg-transparent border-none focus:ring-0 leading-relaxed resize-none p-0 placeholder:text-muted-foreground/30 font-sans tracking-normal overflow-hidden relative text-foreground/80 caret-foreground shadow-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300",
-                                isActuallyCollapsed ? "text-sm md:text-sm min-h-[30px]" : "text-base md:text-base min-h-[60px]"
-                            )}
-                            style={{ height: isActuallyCollapsed ? '30px' : '60px' }}
-                        />
-                    </div>
+                <div className="max-h-[500px] overflow-y-auto scrollbar-hover relative">
+                    <EditorContent editor={editor} />
                 </div>
 
                 {showSuggestions && suggestions.length > 0 && (

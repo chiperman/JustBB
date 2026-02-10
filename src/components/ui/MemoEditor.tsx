@@ -83,6 +83,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     }, []);
 
     const editor = useEditor({
+        immediatelyRender: false,
         extensions: [
             StarterKit.configure({
                 heading: false,

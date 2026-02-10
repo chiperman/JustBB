@@ -25,6 +25,7 @@ interface MemoFeedProps {
 
 export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProps) {
     const [memos, setMemos] = useState<Memo[]>(initialMemos);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [hasMore, setHasMore] = useState(initialMemos.length >= 20);
     const [loading, setLoading] = useState(false);
     const observerTarget = useRef<HTMLDivElement>(null);
@@ -176,7 +177,11 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
                                     aria-hidden="true"
                                 />
                             )}
-                            <MemoCard memo={memo} />
+                            <MemoCard
+                                memo={memo}
+                                isEditing={editingId === memo.id}
+                                onEditChange={(editing) => setEditingId(editing ? memo.id : null)}
+                            />
                         </div>
                     );
                 })}

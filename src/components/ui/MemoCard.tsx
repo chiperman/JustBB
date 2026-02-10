@@ -15,11 +15,12 @@ import { UnlockDialog } from './UnlockDialog';
 
 interface MemoCardProps {
     memo: Memo;
+    isEditing?: boolean;
+    onEditChange?: (editing: boolean) => void;
 }
 
-export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
+export const MemoCard = memo(function MemoCard({ memo, isEditing, onEditChange }: MemoCardProps) {
     const router = useRouter();
-    const [isEditing, setIsEditing] = useState(false);
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const shouldReduceMotion = useReducedMotion();
@@ -49,8 +50,8 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                 <MemoEditor
                     mode="edit"
                     memo={memo}
-                    onCancel={() => setIsEditing(false)}
-                    onSuccess={() => setIsEditing(false)}
+                    onCancel={() => onEditChange?.(false)}
+                    onSuccess={() => onEditChange?.(false)}
                 />
             </article>
         );
@@ -110,7 +111,7 @@ export const MemoCard = memo(function MemoCard({ memo }: MemoCardProps) {
                             content={memo.content}
                             createdAt={memo.created_at}
                             tags={memo.tags ?? []}
-                            onEdit={() => setIsEditing(true)}
+                            onEdit={() => onEditChange?.(true)}
                             onOpenChange={setIsMenuOpen}
                         />
                     </div>

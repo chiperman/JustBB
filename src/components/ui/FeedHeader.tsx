@@ -40,22 +40,25 @@ export function FeedHeader() {
     };
 
     return (
-        <div className="flex items-center justify-between gap-4 py-1">
-            <div className="flex items-center gap-1">
-                <div className="flex items-center">
+        <div className="flex items-center justify-between gap-4 py-2 px-2 h-10">
+            <div className="flex items-center gap-1.5 overflow-hidden">
+                <div className="flex items-center whitespace-nowrap">
                     <Link
                         href="/"
-                        className="text-xl font-bold tracking-tight text-primary hover:opacity-80 transition-opacity p-1 text-balance"
+                        className="text-sm font-bold tracking-tight text-primary/90 hover:text-primary transition-colors px-2 py-1 rounded-sm hover:bg-primary/5 mr-1"
                     >
                         JustMemo
                     </Link>
 
                     {activeDate && (
-                        <div className="flex items-center text-sm font-medium text-muted-foreground">
-                            <span className="mx-1 opacity-40">/</span>
-                            <span className="bg-primary/5 text-primary/80 px-2 py-0.5 rounded-sm text-xs font-mono tracking-tight tabular-nums">
-                                {activeDate}
-                            </span>
+                        <div className="flex items-center gap-1.5 animate-in slide-in-from-left-2 duration-300">
+                            <span className="text-muted-foreground/30 text-[10px] font-light">/</span>
+                            <div className="flex items-center bg-primary/[0.03] dark:bg-primary/[0.05] border border-primary/10 px-2 py-0.5 rounded-full shadow-sm">
+                                <span className="text-[10px] font-mono font-bold text-primary/70 tracking-tighter uppercase mr-1 opacity-50">DATE</span>
+                                <span className="text-xs font-mono font-medium text-primary tracking-tight tabular-nums">
+                                    {activeDate}
+                                </span>
+                            </div>
                         </div>
                     )}
                 </div>

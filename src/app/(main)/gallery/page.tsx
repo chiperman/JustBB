@@ -7,22 +7,6 @@ export default async function GalleryPage() {
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            {/* Header */}
-            <header className="flex items-center gap-2 py-4 px-6 border-b border-border/40 bg-background/50 backdrop-blur-md sticky top-0 z-10">
-                <Link
-                    href="/"
-                    className="text-xl font-bold tracking-tight text-primary hover:opacity-80 transition-opacity p-1"
-                >
-                    JustMemo
-                </Link>
-                <div className="flex items-center text-sm font-medium text-muted-foreground">
-                    <span className="mx-1 opacity-40">/</span>
-                    <span className="bg-primary/5 text-primary/80 px-2 py-0.5 rounded-sm text-xs font-mono tracking-tight">
-                        Gallery
-                    </span>
-                </div>
-            </header>
-
             <div className="flex-1 overflow-y-auto scrollbar-hide px-6 py-10">
                 <div className="max-w-screen-xl mx-auto space-y-12">
                     <section>

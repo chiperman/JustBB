@@ -289,7 +289,7 @@ function MonthCalendar({ date, stats, colorFn }: { date: Date, stats: Record<str
 
             <div className="grid grid-cols-7 gap-1.5 text-center">
                 {['一', '二', '三', '四', '五', '六', '日'].map(d => (
-                    <span key={d} className="text-[10px] pb-1 font-bold text-muted-foreground/30">{d}</span>
+                    <span key={d} className="text-[10px] pb-1 font-bold text-muted-foreground/70">{d}</span>
                 ))}
                 {days.map((day) => {
                     const dateStr = format(day, 'yyyy-MM-dd');

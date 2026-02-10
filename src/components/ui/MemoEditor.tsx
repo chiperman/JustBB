@@ -280,7 +280,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         {/* 高亮层：显示 @引用 高亮 */}
                         <div
                             className={cn(
-                                "absolute inset-0 w-full leading-relaxed p-0 font-serif pointer-events-none whitespace-pre-wrap break-words overflow-hidden transition-all duration-300",
+                                "absolute inset-0 w-full leading-relaxed p-0 font-sans tracking-normal pointer-events-none whitespace-pre-wrap break-words overflow-hidden transition-all duration-300",
                                 isActuallyCollapsed ? "text-sm md:text-sm" : "text-lg md:text-lg"
                             )}
                             style={{ minHeight: '100%' }}
@@ -298,7 +298,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                             className={cn(
-                                "w-full bg-transparent border-none focus:ring-0 leading-relaxed resize-none p-0 placeholder:text-muted-foreground/30 font-serif overflow-hidden relative text-transparent caret-foreground shadow-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300",
+                                "w-full bg-transparent border-none focus:ring-0 leading-relaxed resize-none p-0 placeholder:text-muted-foreground/30 font-sans tracking-normal overflow-hidden relative text-transparent caret-foreground shadow-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300",
                                 isActuallyCollapsed ? "text-sm md:text-sm min-h-[30px]" : "text-lg md:text-lg min-h-[60px]"
                             )}
                             style={{ height: isActuallyCollapsed ? '30px' : '60px' }}

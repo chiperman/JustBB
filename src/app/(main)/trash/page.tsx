@@ -62,57 +62,6 @@ export default function TrashPage() {
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            {/* Header */}
-            <header className="flex items-center gap-2 py-4 px-6 border-b border-border/40 bg-background/50 backdrop-blur-md sticky top-0 z-10">
-                <Link
-                    href="/"
-                    className="text-xl font-bold tracking-tight text-primary hover:opacity-80 transition-opacity p-1"
-                >
-                    JustMemo
-                </Link>
-                <div className="flex items-center text-sm font-medium text-muted-foreground">
-                    <span className="mx-1 opacity-40">/</span>
-                    <span className="bg-destructive/10 text-destructive px-2 py-0.5 rounded-sm text-xs font-mono tracking-tight">
-                        Trash
-                    </span>
-                </div>
-
-                {memos.length > 0 && (
-                    <div className="ml-auto">
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all text-xs font-medium gap-2 rounded-sm"
-                                    disabled={isPending}
-                                >
-                                    {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-                                    清空回收站
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>清空回收站？</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        此操作将永久删除回收站内的所有记录。该操作不可逆，请谨慎操作。
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel className="rounded-sm">取消</AlertDialogCancel>
-                                    <AlertDialogAction
-                                        onClick={handleEmptyTrash}
-                                        className="bg-destructive hover:bg-destructive/90 rounded-sm"
-                                    >
-                                        确认清空
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </div>
-                )}
-            </header>
-
             <div className="flex-1 overflow-y-auto scrollbar-hide px-6 py-10">
                 <div className="max-w-screen-md mx-auto space-y-12">
                     <section>
@@ -126,8 +75,42 @@ export default function TrashPage() {
                                     被遗忘的片段，在这里等待最后的归宿。
                                 </p>
                             </div>
-                            <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.2em] opacity-40 mb-1">
-                                Total: {memos.length.toString().padStart(2, '0')}
+                            <div className="flex flex-col items-end gap-2">
+                                <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.2em] opacity-40">
+                                    Total: {memos.length.toString().padStart(2, '0')}
+                                </div>
+                                {memos.length > 0 && (
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all text-[10px] uppercase font-mono tracking-widest gap-2 rounded-sm h-7"
+                                                disabled={isPending}
+                                            >
+                                                {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                                                Empty Trash
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>清空回收站？</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    此操作将永久删除回收站内的所有记录。该操作不可逆，请谨慎操作。
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel className="rounded-sm">取消</AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    onClick={handleEmptyTrash}
+                                                    className="bg-destructive hover:bg-destructive/90 rounded-sm"
+                                                >
+                                                    确认清空
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                )}
                             </div>
                         </header>
 

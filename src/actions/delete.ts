@@ -54,3 +54,20 @@ export async function permanentDeleteMemo(id: string) {
     revalidatePath('/trash');
     return { success: true };
 }
+
+export async function emptyTrash() {
+    const supabase = getSupabaseAdmin();
+    // 永久删除所有已标记为删除的记录
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('memos') as any)
+        .delete()
+        .not('deleted_at', 'is', null);
+
+    if (error) {
+        console.error('Error emptying trash:', error);
+        return { success: false, error: '清空回收站失败' };
+    }
+
+    revalidatePath('/trash');
+    return { success: true };
+}

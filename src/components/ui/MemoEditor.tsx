@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createMemo } from '@/actions/memos';
 import { useRouter } from 'next/navigation';
-import { X, Pin, Lock, LockOpen, Hash, Eye, EyeOff } from 'lucide-react';
+import { X, Pin, Lock, LockOpen, Hash, Eye, EyeOff, Maximize2, Minimize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
 import { Input } from './input';
@@ -61,6 +61,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     // Suggestion system states
     const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [selectedIndex, setSelectedIndex] = useState(0);
+    const [isFullscreen, setIsFullscreen] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Tag autocomplete states
@@ -139,6 +141,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         const newPrefix = textBeforeCursor.replace(/@\S*$/, `@${item.memo_number} `);
         setContent(newPrefix + textAfterCursor);
         setShowSuggestions(false);
+        setSelectedIndex(0);
         textareaRef.current.focus();
     };
 
@@ -170,9 +173,29 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             handlePublishClick();
             return;
         }
-        // cmdk 内置键盘导航，这里只处理 Escape
-        if (showSuggestions && e.key === 'Escape') {
-            setShowSuggestions(false);
+
+        if (showSuggestions && suggestions.length > 0) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const nextIndex = (selectedIndex + 1) % suggestions.length;
+                setSelectedIndex(nextIndex);
+                return;
+            }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const nextIndex = (selectedIndex - 1 + suggestions.length) % suggestions.length;
+                setSelectedIndex(nextIndex);
+                return;
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSelectSuggestion(suggestions[selectedIndex]);
+                return;
+            }
+            if (e.key === 'Escape') {
+                setShowSuggestions(false);
+                return;
+            }
         }
     };
 
@@ -298,8 +321,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                             className={cn(
-                                "w-full bg-transparent border-none focus:ring-0 leading-relaxed resize-none p-0 placeholder:text-muted-foreground/30 font-sans tracking-normal overflow-hidden relative text-transparent caret-foreground shadow-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300",
-                                isActuallyCollapsed ? "text-sm md:text-sm min-h-[30px]" : "text-lg md:text-lg min-h-[60px]"
+                                "w-full bg-transparent border-none focus:ring-0 leading-relaxed resize-none p-0 placeholder:text-muted-foreground/30 font-sans tracking-normal overflow-hidden relative text-foreground/80 caret-foreground shadow-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300",
+                                isActuallyCollapsed ? "text-sm md:text-sm min-h-[30px]" : "text-base md:text-base min-h-[60px]"
                             )}
                             style={{ height: isActuallyCollapsed ? '30px' : '60px' }}
                         />
@@ -438,6 +461,15 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 >
                                     <Pin className={cn("w-3 h-3", isPinned && "fill-primary")} aria-hidden="true" /> Pin
                                 </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setIsFullscreen(true)}
+                                    className="text-muted-foreground hover:text-primary transition-colors h-8 w-8 p-0"
+                                    aria-label="全屏编辑"
+                                >
+                                    <Maximize2 className="w-3.5 h-3.5" />
+                                </Button>
                                 <span className="text-[10px] text-muted-foreground/40 tabular-nums ml-1">
                                     {content.trim().length} 字
                                 </span>
@@ -475,6 +507,39 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
+                <DialogContent className="max-w-5xl h-[85vh] flex flex-col p-0 gap-0 overflow-hidden bg-background">
+                    <div className="flex-none flex items-center justify-between px-6 py-4 border-b">
+                        <DialogTitle className="text-base font-bold tracking-tight">全屏编辑内容</DialogTitle>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsFullscreen(false)}
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                        >
+                            <Minimize2 className="w-4 h-4" />
+                        </Button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto px-6 py-8">
+                        <div className="max-w-3xl mx-auto flex flex-col h-full">
+                            <MemoEditor
+                                mode={mode}
+                                memo={memo}
+                                isCollapsed={false}
+                                onCancel={() => {
+                                    setIsFullscreen(false);
+                                    onCancel?.();
+                                }}
+                                onSuccess={() => {
+                                    setIsFullscreen(false);
+                                    onSuccess?.();
+                                }}
+                            />
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <Dialog open={showPrivateDialog} onOpenChange={setShowPrivateDialog}>
                 <DialogContent>

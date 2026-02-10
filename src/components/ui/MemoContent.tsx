@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { parseContentTokens } from '@/lib/contentParser';
 import { CodeBlock } from './CodeBlock';
 import { MemoHoverPreview } from './MemoHoverPreview';
+import { useSearchParams } from 'next/navigation';
 
 interface MemoContentProps {
     content: string;
@@ -13,6 +14,26 @@ interface MemoContentProps {
 }
 
 export function MemoContent({ content, className }: MemoContentProps) {
+    const searchParams = useSearchParams();
+    const searchQuery = searchParams?.get('q') || '';
+
+    // 解析并高亮文本
+    const highlightText = (text: string, highlight: string) => {
+        if (!highlight || !text) return text;
+        const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+        return (
+            <>
+                {parts.map((part, i) => (
+                    part.toLowerCase() === highlight.toLowerCase() ? (
+                        <span key={i} className="bg-amber-200/60 text-foreground font-medium px-0.5 rounded-sm mx-px">
+                            {part}
+                        </span>
+                    ) : part
+                ))}
+            </>
+        );
+    };
+
     // 正则解析逻辑
     const renderContent = (text: string) => {
         const tokens = parseContentTokens(text);
@@ -60,7 +81,7 @@ export function MemoContent({ content, className }: MemoContentProps) {
                             );
                         case 'text':
                         default:
-                            return <span key={`text-${index}`} className="text-foreground/90">{token.value}</span>;
+                            return <span key={`text-${index}`} className="text-foreground/90">{highlightText(token.value, searchQuery)}</span>;
                     }
                 })}
             </div>

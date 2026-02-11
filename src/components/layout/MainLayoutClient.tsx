@@ -37,7 +37,7 @@ export function MainLayoutClient({ memos, searchParams, adminCode }: MainLayoutC
                 <div className="max-w-4xl mx-auto w-full">
                     <div className="space-y-4">
                         <FeedHeader />
-                        <MemoEditor isCollapsed={isScrolled} />
+                        <MemoEditor isCollapsed={isScrolled} contextMemos={memos} />
                     </div>
                 </div>
             </div>

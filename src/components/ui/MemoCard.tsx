@@ -50,6 +50,7 @@ export const MemoCard = memo(function MemoCard({ memo, isEditing, onEditChange }
                 <MemoEditor
                     mode="edit"
                     memo={memo}
+                    contextMemos={[memo]} // 编辑模式下至少包含当前 memo，通常这种模式也会有外层 context 传入但目前保持独立
                     onCancel={() => onEditChange?.(false)}
                     onSuccess={() => onEditChange?.(false)}
                 />

@@ -48,9 +48,10 @@ interface MemoEditorProps {
     onSuccess?: () => void;
     isCollapsed?: boolean;
     hideFullscreen?: boolean;
+    contextMemos?: Memo[]; // 增加上下文 Memos 用于即时搜索
 }
 
-export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isCollapsed: isPropCollapsed = false, hideFullscreen = false }: MemoEditorProps) {
+export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isCollapsed: isPropCollapsed = false, hideFullscreen = false, contextMemos = [] }: MemoEditorProps) {
     const [content, setContent] = useState(memo?.content || '');
     const [tags, setTags] = useState<string[]>(memo?.tags || []);
     const [tagInput, setTagInput] = useState('');
@@ -134,7 +135,25 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 setMentionQuery(props.query);
                                 setShowSuggestions(true);
 
-                                // IME 组合阶段不发起搜索
+                                // --- 优化：双层搜索逻辑 (Layer 1: 本地同步过滤) ---
+                                // 即使还在 IME 组合或者网络请求还没发出，也要先从本地 contextMemos 中寻找匹配项
+                                const localItems: SuggestionItem[] = contextMemos
+                                    .filter(m =>
+                                        m.memo_number?.toString().includes(props.query) ||
+                                        m.content.toLowerCase().includes(props.query.toLowerCase())
+                                    )
+                                    .slice(0, 5)
+                                    .map(m => ({
+                                        id: m.id,
+                                        label: `@${m.memo_number}`,
+                                        subLabel: m.content.substring(0, 100),
+                                        memo_number: m.memo_number,
+                                        created_at: m.created_at
+                                    }));
+
+                                setSuggestions(localItems);
+
+                                // 如果正在输入法组合中，不发起网络搜索
                                 if (props.editor.view.composing) {
                                     setIsLoading(false);
                                     return;
@@ -146,14 +165,24 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 searchMemosForMention(props.query).then(data => {
                                     if (requestId !== lastRequestIdRef.current) return;
 
-                                    const items = data.map(m => ({
+                                    const remoteItems = data.map(m => ({
                                         id: m.id,
                                         label: `@${m.memo_number}`,
                                         subLabel: m.content.substring(0, 100),
                                         memo_number: m.memo_number,
                                         created_at: m.created_at
                                     }));
-                                    setSuggestions(items);
+
+                                    // 合并结果，去重并优先保留本地/最新结果
+                                    setSuggestions(prev => {
+                                        const combined = [...prev];
+                                        remoteItems.forEach(ri => {
+                                            if (!combined.some(ci => ci.id === ri.id)) {
+                                                combined.push(ri);
+                                            }
+                                        });
+                                        return combined.slice(0, 8); // 稍微增加展示上限
+                                    });
                                     setIsLoading(false);
                                 }).catch(() => {
                                     if (requestId === lastRequestIdRef.current) {
@@ -166,12 +195,30 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 setSelectedIndex(0);
                                 setMentionQuery(props.query);
 
+                                // --- 优化：双层搜索逻辑 (Layer 1: 本地同步过滤) ---
+                                const localItems: SuggestionItem[] = contextMemos
+                                    .filter(m =>
+                                        m.memo_number?.toString().includes(props.query) ||
+                                        m.content.toLowerCase().includes(props.query.toLowerCase())
+                                    )
+                                    .slice(0, 5)
+                                    .map(m => ({
+                                        id: m.id,
+                                        label: `@${m.memo_number}`,
+                                        subLabel: m.content.substring(0, 100),
+                                        memo_number: m.memo_number,
+                                        created_at: m.created_at
+                                    }));
+
+                                // 立即更新本地结果，确保 0ms 延迟
+                                setSuggestions(localItems);
+
                                 // 清除之前的防抖定时器
                                 if (debounceTimerRef.current) {
                                     clearTimeout(debounceTimerRef.current);
                                 }
 
-                                // 如果正在输入法组合中，不发起搜索
+                                // 如果正在输入法组合中，不发起网络搜索
                                 if (props.editor.view.composing) {
                                     setIsLoading(false);
                                     return;
@@ -179,27 +226,36 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
                                 setIsLoading(true);
 
-                                // 增加 150ms 防抖，使反馈更灵敏
+                                // 增加 250ms 防抖，减少拼音阶段的请求频率
                                 debounceTimerRef.current = setTimeout(() => {
                                     const requestId = ++lastRequestIdRef.current;
                                     searchMemosForMention(props.query).then(data => {
                                         if (requestId !== lastRequestIdRef.current) return;
 
-                                        const items = data.map(m => ({
+                                        const remoteItems = data.map(m => ({
                                             id: m.id,
                                             label: `@${m.memo_number}`,
                                             subLabel: m.content.substring(0, 100),
                                             memo_number: m.memo_number,
                                             created_at: m.created_at
                                         }));
-                                        setSuggestions(items);
+
+                                        setSuggestions(prev => {
+                                            const combined = [...prev];
+                                            remoteItems.forEach(ri => {
+                                                if (!combined.some(ci => ci.id === ri.id)) {
+                                                    combined.push(ri);
+                                                }
+                                            });
+                                            return combined.slice(0, 8);
+                                        });
                                         setIsLoading(false);
                                     }).catch(() => {
                                         if (requestId === lastRequestIdRef.current) {
                                             setIsLoading(false);
                                         }
                                     });
-                                }, 150);
+                                }, 250);
                             },
                             onExit: () => {
                                 setShowSuggestions(false);
@@ -458,11 +514,11 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 </div>
 
                 {showSuggestions && (suggestions.length > 0 || isLoading) && (
-                    <div className="absolute top-full left-0 mt-1 z-50 w-full max-w-[280px]">
-                        <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden max-h-[350px] overflow-y-auto scrollbar-hover flex flex-col justify-center">
+                    <div className="absolute top-full left-0 mt-1 z-50 w-full max-w-[320px]">
+                        <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden max-h-[350px] overflow-y-auto scrollbar-hover min-h-[40px] flex flex-col justify-center">
                             {isLoading && suggestions.length === 0 ? (
-                                <div className="px-3 py-2 text-[10px] text-muted-foreground/60 text-center animate-pulse font-mono tracking-wider">
-                                    搜索中
+                                <div className="px-3 py-4 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight">
+                                    搜索中...
                                 </div>
                             ) : suggestions.length > 0 ? (
                                 <ul className="divide-y divide-border/40">
@@ -670,6 +726,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 memo={memo}
                                 isCollapsed={false}
                                 hideFullscreen={true}
+                                contextMemos={contextMemos}
                                 onCancel={() => {
                                     setIsFullscreen(false);
                                     onCancel?.();

@@ -501,347 +501,335 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
     return (
         <motion.section
-            layout
-            transition={{
-                duration: 0.3,
-                ease: [0.23, 1, 0.32, 1] // Custom easeOut (Quart) for snappier start
-            }}
+            initial={false}
             className={cn(
                 "bg-card border border-border rounded-sm relative focus-within:shadow-md",
                 isActuallyCollapsed ? "px-4 py-3 shadow-none min-h-[50px]" : cn("p-6 shadow-sm flex flex-col items-stretch", hideFullscreen ? "h-full min-h-[500px]" : "min-h-[120px]")
             )}>
+            <motion.div
+                layout
+                transition={{
+                    duration: 0.3,
+                    ease: [0.23, 1, 0.32, 1]
+                }}
+                className="w-full flex-1 flex flex-col min-h-0"
+            >
+                <div className="relative group w-full flex-1 flex flex-col min-h-0">
+                    <label htmlFor="memo-content" className="sr-only">Memo内容</label>
 
-            <div className="relative group w-full flex-1 flex flex-col min-h-0">
-                <label htmlFor="memo-content" className="sr-only">Memo内容</label>
+                    <motion.div
+                        layout
+                        className={cn(
+                            "relative",
+                            hideFullscreen ? "flex-1 overflow-hidden flex flex-col min-h-0" : "max-h-[500px] overflow-y-auto scrollbar-hover",
+                            isActuallyCollapsed ? "min-h-[24px]" : "min-h-[120px]"
+                        )}>
+
+                        <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "min-h-0")} />
+                    </motion.div>
+
+                    {showSuggestions && (suggestions.length > 0 || isLoading) && (
+                        <div className="absolute top-full left-0 mt-1 z-50 w-full max-w-[320px]">
+                            <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden max-h-[350px] overflow-y-auto scrollbar-hover min-h-[40px] flex flex-col justify-center">
+                                {isLoading && suggestions.length === 0 ? (
+                                    <div className="px-3 py-4 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight">
+                                        搜索中...
+                                    </div>
+                                ) : suggestions.length > 0 ? (
+                                    <ul className="divide-y divide-border/40">
+                                        {suggestions.map((item, index) => (
+                                            <li
+                                                key={item.id}
+                                                onClick={() => handleSelectSuggestion(item)}
+                                                className={cn(
+                                                    "flex flex-col gap-1.5 px-3 py-2.5 cursor-pointer outline-none transition-colors relative",
+                                                    index === selectedIndex
+                                                        ? "bg-accent text-accent-foreground"
+                                                        : "hover:bg-accent/50 text-foreground"
+                                                )}
+                                            >
+                                                <div className="flex justify-between items-center w-full">
+                                                    <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
+                                                        {item.created_at ? new Date(item.created_at).toLocaleString('zh-CN', {
+                                                            year: 'numeric',
+                                                            month: '2-digit',
+                                                            day: '2-digit',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                            second: '2-digit',
+                                                            hour12: false
+                                                        }).replace(/\//g, '-') : ''}
+                                                    </span>
+                                                    {item.memo_number !== undefined && (
+                                                        <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
+                                                            #{item.memo_number}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="text-xs leading-relaxed text-foreground/80 break-words pr-2">
+                                                    {item.subLabel && renderHighlightedText(item.subLabel, mentionQuery)}
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : null}
+                            </div>
+                        </div>
+                    )}
+                </div>
 
                 <motion.div
                     layout
-                    className={cn(
-                        "relative",
-                        hideFullscreen ? "flex-1 overflow-hidden flex flex-col min-h-0" : "max-h-[500px] overflow-y-auto scrollbar-hover",
-                        isActuallyCollapsed ? "min-h-[24px]" : "min-h-[120px]"
-                    )}>
+                    initial={false}
+                    animate={{
+                        maxHeight: isActuallyCollapsed ? 0 : 200,
+                        opacity: isActuallyCollapsed ? 0 : 1,
+                        marginTop: isActuallyCollapsed ? 0 : 8
+                    }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="overflow-hidden"
+                >
 
-                    <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "min-h-0")} />
+                    {/* 标签展示与录入区 */}
+                    <div className="flex flex-wrap gap-2 items-center min-h-[32px]">
+                        {tags.map(tag => (
+                            <span
+                                key={tag}
+                                className="inline-flex items-center gap-1 bg-primary/5 text-primary text-xs px-2.5 py-1 rounded-sm group/tag animate-in zoom-in-95 duration-200"
+                            >
+                                #{tag}
+                                <button
+                                    onClick={() => handleRemoveTag(tag)}
+                                    className="hover:text-red-500 transition-colors focus:outline-none focus:ring-1 focus:ring-red-400 rounded-sm p-0.5"
+                                    aria-label={`删除标签 #${tag}`}
+                                >
+                                    <X className="w-2.5 h-2.5" aria-hidden="true" />
+                                </button>
+                            </span>
+                        ))}
+
+                        <div className="relative">
+                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-sm bg-muted/40 border border-transparent focus-within:border-primary/20 focus-within:bg-background transition-all">
+                                <Hash className="w-3.5 h-3.5 text-muted-foreground/50" aria-hidden="true" />
+                                <input
+                                    type="text"
+                                    placeholder="添加标签..."
+                                    value={tagInput}
+                                    onChange={(e) => handleTagInputChange(e.target.value)}
+                                    onKeyDown={handleTagInputKeyDown}
+                                    className="bg-transparent border-none focus:ring-0 text-xs p-0 w-24 placeholder:text-muted-foreground/40"
+                                    aria-label="添加标签"
+                                />
+                            </div>
+                            {showTagSuggestions && tagSuggestions.length > 0 && (
+                                <div className="absolute top-full left-0 mt-1 z-50">
+                                    <Command className="min-w-[200px]">
+                                        <CommandList>
+                                            <CommandGroup>
+                                                {tagSuggestions.map((item) => (
+                                                    <CommandItem
+                                                        key={item.id}
+                                                        value={item.label}
+                                                        onSelect={() => handleSelectTag(item)}
+                                                        className="flex justify-between items-center"
+                                                    >
+                                                        <span className="font-medium text-sm">{item.label}</span>
+                                                        {item.count !== undefined && (
+                                                            <span className="text-xs text-muted-foreground">{item.count}</span>
+                                                        )}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </motion.div>
 
-                {showSuggestions && (suggestions.length > 0 || isLoading) && (
-                    <div className="absolute top-full left-0 mt-1 z-50 w-full max-w-[320px]">
-                        <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden max-h-[350px] overflow-y-auto scrollbar-hover min-h-[40px] flex flex-col justify-center">
-                            {isLoading && suggestions.length === 0 ? (
-                                <div className="px-3 py-4 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight">
-                                    搜索中...
-                                </div>
-                            ) : suggestions.length > 0 ? (
-                                <ul className="divide-y divide-border/40">
-                                    {suggestions.map((item, index) => (
-                                        <li
-                                            key={item.id}
-                                            onClick={() => handleSelectSuggestion(item)}
-                                            className={cn(
-                                                "flex flex-col gap-1.5 px-3 py-2.5 cursor-pointer outline-none transition-colors relative",
-                                                index === selectedIndex
-                                                    ? "bg-accent text-accent-foreground"
-                                                    : "hover:bg-accent/50 text-foreground"
-                                            )}
-                                        >
-                                            <div className="flex justify-between items-center w-full">
-                                                <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
-                                                    {item.created_at ? new Date(item.created_at).toLocaleString('zh-CN', {
-                                                        year: 'numeric',
-                                                        month: '2-digit',
-                                                        day: '2-digit',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                        second: '2-digit',
-                                                        hour12: false
-                                                    }).replace(/\//g, '-') : ''}
-                                                </span>
-                                                {item.memo_number !== undefined && (
-                                                    <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
-                                                        #{item.memo_number}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="text-xs leading-relaxed text-foreground/80 break-words pr-2">
-                                                {item.subLabel && renderHighlightedText(item.subLabel, mentionQuery)}
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : null}
+                {
+                    error && (
+                        <div className="mt-3 text-xs text-red-500 bg-red-500/5 px-3 py-2 rounded-lg border border-red-500/10 animate-in fade-in slide-in-from-top-1">
+                            {error}
                         </div>
-                    </div>
-                )}
-            </div>
+                    )
+                }
 
-            <motion.div
-                layout
-                initial={false}
-                animate={{
-                    maxHeight: isActuallyCollapsed ? 0 : 200,
-                    opacity: isActuallyCollapsed ? 0 : 1,
-                    marginTop: isActuallyCollapsed ? 0 : 8
-                }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="overflow-hidden"
-            >
-
-                {/* 标签展示与录入区 */}
-                <div className="flex flex-wrap gap-2 items-center min-h-[32px]">
-                    {tags.map(tag => (
-                        <span
-                            key={tag}
-                            className="inline-flex items-center gap-1 bg-primary/5 text-primary text-xs px-2.5 py-1 rounded-sm group/tag animate-in zoom-in-95 duration-200"
-                        >
-                            #{tag}
-                            <button
-                                onClick={() => handleRemoveTag(tag)}
-                                className="hover:text-red-500 transition-colors focus:outline-none focus:ring-1 focus:ring-red-400 rounded-sm p-0.5"
-                                aria-label={`删除标签 #${tag}`}
-                            >
-                                <X className="w-2.5 h-2.5" aria-hidden="true" />
-                            </button>
-                        </span>
-                    ))}
-
-                    <div className="relative">
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-sm bg-muted/40 border border-transparent focus-within:border-primary/20 focus-within:bg-background transition-all">
-                            <Hash className="w-3.5 h-3.5 text-muted-foreground/50" aria-hidden="true" />
-                            <input
-                                type="text"
-                                placeholder="添加标签..."
-                                value={tagInput}
-                                onChange={(e) => handleTagInputChange(e.target.value)}
-                                onKeyDown={handleTagInputKeyDown}
-                                className="bg-transparent border-none focus:ring-0 text-xs p-0 w-24 placeholder:text-muted-foreground/40"
-                                aria-label="添加标签"
-                            />
-                        </div>
-                        {showTagSuggestions && tagSuggestions.length > 0 && (
-                            <div className="absolute top-full left-0 mt-1 z-50">
-                                <Command className="min-w-[200px]">
-                                    <CommandList>
-                                        <CommandGroup>
-                                            {tagSuggestions.map((item) => (
-                                                <CommandItem
-                                                    key={item.id}
-                                                    value={item.label}
-                                                    onSelect={() => handleSelectTag(item)}
-                                                    className="flex justify-between items-center"
-                                                >
-                                                    <span className="font-medium text-sm">{item.label}</span>
-                                                    {item.count !== undefined && (
-                                                        <span className="text-xs text-muted-foreground">{item.count}</span>
-                                                    )}
-                                                </CommandItem>
-                                            ))}
-                                        </CommandGroup>
-                                    </CommandList>
-                                </Command>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </motion.div>
-
-            {
-                error && (
-                    <div className="mt-3 text-xs text-red-500 bg-red-500/5 px-3 py-2 rounded-lg border border-red-500/10 animate-in fade-in slide-in-from-top-1">
-                        {error}
-                    </div>
-                )
-            }
-
-            <motion.div
-                layout
-                initial={false}
-                animate={{
-                    maxHeight: isActuallyCollapsed ? 0 : 60,
-                    opacity: isActuallyCollapsed ? 0 : 1,
-                    marginTop: isActuallyCollapsed ? 0 : 16,
-                    paddingTop: isActuallyCollapsed ? 0 : 20,
-                    borderTopWidth: isActuallyCollapsed ? 0 : 1
-                }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="overflow-hidden bg-transparent border-border"
-            >
-
-                <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleTogglePrivate}
-                            className={cn(
-                                "text-[10px] font-bold uppercase tracking-widest",
-                                isPrivate ? "text-primary bg-primary/5" : "text-muted-foreground"
-                            )}
-                            aria-label={isPrivate ? "设为公开内容" : "设为私密内容"}
-                            aria-pressed={isPrivate}
-                        >
-                            {isPrivate ? <Lock className="w-3 h-3" aria-hidden="true" /> : <LockOpen className="w-3 h-3" aria-hidden="true" />}
-                            Private
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setIsPinned(!isPinned)}
-                            className={cn(
-                                "text-[10px] font-bold uppercase tracking-widest",
-                                isPinned ? "text-primary bg-primary/5" : "text-muted-foreground"
-                            )}
-                            aria-label={isPinned ? "取消置顶" : "置顶此内容"}
-                            aria-pressed={isPinned}
-                        >
-                            <Pin className={cn("w-3 h-3", isPinned && "fill-primary")} aria-hidden="true" /> Pin
-                        </Button>
-                        {!isFullscreen && !hideFullscreen && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setIsFullscreen(true)}
-                                className="text-muted-foreground hover:text-primary transition-colors h-8 w-8 p-0"
-                                aria-label="全屏编辑"
-                            >
-                                <Maximize2 className="w-3.5 h-3.5" />
-                            </Button>
-                        )}
-                        <span className="text-[10px] text-muted-foreground/40 tabular-nums ml-1">
-                            {content.trim().length} 字
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {mode === 'edit' && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={onCancel}
-                                className="rounded-sm text-xs text-muted-foreground hover:text-foreground"
-                            >
-                                取消
-                            </Button>
-                        )}
-                        <Button
-                            onClick={handlePublishClick}
-                            disabled={isPending || !content.trim()}
-                            className={cn(
-                                "rounded-sm px-7",
-                                !shouldReduceMotion && "active:scale-95"
-                            )}
-                        >
-                            {isPending ? (
-                                <>
-                                    <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    {mode === 'edit' ? '更新中...' : '发布中...'}
-                                </>
-                            ) : (
-                                mode === 'edit' ? '更新' : '发布'
-                            )}
-                        </Button>
-                    </div>
-                </div>
-            </motion.div>
-
-            <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
-                <DialogContent
-                    className="max-w-5xl h-[92vh] flex flex-col p-0 gap-0 overflow-hidden bg-background"
-                    closeIcon={<Minimize2 className="h-4 w-4" />}
-                    animateOffset={false}
+                <motion.div
+                    layout
+                    initial={false}
+                    animate={{
+                        maxHeight: isActuallyCollapsed ? 0 : 60,
+                        opacity: isActuallyCollapsed ? 0 : 1,
+                        marginTop: isActuallyCollapsed ? 0 : 16,
+                        paddingTop: isActuallyCollapsed ? 0 : 20,
+                        borderTopWidth: isActuallyCollapsed ? 0 : 1
+                    }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="overflow-hidden bg-transparent border-border"
                 >
-                    <DialogTitle className="sr-only">全屏编辑内容</DialogTitle>
-                    <div className="flex-1 overflow-hidden flex items-start justify-center px-6 pt-10 bg-black/5">
-                        <div className="max-w-4xl w-full mx-auto flex flex-col h-[85vh]">
-                            <MemoEditor
-                                mode={mode}
-                                memo={memo}
-                                isCollapsed={false}
-                                hideFullscreen={true}
-                                contextMemos={contextMemos}
-                                onCancel={() => {
-                                    setIsFullscreen(false);
-                                    onCancel?.();
-                                }}
-                                onSuccess={() => {
-                                    setIsFullscreen(false);
-                                    onSuccess?.();
-                                }}
-                            />
+
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-4">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleTogglePrivate}
+                                className={cn(
+                                    "text-[10px] font-bold uppercase tracking-widest",
+                                    isPrivate ? "text-primary bg-primary/5" : "text-muted-foreground"
+                                )}
+                                aria-label={isPrivate ? "设为公开内容" : "设为私密内容"}
+                                aria-pressed={isPrivate}
+                            >
+                                {isPrivate ? <Lock className="w-3 h-3" aria-hidden="true" /> : <LockOpen className="w-3 h-3" aria-hidden="true" />}
+                                Private
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsPinned(!isPinned)}
+                                className={cn(
+                                    "text-[10px] font-bold uppercase tracking-widest",
+                                    isPinned ? "text-primary bg-primary/5" : "text-muted-foreground"
+                                )}
+                                aria-label={isPinned ? "取消置顶" : "置顶此内容"}
+                                aria-pressed={isPinned}
+                            >
+                                <Pin className={cn("w-3 h-3", isPinned && "fill-primary")} aria-hidden="true" /> Pin
+                            </Button>
+                            {!isFullscreen && !hideFullscreen && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setIsFullscreen(true)}
+                                    className="text-muted-foreground hover:text-primary transition-colors h-8 w-8 p-0"
+                                    aria-label="全屏编辑"
+                                >
+                                    <Maximize2 className="w-3.5 h-3.5" />
+                                </Button>
+                            )}
+                            <span className="text-[10px] text-muted-foreground/40 tabular-nums ml-1">
+                                {content.trim().length} 字
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {mode === 'edit' && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={onCancel}
+                                    className="rounded-sm text-xs text-muted-foreground hover:text-foreground"
+                                >
+                                    取消
+                                </Button>
+                            )}
+                            <Button
+                                onClick={handlePublishClick}
+                                disabled={isPending || !content.trim()}
+                                className={cn(
+                                    "rounded-sm px-7",
+                                    !shouldReduceMotion && "active:scale-95"
+                                )}
+                            >
+                                {isPending ? (
+                                    <>
+                                        <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        {mode === 'edit' ? '更新中...' : '发布中...'}
+                                    </>
+                                ) : (
+                                    mode === 'edit' ? '更新' : '发布'
+                                )}
+                            </Button>
                         </div>
                     </div>
-                </DialogContent>
-            </Dialog>
+                </motion.div>
 
-            <Dialog open={showPrivateDialog} onOpenChange={setShowPrivateDialog}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>设置访问口令</DialogTitle>
-                    </DialogHeader>
-                    <div className="flex flex-col gap-4 py-4">
-                        <div className="space-y-2">
-                            <label htmlFor="access-code" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 after:content-['*'] after:ml-0.5 after:text-red-500">
-                                访问口令
-                            </label>
-                            <div className="relative">
-                                <Input
-                                    id="access-code"
-                                    type={showAccessCode ? "text" : "password"}
-                                    value={accessCode}
-                                    onChange={(e) => setAccessCode(e.target.value)}
-                                    placeholder="请输入访问口令"
-                                    className="pr-10"
+                <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
+                    <DialogContent
+                        className="max-w-5xl h-[92vh] flex flex-col p-0 gap-0 overflow-hidden bg-background"
+                        closeIcon={<Minimize2 className="h-4 w-4" />}
+                        animateOffset={false}
+                    >
+                        <DialogTitle className="sr-only">全屏编辑内容</DialogTitle>
+                        <div className="flex-1 overflow-hidden flex items-start justify-center px-6 pt-10 bg-black/5">
+                            <div className="max-w-4xl w-full mx-auto flex flex-col h-[85vh]">
+                                <MemoEditor
+                                    mode={mode}
+                                    memo={memo}
+                                    isCollapsed={false}
+                                    hideFullscreen={true}
+                                    contextMemos={contextMemos}
+                                    onCancel={() => {
+                                        setIsFullscreen(false);
+                                        onCancel?.();
+                                    }}
+                                    onSuccess={() => {
+                                        setIsFullscreen(false);
+                                        onSuccess?.();
+                                    }}
                                 />
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setShowAccessCode(!showAccessCode)}
-                                    className="absolute right-0 top-0 h-full"
-                                    aria-label={showAccessCode ? "隐藏口令" : "显示口令"}
-                                >
-                                    {showAccessCode ? (
-                                        <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                                    ) : (
-                                        <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                                    )}
-                                </Button>
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <label htmlFor="access-hint" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                口令提示 (可选)
-                            </label>
-                            <Input
-                                id="access-hint"
-                                type="text"
-                                value={accessHint}
-                                onChange={(e) => setAccessHint(e.target.value)}
-                                placeholder="用于提示口令内容"
-                            />
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog open={showPrivateDialog} onOpenChange={setShowPrivateDialog}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>设置访问口令</DialogTitle>
+                        </DialogHeader>
+                        <div className="flex flex-col gap-4 py-4">
+                            <div className="space-y-2">
+                                <label htmlFor="access-code" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 after:content-['*'] after:ml-0.5 after:text-red-500">
+                                    访问口令
+                                </label>
+                                <div className="relative">
+                                    <Input
+                                        id="access-code"
+                                        type={showAccessCode ? "text" : "password"}
+                                        value={accessCode}
+                                        onChange={(e) => setAccessCode(e.target.value)}
+                                        placeholder="请输入访问口令"
+                                        className="pr-10"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setShowAccessCode(!showAccessCode)}
+                                        className="absolute right-0 top-0 h-full"
+                                        aria-label={showAccessCode ? "隐藏口令" : "显示口令"}
+                                    >
+                                        {showAccessCode ? (
+                                            <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                        ) : (
+                                            <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <label htmlFor="access-hint" className="text-sm font-medium leading-none">
+                                    口令提示 (选填)
+                                </label>
+                                <Input
+                                    id="access-hint"
+                                    value={accessHint}
+                                    onChange={(e) => setAccessHint(e.target.value)}
+                                    placeholder="例如：我的生日"
+                                />
+                            </div>
                         </div>
-                    </div>
-                    <DialogFooter className="sm:justify-end gap-2">
-                        <Button
-                            variant="ghost"
-                            onClick={() => setShowPrivateDialog(false)}
-                            className="rounded-sm"
-                        >
-                            取消
-                        </Button>
-                        <Button
-                            onClick={performPublish}
-                            disabled={isPending || !accessCode.trim()}
-                            className={cn(
-                                "rounded-sm px-7",
-                                !shouldReduceMotion && "active:scale-95"
-                            )}
-                        >
-                            {isPending ? '提交中...' : '确认发布'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                        <DialogFooter>
+                            <Button variant="ghost" onClick={() => setShowPrivateDialog(false)}>取消</Button>
+                            <Button onClick={performPublish} disabled={!accessCode}>发布</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </motion.div >
         </motion.section >
+
     );
 }
-

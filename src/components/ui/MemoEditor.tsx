@@ -160,11 +160,13 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
                                 if (props.event.key === 'ArrowUp') {
                                     setSelectedIndex((prev) => (prev + suggestionsRef.current.length - 1) % suggestionsRef.current.length);
+                                    props.event.preventDefault();
                                     return true;
                                 }
 
                                 if (props.event.key === 'ArrowDown') {
                                     setSelectedIndex((prev) => (prev + 1) % suggestionsRef.current.length);
+                                    props.event.preventDefault();
                                     return true;
                                 }
 
@@ -172,6 +174,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                     const item = suggestionsRef.current[selectedIndexRef.current];
                                     if (item) {
                                         handleSelectSuggestion(item);
+                                        props.event.preventDefault();
                                         return true;
                                     }
                                 }
@@ -377,36 +380,37 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 </div>
 
                 {showSuggestions && suggestions.length > 0 && (
-                    <div className="absolute top-full left-0 mt-1 z-50">
-                        <Command className="min-w-[280px]">
-                            <CommandList>
-                                <CommandGroup>
-                                    {suggestions.map((item, index) => (
-                                        <CommandItem
-                                            key={item.id}
-                                            value={item.label}
-                                            onSelect={() => handleSelectSuggestion(item)}
-                                            className={cn(
-                                                "flex justify-between items-center gap-3",
-                                                index === selectedIndex && "bg-accent text-accent-foreground"
+                    <div className="absolute top-full left-0 mt-1 z-50 w-full min-w-[280px]">
+                        <div className="bg-popover border border-border rounded-sm shadow-xl overflow-hidden max-h-[300px] overflow-y-auto scrollbar-hover">
+                            <ul className="p-1">
+                                {suggestions.map((item, index) => (
+                                    <li
+                                        key={item.id}
+                                        onClick={() => handleSelectSuggestion(item)}
+                                        className={cn(
+                                            "flex justify-between items-center gap-3 px-3 py-2 cursor-pointer rounded-sm outline-none transition-colors",
+                                            index === selectedIndex
+                                                ? "bg-accent text-accent-foreground"
+                                                : "hover:bg-accent/50 text-foreground"
+                                        )}
+                                    >
+                                        <div className="flex flex-col">
+                                            <span className="font-medium text-sm">{item.label}</span>
+                                            {item.subLabel && (
+                                                <span className="text-xs text-muted-foreground line-clamp-1">
+                                                    {item.subLabel}
+                                                </span>
                                             )}
-                                        >
-                                            <div className="flex flex-col">
-                                                <span className="font-medium text-sm">{item.label}</span>
-                                                {item.subLabel && (
-                                                    <span className="text-xs text-muted-foreground line-clamp-1">
-                                                        {item.subLabel}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {item.memo_number !== undefined && (
-                                                <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">#{item.memo_number}</span>
-                                            )}
-                                        </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                            </CommandList>
-                        </Command>
+                                        </div>
+                                        {item.memo_number !== undefined && (
+                                            <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
+                                                #{item.memo_number}
+                                            </span>
+                                        )}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
                     </div>
                 )}
             </div>

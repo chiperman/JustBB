@@ -381,7 +381,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
                 {showSuggestions && suggestions.length > 0 && (
                     <div className="absolute top-full left-0 mt-1 z-50 w-full min-w-[280px]">
-                        <div className="bg-popover border border-border rounded-sm shadow-xl overflow-hidden max-h-[300px] overflow-y-auto scrollbar-hover">
+                        <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden max-h-[300px] overflow-y-auto scrollbar-hover">
                             <ul className="p-1">
                                 {suggestions.map((item, index) => (
                                     <li

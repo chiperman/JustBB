@@ -80,6 +80,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const selectedIndexRef = useRef(0);
     const suggestionPropsRef = useRef<any>(null);
     const lastRequestIdRef = useRef(0);
+    const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         suggestionsRef.current = suggestions;
@@ -128,12 +129,19 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     render: () => {
                         return {
                             onStart: (props) => {
-                                const requestId = ++lastRequestIdRef.current;
                                 suggestionPropsRef.current = props;
                                 setSelectedIndex(0);
                                 setMentionQuery(props.query);
                                 setShowSuggestions(true);
+
+                                // IME 组合阶段不发起搜索
+                                if (props.editor.view.composing) {
+                                    setIsLoading(false);
+                                    return;
+                                }
+
                                 setIsLoading(true);
+                                const requestId = ++lastRequestIdRef.current;
 
                                 searchMemosForMention(props.query).then(data => {
                                     if (requestId !== lastRequestIdRef.current) return;
@@ -154,29 +162,44 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 });
                             },
                             onUpdate: (props) => {
-                                const requestId = ++lastRequestIdRef.current;
                                 suggestionPropsRef.current = props;
                                 setSelectedIndex(0);
                                 setMentionQuery(props.query);
+
+                                // 清除之前的防抖定时器
+                                if (debounceTimerRef.current) {
+                                    clearTimeout(debounceTimerRef.current);
+                                }
+
+                                // 如果正在输入法组合中，不发起搜索
+                                if (props.editor.view.composing) {
+                                    setIsLoading(false);
+                                    return;
+                                }
+
                                 setIsLoading(true);
 
-                                searchMemosForMention(props.query).then(data => {
-                                    if (requestId !== lastRequestIdRef.current) return;
+                                // 增加 250ms 防抖，减少拼音阶段的请求频率
+                                debounceTimerRef.current = setTimeout(() => {
+                                    const requestId = ++lastRequestIdRef.current;
+                                    searchMemosForMention(props.query).then(data => {
+                                        if (requestId !== lastRequestIdRef.current) return;
 
-                                    const items = data.map(m => ({
-                                        id: m.id,
-                                        label: `@${m.memo_number}`,
-                                        subLabel: m.content.substring(0, 100),
-                                        memo_number: m.memo_number,
-                                        created_at: m.created_at
-                                    }));
-                                    setSuggestions(items);
-                                    setIsLoading(false);
-                                }).catch(() => {
-                                    if (requestId === lastRequestIdRef.current) {
+                                        const items = data.map(m => ({
+                                            id: m.id,
+                                            label: `@${m.memo_number}`,
+                                            subLabel: m.content.substring(0, 100),
+                                            memo_number: m.memo_number,
+                                            created_at: m.created_at
+                                        }));
+                                        setSuggestions(items);
                                         setIsLoading(false);
-                                    }
-                                });
+                                    }).catch(() => {
+                                        if (requestId === lastRequestIdRef.current) {
+                                            setIsLoading(false);
+                                        }
+                                    });
+                                }, 250);
                             },
                             onExit: () => {
                                 setShowSuggestions(false);

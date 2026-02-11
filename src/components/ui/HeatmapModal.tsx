@@ -99,6 +99,14 @@ const viewVariants = {
 
 export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
     const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
+    const [hoveredDay, setHoveredDay] = useState<{
+        date: string;
+        count: number;
+        wordCount: number;
+        left: number;
+        top: number;
+        align: 'left' | 'center' | 'right';
+    } | null>(null);
 
     // Calculate available years from stats
     const availableYears = useMemo(() => {
@@ -124,6 +132,32 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
         if (count <= 5) return 'bg-[var(--heatmap-2)]';
         if (count <= 9) return 'bg-[var(--heatmap-3)]';
         return 'bg-[var(--heatmap-4)]';
+    };
+
+    const handleHover = (e: React.MouseEvent, date: string, count: number, wordCount: number) => {
+        const target = e.currentTarget as HTMLElement;
+        const rect = target.getBoundingClientRect();
+        const container = target.closest('.heatmap-modal-wrapper') as HTMLElement;
+
+        if (container) {
+            const containerRect = container.getBoundingClientRect();
+            const relX = rect.left - containerRect.left + (rect.width / 2);
+            const containerWidth = containerRect.width;
+
+            let align: 'left' | 'center' | 'right' = 'center';
+            // 简单的边界处理
+            if (relX < 60) align = 'left';
+            else if (relX > containerWidth - 60) align = 'right';
+
+            setHoveredDay({
+                date,
+                count,
+                wordCount,
+                left: relX,
+                top: rect.top - containerRect.top,
+                align
+            });
+        }
     };
 
     return (
@@ -187,7 +221,10 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                     </DialogClose>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-10 pt-6 pb-10 flex flex-col">
+                <div
+                    className="flex-1 overflow-y-auto px-10 pt-6 pb-10 flex flex-col relative heatmap-modal-wrapper"
+                    onMouseLeave={() => setHoveredDay(null)}
+                >
                     <AnimatePresence mode="wait" initial={false}>
                         {viewMode === 'month' ? (
                             <motion.div
@@ -233,11 +270,34 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                                                     date={month}
                                                     stats={stats.days}
                                                     colorFn={getColorClass}
+                                                    onHover={handleHover}
                                                 />
                                             </motion.div>
                                         );
                                     })}
                                 </motion.div>
+
+                                {/* Tooltip */}
+                                {hoveredDay && (
+                                    <div
+                                        className={cn(
+                                            "absolute z-[999] px-2.5 py-1.5 text-[10px] font-medium text-white bg-black/95 backdrop-blur-md rounded-[6px] pointer-events-none mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-2xl border border-white/20 whitespace-nowrap transition-all duration-200 ease-out",
+                                            hoveredDay.align === 'center' && "-translate-x-1/2 -translate-y-full",
+                                            hoveredDay.align === 'left' && "-translate-y-full ml-[-7px]",
+                                            hoveredDay.align === 'right' && "-translate-x-full -translate-y-full mr-[-7px]"
+                                        )}
+                                        style={{ left: hoveredDay.left, top: hoveredDay.top }}
+                                    >
+                                        <div className="flex flex-col items-center">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-[#9be9a8] font-bold">{hoveredDay.count} 笔记</span>
+                                                <span className="opacity-40">/</span>
+                                                <span>{hoveredDay.wordCount} 字</span>
+                                            </div>
+                                            <div className="text-[9px] opacity-40 mt-0.5">{hoveredDay.date}</div>
+                                        </div>
+                                    </div>
+                                )}
                             </motion.div>
                         ) : (
                             <motion.div
@@ -257,7 +317,17 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
     );
 }
 
-function MonthCalendar({ date, stats, colorFn }: { date: Date, stats: Record<string, DayStats>, colorFn: (c: number) => string }) {
+function MonthCalendar({
+    date,
+    stats,
+    colorFn,
+    onHover
+}: {
+    date: Date,
+    stats: Record<string, DayStats>,
+    colorFn: (c: number) => string,
+    onHover: (e: React.MouseEvent, date: string, count: number, wordCount: number) => void
+}) {
     const monthStart = startOfMonth(date);
     const monthEnd = endOfMonth(date);
     const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
@@ -303,6 +373,7 @@ function MonthCalendar({ date, stats, colorFn }: { date: Date, stats: Record<str
                             className="relative group/day aspect-square flex items-center justify-center cursor-default"
                             whileHover={isCurrentMonth && count > 0 ? { scale: 1.2, zIndex: 10 } : {}}
                             transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                            onMouseEnter={(e) => isCurrentMonth && count > 0 && onHover(e, dateStr, count, dayStat?.wordCount || 0)}
                         >
                             <div
                                 className={cn(
@@ -317,12 +388,6 @@ function MonthCalendar({ date, stats, colorFn }: { date: Date, stats: Record<str
                                 )}>
                                     {format(day, 'd')}
                                 </span>
-                            )}
-                            {count > 0 && (
-                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/90 backdrop-blur-md text-white text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover/day:opacity-100 transition-all scale-95 group-hover/day:scale-100 whitespace-nowrap z-20 pointer-events-none shadow-xl border border-white/10">
-                                    <div className="font-bold">{count} 笔记</div>
-                                    <div className="text-[9px] opacity-60 text-center">{dayStat?.wordCount || 0} 字</div>
-                                </div>
                             )}
                         </motion.div>
                     );

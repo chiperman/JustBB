@@ -112,7 +112,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 italic: false,
             }),
             Placeholder.configure({
-                placeholder: '有什么新鲜事？',
+                placeholder: 'Wanna memo something？JustMemo it',
                 emptyEditorClass: 'is-editor-empty',
             }),
             LinkExtension.configure({
@@ -323,7 +323,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         editorProps: {
             attributes: {
                 class: cn(
-                    "prose prose-sm max-w-none focus:outline-none text-foreground/80 leading-relaxed font-sans tracking-normal",
+                    "tiptap prose prose-sm max-w-none focus:outline-none text-foreground/80 leading-relaxed font-sans tracking-normal",
                     hideFullscreen ? "flex-1 h-full overflow-y-auto scrollbar-hover px-1 focus:outline-none" : "min-h-[120px]",
                     isActuallyCollapsed ? "min-h-[24px]" : "min-h-[120px]",
                     "text-base"

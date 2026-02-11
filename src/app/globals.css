@@ -222,3 +222,27 @@ body.font-sans {
     @apply bg-background text-foreground;
   }
 }
+
+/* Tiptap Editor Placeholder */
+.tiptap .is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--muted-foreground);
+  pointer-events: none;
+  height: 0;
+  opacity: 0.5;
+}
+
+/* Also support root level empty class if needed */
+.tiptap.is-editor-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--muted-foreground);
+  pointer-events: none;
+  height: 0;
+  opacity: 0.5;
+}
+
+.tiptap:focus {
+  outline: none;
+}

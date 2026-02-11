@@ -27,6 +27,7 @@ interface SuggestionItem {
     subLabel?: string;
     count?: number;
     memo_number?: number;
+    created_at?: string;
 }
 import { useReducedMotion } from 'framer-motion';
 import {
@@ -70,6 +71,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [mentionQuery, setMentionQuery] = useState('');
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     // Refs for Tiptap closures
@@ -125,26 +127,30 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             onStart: (props) => {
                                 setSuggestions([]);
                                 setSelectedIndex(0);
+                                setMentionQuery(props.query);
                                 setShowSuggestions(true);
                                 // 这里简化处理，实际可以通过 tippy.js 实现
                                 searchMemosForMention(props.query).then(data => {
                                     const items = data.map(m => ({
                                         id: m.id,
                                         label: `@${m.memo_number}`,
-                                        subLabel: m.content.substring(0, 50),
-                                        memo_number: m.memo_number
+                                        subLabel: m.content.substring(0, 100),
+                                        memo_number: m.memo_number,
+                                        created_at: m.created_at
                                     }));
                                     setSuggestions(items);
                                 });
                             },
                             onUpdate: (props) => {
                                 setSelectedIndex(0);
+                                setMentionQuery(props.query);
                                 searchMemosForMention(props.query).then(data => {
                                     const items = data.map(m => ({
                                         id: m.id,
                                         label: `@${m.memo_number}`,
-                                        subLabel: m.content.substring(0, 50),
-                                        memo_number: m.memo_number
+                                        subLabel: m.content.substring(0, 100),
+                                        memo_number: m.memo_number,
+                                        created_at: m.created_at
                                     }));
                                     setSuggestions(items);
                                 });
@@ -266,6 +272,22 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         setShowTagSuggestions(false);
     };
 
+    const renderHighlightedText = (text: string, query: string) => {
+        if (!query.trim()) return text;
+        const parts = text.split(new RegExp(`(${query})`, 'gi'));
+        return (
+            <>
+                {parts.map((part, i) => (
+                    part.toLowerCase() === query.toLowerCase() ? (
+                        <mark key={i} className="bg-primary/20 text-primary px-0.5 rounded-sm font-medium">{part}</mark>
+                    ) : (
+                        part
+                    )
+                ))}
+            </>
+        );
+    };
+
     const handleAddTag = () => {
         const tag = tagInput.trim().replace(/^#/, '');
         if (tag && !tags.includes(tag)) {
@@ -380,33 +402,41 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 </div>
 
                 {showSuggestions && suggestions.length > 0 && (
-                    <div className="absolute top-full left-0 mt-1 z-50 w-full min-w-[280px]">
-                        <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden max-h-[300px] overflow-y-auto scrollbar-hover">
-                            <ul className="p-1">
+                    <div className="absolute top-full left-0 mt-1 z-50 w-full max-w-[320px]">
+                        <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden max-h-[350px] overflow-y-auto scrollbar-hover">
+                            <ul className="divide-y divide-border/40">
                                 {suggestions.map((item, index) => (
                                     <li
                                         key={item.id}
                                         onClick={() => handleSelectSuggestion(item)}
                                         className={cn(
-                                            "flex justify-between items-center gap-3 px-3 py-2 cursor-pointer rounded-sm outline-none transition-colors",
+                                            "flex flex-col gap-1.5 px-3 py-2.5 cursor-pointer outline-none transition-colors relative",
                                             index === selectedIndex
                                                 ? "bg-accent text-accent-foreground"
                                                 : "hover:bg-accent/50 text-foreground"
                                         )}
                                     >
-                                        <div className="flex flex-col">
-                                            <span className="font-medium text-sm">{item.label}</span>
-                                            {item.subLabel && (
-                                                <span className="text-xs text-muted-foreground line-clamp-1">
-                                                    {item.subLabel}
+                                        <div className="flex justify-between items-center w-full">
+                                            <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
+                                                {item.created_at ? new Date(item.created_at).toLocaleString('zh-CN', {
+                                                    year: 'numeric',
+                                                    month: '2-digit',
+                                                    day: '2-digit',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    second: '2-digit',
+                                                    hour12: false
+                                                }).replace(/\//g, '-') : ''}
+                                            </span>
+                                            {item.memo_number !== undefined && (
+                                                <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
+                                                    #{item.memo_number}
                                                 </span>
                                             )}
                                         </div>
-                                        {item.memo_number !== undefined && (
-                                            <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
-                                                #{item.memo_number}
-                                            </span>
-                                        )}
+                                        <div className="text-xs leading-relaxed text-foreground/80 break-words pr-2">
+                                            {item.subLabel && renderHighlightedText(item.subLabel, mentionQuery)}
+                                        </div>
                                     </li>
                                 ))}
                             </ul>

@@ -507,8 +507,9 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 <label htmlFor="memo-content" className="sr-only">Memo内容</label>
 
                 <div className={cn(
-                    "overflow-y-auto scrollbar-hover relative",
-                    hideFullscreen ? "max-h-none" : "max-h-[500px]"
+                    "overflow-y-auto scrollbar-hover relative transition-all duration-300 ease-in-out",
+                    hideFullscreen ? "max-h-none" : "max-h-[500px]",
+                    isActuallyCollapsed ? "min-h-[40px]" : "min-h-[120px]"
                 )}>
                     <EditorContent editor={editor} />
                 </div>
@@ -563,154 +564,145 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 )}
             </div>
 
-            <AnimatePresence>
-                {!isActuallyCollapsed && (
-                    <motion.div
-                        initial={hideFullscreen ? false : { height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden"
-                    >
-                        {/* 标签展示与录入区 */}
-                        <div className="flex flex-wrap gap-2 items-center mt-2 min-h-[32px]">
-                            {tags.map(tag => (
-                                <span
-                                    key={tag}
-                                    className="inline-flex items-center gap-1 bg-primary/5 text-primary text-xs px-2.5 py-1 rounded-sm group/tag animate-in zoom-in-95 duration-200"
-                                >
-                                    #{tag}
-                                    <button
-                                        onClick={() => handleRemoveTag(tag)}
-                                        className="hover:text-red-500 transition-colors focus:outline-none focus:ring-1 focus:ring-red-400 rounded-sm p-0.5"
-                                        aria-label={`删除标签 #${tag}`}
-                                    >
-                                        <X className="w-2.5 h-2.5" aria-hidden="true" />
-                                    </button>
-                                </span>
-                            ))}
+            <div className="mt-2">
+                {/* 标签展示与录入区 */}
+                <div className="flex flex-wrap gap-2 items-center min-h-[32px]">
+                    {tags.map(tag => (
+                        <span
+                            key={tag}
+                            className="inline-flex items-center gap-1 bg-primary/5 text-primary text-xs px-2.5 py-1 rounded-sm group/tag animate-in zoom-in-95 duration-200"
+                        >
+                            #{tag}
+                            <button
+                                onClick={() => handleRemoveTag(tag)}
+                                className="hover:text-red-500 transition-colors focus:outline-none focus:ring-1 focus:ring-red-400 rounded-sm p-0.5"
+                                aria-label={`删除标签 #${tag}`}
+                            >
+                                <X className="w-2.5 h-2.5" aria-hidden="true" />
+                            </button>
+                        </span>
+                    ))}
 
-                            <div className="relative">
-                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-sm bg-muted/40 border border-transparent focus-within:border-primary/20 focus-within:bg-background transition-all">
-                                    <Hash className="w-3.5 h-3.5 text-muted-foreground/50" aria-hidden="true" />
-                                    <input
-                                        type="text"
-                                        placeholder="添加标签..."
-                                        value={tagInput}
-                                        onChange={(e) => handleTagInputChange(e.target.value)}
-                                        onKeyDown={handleTagInputKeyDown}
-                                        className="bg-transparent border-none focus:ring-0 text-xs p-0 w-24 placeholder:text-muted-foreground/40"
-                                        aria-label="添加标签"
-                                    />
-                                </div>
-                                {showTagSuggestions && tagSuggestions.length > 0 && (
-                                    <div className="absolute top-full left-0 mt-1 z-50">
-                                        <Command className="min-w-[200px]">
-                                            <CommandList>
-                                                <CommandGroup>
-                                                    {tagSuggestions.map((item) => (
-                                                        <CommandItem
-                                                            key={item.id}
-                                                            value={item.label}
-                                                            onSelect={() => handleSelectTag(item)}
-                                                            className="flex justify-between items-center"
-                                                        >
-                                                            <span className="font-medium text-sm">{item.label}</span>
-                                                            {item.count !== undefined && (
-                                                                <span className="text-xs text-muted-foreground">{item.count}</span>
-                                                            )}
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </div>
-                                )}
-                            </div>
+                    <div className="relative">
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-sm bg-muted/40 border border-transparent focus-within:border-primary/20 focus-within:bg-background transition-all">
+                            <Hash className="w-3.5 h-3.5 text-muted-foreground/50" aria-hidden="true" />
+                            <input
+                                type="text"
+                                placeholder="添加标签..."
+                                value={tagInput}
+                                onChange={(e) => handleTagInputChange(e.target.value)}
+                                onKeyDown={handleTagInputKeyDown}
+                                className="bg-transparent border-none focus:ring-0 text-xs p-0 w-24 placeholder:text-muted-foreground/40"
+                                aria-label="添加标签"
+                            />
                         </div>
-
-                        {error && (
-                            <div className="mt-3 text-xs text-red-500 bg-red-500/5 px-3 py-2 rounded-lg border border-red-500/10 animate-in fade-in slide-in-from-top-1">
-                                {error}
+                        {showTagSuggestions && tagSuggestions.length > 0 && (
+                            <div className="absolute top-full left-0 mt-1 z-50">
+                                <Command className="min-w-[200px]">
+                                    <CommandList>
+                                        <CommandGroup>
+                                            {tagSuggestions.map((item) => (
+                                                <CommandItem
+                                                    key={item.id}
+                                                    value={item.label}
+                                                    onSelect={() => handleSelectTag(item)}
+                                                    className="flex justify-between items-center"
+                                                >
+                                                    <span className="font-medium text-sm">{item.label}</span>
+                                                    {item.count !== undefined && (
+                                                        <span className="text-xs text-muted-foreground">{item.count}</span>
+                                                    )}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
                             </div>
                         )}
+                    </div>
+                </div>
+            </div>
 
-                        <div className="flex justify-between items-center pt-5 mt-4 border-t border-border">
-                            <div className="flex items-center gap-4">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={handleTogglePrivate}
-                                    className={cn(
-                                        "text-[10px] font-bold uppercase tracking-widest",
-                                        isPrivate ? "text-primary bg-primary/5" : "text-muted-foreground"
-                                    )}
-                                    aria-label={isPrivate ? "设为公开内容" : "设为私密内容"}
-                                    aria-pressed={isPrivate}
-                                >
-                                    {isPrivate ? <Lock className="w-3 h-3" aria-hidden="true" /> : <LockOpen className="w-3 h-3" aria-hidden="true" />}
-                                    Private
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setIsPinned(!isPinned)}
-                                    className={cn(
-                                        "text-[10px] font-bold uppercase tracking-widest",
-                                        isPinned ? "text-primary bg-primary/5" : "text-muted-foreground"
-                                    )}
-                                    aria-label={isPinned ? "取消置顶" : "置顶此内容"}
-                                    aria-pressed={isPinned}
-                                >
-                                    <Pin className={cn("w-3 h-3", isPinned && "fill-primary")} aria-hidden="true" /> Pin
-                                </Button>
-                                {!isFullscreen && !hideFullscreen && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setIsFullscreen(true)}
-                                        className="text-muted-foreground hover:text-primary transition-colors h-8 w-8 p-0"
-                                        aria-label="全屏编辑"
-                                    >
-                                        <Maximize2 className="w-3.5 h-3.5" />
-                                    </Button>
-                                )}
-                                <span className="text-[10px] text-muted-foreground/40 tabular-nums ml-1">
-                                    {content.trim().length} 字
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                {mode === 'edit' && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={onCancel}
-                                        className="rounded-sm text-xs text-muted-foreground hover:text-foreground"
-                                    >
-                                        取消
-                                    </Button>
-                                )}
-                                <Button
-                                    onClick={handlePublishClick}
-                                    disabled={isPending || !content.trim()}
-                                    className={cn(
-                                        "rounded-sm px-7",
-                                        !shouldReduceMotion && "active:scale-95"
-                                    )}
-                                >
-                                    {isPending ? (
-                                        <>
-                                            <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            {mode === 'edit' ? '更新中...' : '发布中...'}
-                                        </>
-                                    ) : (
-                                        mode === 'edit' ? '更新' : '发布'
-                                    )}
-                                </Button>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {error && (
+                <div className="mt-3 text-xs text-red-500 bg-red-500/5 px-3 py-2 rounded-lg border border-red-500/10 animate-in fade-in slide-in-from-top-1">
+                    {error}
+                </div>
+            )}
+
+            <div className="flex justify-between items-center pt-5 mt-4 border-t border-border focus-within:pt-5 focus-within:mt-4">
+                <div className="flex items-center gap-4">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleTogglePrivate}
+                        className={cn(
+                            "text-[10px] font-bold uppercase tracking-widest",
+                            isPrivate ? "text-primary bg-primary/5" : "text-muted-foreground"
+                        )}
+                        aria-label={isPrivate ? "设为公开内容" : "设为私密内容"}
+                        aria-pressed={isPrivate}
+                    >
+                        {isPrivate ? <Lock className="w-3 h-3" aria-hidden="true" /> : <LockOpen className="w-3 h-3" aria-hidden="true" />}
+                        Private
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsPinned(!isPinned)}
+                        className={cn(
+                            "text-[10px] font-bold uppercase tracking-widest",
+                            isPinned ? "text-primary bg-primary/5" : "text-muted-foreground"
+                        )}
+                        aria-label={isPinned ? "取消置顶" : "置顶此内容"}
+                        aria-pressed={isPinned}
+                    >
+                        <Pin className={cn("w-3 h-3", isPinned && "fill-primary")} aria-hidden="true" /> Pin
+                    </Button>
+                    {!isFullscreen && !hideFullscreen && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsFullscreen(true)}
+                            className="text-muted-foreground hover:text-primary transition-colors h-8 w-8 p-0"
+                            aria-label="全屏编辑"
+                        >
+                            <Maximize2 className="w-3.5 h-3.5" />
+                        </Button>
+                    )}
+                    <span className="text-[10px] text-muted-foreground/40 tabular-nums ml-1">
+                        {content.trim().length} 字
+                    </span>
+                </div>
+                <div className="flex items-center gap-2">
+                    {mode === 'edit' && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={onCancel}
+                            className="rounded-sm text-xs text-muted-foreground hover:text-foreground"
+                        >
+                            取消
+                        </Button>
+                    )}
+                    <Button
+                        onClick={handlePublishClick}
+                        disabled={isPending || !content.trim()}
+                        className={cn(
+                            "rounded-sm px-7",
+                            !shouldReduceMotion && "active:scale-95"
+                        )}
+                    >
+                        {isPending ? (
+                            <>
+                                <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                {mode === 'edit' ? '更新中...' : '发布中...'}
+                            </>
+                        ) : (
+                            mode === 'edit' ? '更新' : '发布'
+                        )}
+                    </Button>
+                </div>
+            </div>
 
             <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
                 <DialogContent

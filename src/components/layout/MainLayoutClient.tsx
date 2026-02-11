@@ -29,7 +29,7 @@ export function MainLayoutClient({ memos, searchParams, adminCode }: MainLayoutC
         <div className="flex flex-col h-screen overflow-hidden bg-accent/20 font-sans">
             {/* 固定顶部区域 - 品牌、搜索 & 编辑器 */}
             <div className={cn(
-                "flex-none z-30 px-4 md:px-10 md:pr-[calc(2.5rem+4px)] transition-all duration-500 sticky top-0",
+                "flex-none z-30 px-4 md:px-10 md:pr-[calc(2.5rem+4px)] transition-all duration-300 sticky top-0",
                 isScrolled
                     ? "bg-background/80 backdrop-blur-2xl border-b border-border/40 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)] pt-6 pb-4"
                     : "bg-background/20 pt-10 pb-6"

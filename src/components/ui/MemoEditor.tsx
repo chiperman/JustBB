@@ -500,20 +500,30 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
 
     return (
-        <section className={cn(
-            "bg-card border border-border rounded-sm transition-all duration-300 focus-within:shadow-md relative",
-            isActuallyCollapsed ? "px-4 py-3 shadow-none min-h-[50px]" : cn("p-6 shadow-sm flex flex-col items-stretch", hideFullscreen ? "h-full min-h-[500px]" : "min-h-[120px]")
-        )}>
+        <motion.section
+            layout
+            transition={{
+                duration: 0.3,
+                ease: [0.23, 1, 0.32, 1] // Custom easeOut (Quart) for snappier start
+            }}
+            className={cn(
+                "bg-card border border-border rounded-sm relative focus-within:shadow-md",
+                isActuallyCollapsed ? "px-4 py-3 shadow-none min-h-[50px]" : cn("p-6 shadow-sm flex flex-col items-stretch", hideFullscreen ? "h-full min-h-[500px]" : "min-h-[120px]")
+            )}>
+
             <div className="relative group w-full flex-1 flex flex-col min-h-0">
                 <label htmlFor="memo-content" className="sr-only">Memo内容</label>
 
-                <div className={cn(
-                    "relative transition-all duration-300 ease-in-out",
-                    hideFullscreen ? "flex-1 overflow-hidden flex flex-col min-h-0" : "max-h-[500px] overflow-y-auto scrollbar-hover",
-                    isActuallyCollapsed ? "min-h-[24px]" : "min-h-[120px]"
-                )}>
+                <motion.div
+                    layout
+                    className={cn(
+                        "relative",
+                        hideFullscreen ? "flex-1 overflow-hidden flex flex-col min-h-0" : "max-h-[500px] overflow-y-auto scrollbar-hover",
+                        isActuallyCollapsed ? "min-h-[24px]" : "min-h-[120px]"
+                    )}>
+
                     <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "min-h-0")} />
-                </div>
+                </motion.div>
 
                 {showSuggestions && (suggestions.length > 0 || isLoading) && (
                     <div className="absolute top-full left-0 mt-1 z-50 w-full max-w-[320px]">
@@ -565,10 +575,18 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 )}
             </div>
 
-            <div className={cn(
-                "transition-all duration-300 ease-in-out overflow-hidden",
-                isActuallyCollapsed ? "max-h-0 opacity-0 mt-0" : "max-h-[200px] opacity-100 mt-2"
-            )}>
+            <motion.div
+                layout
+                initial={false}
+                animate={{
+                    maxHeight: isActuallyCollapsed ? 0 : 200,
+                    opacity: isActuallyCollapsed ? 0 : 1,
+                    marginTop: isActuallyCollapsed ? 0 : 8
+                }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="overflow-hidden"
+            >
+
                 {/* 标签展示与录入区 */}
                 <div className="flex flex-wrap gap-2 items-center min-h-[32px]">
                     {tags.map(tag => (
@@ -625,7 +643,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         )}
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {
                 error && (
@@ -635,10 +653,20 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 )
             }
 
-            <div className={cn(
-                "overflow-hidden transition-all duration-300 ease-in-out bg-transparent",
-                isActuallyCollapsed ? "max-h-0 opacity-0 border-none" : "max-h-[60px] opacity-100 pt-5 mt-4 border-t border-border"
-            )}>
+            <motion.div
+                layout
+                initial={false}
+                animate={{
+                    maxHeight: isActuallyCollapsed ? 0 : 60,
+                    opacity: isActuallyCollapsed ? 0 : 1,
+                    marginTop: isActuallyCollapsed ? 0 : 16,
+                    paddingTop: isActuallyCollapsed ? 0 : 20,
+                    borderTopWidth: isActuallyCollapsed ? 0 : 1
+                }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="overflow-hidden bg-transparent border-border"
+            >
+
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-4">
                         <Button
@@ -713,7 +741,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         </Button>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
                 <DialogContent
@@ -813,7 +841,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </section >
+        </motion.section >
     );
 }
 

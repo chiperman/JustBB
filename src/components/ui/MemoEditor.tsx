@@ -325,7 +325,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 class: cn(
                     "prose prose-sm max-w-none focus:outline-none text-foreground/80 leading-relaxed font-sans tracking-normal",
                     hideFullscreen ? "min-h-[650px]" : "min-h-[120px]",
-                    isActuallyCollapsed ? "text-sm" : "text-base"
+                    isActuallyCollapsed ? "min-h-[24px]" : "min-h-[120px]",
+                    "text-base"
                 ),
             },
         },
@@ -501,15 +502,15 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     return (
         <section className={cn(
             "bg-card border border-border rounded-sm transition-all duration-300 focus-within:shadow-md relative",
-            isActuallyCollapsed ? "p-3 shadow-none" : "p-6 shadow-sm"
+            isActuallyCollapsed ? "px-4 py-3 shadow-none min-h-[50px]" : "p-6 shadow-sm min-h-[120px]"
         )}>
-            <div className="relative group">
+            <div className="relative group w-full flex flex-col justify-center h-full">
                 <label htmlFor="memo-content" className="sr-only">Memo内容</label>
 
                 <div className={cn(
                     "overflow-y-auto scrollbar-hover relative transition-all duration-300 ease-in-out",
                     hideFullscreen ? "max-h-none" : "max-h-[500px]",
-                    isActuallyCollapsed ? "min-h-[40px]" : "min-h-[120px]"
+                    isActuallyCollapsed ? "min-h-[24px]" : "min-h-[120px]"
                 )}>
                     <EditorContent editor={editor} />
                 </div>
@@ -564,7 +565,10 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 )}
             </div>
 
-            <div className="mt-2">
+            <div className={cn(
+                "transition-all duration-300 ease-in-out overflow-hidden",
+                isActuallyCollapsed ? "max-h-0 opacity-0 mt-0" : "max-h-[200px] opacity-100 mt-2"
+            )}>
                 {/* 标签展示与录入区 */}
                 <div className="flex flex-wrap gap-2 items-center min-h-[32px]">
                     {tags.map(tag => (
@@ -629,78 +633,83 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 </div>
             )}
 
-            <div className="flex justify-between items-center pt-5 mt-4 border-t border-border focus-within:pt-5 focus-within:mt-4">
-                <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleTogglePrivate}
-                        className={cn(
-                            "text-[10px] font-bold uppercase tracking-widest",
-                            isPrivate ? "text-primary bg-primary/5" : "text-muted-foreground"
-                        )}
-                        aria-label={isPrivate ? "设为公开内容" : "设为私密内容"}
-                        aria-pressed={isPrivate}
-                    >
-                        {isPrivate ? <Lock className="w-3 h-3" aria-hidden="true" /> : <LockOpen className="w-3 h-3" aria-hidden="true" />}
-                        Private
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsPinned(!isPinned)}
-                        className={cn(
-                            "text-[10px] font-bold uppercase tracking-widest",
-                            isPinned ? "text-primary bg-primary/5" : "text-muted-foreground"
-                        )}
-                        aria-label={isPinned ? "取消置顶" : "置顶此内容"}
-                        aria-pressed={isPinned}
-                    >
-                        <Pin className={cn("w-3 h-3", isPinned && "fill-primary")} aria-hidden="true" /> Pin
-                    </Button>
-                    {!isFullscreen && !hideFullscreen && (
+            <div className={cn(
+                "overflow-hidden transition-all duration-300 ease-in-out bg-transparent",
+                isActuallyCollapsed ? "max-h-0 opacity-0 border-none" : "max-h-[60px] opacity-100 pt-5 mt-4 border-t border-border"
+            )}>
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-4">
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setIsFullscreen(true)}
-                            className="text-muted-foreground hover:text-primary transition-colors h-8 w-8 p-0"
-                            aria-label="全屏编辑"
+                            onClick={handleTogglePrivate}
+                            className={cn(
+                                "text-[10px] font-bold uppercase tracking-widest",
+                                isPrivate ? "text-primary bg-primary/5" : "text-muted-foreground"
+                            )}
+                            aria-label={isPrivate ? "设为公开内容" : "设为私密内容"}
+                            aria-pressed={isPrivate}
                         >
-                            <Maximize2 className="w-3.5 h-3.5" />
+                            {isPrivate ? <Lock className="w-3 h-3" aria-hidden="true" /> : <LockOpen className="w-3 h-3" aria-hidden="true" />}
+                            Private
                         </Button>
-                    )}
-                    <span className="text-[10px] text-muted-foreground/40 tabular-nums ml-1">
-                        {content.trim().length} 字
-                    </span>
-                </div>
-                <div className="flex items-center gap-2">
-                    {mode === 'edit' && (
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={onCancel}
-                            className="rounded-sm text-xs text-muted-foreground hover:text-foreground"
+                            onClick={() => setIsPinned(!isPinned)}
+                            className={cn(
+                                "text-[10px] font-bold uppercase tracking-widest",
+                                isPinned ? "text-primary bg-primary/5" : "text-muted-foreground"
+                            )}
+                            aria-label={isPinned ? "取消置顶" : "置顶此内容"}
+                            aria-pressed={isPinned}
                         >
-                            取消
+                            <Pin className={cn("w-3 h-3", isPinned && "fill-primary")} aria-hidden="true" /> Pin
                         </Button>
-                    )}
-                    <Button
-                        onClick={handlePublishClick}
-                        disabled={isPending || !content.trim()}
-                        className={cn(
-                            "rounded-sm px-7",
-                            !shouldReduceMotion && "active:scale-95"
+                        {!isFullscreen && !hideFullscreen && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsFullscreen(true)}
+                                className="text-muted-foreground hover:text-primary transition-colors h-8 w-8 p-0"
+                                aria-label="全屏编辑"
+                            >
+                                <Maximize2 className="w-3.5 h-3.5" />
+                            </Button>
                         )}
-                    >
-                        {isPending ? (
-                            <>
-                                <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                {mode === 'edit' ? '更新中...' : '发布中...'}
-                            </>
-                        ) : (
-                            mode === 'edit' ? '更新' : '发布'
+                        <span className="text-[10px] text-muted-foreground/40 tabular-nums ml-1">
+                            {content.trim().length} 字
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {mode === 'edit' && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={onCancel}
+                                className="rounded-sm text-xs text-muted-foreground hover:text-foreground"
+                            >
+                                取消
+                            </Button>
                         )}
-                    </Button>
+                        <Button
+                            onClick={handlePublishClick}
+                            disabled={isPending || !content.trim()}
+                            className={cn(
+                                "rounded-sm px-7",
+                                !shouldReduceMotion && "active:scale-95"
+                            )}
+                        >
+                            {isPending ? (
+                                <>
+                                    <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    {mode === 'edit' ? '更新中...' : '发布中...'}
+                                </>
+                            ) : (
+                                mode === 'edit' ? '更新' : '发布'
+                            )}
+                        </Button>
+                    </div>
                 </div>
             </div>
 

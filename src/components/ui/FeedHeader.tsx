@@ -40,7 +40,7 @@ export function FeedHeader() {
     };
 
     return (
-        <div className="flex items-center justify-between gap-4 py-2 px-2 h-10">
+        <div className="flex items-center justify-between gap-4 py-2 h-10">
             <div className="flex items-center gap-1.5 overflow-hidden">
                 <div className="flex items-center whitespace-nowrap">
                     <Link

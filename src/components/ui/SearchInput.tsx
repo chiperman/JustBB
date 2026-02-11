@@ -27,7 +27,7 @@ export function SearchInput() {
             <Input
                 type="text"
                 placeholder="搜索记录..."
-                className="pl-9"
+                className="pl-9 rounded-sm border-border"
                 onChange={(e) => handleSearch(e.target.value)}
                 defaultValue={searchParams.get('q')?.toString()}
             />

@@ -179,7 +179,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
                                 setIsLoading(true);
 
-                                // 增加 250ms 防抖，减少拼音阶段的请求频率
+                                // 增加 150ms 防抖，使反馈更灵敏
                                 debounceTimerRef.current = setTimeout(() => {
                                     const requestId = ++lastRequestIdRef.current;
                                     searchMemosForMention(props.query).then(data => {
@@ -199,7 +199,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                             setIsLoading(false);
                                         }
                                     });
-                                }, 250);
+                                }, 150);
                             },
                             onExit: () => {
                                 setShowSuggestions(false);
@@ -458,11 +458,11 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 </div>
 
                 {showSuggestions && (suggestions.length > 0 || isLoading) && (
-                    <div className="absolute top-full left-0 mt-1 z-50 w-full max-w-[320px]">
-                        <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden max-h-[350px] overflow-y-auto scrollbar-hover min-h-[40px] flex flex-col justify-center">
+                    <div className="absolute top-full left-0 mt-1 z-50 w-full max-w-[280px]">
+                        <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden max-h-[350px] overflow-y-auto scrollbar-hover flex flex-col justify-center">
                             {isLoading && suggestions.length === 0 ? (
-                                <div className="px-3 py-4 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight">
-                                    搜索中...
+                                <div className="px-3 py-2 text-[10px] text-muted-foreground/60 text-center animate-pulse font-mono tracking-wider">
+                                    搜索中
                                 </div>
                             ) : suggestions.length > 0 ? (
                                 <ul className="divide-y divide-border/40">

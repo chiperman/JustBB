@@ -324,7 +324,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             attributes: {
                 class: cn(
                     "prose prose-sm max-w-none focus:outline-none text-foreground/80 leading-relaxed font-sans tracking-normal",
-                    hideFullscreen ? "min-h-[650px]" : "min-h-[120px]",
+                    hideFullscreen ? "flex-1 h-full overflow-y-auto scrollbar-hover px-1 focus:outline-none" : "min-h-[120px]",
                     isActuallyCollapsed ? "min-h-[24px]" : "min-h-[120px]",
                     "text-base"
                 ),
@@ -502,17 +502,17 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     return (
         <section className={cn(
             "bg-card border border-border rounded-sm transition-all duration-300 focus-within:shadow-md relative",
-            isActuallyCollapsed ? "px-4 py-3 shadow-none min-h-[50px]" : "p-6 shadow-sm min-h-[120px]"
+            isActuallyCollapsed ? "px-4 py-3 shadow-none min-h-[50px]" : cn("p-6 shadow-sm flex flex-col items-stretch", hideFullscreen ? "h-full min-h-[500px]" : "min-h-[120px]")
         )}>
-            <div className="relative group w-full flex flex-col justify-center h-full">
+            <div className="relative group w-full flex-1 flex flex-col min-h-0">
                 <label htmlFor="memo-content" className="sr-only">Memo内容</label>
 
                 <div className={cn(
-                    "overflow-y-auto scrollbar-hover relative transition-all duration-300 ease-in-out",
-                    hideFullscreen ? "max-h-none" : "max-h-[500px]",
+                    "relative transition-all duration-300 ease-in-out",
+                    hideFullscreen ? "flex-1 overflow-hidden flex flex-col min-h-0" : "max-h-[500px] overflow-y-auto scrollbar-hover",
                     isActuallyCollapsed ? "min-h-[24px]" : "min-h-[120px]"
                 )}>
-                    <EditorContent editor={editor} />
+                    <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "min-h-0")} />
                 </div>
 
                 {showSuggestions && (suggestions.length > 0 || isLoading) && (
@@ -627,11 +627,13 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 </div>
             </div>
 
-            {error && (
-                <div className="mt-3 text-xs text-red-500 bg-red-500/5 px-3 py-2 rounded-lg border border-red-500/10 animate-in fade-in slide-in-from-top-1">
-                    {error}
-                </div>
-            )}
+            {
+                error && (
+                    <div className="mt-3 text-xs text-red-500 bg-red-500/5 px-3 py-2 rounded-lg border border-red-500/10 animate-in fade-in slide-in-from-top-1">
+                        {error}
+                    </div>
+                )
+            }
 
             <div className={cn(
                 "overflow-hidden transition-all duration-300 ease-in-out bg-transparent",
@@ -720,8 +722,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     animateOffset={false}
                 >
                     <DialogTitle className="sr-only">全屏编辑内容</DialogTitle>
-                    <div className="flex-1 overflow-y-auto flex items-center justify-center px-6">
-                        <div className="max-w-4xl w-full mx-auto flex flex-col min-h-[650px]">
+                    <div className="flex-1 overflow-hidden flex items-start justify-center px-6 pt-10 bg-black/5">
+                        <div className="max-w-4xl w-full mx-auto flex flex-col h-[85vh]">
                             <MemoEditor
                                 mode={mode}
                                 memo={memo}
@@ -811,7 +813,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </section>
+        </section >
     );
 }
 

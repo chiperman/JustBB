@@ -77,6 +77,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     // Refs for Tiptap closures
     const suggestionsRef = useRef<SuggestionItem[]>([]);
     const selectedIndexRef = useRef(0);
+    const suggestionPropsRef = useRef<any>(null);
 
     useEffect(() => {
         suggestionsRef.current = suggestions;
@@ -125,6 +126,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     render: () => {
                         return {
                             onStart: (props) => {
+                                suggestionPropsRef.current = props;
                                 setSuggestions([]);
                                 setSelectedIndex(0);
                                 setMentionQuery(props.query);
@@ -142,6 +144,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 });
                             },
                             onUpdate: (props) => {
+                                suggestionPropsRef.current = props;
                                 setSelectedIndex(0);
                                 setMentionQuery(props.query);
                                 searchMemosForMention(props.query).then(data => {
@@ -157,6 +160,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             },
                             onExit: () => {
                                 setShowSuggestions(false);
+                                suggestionPropsRef.current = null;
                             },
                             onKeyDown: (props) => {
                                 if (props.event.key === 'Escape') {
@@ -178,9 +182,10 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
                                 if (props.event.key === 'Enter') {
                                     const item = suggestionsRef.current[selectedIndexRef.current];
-                                    if (item) {
-                                        handleSelectSuggestion(item);
+                                    if (item && suggestionPropsRef.current) {
+                                        suggestionPropsRef.current.command({ id: item.memo_number, label: item.memo_number });
                                         props.event.preventDefault();
+                                        props.event.stopPropagation();
                                         return true;
                                     }
                                 }
@@ -249,15 +254,23 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const handleSelectSuggestion = (item: SuggestionItem) => {
         if (!editor) return;
 
-        editor
-            .chain()
-            .focus()
-            .insertContent({
-                type: 'mention',
-                attrs: { id: item.memo_number, label: item.memo_number },
-            })
-            .insertContent(' ')
-            .run();
+        if (suggestionPropsRef.current) {
+            suggestionPropsRef.current.command({
+                id: item.memo_number,
+                label: item.memo_number,
+            });
+        } else {
+            // Fallback to manual insertion if props are lost
+            editor
+                .chain()
+                .focus()
+                .insertContent({
+                    type: 'mention',
+                    attrs: { id: item.memo_number, label: item.memo_number },
+                })
+                .insertContent(' ')
+                .run();
+        }
 
         setShowSuggestions(false);
         setSelectedIndex(0);

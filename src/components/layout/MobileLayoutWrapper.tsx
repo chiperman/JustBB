@@ -18,7 +18,7 @@ export function MobileLayoutWrapper({ children }: MobileLayoutWrapperProps) {
             {/* 移动端侧边栏覆盖层 */}
             <MobileMenuOverlay isOpen={isOpen} onClose={close}>
                 <div className="h-full overflow-y-auto">
-                    <LeftSidebar />
+                    <LeftSidebar onClose={close} />
                 </div>
             </MobileMenuOverlay>
 

@@ -72,6 +72,18 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [isFullscreen, setIsFullscreen] = useState(false);
 
+    // Refs for Tiptap closures
+    const suggestionsRef = useRef<SuggestionItem[]>([]);
+    const selectedIndexRef = useRef(0);
+
+    useEffect(() => {
+        suggestionsRef.current = suggestions;
+    }, [suggestions]);
+
+    useEffect(() => {
+        selectedIndexRef.current = selectedIndex;
+    }, [selectedIndex]);
+
     // Tag autocomplete states
     const [allTags, setAllTags] = useState<TagStat[]>([]);
     const [tagSuggestions, setTagSuggestions] = useState<SuggestionItem[]>([]);
@@ -112,25 +124,29 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         return {
                             onStart: (props) => {
                                 setSuggestions([]);
+                                setSelectedIndex(0);
                                 setShowSuggestions(true);
                                 // 这里简化处理，实际可以通过 tippy.js 实现
                                 searchMemosForMention(props.query).then(data => {
-                                    setSuggestions(data.map(m => ({
+                                    const items = data.map(m => ({
                                         id: m.id,
                                         label: `@${m.memo_number}`,
                                         subLabel: m.content.substring(0, 50),
                                         memo_number: m.memo_number
-                                    })));
+                                    }));
+                                    setSuggestions(items);
                                 });
                             },
                             onUpdate: (props) => {
+                                setSelectedIndex(0);
                                 searchMemosForMention(props.query).then(data => {
-                                    setSuggestions(data.map(m => ({
+                                    const items = data.map(m => ({
                                         id: m.id,
                                         label: `@${m.memo_number}`,
                                         subLabel: m.content.substring(0, 50),
                                         memo_number: m.memo_number
-                                    })));
+                                    }));
+                                    setSuggestions(items);
                                 });
                             },
                             onExit: () => {
@@ -143,17 +159,17 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 }
 
                                 if (props.event.key === 'ArrowUp') {
-                                    setSelectedIndex((prev) => (prev + suggestions.length - 1) % suggestions.length);
+                                    setSelectedIndex((prev) => (prev + suggestionsRef.current.length - 1) % suggestionsRef.current.length);
                                     return true;
                                 }
 
                                 if (props.event.key === 'ArrowDown') {
-                                    setSelectedIndex((prev) => (prev + 1) % suggestions.length);
+                                    setSelectedIndex((prev) => (prev + 1) % suggestionsRef.current.length);
                                     return true;
                                 }
 
                                 if (props.event.key === 'Enter') {
-                                    const item = suggestions[selectedIndex];
+                                    const item = suggestionsRef.current[selectedIndexRef.current];
                                     if (item) {
                                         handleSelectSuggestion(item);
                                         return true;
@@ -347,7 +363,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
     return (
         <section className={cn(
-            "bg-card border border-border rounded-sm transition-all duration-300 focus-within:shadow-md relative overflow-hidden",
+            "bg-card border border-border rounded-sm transition-all duration-300 focus-within:shadow-md relative",
             isActuallyCollapsed ? "p-3 shadow-none" : "p-6 shadow-sm"
         )}>
             <div className="relative group">

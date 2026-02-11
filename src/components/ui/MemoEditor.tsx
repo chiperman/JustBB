@@ -46,9 +46,10 @@ interface MemoEditorProps {
     onCancel?: () => void;
     onSuccess?: () => void;
     isCollapsed?: boolean;
+    hideFullscreen?: boolean;
 }
 
-export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isCollapsed: isPropCollapsed = false }: MemoEditorProps) {
+export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isCollapsed: isPropCollapsed = false, hideFullscreen = false }: MemoEditorProps) {
     const [content, setContent] = useState(memo?.content || '');
     const [tags, setTags] = useState<string[]>(memo?.tags || []);
     const [tagInput, setTagInput] = useState('');
@@ -140,6 +141,25 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                     setShowSuggestions(false);
                                     return true;
                                 }
+
+                                if (props.event.key === 'ArrowUp') {
+                                    setSelectedIndex((prev) => (prev + suggestions.length - 1) % suggestions.length);
+                                    return true;
+                                }
+
+                                if (props.event.key === 'ArrowDown') {
+                                    setSelectedIndex((prev) => (prev + 1) % suggestions.length);
+                                    return true;
+                                }
+
+                                if (props.event.key === 'Enter') {
+                                    const item = suggestions[selectedIndex];
+                                    if (item) {
+                                        handleSelectSuggestion(item);
+                                        return true;
+                                    }
+                                }
+
                                 return false;
                             },
                         };
@@ -174,7 +194,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         editorProps: {
             attributes: {
                 class: cn(
-                    "prose prose-sm max-w-none focus:outline-none min-h-[60px] text-foreground/80 leading-relaxed font-sans tracking-normal",
+                    "prose prose-sm max-w-none focus:outline-none text-foreground/80 leading-relaxed font-sans tracking-normal",
+                    hideFullscreen ? "min-h-[650px]" : "min-h-[120px]",
                     isActuallyCollapsed ? "text-sm" : "text-base"
                 ),
             },
@@ -332,7 +353,10 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             <div className="relative group">
                 <label htmlFor="memo-content" className="sr-only">Memo内容</label>
 
-                <div className="max-h-[500px] overflow-y-auto scrollbar-hover relative">
+                <div className={cn(
+                    "overflow-y-auto scrollbar-hover relative",
+                    hideFullscreen ? "max-h-none" : "max-h-[500px]"
+                )}>
                     <EditorContent editor={editor} />
                 </div>
 
@@ -341,12 +365,15 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         <Command className="min-w-[280px]">
                             <CommandList>
                                 <CommandGroup>
-                                    {suggestions.map((item) => (
+                                    {suggestions.map((item, index) => (
                                         <CommandItem
                                             key={item.id}
                                             value={item.label}
                                             onSelect={() => handleSelectSuggestion(item)}
-                                            className="flex justify-between items-center gap-3"
+                                            className={cn(
+                                                "flex justify-between items-center gap-3",
+                                                index === selectedIndex && "bg-accent text-accent-foreground"
+                                            )}
                                         >
                                             <div className="flex flex-col">
                                                 <span className="font-medium text-sm">{item.label}</span>
@@ -371,7 +398,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             <AnimatePresence>
                 {!isActuallyCollapsed && (
                     <motion.div
-                        initial={{ height: 0, opacity: 0 }}
+                        initial={hideFullscreen ? false : { height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         className="overflow-hidden"
@@ -468,15 +495,17 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 >
                                     <Pin className={cn("w-3 h-3", isPinned && "fill-primary")} aria-hidden="true" /> Pin
                                 </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setIsFullscreen(true)}
-                                    className="text-muted-foreground hover:text-primary transition-colors h-8 w-8 p-0"
-                                    aria-label="全屏编辑"
-                                >
-                                    <Maximize2 className="w-3.5 h-3.5" />
-                                </Button>
+                                {!isFullscreen && !hideFullscreen && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setIsFullscreen(true)}
+                                        className="text-muted-foreground hover:text-primary transition-colors h-8 w-8 p-0"
+                                        aria-label="全屏编辑"
+                                    >
+                                        <Maximize2 className="w-3.5 h-3.5" />
+                                    </Button>
+                                )}
                                 <span className="text-[10px] text-muted-foreground/40 tabular-nums ml-1">
                                     {content.trim().length} 字
                                 </span>
@@ -516,24 +545,19 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             </AnimatePresence>
 
             <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
-                <DialogContent className="max-w-5xl h-[85vh] flex flex-col p-0 gap-0 overflow-hidden bg-background">
-                    <div className="flex-none flex items-center justify-between px-6 py-4 border-b">
-                        <DialogTitle className="text-base font-bold tracking-tight">全屏编辑内容</DialogTitle>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setIsFullscreen(false)}
-                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                        >
-                            <Minimize2 className="w-4 h-4" />
-                        </Button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto px-6 py-8">
-                        <div className="max-w-3xl mx-auto flex flex-col h-full">
+                <DialogContent
+                    className="max-w-5xl h-[92vh] flex flex-col p-0 gap-0 overflow-hidden bg-background"
+                    closeIcon={<Minimize2 className="h-4 w-4" />}
+                    animateOffset={false}
+                >
+                    <DialogTitle className="sr-only">全屏编辑内容</DialogTitle>
+                    <div className="flex-1 overflow-y-auto flex items-center justify-center px-6">
+                        <div className="max-w-4xl w-full mx-auto flex flex-col min-h-[650px]">
                             <MemoEditor
                                 mode={mode}
                                 memo={memo}
                                 isCollapsed={false}
+                                hideFullscreen={true}
                                 onCancel={() => {
                                     setIsFullscreen(false);
                                     onCancel?.();

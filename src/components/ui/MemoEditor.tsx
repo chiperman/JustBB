@@ -72,12 +72,14 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [mentionQuery, setMentionQuery] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     // Refs for Tiptap closures
     const suggestionsRef = useRef<SuggestionItem[]>([]);
     const selectedIndexRef = useRef(0);
     const suggestionPropsRef = useRef<any>(null);
+    const lastRequestIdRef = useRef(0);
 
     useEffect(() => {
         suggestionsRef.current = suggestions;
@@ -126,13 +128,16 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     render: () => {
                         return {
                             onStart: (props) => {
+                                const requestId = ++lastRequestIdRef.current;
                                 suggestionPropsRef.current = props;
-                                setSuggestions([]);
                                 setSelectedIndex(0);
                                 setMentionQuery(props.query);
                                 setShowSuggestions(true);
-                                // 这里简化处理，实际可以通过 tippy.js 实现
+                                setIsLoading(true);
+
                                 searchMemosForMention(props.query).then(data => {
+                                    if (requestId !== lastRequestIdRef.current) return;
+
                                     const items = data.map(m => ({
                                         id: m.id,
                                         label: `@${m.memo_number}`,
@@ -141,13 +146,23 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                         created_at: m.created_at
                                     }));
                                     setSuggestions(items);
+                                    setIsLoading(false);
+                                }).catch(() => {
+                                    if (requestId === lastRequestIdRef.current) {
+                                        setIsLoading(false);
+                                    }
                                 });
                             },
                             onUpdate: (props) => {
+                                const requestId = ++lastRequestIdRef.current;
                                 suggestionPropsRef.current = props;
                                 setSelectedIndex(0);
                                 setMentionQuery(props.query);
+                                setIsLoading(true);
+
                                 searchMemosForMention(props.query).then(data => {
+                                    if (requestId !== lastRequestIdRef.current) return;
+
                                     const items = data.map(m => ({
                                         id: m.id,
                                         label: `@${m.memo_number}`,
@@ -156,6 +171,11 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                         created_at: m.created_at
                                     }));
                                     setSuggestions(items);
+                                    setIsLoading(false);
+                                }).catch(() => {
+                                    if (requestId === lastRequestIdRef.current) {
+                                        setIsLoading(false);
+                                    }
                                 });
                             },
                             onExit: () => {
@@ -414,45 +434,51 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     <EditorContent editor={editor} />
                 </div>
 
-                {showSuggestions && suggestions.length > 0 && (
+                {showSuggestions && (suggestions.length > 0 || isLoading) && (
                     <div className="absolute top-full left-0 mt-1 z-50 w-full max-w-[320px]">
-                        <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden max-h-[350px] overflow-y-auto scrollbar-hover">
-                            <ul className="divide-y divide-border/40">
-                                {suggestions.map((item, index) => (
-                                    <li
-                                        key={item.id}
-                                        onClick={() => handleSelectSuggestion(item)}
-                                        className={cn(
-                                            "flex flex-col gap-1.5 px-3 py-2.5 cursor-pointer outline-none transition-colors relative",
-                                            index === selectedIndex
-                                                ? "bg-accent text-accent-foreground"
-                                                : "hover:bg-accent/50 text-foreground"
-                                        )}
-                                    >
-                                        <div className="flex justify-between items-center w-full">
-                                            <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
-                                                {item.created_at ? new Date(item.created_at).toLocaleString('zh-CN', {
-                                                    year: 'numeric',
-                                                    month: '2-digit',
-                                                    day: '2-digit',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                    second: '2-digit',
-                                                    hour12: false
-                                                }).replace(/\//g, '-') : ''}
-                                            </span>
-                                            {item.memo_number !== undefined && (
-                                                <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
-                                                    #{item.memo_number}
-                                                </span>
+                        <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden max-h-[350px] overflow-y-auto scrollbar-hover min-h-[40px] flex flex-col justify-center">
+                            {isLoading && suggestions.length === 0 ? (
+                                <div className="px-3 py-4 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight">
+                                    搜索中...
+                                </div>
+                            ) : suggestions.length > 0 ? (
+                                <ul className="divide-y divide-border/40">
+                                    {suggestions.map((item, index) => (
+                                        <li
+                                            key={item.id}
+                                            onClick={() => handleSelectSuggestion(item)}
+                                            className={cn(
+                                                "flex flex-col gap-1.5 px-3 py-2.5 cursor-pointer outline-none transition-colors relative",
+                                                index === selectedIndex
+                                                    ? "bg-accent text-accent-foreground"
+                                                    : "hover:bg-accent/50 text-foreground"
                                             )}
-                                        </div>
-                                        <div className="text-xs leading-relaxed text-foreground/80 break-words pr-2">
-                                            {item.subLabel && renderHighlightedText(item.subLabel, mentionQuery)}
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
+                                        >
+                                            <div className="flex justify-between items-center w-full">
+                                                <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
+                                                    {item.created_at ? new Date(item.created_at).toLocaleString('zh-CN', {
+                                                        year: 'numeric',
+                                                        month: '2-digit',
+                                                        day: '2-digit',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                        second: '2-digit',
+                                                        hour12: false
+                                                    }).replace(/\//g, '-') : ''}
+                                                </span>
+                                                {item.memo_number !== undefined && (
+                                                    <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
+                                                        #{item.memo_number}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="text-xs leading-relaxed text-foreground/80 break-words pr-2">
+                                                {item.subLabel && renderHighlightedText(item.subLabel, mentionQuery)}
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : null}
                         </div>
                     </div>
                 )}

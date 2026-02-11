@@ -39,10 +39,9 @@ export function MobileMenuOverlay({ isOpen, onClose, children }: MobileMenuOverl
     const shouldReduceMotion = useReducedMotion();
 
     return (
-        <AnimatePresence>
-            {isOpen && (
-                <>
-                    {/* 背景遮罩 */}
+        <>
+            <AnimatePresence>
+                {isOpen && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -52,22 +51,28 @@ export function MobileMenuOverlay({ isOpen, onClose, children }: MobileMenuOverl
                         onClick={onClose}
                         aria-hidden="true"
                     />
-                    {/* 侧边栏 */}
-                    <motion.div
-                        initial={{ x: '-100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '-100%' }}
-                        transition={shouldReduceMotion ? { duration: 0 } : { type: 'spring', damping: 25, stiffness: 300 }}
-                        className="lg:hidden fixed left-0 top-0 h-full w-72 z-50 bg-background shadow-xl"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-label="移动端菜单"
-                    >
-                        {children}
-                    </motion.div>
-                </>
-            )}
-        </AnimatePresence>
+                )}
+            </AnimatePresence>
+
+            {/* 侧边栏始终保持挂载，仅通过位移控制隐藏 */}
+            <motion.div
+                initial={false}
+                animate={{
+                    x: isOpen ? 0 : '-100%',
+                    visibility: isOpen ? 'visible' : 'hidden' as any
+                }}
+                transition={shouldReduceMotion ? { duration: 0 } : { type: 'spring', damping: 25, stiffness: 300 }}
+                className="lg:hidden fixed left-0 top-0 h-full w-72 z-50 bg-background shadow-xl pointer-events-auto"
+                style={{
+                    pointerEvents: isOpen ? 'auto' : 'none'
+                }}
+                role="dialog"
+                aria-modal="true"
+                aria-label="移动端菜单"
+            >
+                {children}
+            </motion.div>
+        </>
     );
 }
 

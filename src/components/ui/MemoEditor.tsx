@@ -154,12 +154,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 return dateB - dateA;
             });
 
-        if (query === '') {
-            setSuggestions(localItems.slice(0, 5));
-            setHasMoreMentions(false);
-            setIsLoading(false);
-            return;
-        }
+
 
         setSuggestions(localItems.slice(0, 10));
 
@@ -218,16 +213,18 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         setMentionQuery(query);
         setSelectedIndex(0);
 
+
+
         const filtered = allTagsRef.current
             .filter((t: TagStat) => t.tag_name.toLowerCase().includes(query.toLowerCase()))
+            .sort((a, b) => (b.count || 0) - (a.count || 0))
             .map((t: TagStat) => ({
                 id: t.tag_name,
                 label: `#${t.tag_name}`,
                 count: t.count
-            }))
-            .slice(0, 8);
+            }));
 
-
+        setHasMoreMentions(false); // 正在显示标签，禁用 mention 的加载更多
         setSuggestions(filtered);
     };
 
@@ -252,6 +249,13 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             }),
             Mention.extend({
                 name: 'mention',
+                renderHTML({ node, HTMLAttributes }) {
+                    return [
+                        'span',
+                        this.options.HTMLAttributes,
+                        `@${node.attrs.label ?? node.attrs.id}`,
+                    ]
+                },
             }).configure({
                 HTMLAttributes: {
                     class: 'text-primary font-mono bg-primary/10 px-1 rounded-sm mx-0.5 inline-block decoration-none',
@@ -280,6 +284,16 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                     return true;
                                 }
 
+                                if (props.event.key === ' ' && suggestionPropsRef.current) {
+                                    // 按下空格，若查询符合 @\d+ 格式，直接创建
+                                    const query = suggestionPropsRef.current.query;
+                                    if (/^\d+$/.test(query)) {
+                                        suggestionPropsRef.current.command({ id: query, label: query });
+                                        props.event.preventDefault();
+                                        return true;
+                                    }
+                                }
+
                                 if (props.event.key === 'ArrowUp') {
                                     setSelectedIndex((prev) => (prev + suggestionsRef.current.length - 1) % suggestionsRef.current.length);
                                     props.event.preventDefault();
@@ -295,7 +309,9 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 if (props.event.key === 'Enter') {
                                     const item = suggestionsRef.current[selectedIndexRef.current];
                                     if (item && suggestionPropsRef.current) {
-                                        suggestionPropsRef.current.command({ id: item.label, label: item.label });
+                                        // 移除 @ 前缀再插入，避免 renderHTML 重复添加
+                                        const label = item.label.startsWith('@') ? item.label.slice(1) : item.label;
+                                        suggestionPropsRef.current.command({ id: label, label: label });
                                         props.event.preventDefault();
                                         props.event.stopPropagation();
                                         return true;
@@ -310,6 +326,13 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             }),
             Mention.extend({
                 name: 'hashtag',
+                renderHTML({ node, HTMLAttributes }) {
+                    return [
+                        'span',
+                        this.options.HTMLAttributes,
+                        `#${node.attrs.label ?? node.attrs.id}`,
+                    ]
+                },
             }).configure({
                 HTMLAttributes: {
                     class: 'text-primary font-mono bg-primary/10 px-1 rounded-sm mx-0.5 inline-block decoration-none',
@@ -318,6 +341,11 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     char: '#',
                     pluginKey: hashtagPluginKey,
                     allowSpaces: false,
+                    // 自定义匹配规则以支持中文等非 ASCII 字符
+                    // 这里允许 # 后跟任意非空格字符
+                    allow: ({ editor, range }) => {
+                        return true;
+                    },
                     render: () => {
                         return {
                             onStart: (props) => {
@@ -339,6 +367,16 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                     return true;
                                 }
 
+                                if (props.event.key === ' ' && suggestionPropsRef.current) {
+                                    // 按下空格，若查询符合标签格式，直接创建
+                                    const query = suggestionPropsRef.current.query;
+                                    if (/^[\w\u4e00-\u9fa5]+$/.test(query)) {
+                                        suggestionPropsRef.current.command({ id: query, label: query });
+                                        props.event.preventDefault();
+                                        return true;
+                                    }
+                                }
+
                                 if (props.event.key === 'ArrowUp') {
                                     setSelectedIndex((prev) => (prev + suggestionsRef.current.length - 1) % suggestionsRef.current.length);
                                     props.event.preventDefault();
@@ -354,7 +392,9 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 if (props.event.key === 'Enter') {
                                     const item = suggestionsRef.current[selectedIndexRef.current];
                                     if (suggestionPropsRef.current && item) {
-                                        const label = item ? item.label : `#${suggestionPropsRef.current.query}`;
+                                        const rawLabel = item ? item.label : `#${suggestionPropsRef.current.query}`;
+                                        // 移除 # 前缀
+                                        const label = rawLabel.startsWith('#') ? rawLabel.slice(1) : rawLabel;
                                         suggestionPropsRef.current.command({ id: label, label: label });
                                         props.event.preventDefault();
                                         props.event.stopPropagation();
@@ -467,7 +507,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             if (selectedItem) {
                 selectedItem.scrollIntoView({
                     block: 'nearest',
-                    behavior: 'smooth'
+                    behavior: 'instant' // 避免快速操作时的平滑滚动延迟导致“抽搐”
                 });
             }
         }
@@ -477,7 +517,10 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         const target = e.currentTarget;
         const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 50;
 
-        if (isNearBottom && hasMoreMentions && !isFetchingMore && !isLoading && mentionQuery !== '') {
+
+
+        // 移除 mentionQuery !== '' 限制，允许空 query 加载
+        if (isNearBottom && hasMoreMentions && !isFetchingMore && !isLoading) {
             setIsFetchingMore(true);
             const nextOffset = mentionOffset;
 
@@ -525,9 +568,17 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
 
         if (suggestionPropsRef.current) {
+            const rawLabel = item.label;
+            // 根据当前的触发字符判断应该移除哪个前缀
+            // 这里我们无法直接知道当前是 @ 还是 #，但可以通过 label 判断
+            let label = rawLabel;
+            if (rawLabel.startsWith('@') || rawLabel.startsWith('#')) {
+                label = rawLabel.slice(1);
+            }
+
             suggestionPropsRef.current.command({
-                id: item.label,
-                label: item.label,
+                id: label,
+                label: label,
             });
         }
 
@@ -665,7 +716,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             className="absolute top-full left-0 mt-2 z-50 w-full max-w-[350px]"
                             onMouseDown={(e) => e.preventDefault()} // 防止点击弹窗导致编辑器失焦
                         >
-                            <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden max-h-[450px] flex flex-col">
+                            <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden flex flex-col max-h-[450px]">
                                 {isLoading && suggestions.length === 0 ? (
                                     <div className="px-3 py-6 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight">
                                         搜索中...
@@ -735,6 +786,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                                 载入更多...
                                             </li>
                                         )}
+
                                     </ul>
                                 ) : null}
                             </div>

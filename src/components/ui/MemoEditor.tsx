@@ -75,6 +75,9 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const [mentionQuery, setMentionQuery] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [mentionOffset, setMentionOffset] = useState(0);
+    const [hasMoreMentions, setHasMoreMentions] = useState(true);
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
 
     // Refs for Tiptap closures
     const suggestionsRef = useRef<SuggestionItem[]>([]);
@@ -82,6 +85,10 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const suggestionPropsRef = useRef<any>(null);
     const lastRequestIdRef = useRef(0);
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const isFetchingMoreRef = useRef(false);
+    const hasMoreMentionsRef = useRef(true);
+    const mentionOffsetRef = useRef(0);
+    const mentionQueryRef = useRef('');
 
     useEffect(() => {
         suggestionsRef.current = suggestions;
@@ -91,8 +98,131 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         selectedIndexRef.current = selectedIndex;
     }, [selectedIndex]);
 
-    // Tag autocomplete states
+    useEffect(() => {
+        isFetchingMoreRef.current = isFetchingMore;
+    }, [isFetchingMore]);
+
+    useEffect(() => {
+        hasMoreMentionsRef.current = hasMoreMentions;
+    }, [hasMoreMentions]);
+
+    useEffect(() => {
+        mentionOffsetRef.current = mentionOffset;
+    }, [mentionOffset]);
+
+    useEffect(() => {
+        mentionQueryRef.current = mentionQuery;
+    }, [mentionQuery]);
+
     const [allTags, setAllTags] = useState<TagStat[]>([]);
+
+    // --- 提取搜索逻辑 ---
+    const fetchMentionSuggestions = async (query: string, isUpdate = false) => {
+        setMentionQuery(query);
+        setSelectedIndex(0);
+        if (!isUpdate) {
+            setMentionOffset(0);
+            setHasMoreMentions(true);
+        }
+
+        // 本地过滤
+        const localItems: SuggestionItem[] = contextMemos
+            .filter(m =>
+                m.memo_number?.toString().includes(query) ||
+                m.content.toLowerCase().includes(query.toLowerCase())
+            )
+            .map(m => ({
+                id: m.id,
+                label: `@${m.memo_number}`,
+                subLabel: m.content.substring(0, 100),
+                memo_number: m.memo_number,
+                created_at: m.created_at
+            }))
+            .sort((a, b) => {
+                const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                return dateB - dateA;
+            });
+
+        if (query === '') {
+            setSuggestions(localItems.slice(0, 5));
+            setHasMoreMentions(false);
+            setIsLoading(false);
+            return;
+        }
+
+        setSuggestions(localItems.slice(0, 10));
+
+        if (editor?.view.composing) {
+            setIsLoading(false);
+            return;
+        }
+
+        setIsLoading(true);
+
+        const performSearch = async () => {
+            const reqId = ++lastRequestIdRef.current;
+            try {
+                const data = await searchMemosForMention(query, 0, 15);
+                if (reqId !== lastRequestIdRef.current) return;
+
+                const remoteItems = data.map((m: Memo) => ({
+                    id: m.id,
+                    label: `@${m.memo_number}`,
+                    subLabel: m.content.substring(0, 100),
+                    memo_number: m.memo_number,
+                    created_at: m.created_at
+                }));
+
+                setHasMoreMentions(data.length >= 15);
+                setMentionOffset(data.length);
+
+                setSuggestions(prev => {
+                    const combined = [...prev];
+                    remoteItems.forEach((ri: SuggestionItem) => {
+                        if (!combined.some(ci => ci.id === ri.id)) {
+                            combined.push(ri);
+                        }
+                    });
+                    combined.sort((a, b) => {
+                        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                        return dateB - dateA;
+                    });
+                    return combined;
+                });
+            } finally {
+                if (reqId === lastRequestIdRef.current) setIsLoading(false);
+            }
+        };
+
+        if (isUpdate) {
+            if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+            debounceTimerRef.current = setTimeout(performSearch, 250);
+        } else {
+            performSearch();
+        }
+    };
+
+    const fetchHashtagSuggestions = (query: string) => {
+        setMentionQuery(query);
+        setSelectedIndex(0);
+
+        const filtered = allTags
+            .filter((t: TagStat) => t.tag_name.toLowerCase().includes(query.toLowerCase()))
+            .map((t: TagStat) => ({
+                id: t.tag_name,
+                label: `#${t.tag_name}`,
+                count: t.count
+            }))
+            .slice(0, 8);
+
+        setSuggestions(filtered);
+    };
+
+    useEffect(() => {
+        mentionQueryRef.current = mentionQuery;
+    }, [mentionQuery]);
 
     const shouldReduceMotion = useReducedMotion();
     const router = useRouter();
@@ -110,7 +240,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 italic: false,
             }),
             Placeholder.configure({
-                placeholder: 'Wanna memo something？JustMemo it',
+                placeholder: '想记点什么？JustMemo it',
                 emptyEditorClass: 'is-editor-empty',
             }),
             LinkExtension.configure({
@@ -129,131 +259,12 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         return {
                             onStart: (props) => {
                                 suggestionPropsRef.current = props;
-                                setSelectedIndex(0);
-                                setMentionQuery(props.query);
                                 setShowSuggestions(true);
-
-                                // --- 优化：双层搜索逻辑 (Layer 1: 本地同步过滤) ---
-                                // 即使还在 IME 组合或者网络请求还没发出，也要先从本地 contextMemos 中寻找匹配项
-                                const localItems: SuggestionItem[] = contextMemos
-                                    .filter(m =>
-                                        m.memo_number?.toString().includes(props.query) ||
-                                        m.content.toLowerCase().includes(props.query.toLowerCase())
-                                    )
-                                    .slice(0, 5)
-                                    .map(m => ({
-                                        id: m.id,
-                                        label: `@${m.memo_number}`,
-                                        subLabel: m.content.substring(0, 100),
-                                        memo_number: m.memo_number,
-                                        created_at: m.created_at
-                                    }));
-
-                                setSuggestions(localItems);
-
-                                // 如果正在输入法组合中，不发起网络搜索
-                                if (props.editor.view.composing) {
-                                    setIsLoading(false);
-                                    return;
-                                }
-
-                                setIsLoading(true);
-                                const requestId = ++lastRequestIdRef.current;
-
-                                searchMemosForMention(props.query).then((data: Memo[]) => {
-                                    if (requestId !== lastRequestIdRef.current) return;
-
-                                    const remoteItems = data.map((m: Memo) => ({
-                                        id: m.id,
-                                        label: `@${m.memo_number}`,
-                                        subLabel: m.content.substring(0, 100),
-                                        memo_number: m.memo_number,
-                                        created_at: m.created_at
-                                    }));
-
-                                    // 合并结果，去重并优先保留本地/最新结果
-                                    setSuggestions(prev => {
-                                        const combined = [...prev];
-                                        remoteItems.forEach((ri: SuggestionItem) => {
-                                            if (!combined.some(ci => ci.id === ri.id)) {
-                                                combined.push(ri);
-                                            }
-                                        });
-                                        return combined.slice(0, 8); // 稍微增加展示上限
-                                    });
-                                    setIsLoading(false);
-                                }).catch(() => {
-                                    if (requestId === lastRequestIdRef.current) {
-                                        setIsLoading(false);
-                                    }
-                                });
+                                fetchMentionSuggestions(props.query, false);
                             },
                             onUpdate: (props) => {
                                 suggestionPropsRef.current = props;
-                                setSelectedIndex(0);
-                                setMentionQuery(props.query);
-
-                                // --- 优化：双层搜索逻辑 (Layer 1: 本地同步过滤) ---
-                                const localItems: SuggestionItem[] = contextMemos
-                                    .filter((m: Memo) =>
-                                        m.memo_number?.toString().includes(props.query) ||
-                                        m.content.toLowerCase().includes(props.query.toLowerCase())
-                                    )
-                                    .slice(0, 5)
-                                    .map((m: Memo) => ({
-                                        id: m.id,
-                                        label: `@${m.memo_number}`,
-                                        subLabel: m.content.substring(0, 100),
-                                        memo_number: m.memo_number,
-                                        created_at: m.created_at
-                                    }));
-
-                                // 立即更新本地结果，确保 0ms 延迟
-                                setSuggestions(localItems);
-
-                                // 清除之前的防抖定时器
-                                if (debounceTimerRef.current) {
-                                    clearTimeout(debounceTimerRef.current);
-                                }
-
-                                // 如果正在输入法组合中，不发起网络搜索
-                                if (props.editor.view.composing) {
-                                    setIsLoading(false);
-                                    return;
-                                }
-
-                                setIsLoading(true);
-
-                                // 增加 250ms 防抖，减少拼音阶段的请求频率
-                                debounceTimerRef.current = setTimeout(() => {
-                                    const requestId = ++lastRequestIdRef.current;
-                                    searchMemosForMention(props.query).then((data: Memo[]) => {
-                                        if (requestId !== lastRequestIdRef.current) return;
-
-                                        const remoteItems = data.map((m: Memo) => ({
-                                            id: m.id,
-                                            label: `@${m.memo_number}`,
-                                            subLabel: m.content.substring(0, 100),
-                                            memo_number: m.memo_number,
-                                            created_at: m.created_at
-                                        }));
-
-                                        setSuggestions(prev => {
-                                            const combined = [...prev];
-                                            remoteItems.forEach((ri: SuggestionItem) => {
-                                                if (!combined.some(ci => ci.id === ri.id)) {
-                                                    combined.push(ri);
-                                                }
-                                            });
-                                            return combined.slice(0, 8);
-                                        });
-                                        setIsLoading(false);
-                                    }).catch(() => {
-                                        if (requestId === lastRequestIdRef.current) {
-                                            setIsLoading(false);
-                                        }
-                                    });
-                                }, 250);
+                                fetchMentionSuggestions(props.query, true);
                             },
                             onExit: () => {
                                 setShowSuggestions(false);
@@ -305,37 +316,12 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         return {
                             onStart: (props) => {
                                 suggestionPropsRef.current = props;
-                                setSelectedIndex(0);
-                                setMentionQuery(props.query);
                                 setShowSuggestions(true);
-
-                                // 标签过滤逻辑
-                                const filtered = allTags
-                                    .filter((t: TagStat) => t.tag_name.toLowerCase().includes(props.query.toLowerCase()))
-                                    .slice(0, 8)
-                                    .map((t: TagStat) => ({
-                                        id: t.tag_name,
-                                        label: `#${t.tag_name}`,
-                                        count: t.count
-                                    }));
-
-                                setSuggestions(filtered);
+                                fetchHashtagSuggestions(props.query);
                             },
                             onUpdate: (props) => {
                                 suggestionPropsRef.current = props;
-                                setSelectedIndex(0);
-                                setMentionQuery(props.query);
-
-                                const filtered = allTags
-                                    .filter((t: TagStat) => t.tag_name.toLowerCase().includes(props.query.toLowerCase()))
-                                    .slice(0, 8)
-                                    .map((t: TagStat) => ({
-                                        id: t.tag_name,
-                                        label: `#${t.tag_name}`,
-                                        count: t.count
-                                    }));
-
-                                setSuggestions(filtered);
+                                fetchHashtagSuggestions(props.query);
                             },
                             onExit: () => {
                                 setShowSuggestions(false);
@@ -403,8 +389,54 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             findHashtags(json);
             setTags(extractedTags);
         },
-        onFocus: () => setIsFocused(true),
-        onBlur: () => setIsFocused(false),
+        onFocus: () => {
+            setIsFocused(true);
+            // 重新进入编辑器时，检查是否需要重新弹出建议
+            setTimeout(() => {
+                if (!editor) return;
+                const { from } = editor.state.selection;
+                // 获取光标前后的文本进行判断
+                const textBefore = editor.state.doc.textBetween(Math.max(0, from - 20), from);
+                const mentionMatch = textBefore.match(/(?:^|\s)(@|#)(\w*)$/);
+
+                if (mentionMatch) {
+                    const char = mentionMatch[1];
+                    const query = mentionMatch[2];
+                    const startPos = from - mentionMatch[2].length - 1;
+
+                    // 手动计算 range 并模拟 props 供 handleSelectSuggestion 使用
+                    suggestionPropsRef.current = {
+                        editor,
+                        query,
+                        range: { from: startPos, to: from },
+                        command: (props: any) => {
+                            // 手动实现插入逻辑
+                            editor.chain().focus().deleteRange({ from: startPos, to: from }).insertContent([
+                                {
+                                    type: char === '@' ? 'mention' : 'hashtag',
+                                    attrs: { id: props.label, label: props.label }
+                                },
+                                {
+                                    type: 'text',
+                                    text: ' '
+                                }
+                            ]).run();
+                        }
+                    };
+
+                    setShowSuggestions(true);
+                    if (char === '@') {
+                        fetchMentionSuggestions(query, false);
+                    } else {
+                        fetchHashtagSuggestions(query);
+                    }
+                }
+            }, 100);
+        },
+        onBlur: () => {
+            setIsFocused(false);
+            setShowSuggestions(false);
+        },
         editorProps: {
             attributes: {
                 class: cn(
@@ -436,6 +468,53 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             }
         }
     }, [selectedIndex, showSuggestions]);
+
+    const handleSuggestionScroll = async (e: React.UIEvent<HTMLUListElement>) => {
+        const target = e.currentTarget;
+        const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 50;
+
+        if (isNearBottom && hasMoreMentions && !isFetchingMore && !isLoading && mentionQuery !== '') {
+            setIsFetchingMore(true);
+            const nextOffset = mentionOffset;
+
+            try {
+                const data = await searchMemosForMention(mentionQuery, nextOffset, 15);
+                if (mentionQueryRef.current !== mentionQuery) return; // Query changed
+
+                const newItems = data.map((m: Memo) => ({
+                    id: m.id,
+                    label: `@${m.memo_number}`,
+                    subLabel: m.content.substring(0, 100),
+                    memo_number: m.memo_number,
+                    created_at: m.created_at
+                }));
+
+                setHasMoreMentions(data.length >= 15);
+                setMentionOffset(prev => prev + data.length);
+
+                setSuggestions(prev => {
+                    const combined = [...prev];
+                    newItems.forEach((ni: SuggestionItem) => {
+                        if (!combined.some(ci => ci.id === ni.id)) {
+                            combined.push(ni);
+                        }
+                    });
+
+                    combined.sort((a, b) => {
+                        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                        return dateB - dateA;
+                    });
+
+                    return combined;
+                });
+            } catch (err) {
+                console.error('Error fetching more mentions:', err);
+            } finally {
+                setIsFetchingMore(false);
+            }
+        }
+    };
 
     const handleSelectSuggestion = (item: SuggestionItem) => {
         if (!editor) return;
@@ -594,7 +673,10 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     </motion.div>
 
                     {showSuggestions && (suggestions.length > 0 || isLoading) && (
-                        <div className="absolute top-full left-0 mt-2 z-50 w-full max-w-[350px]">
+                        <div
+                            className="absolute top-full left-0 mt-2 z-50 w-full max-w-[350px]"
+                            onMouseDown={(e) => e.preventDefault()} // 防止点击弹窗导致编辑器失焦
+                        >
                             <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden max-h-[450px] flex flex-col">
                                 {isLoading && suggestions.length === 0 ? (
                                     <div className="px-3 py-6 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight">
@@ -604,6 +686,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                     <ul
                                         ref={suggestionListRef}
                                         className="divide-y divide-border/40 overflow-y-auto scrollbar-hover"
+                                        onScroll={handleSuggestionScroll}
                                     >
                                         {suggestions.map((item, index) => (
                                             <li
@@ -652,6 +735,11 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                                 )}
                                             </li>
                                         ))}
+                                        {isFetchingMore && (
+                                            <li className="px-3 py-4 text-[10px] text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight bg-background/50 backdrop-blur-sm sticky bottom-0 border-t border-border/40">
+                                                载入更多...
+                                            </li>
+                                        )}
                                     </ul>
                                 ) : null}
                             </div>
@@ -727,7 +815,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 aria-pressed={isPrivate}
                             >
                                 {isPrivate ? <Lock className="w-3 h-3" aria-hidden="true" /> : <LockOpen className="w-3 h-3" aria-hidden="true" />}
-                                Private
+                                私密
                             </Button>
                             <Button
                                 variant="ghost"
@@ -740,7 +828,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 aria-label={isPinned ? "取消置顶" : "置顶此内容"}
                                 aria-pressed={isPinned}
                             >
-                                <Pin className={cn("w-3 h-3", isPinned && "fill-primary")} aria-hidden="true" /> Pin
+                                <Pin className={cn("w-3 h-3", isPinned && "fill-primary")} aria-hidden="true" /> 置顶
                             </Button>
                             {!isFullscreen && !hideFullscreen && (
                                 <Button

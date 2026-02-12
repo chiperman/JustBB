@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { Memo } from '@/types/memo';
 import { cookies } from 'next/headers';
 
-export async function searchMemosForMention(query: string): Promise<Memo[]> {
+export async function searchMemosForMention(query: string, offset: number = 0, limit: number = 10): Promise<Memo[]> {
     const supabase = getSupabaseAdmin();
     const cookieStore = await cookies();
     const adminCode = cookieStore.get('memo_access_code')?.value || '';
@@ -13,8 +13,8 @@ export async function searchMemosForMention(query: string): Promise<Memo[]> {
     const { data, error } = await (supabase.rpc as any)('search_memos_secure', {
         query_text: query,
         input_code: adminCode,
-        limit_val: 5, // 只返回前 5 条建议
-        offset_val: 0,
+        limit_val: limit,
+        offset_val: offset,
         filters: {}
     });
 

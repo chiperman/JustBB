@@ -60,7 +60,8 @@ export function MemoContent({ content, className }: MemoContentProps) {
                                 <Link
                                     key={`tag-${index}`}
                                     href={`/?tag=${encodeURIComponent(token.value.slice(1))}`}
-                                    className="text-primary hover:underline mx-0.5 focus-visible:ring-1 focus-visible:ring-primary/30 outline-none rounded-sm hover:bg-primary/10 transition-colors"
+                                    className="hover:underline mx-0.5 focus-visible:ring-1 focus-visible:ring-primary/30 outline-none rounded-sm transition-colors"
+                                    style={{ color: '#5783f7' }}
                                     aria-label={`查看包含 #${token.value.slice(1)} 标签的记录`}
                                 >
                                     {token.value}

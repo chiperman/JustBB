@@ -13,14 +13,15 @@ import { Command, CommandList, CommandItem, CommandEmpty, CommandGroup } from '.
 import { getAllTags } from '@/actions/tags';
 
 // Tiptap imports
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, Extension } from '@tiptap/react';
 import { nodeInputRule, nodePasteRule } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import LinkExtension from '@tiptap/extension-link';
 import Mention from '@tiptap/extension-mention';
 import CharacterCount from '@tiptap/extension-character-count';
-import { PluginKey } from '@tiptap/pm/state';
+import { PluginKey, Plugin } from '@tiptap/pm/state';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
 // 为建议插件定义独立的 Key，防止冲突
 const mentionPluginKey = new PluginKey('mention');
@@ -331,7 +332,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 },
             }).configure({
                 HTMLAttributes: {
-                    class: 'text-primary font-mono bg-primary/10 px-1 rounded-sm mx-0.5 inline-block decoration-none',
+                    class: 'font-mono mx-0.5 inline-block decoration-none',
+                    style: 'color: #5783f7',
                 },
                 suggestion: {
                     char: '#',

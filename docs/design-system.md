@@ -58,3 +58,17 @@
 ### 7.2 高度对齐
 *   所有节点与轴线必须像素级对齐，确保垂直感官连贯。
 *   文字内容与圆点中心在水平线上对齐。
+
+## 8. 正文节点规范 (Content Nodes)
+
+### 8.1 提及 (@Mention) & 引用
+*   **样式**: `font-mono`, `bg-primary/10`, `text-primary`, `px-1`, `rounded-sm` (2px)。
+*   **交互**: Hover 时 `bg-primary/20`，支持 Popover 预览。
+
+### 8.2 标签 (#Hashtag)
+*   **样式**: `font-mono`, `font-medium`, `text-[#5783f7]` (标准外链蓝), `mx-0.5`。
+*   **交互**: Hover 下划线反馈，点击进入标签过滤。
+
+### 8.3 代码块 (Code Blocks)
+*   **样式**: `bg-muted/50` 柔和背景，`border-border/40` 微边框。
+*   **字体**: `font-mono`, `text-sm`。

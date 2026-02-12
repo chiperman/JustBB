@@ -13,7 +13,7 @@ export function parseContentTokens(text: string): ContentToken[] {
     // 4. Tag匹配: #标签 (不含空格，中文或字母数字)
     // 5. 图片直链: http(s)://...jpg/png/gif/webp
 
-    const regex = /```(\w*)\n?([\s\S]*?)```|!\[.*?\]\((https?:\/\/\S+\.(?:jpg|jpeg|png|gif|webp))\)|(@\d+)|(#[\w\u4e00-\u9fa5]+)|(https?:\/\/\S+\.(?:jpg|jpeg|png|gif|webp))/g;
+    const regex = /```(\w*)\n?([\s\S]*?)```|!\[.*?\]\((https?:\/\/\S+\.(?:jpg|jpeg|png|gif|webp))\)|(@\d+)|(?:^|\s|(?<=[^a-zA-Z0-9]))(#[\w\u4e00-\u9fa5]+)|(https?:\/\/\S+\.(?:jpg|jpeg|png|gif|webp))/g;
 
     const tokens: ContentToken[] = [];
     let lastIndex = 0;

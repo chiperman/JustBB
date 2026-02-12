@@ -17,6 +17,7 @@
 *   **功能**: 发布新记录。
 *   **输入**: `{ content: string, tags: string[], is_private: boolean, access_code?: string, access_code_hint?: string }`
 *   **校验**: `content` 不能为空且需经过 Zod 校验。
+*   **内容规范**: `content` 支持 Markdown 基本语法、`#标签` 和 `@编号`。
 
 ### 2.2 `updateMemo`
 *   **功能**: 编辑记录内容。

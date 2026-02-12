@@ -12,6 +12,7 @@ export interface Memo {
     updated_at?: string;
     deleted_at?: string | null;
     word_count?: number;
+    access_code?: string;
 }
 
 export interface TagStat {

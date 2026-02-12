@@ -88,7 +88,7 @@ export async function updateMemoContent(formData: FormData) {
 
     const supabase = getSupabaseAdmin();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('memos') as any)
+    const { data: updatedData, error } = await (supabase.from('memos') as any)
         .update({
             content,
             tags,
@@ -97,7 +97,9 @@ export async function updateMemoContent(formData: FormData) {
             updated_at: new Date().toISOString(),
             word_count: content.trim().length
         })
-        .eq('id', id);
+        .eq('id', id)
+        .select()
+        .single();
 
     if (error) {
         console.error('Error updating memo content:', error);
@@ -105,5 +107,6 @@ export async function updateMemoContent(formData: FormData) {
     }
 
     revalidatePath('/');
-    return { success: true };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return { success: true, data: updatedData as any };
 }

@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { Button } from './button';
 import { Input } from './input';
 import { updateMemoContent } from '@/actions/update';
-import { searchMemosForMention } from '@/actions/search';
+import { getAllMemoIndices } from '@/actions/search';
 import { Command, CommandList, CommandItem, CommandEmpty, CommandGroup } from './command';
 import { getAllTags } from '@/actions/tags';
 
@@ -46,6 +46,14 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { Memo, TagStat } from '@/types/memo';
+import { Editor } from '@tiptap/react';
+
+import { SuggestionProps } from '@tiptap/suggestion';
+
+interface CustomSuggestionProps extends SuggestionProps {
+    command: (props: any) => void;
+}
+
 
 interface MemoEditorProps {
     mode?: 'create' | 'edit';
@@ -80,13 +88,12 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const [mentionQuery, setMentionQuery] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const [mentionOffset, setMentionOffset] = useState(0);
     const [hasMoreMentions, setHasMoreMentions] = useState(true);
-    const [isFetchingMore, setIsFetchingMore] = useState(false);
 
     // Refs for Tiptap closures
     const suggestionsRef = useRef<SuggestionItem[]>([]);
     const selectedIndexRef = useRef(0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const suggestionPropsRef = useRef<any>(null);
     const lastRequestIdRef = useRef(0);
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -104,16 +111,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     }, [selectedIndex]);
 
     useEffect(() => {
-        isFetchingMoreRef.current = isFetchingMore;
-    }, [isFetchingMore]);
-
-    useEffect(() => {
         hasMoreMentionsRef.current = hasMoreMentions;
     }, [hasMoreMentions]);
-
-    useEffect(() => {
-        mentionOffsetRef.current = mentionOffset;
-    }, [mentionOffset]);
 
     useEffect(() => {
         mentionQueryRef.current = mentionQuery;
@@ -126,87 +125,82 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         allTagsRef.current = allTags;
     }, [allTags]);
 
+    // Local index for mentions
+    const [memoIndex, setMemoIndex] = useState<SuggestionItem[]>([]);
+    const memoIndexRef = useRef<SuggestionItem[]>([]);
+
+    useEffect(() => {
+        memoIndexRef.current = memoIndex;
+        // If index loads while user is searching, refresh results
+        if (showSuggestions && suggestionTrigger === '@') {
+            fetchMentionSuggestions(mentionQueryRef.current, true);
+        }
+    }, [memoIndex]);
+
+    // Local pagination state
+    const [filteredMentions, setFilteredMentions] = useState<SuggestionItem[]>([]);
+    const [displayLimit, setDisplayLimit] = useState(50);
+    const [suggestionTrigger, setSuggestionTrigger] = useState<string | null>(null);
+    const [isIndexLoading, setIsIndexLoading] = useState(true);
+    const filteredMentionsRef = useRef<SuggestionItem[]>([]);
+
+    useEffect(() => {
+        filteredMentionsRef.current = filteredMentions;
+        // Only update suggestions from pagination state if the active trigger is '@'
+        if (showSuggestions && suggestionTrigger === '@') {
+            setSuggestions(filteredMentions.slice(0, displayLimit));
+            setHasMoreMentions(displayLimit < filteredMentions.length);
+        }
+    }, [filteredMentions, displayLimit, showSuggestions, suggestionTrigger]);
+
+    useEffect(() => {
+        // Load lightweight index on mount
+        setIsIndexLoading(true);
+        getAllMemoIndices().then(memos => {
+            const indexItems = memos.map(m => ({
+                id: m.id!,
+                label: `@${m.memo_number}`,
+                subLabel: m.content?.substring(0, 100) || '',
+                memo_number: m.memo_number,
+                created_at: m.created_at
+            }));
+            setMemoIndex(indexItems);
+            setIsIndexLoading(false);
+        }).catch(() => {
+            setIsIndexLoading(false);
+        });
+    }, []);
+
     // --- 提取搜索逻辑 ---
+    // Update: Now using purely local index
     const fetchMentionSuggestions = async (query: string, isUpdate = false) => {
         setMentionQuery(query);
         setSelectedIndex(0);
-        if (!isUpdate) {
-            setMentionOffset(0);
-            setHasMoreMentions(true);
-        }
 
-        // 本地过滤
-        const localItems: SuggestionItem[] = contextMemos
-            .filter(m =>
-                m.memo_number?.toString().includes(query) ||
-                m.content.toLowerCase().includes(query.toLowerCase())
+        // Search in local index (which contains ALL memos now)
+        const sourceData = memoIndexRef.current.length > 0 ? memoIndexRef.current : contextMemos.map(m => ({
+            id: m.id,
+            label: `@${m.memo_number}`,
+            subLabel: m.content.substring(0, 100),
+            memo_number: m.memo_number,
+            created_at: m.created_at
+        }));
+
+        const filtered = sourceData
+            .filter(item =>
+                item.label.includes(query) ||
+                (item.subLabel && item.subLabel.toLowerCase().includes(query.toLowerCase()))
             )
-            .map(m => ({
-                id: m.id,
-                label: `@${m.memo_number}`,
-                subLabel: m.content.substring(0, 100),
-                memo_number: m.memo_number,
-                created_at: m.created_at
-            }))
             .sort((a, b) => {
                 const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
                 const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
                 return dateB - dateA;
             });
 
-
-
-        setSuggestions(localItems.slice(0, 10));
-
-        if (editor?.view.composing) {
-            setIsLoading(false);
-            return;
-        }
-
-        setIsLoading(true);
-
-        const performSearch = async () => {
-            const reqId = ++lastRequestIdRef.current;
-            try {
-                const data = await searchMemosForMention(query, 0, 15);
-                if (reqId !== lastRequestIdRef.current) return;
-
-                const remoteItems = data.map((m: Memo) => ({
-                    id: m.id,
-                    label: `@${m.memo_number}`,
-                    subLabel: m.content.substring(0, 100),
-                    memo_number: m.memo_number,
-                    created_at: m.created_at
-                }));
-
-                setHasMoreMentions(data.length >= 15);
-                setMentionOffset(data.length);
-
-                setSuggestions(prev => {
-                    const combined = [...prev];
-                    remoteItems.forEach((ri: SuggestionItem) => {
-                        if (!combined.some(ci => ci.id === ri.id)) {
-                            combined.push(ri);
-                        }
-                    });
-                    combined.sort((a, b) => {
-                        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-                        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-                        return dateB - dateA;
-                    });
-                    return combined;
-                });
-            } finally {
-                if (reqId === lastRequestIdRef.current) setIsLoading(false);
-            }
-        };
-
-        if (isUpdate) {
-            if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-            debounceTimerRef.current = setTimeout(performSearch, 250);
-        } else {
-            performSearch();
-        }
+        // Update filtered results and reset pagination
+        setFilteredMentions(filtered);
+        setDisplayLimit(50); // Start with 50 for faster initial render but enough to scroll
+        setIsLoading(false);
     };
 
     const fetchHashtagSuggestions = (query: string) => {
@@ -268,6 +262,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             onStart: (props) => {
                                 suggestionPropsRef.current = props;
                                 setShowSuggestions(true);
+                                setSuggestionTrigger('@');
                                 fetchMentionSuggestions(props.query, false);
                             },
                             onUpdate: (props) => {
@@ -276,6 +271,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             },
                             onExit: () => {
                                 setShowSuggestions(false);
+                                setSuggestionTrigger(null);
                                 suggestionPropsRef.current = null;
                             },
                             onKeyDown: (props) => {
@@ -351,6 +347,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             onStart: (props) => {
                                 suggestionPropsRef.current = props;
                                 setShowSuggestions(true);
+                                setSuggestionTrigger('#');
                                 fetchHashtagSuggestions(props.query);
                             },
                             onUpdate: (props) => {
@@ -359,6 +356,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             },
                             onExit: () => {
                                 setShowSuggestions(false);
+                                setSuggestionTrigger(null);
                                 suggestionPropsRef.current = null;
                             },
                             onKeyDown: (props) => {
@@ -453,7 +451,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         editor,
                         query,
                         range: { from: startPos, to: from },
-                        command: (props: any) => {
+                        command: (props: { label: string }) => {
                             // 手动实现插入逻辑
                             editor.chain().focus().deleteRange({ from: startPos, to: from }).insertContent([
                                 {
@@ -469,6 +467,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     };
 
                     setShowSuggestions(true);
+                    setSuggestionTrigger(char);
                     if (char === '@') {
                         fetchMentionSuggestions(query, false);
                     } else {
@@ -480,6 +479,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         onBlur: () => {
             setIsFocused(false);
             setShowSuggestions(false);
+            setSuggestionTrigger(null);
         },
         editorProps: {
             attributes: {
@@ -515,51 +515,11 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
     const handleSuggestionScroll = async (e: React.UIEvent<HTMLUListElement>) => {
         const target = e.currentTarget;
-        const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 50;
+        const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 150;
 
-
-
-        // 移除 mentionQuery !== '' 限制，允许空 query 加载
-        if (isNearBottom && hasMoreMentions && !isFetchingMore && !isLoading) {
-            setIsFetchingMore(true);
-            const nextOffset = mentionOffset;
-
-            try {
-                const data = await searchMemosForMention(mentionQuery, nextOffset, 15);
-                if (mentionQueryRef.current !== mentionQuery) return; // Query changed
-
-                const newItems = data.map((m: Memo) => ({
-                    id: m.id,
-                    label: `@${m.memo_number}`,
-                    subLabel: m.content.substring(0, 100),
-                    memo_number: m.memo_number,
-                    created_at: m.created_at
-                }));
-
-                setHasMoreMentions(data.length >= 15);
-                setMentionOffset(prev => prev + data.length);
-
-                setSuggestions(prev => {
-                    const combined = [...prev];
-                    newItems.forEach((ni: SuggestionItem) => {
-                        if (!combined.some(ci => ci.id === ni.id)) {
-                            combined.push(ni);
-                        }
-                    });
-
-                    combined.sort((a, b) => {
-                        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-                        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-                        return dateB - dateA;
-                    });
-
-                    return combined;
-                });
-            } catch (err) {
-                console.error('Error fetching more mentions:', err);
-            } finally {
-                setIsFetchingMore(false);
-            }
+        // Local infinite scroll: increase limit when scrolling down
+        if (isNearBottom && hasMoreMentions && !isLoading) {
+            setDisplayLimit(prev => Math.min(prev + 50, filteredMentionsRef.current.length));
         }
     };
 
@@ -658,6 +618,26 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             }
 
             if (result.success) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const newMemo = (result as any).data;
+                if (newMemo) {
+                    setMemoIndex(prev => {
+                        const newItem: SuggestionItem = {
+                            id: newMemo.id,
+                            label: `@${newMemo.memo_number}`,
+                            subLabel: newMemo.content.substring(0, 100),
+                            memo_number: newMemo.memo_number,
+                            created_at: newMemo.created_at
+                        };
+
+                        if (mode === 'edit') {
+                            return prev.map(item => item.id === newItem.id ? newItem : item);
+                        } else {
+                            return [newItem, ...prev];
+                        }
+                    });
+                }
+
                 if (mode === 'create') {
                     editor?.commands.setContent('');
                     setContent('');
@@ -717,14 +697,15 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             onMouseDown={(e) => e.preventDefault()} // 防止点击弹窗导致编辑器失焦
                         >
                             <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden flex flex-col max-h-[450px]">
-                                {isLoading && suggestions.length === 0 ? (
+                                {isLoading || (isIndexLoading && suggestions.length === 0) ? (
                                     <div className="px-3 py-6 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight">
-                                        搜索中...
+                                        加载中...
                                     </div>
-                                ) : suggestions.length > 0 ? (
+                                ) : null}
+                                {suggestions.length > 0 ? (
                                     <ul
                                         ref={suggestionListRef}
-                                        className="divide-y divide-border/40 overflow-y-auto scrollbar-hover"
+                                        className="divide-y divide-border/40 overflow-y-auto scrollbar-hover flex-1 min-h-0"
                                         onScroll={handleSuggestionScroll}
                                     >
                                         {suggestions.map((item, index) => (
@@ -741,7 +722,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                                 {item.label.startsWith('#') ? (
                                                     <div className="flex justify-between items-center w-full">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-sm font-medium">{item.label}</span>
+                                                            <span className="text-xs text-foreground/80">{item.label}</span>
                                                             {item.subLabel && (
                                                                 <span className="text-[10px] text-muted-foreground/60 italic font-mono">
                                                                     {item.subLabel}
@@ -781,12 +762,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                                 )}
                                             </li>
                                         ))}
-                                        {isFetchingMore && (
-                                            <li className="px-3 py-4 text-[10px] text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight bg-background/50 backdrop-blur-sm sticky bottom-0 border-t border-border/40">
-                                                载入更多...
-                                            </li>
-                                        )}
-
                                     </ul>
                                 ) : null}
                             </div>

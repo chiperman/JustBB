@@ -59,7 +59,7 @@ export function MobileMenuOverlay({ isOpen, onClose, children }: MobileMenuOverl
                 initial={false}
                 animate={{
                     x: isOpen ? 0 : '-100%',
-                    visibility: isOpen ? 'visible' : 'hidden' as any
+                    visibility: (isOpen ? 'visible' : 'hidden') as 'visible' | 'hidden'
                 }}
                 transition={shouldReduceMotion ? { duration: 0 } : { type: 'spring', damping: 25, stiffness: 300 }}
                 className="lg:hidden fixed left-0 top-0 h-full w-72 z-50 bg-background shadow-xl pointer-events-auto"

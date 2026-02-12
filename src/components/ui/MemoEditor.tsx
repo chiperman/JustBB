@@ -332,7 +332,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 },
             }).configure({
                 HTMLAttributes: {
-                    class: 'font-mono mx-0.5 inline-block decoration-none',
+                    class: 'font-mono mx-0.5 inline-block decoration-none font-medium',
                     style: 'color: #5783f7',
                 },
                 suggestion: {

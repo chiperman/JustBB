@@ -14,11 +14,17 @@ import { getAllTags } from '@/actions/tags';
 
 // Tiptap imports
 import { useEditor, EditorContent } from '@tiptap/react';
+import { nodeInputRule, nodePasteRule } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import LinkExtension from '@tiptap/extension-link';
 import Mention from '@tiptap/extension-mention';
 import CharacterCount from '@tiptap/extension-character-count';
+import { PluginKey } from '@tiptap/pm/state';
+
+// 为建议插件定义独立的 Key，防止冲突
+const mentionPluginKey = new PluginKey('mention');
+const hashtagPluginKey = new PluginKey('hashtag');
 
 // 建议项类型
 interface SuggestionItem {
@@ -54,7 +60,6 @@ interface MemoEditorProps {
 export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isCollapsed: isPropCollapsed = false, hideFullscreen = false, contextMemos = [] }: MemoEditorProps) {
     const [content, setContent] = useState(memo?.content || '');
     const [tags, setTags] = useState<string[]>(memo?.tags || []);
-    const [tagInput, setTagInput] = useState('');
     const [isPending, setIsPending] = useState(false);
     const [isPrivate, setIsPrivate] = useState(memo?.is_private || false);
     const [accessCode, setAccessCode] = useState('');
@@ -115,6 +120,11 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     }, [mentionQuery]);
 
     const [allTags, setAllTags] = useState<TagStat[]>([]);
+    const allTagsRef = useRef<TagStat[]>([]);
+
+    useEffect(() => {
+        allTagsRef.current = allTags;
+    }, [allTags]);
 
     // --- 提取搜索逻辑 ---
     const fetchMentionSuggestions = async (query: string, isUpdate = false) => {
@@ -208,7 +218,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         setMentionQuery(query);
         setSelectedIndex(0);
 
-        const filtered = allTags
+        const filtered = allTagsRef.current
             .filter((t: TagStat) => t.tag_name.toLowerCase().includes(query.toLowerCase()))
             .map((t: TagStat) => ({
                 id: t.tag_name,
@@ -216,6 +226,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 count: t.count
             }))
             .slice(0, 8);
+
 
         setSuggestions(filtered);
     };
@@ -239,22 +250,15 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 bold: false,
                 italic: false,
             }),
-            Placeholder.configure({
-                placeholder: '想记点什么？JustMemo it',
-                emptyEditorClass: 'is-editor-empty',
-            }),
-            LinkExtension.configure({
-                openOnClick: false,
-            }),
-            CharacterCount.configure({
-                limit: 2000,
-            }),
-            Mention.configure({
+            Mention.extend({
+                name: 'mention',
+            }).configure({
                 HTMLAttributes: {
                     class: 'text-primary font-mono bg-primary/10 px-1 rounded-sm mx-0.5 inline-block decoration-none',
                 },
                 suggestion: {
                     char: '@',
+                    pluginKey: mentionPluginKey,
                     render: () => {
                         return {
                             onStart: (props) => {
@@ -312,6 +316,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 },
                 suggestion: {
                     char: '#',
+                    pluginKey: hashtagPluginKey,
+                    allowSpaces: false,
                     render: () => {
                         return {
                             onStart: (props) => {
@@ -347,8 +353,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
                                 if (props.event.key === 'Enter') {
                                     const item = suggestionsRef.current[selectedIndexRef.current];
-                                    if (suggestionPropsRef.current) {
-                                        // 如果是现有的标签则插入现有标签，如果是新输入的且按回车则按 query 插入
+                                    if (suggestionPropsRef.current && item) {
                                         const label = item ? item.label : `#${suggestionPropsRef.current.query}`;
                                         suggestionPropsRef.current.command({ id: label, label: label });
                                         props.event.preventDefault();
@@ -363,6 +368,16 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     },
                 },
             }),
+            Placeholder.configure({
+                placeholder: '想记点什么？JustMemo it',
+                emptyEditorClass: 'is-editor-empty',
+            }),
+            LinkExtension.configure({
+                openOnClick: false,
+            }),
+            CharacterCount.configure({
+                limit: 2000,
+            }),
         ],
         content: memo?.content || '',
         onUpdate: ({ editor }) => {
@@ -371,22 +386,11 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             setError(null);
 
             // 实时同步内容中的标签到 tags 状态
-            const json = editor.getJSON();
-            const extractedTags: string[] = [];
-
-            // 递归提取所有 hashtag 类型的节点
-            const findHashtags = (node: any) => {
-                if (node.type === 'hashtag' && node.attrs?.label) {
-                    const tag = node.attrs.label.replace(/^#/, '');
-                    if (tag && !extractedTags.includes(tag)) {
-                        extractedTags.push(tag);
-                    }
-                }
-                if (node.content) {
-                    node.content.forEach(findHashtags);
-                }
-            };
-            findHashtags(json);
+            // 采用正则从纯文本中提取，确保即使未转换为 Node 的标签也能被识别
+            // 改进正则以支持中文和中英文混合标签，并确保不匹配邮箱等
+            const hashtagRegex = /(?:^|\s|(?<=[^a-zA-Z0-9]))#([\w\u4e00-\u9fa5]+)/g;
+            const matches = text.matchAll(hashtagRegex);
+            const extractedTags = Array.from(new Set(Array.from(matches).map(m => m[1])));
             setTags(extractedTags);
         },
         onFocus: () => {
@@ -519,6 +523,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const handleSelectSuggestion = (item: SuggestionItem) => {
         if (!editor) return;
 
+
         if (suggestionPropsRef.current) {
             suggestionPropsRef.current.command({
                 id: item.label,
@@ -530,30 +535,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         setSelectedIndex(0);
     };
 
-    const handleSelectTag = (item: SuggestionItem) => {
-        // 废弃手动选择标签逻辑
-    };
 
-    const handleRemoveTag = (tagToRemove: string) => {
-        if (!editor) return;
-
-        // 从编辑器内容中移除对应的标签节点
-        const { state, dispatch } = editor.view;
-        const { tr } = state;
-        let deleted = false;
-
-        state.doc.descendants((node, pos) => {
-            if (node.type.name === 'hashtag' && node.attrs.label === `#${tagToRemove}`) {
-                tr.delete(pos, pos + node.nodeSize);
-                deleted = true;
-                return false; // stop descending
-            }
-        });
-
-        if (deleted) {
-            dispatch(tr);
-        }
-    };
 
     const renderHighlightedText = (text: string, query: string) => {
         if (!query.trim()) return text;
@@ -594,13 +576,19 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         const textContent = editor?.getText() || content;
         if (!textContent.trim() || isPending) return;
 
+        // 终极校验：发布前再次从文本中提取标签
+        // 使用更严谨的正则提取，支持中文且避免误识
+        const hashtagRegex = /(?:^|\s|(?<=[^a-zA-Z0-9]))#([\w\u4e00-\u9fa5]+)/g;
+        const matches = textContent.matchAll(hashtagRegex);
+        const finalTags = Array.from(new Set(Array.from(matches).map(m => m[1])));
+
         setIsPending(true);
         setError(null);
         setShowPrivateDialog(false);
 
         const formData = new FormData();
         formData.append('content', textContent);
-        tags.forEach(tag => formData.append('tags', tag));
+        finalTags.forEach(tag => formData.append('tags', tag));
         formData.append('is_private', String(isPrivate));
         formData.append('is_pinned', String(isPinned));
 
@@ -672,7 +660,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "min-h-0")} />
                     </motion.div>
 
-                    {showSuggestions && (suggestions.length > 0 || isLoading) && (
+                    {showSuggestions && (suggestions.length > 0 || isLoading || mentionQueryRef.current.startsWith('#')) && (
                         <div
                             className="absolute top-full left-0 mt-2 z-50 w-full max-w-[350px]"
                             onMouseDown={(e) => e.preventDefault()} // 防止点击弹窗导致编辑器失焦
@@ -701,7 +689,14 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                             >
                                                 {item.label.startsWith('#') ? (
                                                     <div className="flex justify-between items-center w-full">
-                                                        <span className="text-sm font-medium">{item.label}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm font-medium">{item.label}</span>
+                                                            {item.subLabel && (
+                                                                <span className="text-[10px] text-muted-foreground/60 italic font-mono">
+                                                                    {item.subLabel}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         {item.count !== undefined && (
                                                             <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
                                                                 {item.count}
@@ -747,37 +742,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     )}
                 </div>
 
-                <motion.div
-                    layout
-                    initial={false}
-                    animate={{
-                        maxHeight: isActuallyCollapsed ? 0 : 200,
-                        opacity: isActuallyCollapsed ? 0 : 1,
-                        marginTop: isActuallyCollapsed ? 0 : 8
-                    }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="overflow-hidden"
-                >
 
-                    {/* 标签展示区 */}
-                    <div className="flex flex-wrap gap-2 items-center min-h-[32px]">
-                        {tags.map(tag => (
-                            <span
-                                key={tag}
-                                className="inline-flex items-center gap-1 bg-primary/5 text-primary text-xs px-2.5 py-1 rounded-sm group/tag animate-in zoom-in-95 duration-200"
-                            >
-                                #{tag}
-                                <button
-                                    onClick={() => handleRemoveTag(tag)}
-                                    className="hover:text-red-500 transition-colors focus:outline-none focus:ring-1 focus:ring-red-400 rounded-sm p-0.5"
-                                    aria-label={`删除标签 #${tag}`}
-                                >
-                                    <X className="w-2.5 h-2.5" aria-hidden="true" />
-                                </button>
-                            </span>
-                        ))}
-                    </div>
-                </motion.div>
 
                 {
                     error && (

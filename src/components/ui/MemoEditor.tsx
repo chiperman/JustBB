@@ -93,8 +93,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
     // Tag autocomplete states
     const [allTags, setAllTags] = useState<TagStat[]>([]);
-    const [tagSuggestions, setTagSuggestions] = useState<SuggestionItem[]>([]);
-    const [showTagSuggestions, setShowTagSuggestions] = useState(false);
 
     const shouldReduceMotion = useReducedMotion();
     const router = useRouter();
@@ -162,10 +160,10 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 setIsLoading(true);
                                 const requestId = ++lastRequestIdRef.current;
 
-                                searchMemosForMention(props.query).then(data => {
+                                searchMemosForMention(props.query).then((data: Memo[]) => {
                                     if (requestId !== lastRequestIdRef.current) return;
 
-                                    const remoteItems = data.map(m => ({
+                                    const remoteItems = data.map((m: Memo) => ({
                                         id: m.id,
                                         label: `@${m.memo_number}`,
                                         subLabel: m.content.substring(0, 100),
@@ -176,7 +174,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                     // 合并结果，去重并优先保留本地/最新结果
                                     setSuggestions(prev => {
                                         const combined = [...prev];
-                                        remoteItems.forEach(ri => {
+                                        remoteItems.forEach((ri: SuggestionItem) => {
                                             if (!combined.some(ci => ci.id === ri.id)) {
                                                 combined.push(ri);
                                             }
@@ -197,12 +195,12 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
                                 // --- 优化：双层搜索逻辑 (Layer 1: 本地同步过滤) ---
                                 const localItems: SuggestionItem[] = contextMemos
-                                    .filter(m =>
+                                    .filter((m: Memo) =>
                                         m.memo_number?.toString().includes(props.query) ||
                                         m.content.toLowerCase().includes(props.query.toLowerCase())
                                     )
                                     .slice(0, 5)
-                                    .map(m => ({
+                                    .map((m: Memo) => ({
                                         id: m.id,
                                         label: `@${m.memo_number}`,
                                         subLabel: m.content.substring(0, 100),
@@ -229,10 +227,10 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 // 增加 250ms 防抖，减少拼音阶段的请求频率
                                 debounceTimerRef.current = setTimeout(() => {
                                     const requestId = ++lastRequestIdRef.current;
-                                    searchMemosForMention(props.query).then(data => {
+                                    searchMemosForMention(props.query).then((data: Memo[]) => {
                                         if (requestId !== lastRequestIdRef.current) return;
 
-                                        const remoteItems = data.map(m => ({
+                                        const remoteItems = data.map((m: Memo) => ({
                                             id: m.id,
                                             label: `@${m.memo_number}`,
                                             subLabel: m.content.substring(0, 100),
@@ -242,7 +240,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
                                         setSuggestions(prev => {
                                             const combined = [...prev];
-                                            remoteItems.forEach(ri => {
+                                            remoteItems.forEach((ri: SuggestionItem) => {
                                                 if (!combined.some(ci => ci.id === ri.id)) {
                                                     combined.push(ri);
                                                 }
@@ -282,7 +280,91 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 if (props.event.key === 'Enter') {
                                     const item = suggestionsRef.current[selectedIndexRef.current];
                                     if (item && suggestionPropsRef.current) {
-                                        suggestionPropsRef.current.command({ id: item.memo_number, label: item.memo_number });
+                                        suggestionPropsRef.current.command({ id: item.label, label: item.label });
+                                        props.event.preventDefault();
+                                        props.event.stopPropagation();
+                                        return true;
+                                    }
+                                }
+
+                                return false;
+                            },
+                        };
+                    },
+                },
+            }),
+            Mention.extend({
+                name: 'hashtag',
+            }).configure({
+                HTMLAttributes: {
+                    class: 'text-primary font-mono bg-primary/10 px-1 rounded-sm mx-0.5 inline-block decoration-none',
+                },
+                suggestion: {
+                    char: '#',
+                    render: () => {
+                        return {
+                            onStart: (props) => {
+                                suggestionPropsRef.current = props;
+                                setSelectedIndex(0);
+                                setMentionQuery(props.query);
+                                setShowSuggestions(true);
+
+                                // 标签过滤逻辑
+                                const filtered = allTags
+                                    .filter((t: TagStat) => t.tag_name.toLowerCase().includes(props.query.toLowerCase()))
+                                    .slice(0, 8)
+                                    .map((t: TagStat) => ({
+                                        id: t.tag_name,
+                                        label: `#${t.tag_name}`,
+                                        count: t.count
+                                    }));
+
+                                setSuggestions(filtered);
+                            },
+                            onUpdate: (props) => {
+                                suggestionPropsRef.current = props;
+                                setSelectedIndex(0);
+                                setMentionQuery(props.query);
+
+                                const filtered = allTags
+                                    .filter((t: TagStat) => t.tag_name.toLowerCase().includes(props.query.toLowerCase()))
+                                    .slice(0, 8)
+                                    .map((t: TagStat) => ({
+                                        id: t.tag_name,
+                                        label: `#${t.tag_name}`,
+                                        count: t.count
+                                    }));
+
+                                setSuggestions(filtered);
+                            },
+                            onExit: () => {
+                                setShowSuggestions(false);
+                                suggestionPropsRef.current = null;
+                            },
+                            onKeyDown: (props) => {
+                                if (props.event.key === 'Escape') {
+                                    setShowSuggestions(false);
+                                    return true;
+                                }
+
+                                if (props.event.key === 'ArrowUp') {
+                                    setSelectedIndex((prev) => (prev + suggestionsRef.current.length - 1) % suggestionsRef.current.length);
+                                    props.event.preventDefault();
+                                    return true;
+                                }
+
+                                if (props.event.key === 'ArrowDown') {
+                                    setSelectedIndex((prev) => (prev + 1) % suggestionsRef.current.length);
+                                    props.event.preventDefault();
+                                    return true;
+                                }
+
+                                if (props.event.key === 'Enter') {
+                                    const item = suggestionsRef.current[selectedIndexRef.current];
+                                    if (suggestionPropsRef.current) {
+                                        // 如果是现有的标签则插入现有标签，如果是新输入的且按回车则按 query 插入
+                                        const label = item ? item.label : `#${suggestionPropsRef.current.query}`;
+                                        suggestionPropsRef.current.command({ id: label, label: label });
                                         props.event.preventDefault();
                                         props.event.stopPropagation();
                                         return true;
@@ -302,21 +384,24 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             setContent(text);
             setError(null);
 
-            // 处理 #标签 建议触发
-            const { from, to } = editor.state.selection;
-            const textBefore = editor.state.doc.textBetween(Math.max(0, from - 20), from, ' ');
-            const tagMatch = textBefore.match(/#(\S*)$/);
+            // 实时同步内容中的标签到 tags 状态
+            const json = editor.getJSON();
+            const extractedTags: string[] = [];
 
-            if (tagMatch) {
-                const query = tagMatch[1];
-                const filtered = allTags
-                    .filter(t => t.tag_name.toLowerCase().includes(query.toLowerCase()))
-                    .slice(0, 5);
-                setTagSuggestions(filtered.map(t => ({ id: t.tag_name, label: `#${t.tag_name}`, count: t.count })));
-                setShowTagSuggestions(true);
-            } else {
-                setShowTagSuggestions(false);
-            }
+            // 递归提取所有 hashtag 类型的节点
+            const findHashtags = (node: any) => {
+                if (node.type === 'hashtag' && node.attrs?.label) {
+                    const tag = node.attrs.label.replace(/^#/, '');
+                    if (tag && !extractedTags.includes(tag)) {
+                        extractedTags.push(tag);
+                    }
+                }
+                if (node.content) {
+                    node.content.forEach(findHashtags);
+                }
+            };
+            findHashtags(json);
+            setTags(extractedTags);
         },
         onFocus: () => setIsFocused(true),
         onBlur: () => setIsFocused(false),
@@ -338,38 +423,28 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         }
     }, [editor, memo, mode]);
 
-    const handleTagInputChange = (val: string) => {
-        setTagInput(val);
-        if (val.trim()) {
-            const filtered = allTags
-                .filter(t => t.tag_name.toLowerCase().includes(val.toLowerCase()))
-                .slice(0, 5);
-            setTagSuggestions(filtered.map(t => ({ id: t.tag_name, label: `#${t.tag_name}`, count: t.count })));
-            setShowTagSuggestions(true);
-        } else {
-            setShowTagSuggestions(false);
+    const suggestionListRef = useRef<HTMLUListElement>(null);
+
+    useLayoutEffect(() => {
+        if (showSuggestions && suggestionListRef.current) {
+            const selectedItem = suggestionListRef.current.children[selectedIndex] as HTMLElement;
+            if (selectedItem) {
+                selectedItem.scrollIntoView({
+                    block: 'nearest',
+                    behavior: 'smooth'
+                });
+            }
         }
-    };
+    }, [selectedIndex, showSuggestions]);
 
     const handleSelectSuggestion = (item: SuggestionItem) => {
         if (!editor) return;
 
         if (suggestionPropsRef.current) {
             suggestionPropsRef.current.command({
-                id: item.memo_number,
-                label: item.memo_number,
+                id: item.label,
+                label: item.label,
             });
-        } else {
-            // Fallback to manual insertion if props are lost
-            editor
-                .chain()
-                .focus()
-                .insertContent({
-                    type: 'mention',
-                    attrs: { id: item.memo_number, label: item.memo_number },
-                })
-                .insertContent(' ')
-                .run();
         }
 
         setShowSuggestions(false);
@@ -377,12 +452,28 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     };
 
     const handleSelectTag = (item: SuggestionItem) => {
-        const tag = item.id;
-        if (!tags.includes(tag)) {
-            setTags([...tags, tag]);
+        // 废弃手动选择标签逻辑
+    };
+
+    const handleRemoveTag = (tagToRemove: string) => {
+        if (!editor) return;
+
+        // 从编辑器内容中移除对应的标签节点
+        const { state, dispatch } = editor.view;
+        const { tr } = state;
+        let deleted = false;
+
+        state.doc.descendants((node, pos) => {
+            if (node.type.name === 'hashtag' && node.attrs.label === `#${tagToRemove}`) {
+                tr.delete(pos, pos + node.nodeSize);
+                deleted = true;
+                return false; // stop descending
+            }
+        });
+
+        if (deleted) {
+            dispatch(tr);
         }
-        setTagInput('');
-        setShowTagSuggestions(false);
     };
 
     const renderHighlightedText = (text: string, query: string) => {
@@ -399,32 +490,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 ))}
             </>
         );
-    };
-
-    const handleAddTag = () => {
-        const tag = tagInput.trim().replace(/^#/, '');
-        if (tag && !tags.includes(tag)) {
-            setTags([...tags, tag]);
-            setTagInput('');
-        }
-        setShowTagSuggestions(false);
-    };
-
-    const handleRemoveTag = (tagToRemove: string) => {
-        setTags(tags.filter(t => t !== tagToRemove));
-    };
-
-
-    const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        // cmdk 内置键盘导航，这里只处理 Enter 添加新标签和 Escape
-        if (showTagSuggestions && e.key === 'Escape') {
-            setShowTagSuggestions(false);
-            return;
-        }
-        if (e.key === 'Enter' && !showTagSuggestions) {
-            e.preventDefault();
-            handleAddTag();
-        }
     };
 
     const handleTogglePrivate = () => {
@@ -529,14 +594,17 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     </motion.div>
 
                     {showSuggestions && (suggestions.length > 0 || isLoading) && (
-                        <div className="absolute top-full left-0 mt-1 z-50 w-full max-w-[320px]">
-                            <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden max-h-[350px] overflow-y-auto scrollbar-hover min-h-[40px] flex flex-col justify-center">
+                        <div className="absolute top-full left-0 mt-2 z-50 w-full max-w-[350px]">
+                            <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden max-h-[450px] flex flex-col">
                                 {isLoading && suggestions.length === 0 ? (
-                                    <div className="px-3 py-4 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight">
+                                    <div className="px-3 py-6 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight">
                                         搜索中...
                                     </div>
                                 ) : suggestions.length > 0 ? (
-                                    <ul className="divide-y divide-border/40">
+                                    <ul
+                                        ref={suggestionListRef}
+                                        className="divide-y divide-border/40 overflow-y-auto scrollbar-hover"
+                                    >
                                         {suggestions.map((item, index) => (
                                             <li
                                                 key={item.id}
@@ -548,27 +616,40 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                                         : "hover:bg-accent/50 text-foreground"
                                                 )}
                                             >
-                                                <div className="flex justify-between items-center w-full">
-                                                    <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
-                                                        {item.created_at ? new Date(item.created_at).toLocaleString('zh-CN', {
-                                                            year: 'numeric',
-                                                            month: '2-digit',
-                                                            day: '2-digit',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit',
-                                                            second: '2-digit',
-                                                            hour12: false
-                                                        }).replace(/\//g, '-') : ''}
-                                                    </span>
-                                                    {item.memo_number !== undefined && (
-                                                        <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
-                                                            #{item.memo_number}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="text-xs leading-relaxed text-foreground/80 break-words pr-2">
-                                                    {item.subLabel && renderHighlightedText(item.subLabel, mentionQuery)}
-                                                </div>
+                                                {item.label.startsWith('#') ? (
+                                                    <div className="flex justify-between items-center w-full">
+                                                        <span className="text-sm font-medium">{item.label}</span>
+                                                        {item.count !== undefined && (
+                                                            <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
+                                                                {item.count}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <div className="flex justify-between items-center w-full">
+                                                            <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
+                                                                {item.created_at ? new Date(item.created_at).toLocaleString('zh-CN', {
+                                                                    year: 'numeric',
+                                                                    month: '2-digit',
+                                                                    day: '2-digit',
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit',
+                                                                    second: '2-digit',
+                                                                    hour12: false
+                                                                }).replace(/\//g, '-') : ''}
+                                                            </span>
+                                                            {item.memo_number !== undefined && (
+                                                                <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
+                                                                    #{item.memo_number}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="text-xs leading-relaxed text-foreground/80 break-words pr-2">
+                                                            {item.subLabel && renderHighlightedText(item.subLabel, mentionQuery)}
+                                                        </div>
+                                                    </>
+                                                )}
                                             </li>
                                         ))}
                                     </ul>
@@ -590,7 +671,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     className="overflow-hidden"
                 >
 
-                    {/* 标签展示与录入区 */}
+                    {/* 标签展示区 */}
                     <div className="flex flex-wrap gap-2 items-center min-h-[32px]">
                         {tags.map(tag => (
                             <span
@@ -607,44 +688,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 </button>
                             </span>
                         ))}
-
-                        <div className="relative">
-                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-sm bg-muted/40 border border-transparent focus-within:border-primary/20 focus-within:bg-background transition-all">
-                                <Hash className="w-3.5 h-3.5 text-muted-foreground/50" aria-hidden="true" />
-                                <input
-                                    type="text"
-                                    placeholder="添加标签..."
-                                    value={tagInput}
-                                    onChange={(e) => handleTagInputChange(e.target.value)}
-                                    onKeyDown={handleTagInputKeyDown}
-                                    className="bg-transparent border-none focus:ring-0 text-xs p-0 w-24 placeholder:text-muted-foreground/40"
-                                    aria-label="添加标签"
-                                />
-                            </div>
-                            {showTagSuggestions && tagSuggestions.length > 0 && (
-                                <div className="absolute top-full left-0 mt-1 z-50">
-                                    <Command className="min-w-[200px]">
-                                        <CommandList>
-                                            <CommandGroup>
-                                                {tagSuggestions.map((item) => (
-                                                    <CommandItem
-                                                        key={item.id}
-                                                        value={item.label}
-                                                        onSelect={() => handleSelectTag(item)}
-                                                        className="flex justify-between items-center"
-                                                    >
-                                                        <span className="font-medium text-sm">{item.label}</span>
-                                                        {item.count !== undefined && (
-                                                            <span className="text-xs text-muted-foreground">{item.count}</span>
-                                                        )}
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandGroup>
-                                        </CommandList>
-                                    </Command>
-                                </div>
-                            )}
-                        </div>
                     </div>
                 </motion.div>
 

@@ -40,7 +40,6 @@ import { YearlyStats } from './YearlyStats';
 interface DayStats {
     count: number;
     wordCount: number;
-    date: string;
 }
 
 interface HeatmapStats {

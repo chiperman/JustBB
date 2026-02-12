@@ -1,6 +1,7 @@
 'use server';
 
 import { supabase } from '@/lib/supabase';
+import { Json } from '@/types/database';
 
 export async function getMemos(params: {
     query?: string;
@@ -32,9 +33,9 @@ export async function getMemos(params: {
         input_code: adminCode,
         limit_val: limitSize,
         offset_val: offsetVal,
-        filters: filters as Record<string, unknown>,
+        filters: filters as unknown as Json,
         sort_order: sort
-    });
+    } as any);
 
     if (error) {
         console.error('Error fetching memos via RPC:', {

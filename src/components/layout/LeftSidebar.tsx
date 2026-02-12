@@ -1,7 +1,6 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import { SearchInput } from '../ui/SearchInput';
 import { TagCloud } from '../ui/TagCloud';
 import { Heatmap } from '../ui/Heatmap';
 import { OnThisDay } from '../ui/OnThisDay';
@@ -68,7 +67,9 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
             </div>
 
             <div className={cn("transition-all duration-300", effectiveIsCollapsed ? "h-0 opacity-0 invisible overflow-hidden" : "h-auto opacity-100 visible mb-8 px-1")}>
-                <Heatmap />
+                <Suspense fallback={<div className="h-40 w-full animate-pulse bg-muted/20 rounded-md" />}>
+                    <Heatmap />
+                </Suspense>
             </div>
 
             <nav className="flex-1 space-y-1.5 mb-6">

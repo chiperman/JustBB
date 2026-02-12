@@ -11,6 +11,7 @@ import { updateMemoContent } from '@/actions/update';
 import { getAllMemoIndices } from '@/actions/search';
 import { Command, CommandList, CommandItem, CommandEmpty, CommandGroup } from './command';
 import { getAllTags } from '@/actions/tags';
+import { memoCache, CacheItem } from '@/lib/memo-cache'; // Import local cache
 
 // Tiptap imports
 import { useEditor, EditorContent, Extension } from '@tiptap/react';
@@ -55,6 +56,30 @@ interface CustomSuggestionProps extends SuggestionProps {
     command: (props: any) => void;
 }
 
+
+// Helper to generate smart snippet
+const generateSnippet = (content: string, query: string): string => {
+    // 1. Replace Markdown images with [图片]
+    let text = content.replace(/!\[.*?\]\(.*?\)/g, '[图片]');
+
+    // 2. Initial toggle if no query
+    if (!query.trim()) return text.substring(0, 100);
+
+    const lowerText = text.toLowerCase();
+    const lowerQuery = query.toLowerCase();
+    const index = lowerText.indexOf(lowerQuery);
+
+    // 3. If query not found (shouldn't happen in search results, but safe guard)
+    if (index === -1) return text.substring(0, 100);
+
+    // 4. If match is near the beginning, just show start
+    if (index < 40) return text.substring(0, 100);
+
+    // 5. Contextual snippet
+    const start = Math.max(0, index - 20);
+    const end = Math.min(text.length, index + 80);
+    return '...' + text.substring(start, end);
+};
 
 interface MemoEditorProps {
     mode?: 'create' | 'edit';
@@ -126,24 +151,19 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         allTagsRef.current = allTags;
     }, [allTags]);
 
-    // Local index for mentions
-    const [memoIndex, setMemoIndex] = useState<SuggestionItem[]>([]);
-    const memoIndexRef = useRef<SuggestionItem[]>([]);
 
-    useEffect(() => {
-        memoIndexRef.current = memoIndex;
-        // If index loads while user is searching, refresh results
-        if (showSuggestions && suggestionTrigger === '@') {
-            fetchMentionSuggestions(mentionQueryRef.current, true);
-        }
-    }, [memoIndex]);
 
     // Local pagination state
     const [filteredMentions, setFilteredMentions] = useState<SuggestionItem[]>([]);
-    const [displayLimit, setDisplayLimit] = useState(50);
+    const [displayLimit, setDisplayLimit] = useState(20); // Initial limit changed to 20 per plan
     const [suggestionTrigger, setSuggestionTrigger] = useState<string | null>(null);
     const [isIndexLoading, setIsIndexLoading] = useState(true);
     const filteredMentionsRef = useRef<SuggestionItem[]>([]);
+    const suggestionTriggerRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        suggestionTriggerRef.current = suggestionTrigger;
+    }, [suggestionTrigger]);
 
     useEffect(() => {
         filteredMentionsRef.current = filteredMentions;
@@ -155,52 +175,73 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     }, [filteredMentions, displayLimit, showSuggestions, suggestionTrigger]);
 
     useEffect(() => {
-        // Load lightweight index on mount
-        setIsIndexLoading(true);
-        getAllMemoIndices().then(memos => {
-            const indexItems = memos.map(m => ({
-                id: m.id!,
-                label: `@${m.memo_number}`,
-                subLabel: m.content?.substring(0, 100) || '',
-                memo_number: m.memo_number,
-                created_at: m.created_at
-            }));
-            setMemoIndex(indexItems);
+        // Initialize Cache Strategy
+        const initCache = async () => {
+            setIsIndexLoading(true);
+
+            // 1. Immediate Seed from props (if any and cache empty)
+            if (!memoCache.getInitialized() && contextMemos.length > 0) {
+                const seedItems: CacheItem[] = contextMemos.map(m => ({
+                    id: m.id,
+                    memo_number: m.memo_number || 0,
+                    content: m.content,
+                    created_at: m.created_at
+                }));
+                memoCache.mergeItems(seedItems);
+            }
+
+            // 2. Background Fetch Full Index
+            if (!memoCache.getFullyLoaded()) {
+                try {
+                    const memos = await getAllMemoIndices();
+
+                    const indexItems: CacheItem[] = memos.map(m => ({
+                        id: m.id!,
+                        memo_number: m.memo_number || 0,
+                        content: m.content || '',
+                        created_at: m.created_at || new Date().toISOString()
+                    }));
+                    memoCache.mergeItems(indexItems);
+                    memoCache.setFullyLoaded(true);
+
+                    // If the user is currently looking at mentions, refresh the list immediately
+                    if (suggestionTriggerRef.current === '@') {
+                        fetchMentionSuggestions(mentionQueryRef.current, true);
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch background index", e);
+                }
+            }
+
             setIsIndexLoading(false);
-        }).catch(() => {
-            setIsIndexLoading(false);
-        });
+        };
+
+        initCache();
     }, []);
 
     // --- 提取搜索逻辑 ---
     // Update: Now using purely local index
+    // --- 提取搜索逻辑 ---
+    // Update: Now using global memoCache
     const fetchMentionSuggestions = async (query: string, isUpdate = false) => {
         setMentionQuery(query);
         setSelectedIndex(0);
 
-        // Search in local index (which contains ALL memos now)
-        const sourceData = memoIndexRef.current.length > 0 ? memoIndexRef.current : contextMemos.map(m => ({
-            id: m.id,
-            label: `@${m.memo_number}`,
-            subLabel: m.content.substring(0, 100),
-            memo_number: m.memo_number,
-            created_at: m.created_at
+        // Search in local cache
+        const searchResults = memoCache.search(query);
+
+        // Map to SuggestionItem with Smart Snippet
+        const filtered: SuggestionItem[] = searchResults.map(item => ({
+            id: item.id,
+            label: `@${item.memo_number}`,
+            subLabel: generateSnippet(item.content, query),
+            memo_number: item.memo_number,
+            created_at: item.created_at
         }));
 
-        const filtered = sourceData
-            .filter(item =>
-                item.label.includes(query) ||
-                (item.subLabel && item.subLabel.toLowerCase().includes(query.toLowerCase()))
-            )
-            .sort((a, b) => {
-                const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-                const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-                return dateB - dateA;
-            });
-
         // Update filtered results and reset pagination
-        setFilteredMentions(filtered);
-        setDisplayLimit(50); // Start with 50 for faster initial render but enough to scroll
+        setFilteredMentions(filtered); // Store FULL list of matches
+        setDisplayLimit(20); // Reset limit to 20 for instant render
         setIsLoading(false);
     };
 
@@ -521,7 +562,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
         // Local infinite scroll: increase limit when scrolling down
         if (isNearBottom && hasMoreMentions && !isLoading) {
-            setDisplayLimit(prev => Math.min(prev + 50, filteredMentionsRef.current.length));
+            setDisplayLimit(prev => Math.min(prev + 20, filteredMentionsRef.current.length));
         }
     };
 
@@ -623,21 +664,21 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const newMemo = (result as any).data;
                 if (newMemo) {
-                    setMemoIndex(prev => {
-                        const newItem: SuggestionItem = {
+                    if (newMemo) {
+                        // Update Cache Optimistically
+                        memoCache.addItem({
                             id: newMemo.id,
-                            label: `@${newMemo.memo_number}`,
-                            subLabel: newMemo.content.substring(0, 100),
-                            memo_number: newMemo.memo_number,
+                            memo_number: newMemo.memo_number || 0,
+                            content: newMemo.content,
                             created_at: newMemo.created_at
-                        };
+                        });
 
-                        if (mode === 'edit') {
-                            return prev.map(item => item.id === newItem.id ? newItem : item);
-                        } else {
-                            return [newItem, ...prev];
-                        }
-                    });
+                        // No need to update local state since we use memoCache now, 
+                        // but if we are in 'edit', we might need to refresh something? 
+                        // Actually logic below was dealing with 'suggestionItems' state directly.
+                        // Now we rely on fetchMentionSuggestions re-running if needed, 
+                        // or next time user opens suggestions.
+                    }
                 }
 
                 if (mode === 'create') {

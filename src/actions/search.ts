@@ -28,15 +28,13 @@ export async function searchMemosForMention(query: string, offset: number = 0, l
 
 export async function getAllMemoIndices(): Promise<Partial<Memo>[]> {
     const supabase = getSupabaseAdmin();
-    const cookieStore = await cookies();
-    const adminCode = cookieStore.get('memo_access_code')?.value || '';
 
     // Fetch all memos, ordered by creation date descending
     // Only select necessary fields for indexing to keep payload small
     const { data, error } = await supabase
         .from('memos')
-        .select('id, memo_number, content, created_at, is_private, access_code, is_archived')
-        .eq('is_archived', false) // Only active memos
+        .select('id, memo_number, content, created_at, is_private, access_code')
+        .is('deleted_at', null) // Only active (not deleted) memos
         .order('created_at', { ascending: false });
 
     if (error) {
@@ -46,17 +44,14 @@ export async function getAllMemoIndices(): Promise<Partial<Memo>[]> {
 
     // Filter based on visibility permissions
     const memos = (data || []) as unknown as Memo[];
-    const visibleMemos = memos.filter((memo) => {
-        if (!memo.is_private) return true;
-        if (adminCode && memo.access_code === adminCode) return true;
-        return false;
-    });
+    const visibleMemos = memos;
 
     // Return lightweight objects
     return visibleMemos.map(memo => ({
         id: memo.id,
         memo_number: memo.memo_number,
-        content: memo.content.substring(0, 100), // Truncate content for index
+        // Return lightweight objects but full content for client-side indexing
+        content: memo.content || '', // Full content for search index
         created_at: memo.created_at
     }));
 }

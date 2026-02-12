@@ -12,8 +12,18 @@
 *   `src/app`: 路由与页面组件。
 *   `src/components`: UI 库与业务组件。
 *   `src/actions`: **Server Actions** 逻辑目录。
-*   `src/lib`: Supabase Client、工具函数、加密逻辑。
+*   `src/lib`: Supabase Client、工具函数、加密逻辑、**MemoCache (客户端索引)**。
 *   `src/types`: 数据库类型定义。
+
+## 2.1 客户端缓存架构 (MemoCache)
+*   **目的**: 实现 `@` 引用时的零延迟搜索与建议。
+*   **单例模式**: `MemoCache` 类维护全局唯一的内存索引。
+*   **混合加载策略 (Hybrid Loading)**:
+    1.  **Seed (Props)**: 页面加载时，利用服务端渲染传入的 `contextMemos` (最近20条) 立即初始化缓存。
+    2.  **Background Fetch**: 随后在后台异步调用 `getAllMemoIndices` 拉取全量数据 (仅 ID、Content、Number)。
+    3.  **Merge**: 自动去重合并，标记 `isFullyLoaded`。
+*   **乐观更新**:
+    - 发布新 Memo 成功后，直接写入 Cache，无需等待网络重载即可被搜索。
 
 ## 3. 环境变量 (.env)
 详见根目录下的 **[.env.example](file:///home/chiperman/code/JustMemo/.env.example)**。需配置 Supabase 凭证与站点 URL。

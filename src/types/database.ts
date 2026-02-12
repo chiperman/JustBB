@@ -70,7 +70,7 @@ export type Database = {
                     input_code?: string;
                     limit_val?: number;
                     offset_val?: number;
-                    filters?: Record<string, unknown>;
+                    filters?: Json;
                     sort_order?: string;
                 };
                 Returns: {

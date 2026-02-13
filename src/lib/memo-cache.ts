@@ -1,18 +1,38 @@
+const MEMO_CACHE_KEY = 'MEMO_DATA_CACHE_V1';
+
 export interface CacheItem {
     id: string;
     memo_number: number;
     content: string; // Full text for search
     created_at: string;
+    // Add optional fields for full feed rendering if needed, 
+    // but for now we might keeping CacheItem simple or mapping FULL Memo to it?
+    // Actually search.ts getAllMemos returns Memo[]. 
+    // We should probably store Memo[] in cache if we want to render the feed from it.
+    // Let's extend CacheItem or just use Memo type if possible, but to avoid circular deps with types, 
+    // let's keep CacheItem generic or just use 'any' for now? 
+    // Better: let's stick to the plan. MemoFeed needs FULL data. 
+    // So CacheItem should be compatible with Memo. 
+    // Let's update CacheItem to index signature or include needed fields.
+    tags?: string[] | null;
+    is_pinned?: boolean;
+    is_locked?: boolean;
+    is_private?: boolean;
+    [key: string]: any;
 }
 
 class MemoCache {
     private static instance: MemoCache;
     private items: CacheItem[] = [];
     private isInitialized = false;
-    private isFullyLoaded = false; // New flag to track if full index is loaded
-    private initPromise: Promise<void> | null = null;
+    private isFullyLoaded = false;
 
-    private constructor() { }
+    private constructor() {
+        // Try load from storage immediately
+        if (typeof window !== 'undefined') {
+            this.loadFromStorage();
+        }
+    }
 
     public static getInstance(): MemoCache {
         if (!MemoCache.instance) {
@@ -31,6 +51,9 @@ class MemoCache {
 
     public setFullyLoaded(value: boolean) {
         this.isFullyLoaded = value;
+        if (value) {
+            this.saveToStorage();
+        }
     }
 
     public getFullyLoaded(): boolean {
@@ -41,6 +64,7 @@ class MemoCache {
         this.items = items;
         this.isInitialized = true;
         this.isFullyLoaded = true;
+        this.saveToStorage();
     }
 
     public getItems(): CacheItem[] {
@@ -48,55 +72,16 @@ class MemoCache {
     }
 
     public addItem(item: CacheItem) {
-        // Prepend new item
         this.items.unshift(item);
+        this.saveToStorage();
     }
 
-    // Merge logic: keep existing items, add new ones if not present (simple id check)
-    // Assuming 'newItems' are the "latest" full list or a chunk. 
-    // For this specific requirement (background full fetch), we usually just overwrite 
-    // or intelligently merge. Overwriting is safest if we fetched "all".
-    // But we need to preserve the order (newest first).
     public mergeItems(newItems: CacheItem[]) {
-        const existingIds = new Set(this.items.map(i => i.id));
-        const uniqueNewItems = newItems.filter(i => !existingIds.has(i.id));
-
-        // If we assumed newItems is the "Master Truth" sorted by time, 
-        // we might just want to set it. 
-        // But to be safe against race conditions (e.g. user created a memo while fetching),
-        // we might want to do key-based deduplication.
-
-        // Strategy: Create map from newItems (latest server state), 
-        // but also keep any items in 'this.items' that *aren't* in newItems? 
-        // (Maybe user created them locally but they aren't on server yet? 
-        // No, local creation sends to server).
-
-        // Simplest strategy for "Background Full Fetch": 
-        // Just Use the new list, but check if we have any "very new" items 
-        // locally that might be missing? 
-        // Actually, if we just fetched from server, it should be accurate.
-        // Let's just use a Map to merge and sort.
-
         const mergedMap = new Map<string, CacheItem>();
 
-        // Priority: current items (might have just-created ones) overwrites fetched? 
-        // No, fetched is source of truth usually. 
-        // Let's trust the input 'newItems' as the source of truth, 
-        // BUT if we just added a local item, it might be in 'this.items' but not yet in 'newItems' 
-        // (if the fetch started *before* the creation finished? Unlikely with await).
-
-        // User requirement: "Background fetch... merge silently".
-        // Let's just combine and dedup by ID, then sort by ID or CreatedAt.
-
-        const allItems = [...this.items, ...newItems];
-        // Dedup keeping the first occurrence (which is from this.items, preserving local state if needed)
-        // actually, Map keeps last set value.
-
-        // Better:
         newItems.forEach(i => mergedMap.set(i.id, i));
         this.items.forEach(i => {
             if (!mergedMap.has(i.id)) {
-                // Maybe a just-created item that hasn't synced? Keep it.
                 mergedMap.set(i.id, i);
             }
         });
@@ -106,6 +91,7 @@ class MemoCache {
         });
 
         this.isInitialized = true;
+        this.saveToStorage();
     }
 
     public search(query: string): CacheItem[] {
@@ -116,6 +102,34 @@ class MemoCache {
             item.memo_number.toString().includes(lowerQuery) ||
             item.content.toLowerCase().includes(lowerQuery)
         );
+    }
+
+    private loadFromStorage() {
+        try {
+            const raw = localStorage.getItem(MEMO_CACHE_KEY);
+            if (raw) {
+                const data = JSON.parse(raw);
+                if (Array.isArray(data)) {
+                    this.items = data;
+                    this.isInitialized = true;
+                    // If we have data, we can assume it's somewhat loaded, 
+                    // but maybe not "Fully" if we want to force a refresh?
+                    // Let's assume if it's there, it's a good starting point.
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load memo cache', e);
+        }
+    }
+
+    private saveToStorage() {
+        try {
+            if (typeof window !== 'undefined') {
+                localStorage.setItem(MEMO_CACHE_KEY, JSON.stringify(this.items));
+            }
+        } catch (e) {
+            console.error('Failed to save memo cache', e);
+        }
     }
 }
 

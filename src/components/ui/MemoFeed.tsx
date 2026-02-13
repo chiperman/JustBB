@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { MemoCard } from './MemoCard';
-import { getMemos } from '@/actions/fetchMemos';
+import { getAllMemos } from '@/actions/search';
 import { Loader2 } from 'lucide-react';
 import { Memo } from '@/types/memo';
-import { ChevronDown, CheckCircle, ArrowUpDown } from 'lucide-react';
 import { useTimeline } from '@/context/TimelineContext';
+import { memoCache } from '@/lib/memo-cache';
+import { clientFilterMemos } from '@/lib/client-filters';
 
 interface MemoFeedProps {
     initialMemos: Memo[];
@@ -17,78 +18,79 @@ interface MemoFeedProps {
         year?: string;
         month?: string;
         date?: string;
-        code?: string;
         sort?: string;
     };
     adminCode?: string;
 }
 
 export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProps) {
-    const [memos, setMemos] = useState<Memo[]>(initialMemos);
+    // 1. Displayed Memos (What user sees)
+    // Initially uses SSR data to ensure fast First Paint
+    // Once full data is loaded, it switches to client-filtered data
+    const [isFullLoaded, setIsFullLoaded] = useState(false);
+    const [allMemos, setAllMemos] = useState<Memo[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [hasMore, setHasMore] = useState(initialMemos.length >= 20);
-    const [loading, setLoading] = useState(false);
-    const observerTarget = useRef<HTMLDivElement>(null);
-    const offsetRef = useRef(initialMemos.length);
+
+    // Initial sync with SSR data
+    useEffect(() => {
+        if (!isFullLoaded) {
+            // Can't replace displayed directly here strictly, 
+            // but we rely on derived state below
+        }
+    }, [initialMemos, isFullLoaded]);
+
     const router = useRouter();
-    const pathname = usePathname();
 
+    // 2. Background Load & Cache Sync
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setMemos(initialMemos);
-        offsetRef.current = initialMemos.length;
-        setHasMore(initialMemos.length >= 20);
-    }, [initialMemos]);
-
-    const loadMore = useCallback(async () => {
-        if (loading || !hasMore) return;
-
-        setLoading(true);
-        const { query, tag, date, sort } = searchParams;
-
-        const moreMemos = await getMemos({
-            query,
-            tag,
-            date,
-            sort,
-            adminCode,
-            limit: 20,
-            offset: offsetRef.current
-        });
-
-        if (moreMemos && moreMemos.length > 0) {
-            setMemos((prev) => [...prev, ...moreMemos]);
-            offsetRef.current += moreMemos.length;
-            if (moreMemos.length < 20) setHasMore(false);
-        } else {
-            setHasMore(false);
-        }
-        setLoading(false);
-    }, [loading, hasMore, searchParams, adminCode]);
-
-    const { setActiveId, isManualClick } = useTimeline();
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting) {
-                    loadMore();
+        const syncData = async () => {
+            // A. Try loading from local cache first (Instant)
+            if (memoCache.getInitialized()) {
+                const cached = memoCache.getItems() as unknown as Memo[];
+                if (cached.length > 0) {
+                    setAllMemos(cached);
+                    setIsFullLoaded(true);
                 }
-            },
-            { threshold: 0.1 }
-        );
+            }
 
-        const currentTarget = observerTarget.current;
-        if (currentTarget) {
-            observer.observe(currentTarget);
-        }
+            // B. Silent Background Fetch (Revalidate)
+            try {
+                // Determine if we need to fetch (simple strategy: always fetch to sync latest)
+                // In future can use timestamp check
+                const freshMemos = await getAllMemos();
 
-        return () => {
-            if (currentTarget) {
-                observer.unobserve(currentTarget);
+                // Merge into Cache
+                // Map to CacheItem if needed, but we essentially store Memo[]
+                // Casting for now as CacheItem is loose
+                memoCache.mergeItems(freshMemos as any[]);
+
+                // Update State
+                setAllMemos(memoCache.getItems() as unknown as Memo[]);
+                setIsFullLoaded(true);
+                memoCache.setFullyLoaded(true);
+
+            } catch (err) {
+                console.error("Background memo fetch failed", err);
+                // Keep showing SSR data or Cache data if available
             }
         };
-    }, [loadMore]);
+
+        syncData();
+    }, []);
+
+    // 3. Derived State: Apply Filters
+    const displayedMemos = useMemo(() => {
+        if (isFullLoaded && allMemos.length > 0) {
+            // Client-side filtering (Fast, 0 latency)
+            return clientFilterMemos(allMemos, searchParams);
+        } else {
+            // Fallback to SSR initial data (Server-side filtered)
+            return initialMemos;
+        }
+    }, [isFullLoaded, allMemos, searchParams, initialMemos]);
+
+
+    const { setActiveId, isManualClick } = useTimeline();
 
     // Scroll Spy Logic
     useEffect(() => {
@@ -124,12 +126,12 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
             currentAnchors.forEach((anchor) => observer.unobserve(anchor));
             observer.disconnect();
         };
-    }, [isManualClick, setActiveId, memos]); // memos 即使变化，ID 也是稳定的，但新加载的需要被观察
+    }, [isManualClick, setActiveId, displayedMemos]);
 
     return (
         <div className="space-y-6">
             <div className="columns-1 gap-6 space-y-6">
-                {memos.map((memo, index) => {
+                {displayedMemos.map((memo, index) => {
                     // 使用与 stats.ts 一致的本地时区逻辑 (UTC+8) 构建日期 ID
                     // 否则 00:00-08:00 的记录会被归到前一天，导致锚点 ID 不匹配
                     const utcDate = new Date(memo.created_at);
@@ -139,7 +141,7 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
                     const currentYear = currentDate.split('-')[0];
                     const currentMonth = currentDate.split('-')[1];
 
-                    const prevMemo = index > 0 ? memos[index - 1] : null;
+                    const prevMemo = index > 0 ? displayedMemos[index - 1] : null;
                     let prevDateFull = null;
                     if (prevMemo) {
                         const prevUtcDate = new Date(prevMemo.created_at);
@@ -187,15 +189,22 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
                 })}
             </div>
 
-            {hasMore && (
-                <div ref={observerTarget} className="flex justify-center p-4">
-                    {loading && <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />}
+            {!isFullLoaded && (
+                <div className="flex justify-center p-4">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    <span className="ml-2 text-xs text-muted-foreground">Loading full history...</span>
                 </div>
             )}
 
-            {!hasMore && memos.length > 0 && (
+            {isFullLoaded && displayedMemos.length > 0 && (
                 <div className="text-center text-xs text-muted-foreground pb-8 pt-4">
                     --- The End ---
+                </div>
+            )}
+
+            {isFullLoaded && displayedMemos.length === 0 && (
+                <div className="text-center text-muted-foreground py-12">
+                    No memos found.
                 </div>
             )}
         </div>

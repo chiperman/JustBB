@@ -26,32 +26,21 @@ export async function searchMemosForMention(query: string, offset: number = 0, l
     return (data || []) as Memo[];
 }
 
-export async function getAllMemoIndices(): Promise<Partial<Memo>[]> {
+export async function getAllMemos(): Promise<Memo[]> {
     const supabase = getSupabaseAdmin();
 
     // Fetch all memos, ordered by creation date descending
-    // Only select necessary fields for indexing to keep payload small
+    // Select all fields required for the UI
     const { data, error } = await supabase
         .from('memos')
-        .select('id, memo_number, content, created_at, is_private, access_code')
+        .select('*')
         .is('deleted_at', null) // Only active (not deleted) memos
         .order('created_at', { ascending: false });
 
     if (error) {
-        console.error('Error fetching memo indices:', error);
+        console.error('Error fetching all memos:', error);
         return [];
     }
 
-    // Filter based on visibility permissions
-    const memos = (data || []) as unknown as Memo[];
-    const visibleMemos = memos;
-
-    // Return lightweight objects
-    return visibleMemos.map(memo => ({
-        id: memo.id,
-        memo_number: memo.memo_number,
-        // Return lightweight objects but full content for client-side indexing
-        content: memo.content || '', // Full content for search index
-        created_at: memo.created_at
-    }));
+    return (data || []) as Memo[];
 }

@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { Button } from './button';
 import { Input } from './input';
 import { updateMemoContent } from '@/actions/update';
-import { getAllMemoIndices } from '@/actions/search';
+import { getAllMemos } from '@/actions/search';
 import { Command, CommandList, CommandItem, CommandEmpty, CommandGroup } from './command';
 import { getAllTags } from '@/actions/tags';
 import { memoCache, CacheItem } from '@/lib/memo-cache'; // Import local cache
@@ -193,7 +193,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             // 2. Background Fetch Full Index
             if (!memoCache.getFullyLoaded()) {
                 try {
-                    const memos = await getAllMemoIndices();
+                    const memos = await getAllMemos();
 
                     const indexItems: CacheItem[] = memos.map(m => ({
                         id: m.id!,

@@ -78,13 +78,13 @@
     ```
 *   **返回**: `Memo[]` (包含 `word_count`)
 
-### 4.2 `getAllMemoIndices` (Search Action)
-*   **功能**: 获取全量笔记索引。
-*   **用途**: 供前端 `MemoCache` 构建本地搜索索引。
-*   **返回**: `Partial<Memo>[]` (仅包含 `id`, `memo_number`, `content`, `created_at`)。
+### 4.2 `getAllMemos` (Search Action)
+*   **功能**: 获取全量笔记数据。
+*   **用途**: 供前端 `MemoCache` 构建本地全量数据库，支持离线搜索与流式浏览。
+*   **返回**: `Memo[]` (包含所有字段: `content`, `tags`, `is_pinned` 等)。
 *   **特性**: 
     - 过滤掉 `deleted_at IS NOT NULL` 的记录。
-    - 针对 Editor 场景优化，假设编辑器用户具备读取权限。
+    - 针对 Editor 建议与 Feeds 列表共用同一数据源。
 
 ### 4.3 `getStats` / `getTags`
 *   **功能**: 侧边栏热力图与标签云。

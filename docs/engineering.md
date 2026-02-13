@@ -16,12 +16,13 @@
 *   `src/types`: 数据库类型定义。
 
 ## 2.1 客户端缓存架构 (MemoCache)
-*   **目的**: 实现 `@` 引用时的零延迟搜索与建议。
-*   **单例模式**: `MemoCache` 类维护全局唯一的内存索引。
-*   **混合加载策略 (Hybrid Loading)**:
-    1.  **Seed (Props)**: 页面加载时，利用服务端渲染传入的 `contextMemos` (最近20条) 立即初始化缓存。
-    2.  **Background Fetch**: 随后在后台异步调用 `getAllMemoIndices` 拉取全量数据 (仅 ID、Content、Number)。
-    3.  **Merge**: 自动去重合并，标记 `isFullyLoaded`。
+*   **目的**: 实现 **离线优先 (Offline-First)** 的浏览与搜索体验。
+*   **持久化**: 使用 `localStorage` (Key: `MEMO_DATA_CACHE_V1`) 存储全量 Memo 数据。
+*   **渐进式加载策略 (Progressive Loading)**:
+    1.  **SSR**: 页面首屏由服务端直出最新 20 条 (保证 SEO 与 FCP)。
+    2.  **Cache Hydration**: 客户端 JS 执行后，立即从 `localStorage` 读取缓存，瞬间填满历史列表。
+    3.  **Background Revalidation**: 后台静默调用 `getAllMemos` 拉取最新全量数据 (包含 `updated_at` 校验)，更新内存与 `localStorage`。
+    4.  **Client-Side Mode**: 数据全量加载后，**Search & Filter** 切换为纯客户端计算，不再发起网络请求。
 *   **乐观更新**:
     - 发布新 Memo 成功后，直接写入 Cache，无需等待网络重载即可被搜索。
 

@@ -26,6 +26,7 @@ class MemoCache {
     private items: CacheItem[] = [];
     private isInitialized = false;
     private isFullyLoaded = false;
+    private listeners: (() => void)[] = [];
 
     private constructor() {
         // Try load from storage immediately
@@ -39,6 +40,17 @@ class MemoCache {
             MemoCache.instance = new MemoCache();
         }
         return MemoCache.instance;
+    }
+
+    public subscribe(listener: () => void): () => void {
+        this.listeners.push(listener);
+        return () => {
+            this.listeners = this.listeners.filter(l => l !== listener);
+        };
+    }
+
+    private notify() {
+        this.listeners.forEach(listener => listener());
     }
 
     public setInitialized(value: boolean) {
@@ -65,6 +77,7 @@ class MemoCache {
         this.isInitialized = true;
         this.isFullyLoaded = true;
         this.saveToStorage();
+        this.notify();
     }
 
     public getItems(): CacheItem[] {
@@ -74,6 +87,13 @@ class MemoCache {
     public addItem(item: CacheItem) {
         this.items.unshift(item);
         this.saveToStorage();
+        this.notify();
+    }
+
+    public removeItem(id: string) {
+        this.items = this.items.filter(item => item.id !== id);
+        this.saveToStorage();
+        this.notify();
     }
 
     public mergeItems(newItems: CacheItem[]) {
@@ -92,6 +112,7 @@ class MemoCache {
 
         this.isInitialized = true;
         this.saveToStorage();
+        this.notify();
     }
 
     public search(query: string): CacheItem[] {

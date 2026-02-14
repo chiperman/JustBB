@@ -10,7 +10,7 @@ export interface FilterParams {
 }
 
 export function clientFilterMemos(memos: Memo[], params: FilterParams): Memo[] {
-    let result = [...memos];
+    let result = memos.filter(m => !m.deleted_at);
 
     // 1. Tag Filter
     if (params.tag) {

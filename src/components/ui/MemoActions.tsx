@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { deleteMemo, restoreMemo, permanentDeleteMemo } from '@/actions/delete';
 import { updateMemoState } from '@/actions/update';
+import { memoCache } from '@/lib/memo-cache';
 import { Trash2, RotateCcw, MoreHorizontal } from 'lucide-react';
 import {
     DropdownMenu,
@@ -60,6 +61,7 @@ export function MemoActions({
     const handleDelete = async () => {
         setIsPending(true);
         await deleteMemo(id);
+        memoCache.removeItem(id);
         setIsPending(false);
         toast({
             title: "已删除",
@@ -239,7 +241,7 @@ export function MemoActions({
                     <AlertDialogHeader>
                         <AlertDialogTitle>确定要删除这条记录吗？</AlertDialogTitle>
                         <AlertDialogDescription>
-                            记录将被移至回收站，你可以在 30 天内恢复它。
+                            记录将被移至回收站。
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

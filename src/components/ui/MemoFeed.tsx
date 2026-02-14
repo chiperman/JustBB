@@ -76,6 +76,15 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
         };
 
         syncData();
+
+        // C. Subscribe to Cache Changes
+        const unsubscribe = memoCache.subscribe(() => {
+            setAllMemos([...memoCache.getItems()] as unknown as Memo[]);
+        });
+
+        return () => {
+            unsubscribe();
+        };
     }, []);
 
     // 3. Derived State: Apply Filters

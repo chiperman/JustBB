@@ -166,22 +166,7 @@ export const MemoCard = memo(function MemoCard({ memo, isEditing, onEditChange }
             )}
 
             {/* 底部交互与标签 */}
-            {!memo.is_locked && (
-                <div className="mt-6 flex items-center justify-between gap-4">
-                    <div className="flex flex-wrap gap-2" role="list" aria-label="标签列表">
-                        {memo.tags?.map(tag => (
-                            <span
-                                key={tag}
-                                role="listitem"
-                                className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-sm hover:bg-primary/20 cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 outline-none"
-                                tabIndex={0}
-                            >
-                                #{tag}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            )}
+
 
             {/* 锁定覆盖层 */}
             {memo.is_locked && (

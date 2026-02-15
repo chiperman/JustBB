@@ -12,6 +12,7 @@ import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { MainLayoutClient } from "@/components/layout/MainLayoutClient";
 import { getMemos } from "@/actions/fetchMemos";
 import { Memo } from "@/types/memo";
+import { TimelineProvider } from "@/context/TimelineContext";
 import './themes.css';
 
 export default function LoginPage() {
@@ -33,8 +34,6 @@ export default function LoginPage() {
                 setMemos(data || []);
             } catch (err) {
                 console.error("Failed to load memos:", err);
-            } finally {
-                setLoadingMemos(false);
             }
         };
         loadMemos();
@@ -135,10 +134,12 @@ export default function LoginPage() {
                     <div className="w-full h-full pointer-events-auto bg-background shadow-2xl overflow-hidden rounded-[var(--login-card-radius)] border border-black/5">
                         {/* Actual Home Page Content */}
                         <div className={viewMode === 'SPLIT_VIEW' ? "pointer-events-none select-none grayscale-[0.2]" : ""}>
-                            <MainLayoutClient
-                                memos={memos}
-                                searchParams={{}}
-                            />
+                            <TimelineProvider>
+                                <MainLayoutClient
+                                    memos={memos}
+                                    searchParams={{}}
+                                />
+                            </TimelineProvider>
                         </div>
 
                         {/* Overlay Trigger in Home Focus */}

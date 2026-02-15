@@ -58,6 +58,19 @@ export function clientFilterMemos(memos: Memo[], params: FilterParams): Memo[] {
     // 4. Sort
     const isAsc = params.sort === 'oldest';
     result.sort((a, b) => {
+        // First sort by pinned status
+        if (a.is_pinned !== b.is_pinned) {
+            return a.is_pinned ? -1 : 1;
+        }
+
+        // Then for pinned items, sort by pinned_at
+        if (a.is_pinned && a.pinned_at !== b.pinned_at) {
+            const pinnedA = new Date(a.pinned_at || 0).getTime();
+            const pinnedB = new Date(b.pinned_at || 0).getTime();
+            return pinnedB - pinnedA; // Always show newest pinned first
+        }
+
+        // Finally sort by created_at
         const timeA = new Date(a.created_at || 0).getTime();
         const timeB = new Date(b.created_at || 0).getTime();
         return isAsc ? timeA - timeB : timeB - timeA;

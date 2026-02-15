@@ -44,6 +44,11 @@ export async function createMemo(formData: FormData): Promise<{ success: boolean
     // 计算字数
     insertData.word_count = validated.data.content.trim().length;
 
+    // 如果设置了置顶，记录置顶时间
+    if (insertData.is_pinned) {
+        insertData.pinned_at = new Date().toISOString();
+    }
+
     const supabase = getSupabaseAdmin();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from('memos') as any)

@@ -107,6 +107,12 @@ class MemoCache {
         });
 
         this.items = Array.from(mergedMap.values()).sort((a, b) => {
+            if (a.is_pinned !== b.is_pinned) {
+                return a.is_pinned ? -1 : 1;
+            }
+            if (a.is_pinned && a.pinned_at !== b.pinned_at) {
+                return new Date(b.pinned_at || 0).getTime() - new Date(a.pinned_at || 0).getTime();
+            }
             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         });
 

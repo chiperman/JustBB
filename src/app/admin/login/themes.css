@@ -1,0 +1,48 @@
+/* Login Page: Ink on Paper Theme (Exclusive) */
+
+:root {
+    --login-bg: #fdfcf9;
+    /* Bone white / Paper color */
+    --login-text: #1a1a1a;
+    --login-accent: #d97757;
+    --login-card-bg: rgba(255, 255, 255, 0.4);
+    --login-card-border: rgba(0, 0, 0, 0.05);
+    --login-card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+    --login-card-radius: 4px;
+    /* Minimalist sharp edges */
+    --login-input-bg: transparent;
+    --login-input-border: 0 0 1px 0 rgba(0, 0, 0, 0.2);
+    /* Line style */
+    --login-input-focus: 0 0 1px 0 #d97757;
+    --login-label-font: "Playfair Display", serif;
+}
+
+/* Texture Effects */
+.paper-texture {
+    position: relative;
+    min-height: 100vh;
+    background-color: var(--login-bg);
+    overflow: hidden;
+}
+
+.paper-texture::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.04;
+    pointer-events: none;
+    background-image: url("https://www.transparenttextures.com/patterns/felt.png");
+    z-index: 1;
+}
+
+.ink-bleed {
+    filter: url('#ink-filter');
+}
+
+/* Editorial Serif Font Fallback */
+.font-editorial {
+    font-family: "Playfair Display", "Georgia", "Times New Roman", serif;
+}

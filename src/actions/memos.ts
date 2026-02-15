@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import bcrypt from 'bcryptjs';
 import { Memo } from '@/types/memo';
@@ -55,7 +55,7 @@ export async function createMemo(formData: FormData): Promise<{ success: boolean
         insertData.pinned_at = new Date().toISOString();
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = await createClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from('memos') as any)
         .insert([insertData])

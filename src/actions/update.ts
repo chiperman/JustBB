@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import bcrypt from 'bcryptjs';
 import { isAdmin } from './auth';
@@ -50,7 +50,7 @@ export async function updateMemoState(formData: FormData) {
         updateData.access_code = bcrypt.hashSync(access_code, salt);
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = await createClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from('memos') as any)
         .update(updateData)
@@ -93,7 +93,7 @@ export async function updateMemoContent(formData: FormData) {
 
     const { id, content, tags, is_private, is_pinned } = validated.data;
 
-    const supabase = getSupabaseAdmin();
+    const supabase = await createClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: updatedData, error } = await (supabase.from('memos') as any)
         .update({

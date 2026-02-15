@@ -1,6 +1,6 @@
 'use server';
 
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 import { Json } from '@/types/database';
 
 export async function getMemos(params: {
@@ -22,6 +22,7 @@ export async function getMemos(params: {
         sort = 'newest'
     } = params;
 
+    const supabase = await createClient();
     const filters: Record<string, unknown> = tag ? { tag } : {};
     if (date) {
         filters.date = date;
@@ -35,7 +36,7 @@ export async function getMemos(params: {
         offset_val: offsetVal,
         filters: filters as unknown as Json,
         sort_order: sort
-    } as any);
+    });
 
     if (error) {
         console.error('Error fetching memos via RPC:', {
@@ -51,12 +52,8 @@ export async function getMemos(params: {
 }
 
 export async function getArchivedMemos(year: number, month: number) {
+    const supabase = await createClient();
     const startDate = new Date(year, month - 1, 1).toISOString();
-    // new Date(year, month, 0) returns the last day of the specific month
-    // Note: month param in Date constructor is 0-indexed (0-11), 
-    // but the day 0 goes to previous month's last day.
-    // So if month is 10 (Oct), we want end of Oct.
-    // new Date(2025, 10, 0) -> Oct 31, 2025
     const endDate = new Date(year, month, 0, 23, 59, 59, 999).toISOString();
 
     const { data, error } = await supabase
@@ -77,6 +74,7 @@ export async function getArchivedMemos(year: number, month: number) {
 }
 
 export async function getGalleryMemos() {
+    const supabase = await createClient();
     const { data, error } = await supabase
         .from('memos')
         .select('*')

@@ -3,7 +3,7 @@ import { Memo } from "@/types/memo";
 import { cookies } from 'next/headers';
 import { MainLayoutClient } from "@/components/layout/MainLayoutClient";
 
-export default async function Home(props: {
+export default async function MemoPage(props: {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const searchParams = await props.searchParams;

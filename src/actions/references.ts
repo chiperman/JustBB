@@ -1,11 +1,12 @@
 'use server';
 
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 import { Memo } from '@/types/memo';
 
 export async function getBacklinks(memoNumber: number): Promise<Memo[]> {
     if (!memoNumber) return [];
 
+    const supabase = await createClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from('memos') as any)
         .select('id, memo_number, content, created_at')

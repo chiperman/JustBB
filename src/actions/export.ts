@@ -1,9 +1,10 @@
 'use server';
 
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 import { Memo } from '@/types/memo';
 
 export async function exportAllMemos(): Promise<{ data: Memo[] | null; error: string | null }> {
+    const supabase = await createClient();
     const { data, error } = await supabase
         .from('memos')
         .select('*')

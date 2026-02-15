@@ -1,12 +1,12 @@
 'use server';
 
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { isAdmin } from './auth';
 
 export async function deleteMemo(id: string) {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
-    const supabase = getSupabaseAdmin();
+    const supabase = await createClient();
     // 软删除: 设置 deleted_at 为当前时间
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from('memos') as any)
@@ -24,7 +24,7 @@ export async function deleteMemo(id: string) {
 
 export async function restoreMemo(id: string) {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
-    const supabase = getSupabaseAdmin();
+    const supabase = await createClient();
     // 恢复: 设置 deleted_at 为 NULL
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from('memos') as any)
@@ -43,7 +43,7 @@ export async function restoreMemo(id: string) {
 
 export async function permanentDeleteMemo(id: string) {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
-    const supabase = getSupabaseAdmin();
+    const supabase = await createClient();
     // 硬删除
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from('memos') as any)
@@ -61,7 +61,7 @@ export async function permanentDeleteMemo(id: string) {
 
 export async function emptyTrash() {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
-    const supabase = getSupabaseAdmin();
+    const supabase = await createClient();
     // 永久删除所有已标记为删除的记录
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from('memos') as any)

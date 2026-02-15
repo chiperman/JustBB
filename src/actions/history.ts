@@ -1,9 +1,10 @@
 'use server';
 
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 import { Memo } from '@/types/memo';
 
 export async function getOnThisDayMemos(): Promise<Memo[]> {
+    const supabase = await createClient();
     const today = new Date();
     const month = today.getMonth() + 1;
     const day = today.getDate();

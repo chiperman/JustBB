@@ -1,9 +1,9 @@
 'use server';
 
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 
 export async function getAllTags() {
-    const supabase = getSupabaseAdmin();
+    const supabase = await createClient();
     const { data, error } = await supabase.rpc('get_distinct_tags');
 
     if (error) {

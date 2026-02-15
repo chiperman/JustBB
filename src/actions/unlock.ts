@@ -1,7 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 import bcrypt from 'bcryptjs';
 
 export async function unlockWithCode(code: string): Promise<{ success: boolean; error?: string }> {

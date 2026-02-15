@@ -17,7 +17,7 @@ import { Suspense } from 'react';
 import './themes.css';
 
 export default function LoginPage() {
-    const [viewMode, setViewMode] = useState<'HOME_FOCUS' | 'SPLIT_VIEW'>('HOME_FOCUS');
+    const [viewMode, setViewMode] = useState<'HOME_FOCUS' | 'CARD_VIEW' | 'SPLIT_VIEW'>('HOME_FOCUS');
     const [memos, setMemos] = useState<Memo[]>([]);
 
     // Login form states
@@ -39,10 +39,11 @@ export default function LoginPage() {
         };
         loadMemos();
 
-        // Auto-trigger entrance animation
+        // Auto-trigger entrance animation (Step 1: Shrink to Card)
+        // 增加延迟至 1200ms，确保用户能先看到完整的“主页”状态，形成视觉对比
         const timer = setTimeout(() => {
-            setViewMode('SPLIT_VIEW');
-        }, 500);
+            setViewMode('CARD_VIEW');
+        }, 1200);
 
         return () => clearTimeout(timer);
     }, []);
@@ -79,12 +80,23 @@ export default function LoginPage() {
     };
 
     // Orchestration Variants
+    // Orchestration Variants
     const homeTransitionVariants: Variants = {
         home: {
             scale: 1,
             x: '0%',
             opacity: 1,
             filter: 'blur(0px)',
+            borderRadius: '0px',
+            transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+        },
+        card: {
+            scale: 0.9,
+            x: '0%', // Keep centered for Step 1
+            opacity: 1,
+            filter: 'blur(0px)',
+            borderRadius: '24px', // Physical card look
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
         },
         split: {
@@ -92,6 +104,7 @@ export default function LoginPage() {
             x: '50%', // Occupy right half
             opacity: 1,
             filter: 'blur(2px)',
+            borderRadius: '24px',
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
         }
     };
@@ -99,6 +112,11 @@ export default function LoginPage() {
     const loginPanelVariants: Variants = {
         home: {
             x: '-100%',
+            opacity: 0,
+            transition: { duration: 0.6, ease: 'easeIn' }
+        },
+        card: {
+            x: '-100%', // Keep hidden for Step 1
             opacity: 0,
             transition: { duration: 0.6, ease: 'easeIn' }
         },
@@ -138,11 +156,11 @@ export default function LoginPage() {
                     <motion.div
                         variants={homeTransitionVariants}
                         initial="home"
-                        animate={viewMode === 'HOME_FOCUS' ? 'home' : 'split'}
-                        className="absolute inset-0 z-10 origin-left overflow-hidden bg-white"
-                        onClick={() => viewMode === 'SPLIT_VIEW' && setViewMode('HOME_FOCUS')}
+                        animate={viewMode === 'HOME_FOCUS' ? 'home' : (viewMode === 'CARD_VIEW' ? 'card' : 'split')}
+                        className="absolute inset-0 z-10 origin-center overflow-hidden bg-white"
+                        style={{ borderRadius: viewMode === 'HOME_FOCUS' ? 0 : 24 }}
                     >
-                        <div className="w-full h-full pointer-events-auto shadow-2xl overflow-hidden rounded-[var(--login-card-radius)] border border-black/5">
+                        <div className="w-full h-full pointer-events-auto shadow-2xl overflow-hidden border border-black/5" style={{ borderRadius: 'inherit' }}>
                             {/* Actual Home Page Content */}
                             <div className={viewMode === 'SPLIT_VIEW' ? "pointer-events-none select-none grayscale-[0.2] h-full" : "h-full"}>
                                 <Suspense fallback={<div className="w-full h-full bg-background animate-pulse" />}>

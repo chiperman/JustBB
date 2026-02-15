@@ -266,9 +266,13 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                         <span>清除口令并锁定</span>
                                     </DropdownMenuItem>
                                 )}
-                                <DropdownMenuItem className="rounded-sm" onClick={() => router.push('/admin/login')}>
+                                <DropdownMenuItem className="rounded-sm" onClick={() => {
+                                    // router.push('/admin/login');
+                                    console.log("Login navigation disabled for transition debugging");
+                                    alert("登录跳转已禁用，请手动访问 /admin/login 进行动效调试");
+                                }}>
                                     <LogIn className="mr-2 h-4 w-4 text-primary" />
-                                    <span>管理员登录</span>
+                                    <span>管理员登录 (调试中)</span>
                                 </DropdownMenuItem>
                             </>
                         )}

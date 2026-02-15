@@ -38,6 +38,13 @@ export default function LoginPage() {
             }
         };
         loadMemos();
+
+        // Auto-trigger entrance animation
+        const timer = setTimeout(() => {
+            setViewMode('SPLIT_VIEW');
+        }, 500);
+
+        return () => clearTimeout(timer);
     }, []);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

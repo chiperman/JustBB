@@ -23,7 +23,8 @@ CREATE OR REPLACE FUNCTION search_memos_secure(
   input_code TEXT DEFAULT NULL,
   limit_val INT DEFAULT 20,
   offset_val INT DEFAULT 0,
-  filters JSONB DEFAULT '{}'::JSONB
+  filters JSONB DEFAULT '{}'::JSONB,
+  sort_order TEXT DEFAULT 'newest'
 )
 RETURNS TABLE (
   id UUID, 
@@ -56,7 +57,8 @@ BEGIN
       WHEN auth.uid() IS NOT NULL THEN FALSE
       WHEN m.access_code IS NOT NULL AND m.access_code = crypt(input_code, m.access_code) THEN FALSE
       ELSE TRUE
-    END as is_locked
+    END as is_locked,
+    m.word_count
   FROM memos m
   WHERE 
     -- 1. 软删除过滤
@@ -65,8 +67,10 @@ BEGIN
       -- 2. 权限校验
       m.is_private = FALSE 
       OR (m.is_private = TRUE AND (
+        -- 管理员或正确口令
         (auth.uid() IS NOT NULL OR (m.access_code IS NOT NULL AND m.access_code = crypt(input_code, m.access_code)))
-        OR (query_text = '' OR query_text = ANY(m.tags))
+        -- 仅在非搜索模式（无关键字且无标签）下允许访客看到私密记录占位
+        OR (query_text = '' AND filters->>'tag' IS NULL)
       ))
     )
     AND (
@@ -77,9 +81,13 @@ BEGIN
     )
     -- 4. Tag 过滤
     AND (filters->>'tag' IS NULL OR filters->>'tag' = ANY(m.tags))
-    -- 5. 日期过滤 (使用 Asia/Shanghai 时区)
+    -- 5. 日期过滤
     AND (filters->>'date' IS NULL OR (m.created_at AT TIME ZONE 'Asia/Shanghai')::DATE = (filters->>'date')::DATE)
-  ORDER BY m.is_pinned DESC, m.pinned_at DESC NULLS LAST, m.created_at DESC
+  ORDER BY 
+    m.is_pinned DESC, 
+    m.pinned_at DESC NULLS LAST,
+    CASE WHEN sort_order = 'oldest' THEN m.created_at END ASC,
+    CASE WHEN sort_order = 'newest' OR sort_order IS NULL THEN m.created_at END DESC
   LIMIT limit_val OFFSET offset_val;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

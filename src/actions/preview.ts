@@ -5,8 +5,8 @@ import { Memo } from '@/types/memo';
 
 export async function getMemoByNumber(memoNumber: number): Promise<Memo | null> {
     const supabase = await createClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from('memos') as any)
+    const { data, error } = await supabase
+        .from('memos')
         .select('content')
         .eq('memo_number', memoNumber)
         .eq('is_private', false)

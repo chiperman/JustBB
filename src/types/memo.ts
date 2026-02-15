@@ -8,11 +8,11 @@ export interface Memo {
     is_pinned: boolean;
     pinned_at?: string | null;
     is_locked?: boolean;
-    access_code_hint?: string;
+    access_code_hint?: string | null;
     updated_at?: string;
     deleted_at?: string | null;
     word_count?: number;
-    access_code?: string;
+    access_code?: string | null;
 }
 
 export interface TagStat {

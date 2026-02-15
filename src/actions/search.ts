@@ -11,7 +11,8 @@ export async function searchMemosForMention(query: string, offset: number = 0, l
     const adminCode = cookieStore.get('memo_access_code')?.value || '';
 
     // 使用现有的 search_memos_secure RPC，或者一个更轻量的搜索
-    const { data, error } = await (supabase.rpc as any)('search_memos_secure', {
+    // 使用现有的 search_memos_secure RPC，或者一个更轻量的搜索
+    const { data, error } = await supabase.rpc('search_memos_secure', {
         query_text: query,
         input_code: adminCode,
         limit_val: limit,

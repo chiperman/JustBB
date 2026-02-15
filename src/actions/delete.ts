@@ -8,8 +8,8 @@ export async function deleteMemo(id: string) {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
     const supabase = await createClient();
     // 软删除: 设置 deleted_at 为当前时间
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('memos') as any)
+    const { error } = await supabase
+        .from('memos')
         .update({ deleted_at: new Date().toISOString() })
         .eq('id', id);
 
@@ -26,8 +26,8 @@ export async function restoreMemo(id: string) {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
     const supabase = await createClient();
     // 恢复: 设置 deleted_at 为 NULL
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('memos') as any)
+    const { error } = await supabase
+        .from('memos')
         .update({ deleted_at: null })
         .eq('id', id);
 
@@ -45,8 +45,8 @@ export async function permanentDeleteMemo(id: string) {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
     const supabase = await createClient();
     // 硬删除
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('memos') as any)
+    const { error } = await supabase
+        .from('memos')
         .delete()
         .eq('id', id);
 
@@ -63,8 +63,8 @@ export async function emptyTrash() {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
     const supabase = await createClient();
     // 永久删除所有已标记为删除的记录
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('memos') as any)
+    const { error } = await supabase
+        .from('memos')
         .delete()
         .not('deleted_at', 'is', null);
 

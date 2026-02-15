@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { cn } from "@/lib/utils";
 import { MemoEditor } from "@/components/ui/MemoEditor";
 import { MemoFeed } from '@/components/ui/MemoFeed';
@@ -27,7 +28,7 @@ export function MainLayoutClient({ memos, searchParams, adminCode }: MainLayoutC
         };
         checkAuth();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
             setIsAdmin(!!session?.user);
         });
 

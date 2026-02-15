@@ -7,8 +7,8 @@ export async function getBacklinks(memoNumber: number): Promise<Memo[]> {
     if (!memoNumber) return [];
 
     const supabase = await createClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from('memos') as any)
+    const { data, error } = await supabase
+        .from('memos')
         .select('id, memo_number, content, created_at')
         .eq('is_private', false)
         .is('deleted_at', null)

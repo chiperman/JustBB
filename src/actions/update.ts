@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import bcrypt from 'bcryptjs';
+import { Database } from '@/types/database';
+import { Memo } from '@/types/memo';
 import { isAdmin } from './auth';
 
 const UpdateMemoSchema = z.object({
@@ -33,8 +35,7 @@ export async function updateMemoState(formData: FormData) {
     }
 
     const { id, is_private, is_pinned, access_code, access_code_hint } = validated.data;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updateData: any = {};
+    const updateData: Database['public']['Tables']['memos']['Update'] = {};
 
     if (is_private !== undefined) updateData.is_private = is_private;
     if (is_pinned !== undefined) {
@@ -51,8 +52,8 @@ export async function updateMemoState(formData: FormData) {
     }
 
     const supabase = await createClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('memos') as any)
+    const { error } = await supabase
+        .from('memos')
         .update(updateData)
         .eq('id', id);
 
@@ -94,8 +95,8 @@ export async function updateMemoContent(formData: FormData) {
     const { id, content, tags, is_private, is_pinned } = validated.data;
 
     const supabase = await createClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: updatedData, error } = await (supabase.from('memos') as any)
+    const { data: updatedData, error } = await supabase
+        .from('memos')
         .update({
             content,
             tags,
@@ -111,10 +112,11 @@ export async function updateMemoContent(formData: FormData) {
 
     if (error) {
         console.error('Error updating memo content:', error);
-        return { error: '更新失败' };
+        return { error: '内容更新失败' };
     }
 
     revalidatePath('/');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return { success: true, data: updatedData as any };
+    // Explicitly cast the returned data to Memo if needed, or rely on inference if mapped correctly.
+    // However, to satisfy strictly typed return:
+    return { success: true, data: updatedData as Memo };
 }

@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation';
 interface UnlockDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    hint?: string;
+    hint?: string | null;
 }
 
 export function UnlockDialog({ isOpen, onClose, hint }: UnlockDialogProps) {

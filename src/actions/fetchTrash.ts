@@ -20,8 +20,7 @@ export async function getTrashMemos(): Promise<Memo[]> {
     }
 
     // 适配前端 Memo 类型 (添加 is_locked 默认值)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data as any[] || []).map((memo: any) => ({
+    return (data || []).map((memo) => ({
         ...memo,
         is_locked: memo.is_private // 垃圾箱里的私密内容暂时也锁定
     })) as Memo[];

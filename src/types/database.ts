@@ -15,6 +15,7 @@ export type Memo = {
     access_code_hint: string | null;
     is_private: boolean;
     is_pinned: boolean;
+    pinned_at: string | null;
     created_at: string;
     updated_at: string;
     deleted_at: string | null;
@@ -35,6 +36,7 @@ export type Database = {
                     access_code_hint?: string | null;
                     is_private?: boolean;
                     is_pinned?: boolean;
+                    pinned_at?: string | null;
                     created_at?: string;
                     updated_at?: string;
                     deleted_at?: string | null;
@@ -49,11 +51,13 @@ export type Database = {
                     access_code_hint?: string | null;
                     is_private?: boolean;
                     is_pinned?: boolean;
+                    pinned_at?: string | null;
                     created_at?: string;
                     updated_at?: string;
                     deleted_at?: string | null;
                     word_count?: number;
                 };
+                Relationships: [];
             };
         };
         Views: {
@@ -85,6 +89,17 @@ export type Database = {
                     pinned_at: string | null;
                     is_locked: boolean;
                     word_count: number;
+                }[];
+            };
+            get_timeline_stats: {
+                Args: Record<string, never>;
+                Returns: Json;
+            };
+            get_distinct_tags: {
+                Args: Record<string, never>;
+                Returns: {
+                    tag_name: string;
+                    count: number;
                 }[];
             };
         };

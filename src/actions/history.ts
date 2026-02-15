@@ -16,8 +16,8 @@ export async function getOnThisDayMemos(): Promise<Memo[]> {
         const endDate = new Date(year, month - 1, day, 23, 59, 59).toISOString();
 
         promises.push(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (supabase.from('memos') as any)
+            supabase
+                .from('memos')
                 .select('*')
                 .eq('is_private', false)
                 .is('deleted_at', null)

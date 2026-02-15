@@ -21,7 +21,11 @@ export async function getMemoStats() {
     return data;
 }
 
-export async function getTimelineStats() {
+interface TimelineStats {
+    days: Record<string, { count: number }>;
+}
+
+export async function getTimelineStats(): Promise<TimelineStats> {
     const supabase = await createClient();
     const { data, error } = await supabase.rpc('get_timeline_stats');
 
@@ -32,5 +36,5 @@ export async function getTimelineStats() {
         };
     }
 
-    return data;
+    return (data as unknown as TimelineStats) || { days: {} };
 }

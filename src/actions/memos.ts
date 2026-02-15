@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import bcrypt from 'bcryptjs';
 import { Memo } from '@/types/memo';
+import { Database } from '@/types/database';
 import { isAdmin } from './auth';
 
 const CreateMemoSchema = z.object({
@@ -39,8 +40,7 @@ export async function createMemo(formData: FormData): Promise<{ success: boolean
     }
 
     const { access_code, ...rest } = validated.data;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const insertData: any = { ...rest };
+    const insertData: Database['public']['Tables']['memos']['Insert'] = { ...rest };
 
     if (access_code) {
         const salt = bcrypt.genSaltSync(10);
@@ -56,8 +56,8 @@ export async function createMemo(formData: FormData): Promise<{ success: boolean
     }
 
     const supabase = await createClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from('memos') as any)
+    const { data, error } = await supabase
+        .from('memos')
         .insert([insertData])
         .select()
         .single();

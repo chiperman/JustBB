@@ -450,7 +450,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 },
             }),
             Placeholder.configure({
-                placeholder: '想记点什么？JustMemo it',
+                placeholder: 'Wanna memo something? JustMemo it!',
                 emptyEditorClass: 'is-editor-empty',
             }),
             LinkExtension.configure({

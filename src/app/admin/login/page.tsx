@@ -13,6 +13,7 @@ import { MainLayoutClient } from "@/components/layout/MainLayoutClient";
 import { getMemos } from "@/actions/fetchMemos";
 import { Memo } from "@/types/memo";
 import { TimelineProvider } from "@/context/TimelineContext";
+import { Suspense } from 'react';
 import './themes.css';
 
 export default function LoginPage() {
@@ -75,12 +76,14 @@ export default function LoginPage() {
         home: {
             scale: 1,
             x: '0%',
+            opacity: 1,
             filter: 'blur(0px)',
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
         },
         split: {
             scale: 0.9,
             x: '50%', // Occupy right half
+            opacity: 1,
             filter: 'blur(2px)',
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
         }
@@ -121,24 +124,29 @@ export default function LoginPage() {
 
             {/* Split View Container */}
             <motion.div
-                className="relative w-full h-full flex items-center justify-center z-10"
-                initial="home"
-                animate={viewMode === 'HOME_FOCUS' ? 'home' : 'split'}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, ease: 'easeOut' }}
+                className="relative w-full h-full z-10"
             >
                 {/* Home Panel (Main Content) */}
                 <motion.div
                     variants={homeTransitionVariants}
-                    className="absolute w-full h-full z-10 origin-left overflow-hidden"
+                    initial="home"
+                    animate={viewMode === 'HOME_FOCUS' ? 'home' : 'split'}
+                    className="absolute inset-0 z-10 origin-left overflow-hidden bg-white"
                     onClick={() => viewMode === 'SPLIT_VIEW' && setViewMode('HOME_FOCUS')}
                 >
-                    <div className="w-full h-full pointer-events-auto bg-background shadow-2xl overflow-hidden rounded-[var(--login-card-radius)] border border-black/5">
+                    <div className="w-full h-full pointer-events-auto shadow-2xl overflow-hidden rounded-[var(--login-card-radius)] border border-black/5">
                         {/* Actual Home Page Content */}
-                        <div className={viewMode === 'SPLIT_VIEW' ? "pointer-events-none select-none grayscale-[0.2]" : ""}>
+                        <div className={viewMode === 'SPLIT_VIEW' ? "pointer-events-none select-none grayscale-[0.2] h-full" : "h-full"}>
                             <TimelineProvider>
-                                <MainLayoutClient
-                                    memos={memos}
-                                    searchParams={{}}
-                                />
+                                <Suspense fallback={<div className="w-full h-full bg-background animate-pulse" />}>
+                                    <MainLayoutClient
+                                        memos={memos}
+                                        searchParams={{}}
+                                    />
+                                </Suspense>
                             </TimelineProvider>
                         </div>
 
@@ -171,9 +179,11 @@ export default function LoginPage() {
                 {/* Login Panel (Auth Form) */}
                 <motion.div
                     variants={loginPanelVariants}
-                    className="absolute left-0 w-[50%] h-full z-20 flex items-center justify-center p-12 overflow-hidden"
+                    initial="home"
+                    animate={viewMode === 'HOME_FOCUS' ? 'home' : 'split'}
+                    className="absolute left-0 w-[50%] h-full z-20 flex items-center justify-center p-12 overflow-hidden pointer-events-none"
                 >
-                    <div className="w-full max-w-[400px] space-y-16">
+                    <div className="w-full max-w-[400px] space-y-16 pointer-events-auto">
                         {/* Hero / Brand */}
                         <div className="space-y-4 text-left">
                             <h1 className="text-7xl font-bold tracking-tighter text-primary font-editorial italic underline underline-offset-[12px] decoration-1 decoration-primary/20">JustMemo</h1>

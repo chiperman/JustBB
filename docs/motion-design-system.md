@@ -134,3 +134,10 @@ export const cardVariants: Variants = {
     Content
 </motion.div>
 ```
+
+---
+
+## 6. 实例参考 (Examples)
+
+*   [登录页/主页切换动效设计 (Login Transition Design)](./login-transition-design.md) - 详解了如何实现全屏预览到分屏表单的复杂过渡。
+*   [登录页动效分步实现计划 (Login Transition Roadmap)](./login-transition-roadmap.md) - 记录了从全屏->卡片->分屏的迭代步骤。

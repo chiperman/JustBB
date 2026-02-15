@@ -11,6 +11,7 @@ import { useTheme } from 'next-themes';
 import { logout, getCurrentUser } from '@/actions/auth';
 import { clearUnlockCode } from '@/actions/unlock';
 import { cn } from '@/lib/utils';
+import { useLoginMode } from '@/context/LoginModeContext';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -56,6 +57,8 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     const [isUnlockOpen, setIsUnlockOpen] = React.useState(false);
     const { theme, setTheme } = useTheme();
     const router = useRouter();
+    const pathname = usePathname();
+    const { setViewMode } = useLoginMode();
 
     React.useEffect(() => {
         // 获取管理员状态和访客状态
@@ -267,12 +270,10 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                     </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem className="rounded-sm" onClick={() => {
-                                    // router.push('/admin/login');
-                                    console.log("Login navigation disabled for transition debugging");
-                                    alert("登录跳转已禁用，请手动访问 /admin/login 进行动效调试");
+                                    setViewMode('CARD_VIEW');
                                 }}>
                                     <LogIn className="mr-2 h-4 w-4 text-primary" />
-                                    <span>管理员登录 (调试中)</span>
+                                    <span>管理员登录</span>
                                 </DropdownMenuItem>
                             </>
                         )}

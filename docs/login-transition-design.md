@@ -1,7 +1,7 @@
 # 登录页/主页切换动效设计文档 (Login Transition Design)
 
 > **版本 (Version)**: 1.0
-> **状态 (Status)**: 已实现 (Implemented)
+> **状态 (Status)**: 未实现
 
 本文档记录了 "JustMemo" 登录页面的交互逻辑、视觉隐喻以及关键技术实现细节。
 

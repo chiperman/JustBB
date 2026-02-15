@@ -124,10 +124,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Split View Container */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 1, ease: 'easeOut' }}
+                <div
                     className="relative w-full h-full z-10"
                 >
                     {/* Home Panel (Main Content) */}
@@ -359,7 +356,7 @@ export default function LoginPage() {
                             <div className="w-0.5 h-24 bg-primary/20 group-hover:bg-primary transition-all duration-500" />
                         </motion.div>
                     </motion.div>
-                </motion.div>
+                </div>
             </div>
         </TimelineProvider>
     );

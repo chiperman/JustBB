@@ -13,7 +13,7 @@
 
 *   **目标**: 创建一个平滑的过渡效果，让用户感觉是从“门口”（Home Preview）进入到了“书房内部”（Login Form）。
 *   **视觉风格**: 延续 "The Writer's Study" 的隐喻，沉稳、优雅、有物理质感。
-*   **交互逻辑**: 页面加载后自动触发“主页后退并缩小”的动画，登录表单从左侧滑入（Split View），无需用户额外点击。
+*   **交互逻辑**: 默认展示全屏的主页预览（Home Focus），用户点击 "Authenticate" 后，主页后退并缩小，登录表单从左侧滑入（Split View）。
 
 ---
 
@@ -35,7 +35,7 @@ type ViewMode = 'HOME_FOCUS' | 'SPLIT_VIEW';
 2.  **SPLIT_VIEW (分屏模式)**
     *   **主页预览**: 缩小并移动到右侧 (scale: 0.9, x: 50%)，进入背景状态 (blur: 2px, grayscale)。
     *   **登录表单**: 从左侧滑入占据左半部分 (x: 0, opacity: 1)。
-    *   **交互**: 页面加载后自动触发动画进入 `SPLIT_VIEW`。用户点击右侧的主页预览区域可临时返回 `HOME_FOCUS` 模式查看。
+    *   **交互**: 用户在左侧填写表单。点击右侧的主页预览区域可返回 `HOME_FOCUS` 模式。
 
 ### 2.2 动效变体 (Animation Variants)
 

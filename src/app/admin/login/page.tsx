@@ -38,14 +38,6 @@ export default function LoginPage() {
             }
         };
         loadMemos();
-
-        // Auto-trigger entrance animation (Step 1: Shrink to Card)
-        // 增加延迟至 1200ms，确保用户能先看到完整的“主页”状态，形成视觉对比
-        const timer = setTimeout(() => {
-            setViewMode('CARD_VIEW');
-        }, 1200);
-
-        return () => clearTimeout(timer);
     }, []);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -184,7 +176,7 @@ export default function LoginPage() {
                                             variant="default"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                setViewMode('SPLIT_VIEW');
+                                                setViewMode('CARD_VIEW');
                                             }}
                                             className="h-12 px-8 bg-primary hover:bg-black text-white rounded-none font-bold tracking-[0.2em] uppercase transition-all shadow-xl"
                                         >

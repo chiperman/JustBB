@@ -40,7 +40,13 @@ export function TimelineProvider({ children }: { children: React.ReactNode }) {
 export function useTimeline() {
     const context = useContext(TimelineContext);
     if (!context) {
-        throw new Error('useTimeline must be used within a TimelineProvider');
+        // 返回一个安全的占位符，防止在导航/渲染间隙崩溃
+        return {
+            activeId: null,
+            setActiveId: () => { },
+            isManualClick: false,
+            setManualClick: () => { }
+        };
     }
     return context;
 }

@@ -88,3 +88,39 @@ export async function isAdmin() {
     const user = await getCurrentUser();
     return user?.role === 'admin';
 }
+
+/**
+ * 发送密码重置邮件
+ */
+export async function sendPasswordResetEmail(email: string): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createClient();
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password`,
+    });
+
+    if (error) {
+        console.error('Reset password email error:', error);
+        return { success: false, error: error.message };
+    }
+
+    return { success: true };
+}
+
+/**
+ * 更新密码
+ */
+export async function updatePassword(password: string): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createClient();
+
+    const { error } = await supabase.auth.updateUser({
+        password: password,
+    });
+
+    if (error) {
+        console.error('Update password error:', error);
+        return { success: false, error: error.message };
+    }
+
+    return { success: true };
+}

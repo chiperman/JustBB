@@ -33,9 +33,10 @@ export async function updateSession(request: NextRequest) {
 
     // 1. 保护管理员路径 /admin (排除登录页)
     const isLoginPage = request.nextUrl.pathname === '/admin/login'
+    const isAuthCallback = request.nextUrl.pathname.startsWith('/auth/callback')
     const isAdminPath = request.nextUrl.pathname.startsWith('/admin')
 
-    if (isAdminPath && !isLoginPage) {
+    if (isAdminPath && !isLoginPage && !isAuthCallback) {
         // 未登录 -> 跳转登录
         if (!user) {
             const url = request.nextUrl.clone()
@@ -43,17 +44,11 @@ export async function updateSession(request: NextRequest) {
             return NextResponse.redirect(url)
         }
 
-        // 已登录但非管理员 -> 强制登出并跳转
-        // 注意：这里我们使用 app_metadata 来判断
+        // 已登录但非管理员 -> 跳转到无权访问页
         if (user.app_metadata.role !== 'admin') {
-            await supabase.auth.signOut()
             const url = request.nextUrl.clone()
-            url.pathname = '/admin/login'
-            const response = NextResponse.redirect(url)
-            // 清除本地 cookie
-            response.cookies.delete('sb-access-token')
-            response.cookies.delete('sb-refresh-token')
-            return response
+            url.pathname = '/unauthorized'
+            return NextResponse.redirect(url)
         }
     }
 

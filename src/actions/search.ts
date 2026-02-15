@@ -1,12 +1,12 @@
 'use server';
 
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 import { Memo } from '@/types/memo';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 
 export async function searchMemosForMention(query: string, offset: number = 0, limit: number = 10): Promise<Memo[]> {
-    const supabase = getSupabaseAdmin();
+    const supabase = await createClient();
     const cookieStore = await cookies();
     const adminCode = cookieStore.get('memo_access_code')?.value || '';
 
@@ -28,13 +28,13 @@ export async function searchMemosForMention(query: string, offset: number = 0, l
 }
 
 export async function getAllMemos(): Promise<Memo[]> {
-    const supabase = getSupabaseAdmin();
+    const supabase = await createClient();
     const cookieStore = await cookies();
     const adminCode = cookieStore.get('memo_access_code')?.value || '';
 
     // 获取当前登录用户状态
     const { data: { user } } = await supabase.auth.getUser();
-    const isAdmin = !!user;
+    const isAdmin = user?.app_metadata?.role === 'admin';
 
     // Fetch all memos, ordered by creation date descending
     const { data, error } = await supabase

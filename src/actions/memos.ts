@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 import bcrypt from 'bcryptjs';
 import { Memo } from '@/types/memo';
+import { isAdmin } from './auth';
 
 const CreateMemoSchema = z.object({
     content: z.string().min(1, '内容不能为空'),
@@ -15,7 +16,12 @@ const CreateMemoSchema = z.object({
     access_code_hint: z.string().optional(),
 });
 
-export async function createMemo(formData: FormData): Promise<{ success: boolean; error: string | null; data?: Memo }> { // Added return type and data?: Memo
+export async function createMemo(formData: FormData): Promise<{ success: boolean; error: string | null; data?: Memo }> {
+    // 安全检查：只有管理员能创建
+    if (!await isAdmin()) {
+        return { success: false, error: '权限不足' };
+    }
+
     const rawData = {
         content: formData.get('content') as string,
         tags: formData.getAll('tags') as string[],

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 import bcrypt from 'bcryptjs';
+import { isAdmin } from './auth';
 
 const UpdateMemoSchema = z.object({
     id: z.string(),
@@ -14,6 +15,9 @@ const UpdateMemoSchema = z.object({
 });
 
 export async function updateMemoState(formData: FormData) {
+    if (!await isAdmin()) {
+        return { error: '权限不足' };
+    }
     const rawData = {
         id: formData.get('id') as string,
         is_private: formData.has('is_private') ? formData.get('is_private') === 'true' : undefined,
@@ -70,6 +74,9 @@ const UpdateMemoContentSchema = z.object({
 });
 
 export async function updateMemoContent(formData: FormData) {
+    if (!await isAdmin()) {
+        return { error: '权限不足' };
+    }
     const rawData = {
         id: formData.get('id') as string,
         content: formData.get('content') as string,

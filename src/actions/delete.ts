@@ -2,8 +2,10 @@
 
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
+import { isAdmin } from './auth';
 
 export async function deleteMemo(id: string) {
+    if (!await isAdmin()) return { success: false, error: '权限不足' };
     const supabase = getSupabaseAdmin();
     // 软删除: 设置 deleted_at 为当前时间
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -21,6 +23,7 @@ export async function deleteMemo(id: string) {
 }
 
 export async function restoreMemo(id: string) {
+    if (!await isAdmin()) return { success: false, error: '权限不足' };
     const supabase = getSupabaseAdmin();
     // 恢复: 设置 deleted_at 为 NULL
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,6 +42,7 @@ export async function restoreMemo(id: string) {
 }
 
 export async function permanentDeleteMemo(id: string) {
+    if (!await isAdmin()) return { success: false, error: '权限不足' };
     const supabase = getSupabaseAdmin();
     // 硬删除
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,6 +60,7 @@ export async function permanentDeleteMemo(id: string) {
 }
 
 export async function emptyTrash() {
+    if (!await isAdmin()) return { success: false, error: '权限不足' };
     const supabase = getSupabaseAdmin();
     // 永久删除所有已标记为删除的记录
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -7,10 +7,26 @@ export interface FilterParams {
     month?: string;
     date?: string;
     sort?: string;
+    isAdmin?: boolean;
+    isOnline?: boolean;
 }
 
 export function clientFilterMemos(memos: Memo[], params: FilterParams): Memo[] {
     let result = memos.filter(m => !m.deleted_at);
+
+    // 0. Privacy & Offline Safety Rules
+    const isOnline = params.isOnline ?? true;
+    const isAdmin = params.isAdmin ?? false;
+
+    if (!isOnline) {
+        // 离线状态：强制不可见所有私密或加密内容 (不管是否登录)
+        result = result.filter(m => !m.is_private && !m.access_code);
+    } else if (!isAdmin) {
+        // 在线但非管理员：只显示公开且未加密的内容
+        // (注意：这里通常由后端 RLS 保证，但前端过滤器提供双重保障)
+        result = result.filter(m => !m.is_private && !m.access_code);
+    }
+    // else: 如果是在线管理员，显示全部 (result 保持不变)
 
     // 1. Tag Filter
     if (params.tag) {

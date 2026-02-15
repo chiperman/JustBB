@@ -31,6 +31,21 @@ export function MemoFeed({ initialMemos, searchParams, adminCode, isAdmin = fals
     const [isFullLoaded, setIsFullLoaded] = useState(false);
     const [allMemos, setAllMemos] = useState<Memo[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [isOnline, setIsOnline] = useState(typeof window !== 'undefined' ? window.navigator.onLine : true);
+
+    // 监听网络状态变化
+    useEffect(() => {
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
 
     // Initial sync with SSR data
     useEffect(() => {
@@ -92,12 +107,21 @@ export function MemoFeed({ initialMemos, searchParams, adminCode, isAdmin = fals
     const displayedMemos = useMemo(() => {
         if (isFullLoaded && allMemos.length > 0) {
             // Client-side filtering (Fast, 0 latency)
-            return clientFilterMemos(allMemos, searchParams);
+            return clientFilterMemos(allMemos, {
+                ...searchParams,
+                isAdmin,
+                isOnline
+            });
         } else {
             // Fallback to SSR initial data (Server-side filtered)
-            return initialMemos;
+            // SSR 数据已经由服务器完成了初步过滤，但在离线补全逻辑中也需要再次确认
+            return clientFilterMemos(initialMemos, {
+                ...searchParams,
+                isAdmin,
+                isOnline
+            });
         }
-    }, [isFullLoaded, allMemos, searchParams, initialMemos]);
+    }, [isFullLoaded, allMemos, searchParams, initialMemos, isAdmin, isOnline]);
 
 
     const { setActiveId, isManualClick } = useTimeline();

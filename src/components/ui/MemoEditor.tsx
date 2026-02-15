@@ -863,7 +863,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 aria-label={isPinned ? "取消置顶" : "置顶此内容"}
                                 aria-pressed={isPinned}
                             >
-                                <Pin className={cn("w-3 h-3", isPinned && "fill-primary")} aria-hidden="true" /> 置顶
+                                <Pin className="w-3 h-3" fill={isPinned ? "currentColor" : "none"} aria-hidden="true" /> 置顶
                             </Button>
                             {!isFullscreen && !hideFullscreen && (
                                 <Button

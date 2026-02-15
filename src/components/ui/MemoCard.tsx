@@ -79,7 +79,7 @@ export const MemoCard = memo(function MemoCard({ memo, isEditing, onEditChange }
                             hour12: false
                         }).replace(/\//g, '-')}
                     </time>
-                    {memo.is_pinned && <Pin className="w-3.5 h-3.5 text-primary fill-primary" aria-hidden="true" />}
+                    {memo.is_pinned && <Pin className="w-3.5 h-3.5 text-primary" fill="currentColor" aria-hidden="true" />}
                     {memo.is_private && <Lock className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />}
                     {memo.word_count !== undefined && (
                         <span className="text-[10px] text-muted-foreground/60">

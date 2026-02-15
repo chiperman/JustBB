@@ -21,9 +21,10 @@ interface MemoFeedProps {
         sort?: string;
     };
     adminCode?: string;
+    isAdmin?: boolean;
 }
 
-export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProps) {
+export function MemoFeed({ initialMemos, searchParams, adminCode, isAdmin = false }: MemoFeedProps) {
     // 1. Displayed Memos (What user sees)
     // Initially uses SSR data to ensure fast First Paint
     // Once full data is loaded, it switches to client-filtered data
@@ -190,6 +191,7 @@ export function MemoFeed({ initialMemos, searchParams, adminCode }: MemoFeedProp
                             )}
                             <MemoCard
                                 memo={memo}
+                                isAdmin={isAdmin}
                                 isEditing={editingId === memo.id}
                                 onEditChange={(editing) => setEditingId(editing ? memo.id : null)}
                             />

@@ -15,11 +15,12 @@ import { UnlockDialog } from './UnlockDialog';
 
 interface MemoCardProps {
     memo: Memo;
+    isAdmin?: boolean;
     isEditing?: boolean;
     onEditChange?: (editing: boolean) => void;
 }
 
-export const MemoCard = memo(function MemoCard({ memo, isEditing, onEditChange }: MemoCardProps) {
+export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditing, onEditChange }: MemoCardProps) {
     const router = useRouter();
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -87,7 +88,7 @@ export const MemoCard = memo(function MemoCard({ memo, isEditing, onEditChange }
                         </span>
                     )}
                 </div>
-                {!memo.is_locked && (
+                {!memo.is_locked && isAdmin && (
                     <div className="flex items-center gap-2 group">
                         <Button
                             variant="ghost"

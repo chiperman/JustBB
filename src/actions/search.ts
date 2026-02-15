@@ -3,6 +3,7 @@
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { Memo } from '@/types/memo';
 import { cookies } from 'next/headers';
+import bcrypt from 'bcryptjs';
 
 export async function searchMemosForMention(query: string, offset: number = 0, limit: number = 10): Promise<Memo[]> {
     const supabase = getSupabaseAdmin();
@@ -28,9 +29,14 @@ export async function searchMemosForMention(query: string, offset: number = 0, l
 
 export async function getAllMemos(): Promise<Memo[]> {
     const supabase = getSupabaseAdmin();
+    const cookieStore = await cookies();
+    const adminCode = cookieStore.get('memo_access_code')?.value || '';
+
+    // 获取当前登录用户状态
+    const { data: { user } } = await supabase.auth.getUser();
+    const isAdmin = !!user;
 
     // Fetch all memos, ordered by creation date descending
-    // Select all fields required for the UI
     const { data, error } = await supabase
         .from('memos')
         .select('*')
@@ -42,5 +48,40 @@ export async function getAllMemos(): Promise<Memo[]> {
         return [];
     }
 
-    return (data || []) as Memo[];
+    const memos = (data || []) as Memo[];
+
+    // 如果是管理员，返回全量原始记录
+    if (isAdmin) {
+        return memos.map(m => ({ ...m, is_locked: false }));
+    }
+
+    // 对普通访客或持码用户进行脱敏处理
+    return memos.map(m => {
+        if (!m.is_private) {
+            return { ...m, is_locked: false };
+        }
+
+        // 校验口令
+        let isAuthorized = false;
+        if (adminCode && m.access_code) {
+            try {
+                isAuthorized = bcrypt.compareSync(adminCode, m.access_code);
+            } catch (e) {
+                // Ignore hash format errors
+            }
+        }
+
+        if (isAuthorized) {
+            return { ...m, is_locked: false };
+        }
+
+        // 脱敏：隐藏内容、标签和敏感字段
+        return {
+            ...m,
+            content: '',
+            tags: [],
+            is_locked: true,
+            access_code: undefined // 绝对不要泄露加密后的 Hash
+        };
+    });
 }

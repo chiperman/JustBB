@@ -7,6 +7,7 @@ import { MemoFeed } from '@/components/ui/MemoFeed';
 import { FeedHeader } from "@/components/ui/FeedHeader";
 import { MemoCardSkeleton } from "@/components/ui/MemoCardSkeleton";
 import { Memo } from "@/types/memo";
+import { supabase } from '@/lib/supabase';
 
 interface MainLayoutClientProps {
     memos: Memo[];
@@ -16,7 +17,22 @@ interface MainLayoutClientProps {
 
 export function MainLayoutClient({ memos, searchParams, adminCode }: MainLayoutClientProps) {
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setIsAdmin(!!user);
+        };
+        checkAuth();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setIsAdmin(!!session?.user);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
 
     const handleScroll = () => {
         if (scrollContainerRef.current) {
@@ -37,7 +53,7 @@ export function MainLayoutClient({ memos, searchParams, adminCode }: MainLayoutC
                 <div className="max-w-4xl mx-auto w-full">
                     <div className="space-y-4">
                         <FeedHeader />
-                        <MemoEditor isCollapsed={isScrolled} contextMemos={memos} />
+                        {isAdmin && <MemoEditor isCollapsed={isScrolled} contextMemos={memos} />}
                     </div>
                 </div>
             </div>
@@ -53,6 +69,7 @@ export function MainLayoutClient({ memos, searchParams, adminCode }: MainLayoutC
                         initialMemos={memos ?? []}
                         searchParams={searchParams}
                         adminCode={adminCode}
+                        isAdmin={isAdmin}
                     />
                     {memos.length === 0 && <MemoCardSkeleton />}
                 </div>

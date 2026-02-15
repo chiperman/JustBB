@@ -50,9 +50,10 @@ BEGIN
       -- 2. 权限校验
       m.is_private = FALSE 
       OR (m.is_private = TRUE AND (
+        -- 管理员或正确口令
         (auth.uid() IS NOT NULL OR (m.access_code IS NOT NULL AND m.access_code = crypt(input_code, m.access_code)))
-        -- 搜索模式下允许看到私密记录的占位（除非没有关键词且没有标签）
-        OR (query_text <> '' OR filters->>'tag' IS NOT NULL)
+        -- 仅在非搜索模式（无关键字且无标签）下允许访客看到私密记录占位
+        OR (query_text = '' AND filters->>'tag' IS NULL)
       ))
     )
     AND (

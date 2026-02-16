@@ -23,7 +23,7 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
             scale: 1,
             x: '0%',
             opacity: 1,
-            filter: 'blur(0px)',
+            filter: 'blur(0px) brightness(1)',
             borderRadius: '0px',
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
         },
@@ -31,18 +31,26 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
             scale: 0.9,
             x: '0%',
             opacity: 1,
-            filter: 'blur(0px)',
+            filter: 'blur(0px) brightness(1)',
             borderRadius: '24px',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
         },
         split: {
             scale: 0.9,
-            x: '25%',
+            x: '45%',
             opacity: 1,
-            filter: 'blur(4px)',
+            filter: 'blur(4px) brightness(0.95)',
             borderRadius: '24px',
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+        },
+        hover: {
+            scale: 0.9,
+            x: '45%',
+            opacity: 1,
+            filter: 'blur(0px) brightness(1)',
+            borderRadius: '24px',
+            transition: { duration: 0.5, ease: [0.33, 1, 0.68, 1] }
         }
     };
 
@@ -70,16 +78,16 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
                 <motion.span
                     initial={{ opacity: 0, x: -50 }}
                     animate={{ opacity: 0.05, x: 0 }}
-                    className="absolute top-[10%] left-[5%] text-[15vw] font-editorial italic text-black dark:text-white"
+                    className="absolute top-[10%] left-[5%] text-[10vw] font-editorial italic text-black dark:text-white"
                 >
-                    Draft
+                    JustMemo Draft
                 </motion.span>
                 <motion.span
                     initial={{ opacity: 0, x: 50 }}
                     animate={{ opacity: 0.03, x: 0 }}
-                    className="absolute bottom-[15%] right-[10%] text-[12vw] font-editorial text-black dark:text-white"
+                    className="absolute bottom-[15%] right-[10%] text-[4vw] font-editorial text-black dark:text-white"
                 >
-                    Archive
+                    with ❤️ by chiperman
                 </motion.span>
             </div>
 
@@ -90,13 +98,14 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
                     variants={homeTransitionVariants}
                     initial="home"
                     animate={getVariant()}
+                    whileHover={viewMode === 'SPLIT_VIEW' ? "hover" : undefined}
                     className={`absolute inset-0 z-10 origin-center overflow-hidden bg-background ${viewMode === 'SPLIT_VIEW' ? 'cursor-pointer' : ''}`}
                     style={{ borderRadius: viewMode === 'HOME_FOCUS' ? 0 : 24 }}
                     onClick={() => viewMode === 'SPLIT_VIEW' && setViewMode('HOME_FOCUS')}
                 >
                     <div className="w-full h-full shadow-2xl overflow-hidden border border-black/5 dark:border-white/5" style={{ borderRadius: 'inherit' }}>
                         {/* Actual Home Page Content */}
-                        <div className={viewMode === 'SPLIT_VIEW' ? "pointer-events-none select-none grayscale-[0.2] h-full" : "h-full"}>
+                        <div className={viewMode === 'SPLIT_VIEW' ? "pointer-events-none select-none h-full" : "h-full"}>
                             {children}
                         </div>
 

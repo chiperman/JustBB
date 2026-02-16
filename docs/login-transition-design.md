@@ -47,15 +47,21 @@ const homeTransitionVariants = {
     home: {
         scale: 1,
         x: '0%',
-        filter: 'blur(0px)',
+        filter: 'blur(0px) brightness(1)',
         // 慢速、优雅的弹簧
         transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
     },
     split: {
         scale: 0.9,
-        x: '50%', // 移动到右半边
-        filter: 'blur(2px)', // 视觉后退
+        x: '45%', // 移动到右半边，留出左侧空间
+        filter: 'blur(4px) brightness(0.95)', // 视觉后退，轻微压暗
         transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+    },
+    hover: { // 悬停交互
+        scale: 0.9,
+        x: '45%',
+        filter: 'blur(0px) brightness(1)', // 清除模糊和压暗
+        transition: { duration: 0.5, ease: [0.33, 1, 0.68, 1] }
     }
 };
 ```
@@ -66,11 +72,15 @@ const loginPanelVariants = {
     home: {
         x: '-100%',
         opacity: 0,
+        scale: 0.9,
         transition: { duration: 0.6, ease: 'easeIn' }
     },
     split: {
         x: '0%',
         opacity: 1,
+        scale: 0.9, // 保持卡片大小一致
+        borderRadius: '24px',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
     }
 };

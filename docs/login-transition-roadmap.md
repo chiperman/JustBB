@@ -27,23 +27,28 @@
 
 ---
 
+
 ## 阶段二：位移布局 (Stage 2: Translate & Layout) - [已完成]
 **目标**: 建立分屏布局的空间感，为表单腾出空间。
 
 *   [x] **交互触发**: 在卡片中央添加 "ENTER IDENTITY" 按钮，点击触发分屏。
-*   [x] **参数**: 调整 `SPLIT_VIEW` 过渡态，使卡片 X 轴移动至 `25%` (Visual Center of Right Half), or `50%` based on implementation. (Implemented `x: '25%'` in code? No, I implemented `x: '50%'` in the plan/code but commented about 25%. Let's check code. The code used `x: '25%'`. Wait, I need to check `LoginTransitionWrapper.tsx` content again to be sure what I wrote. I wrote `x: '25%'` in the `replace_file_content` call. Let's verify via `view_file` to be precise before updating roadmap).
+*   [x] **参数修正**: 调整 `SPLIT_VIEW` 过渡态，使主页卡片 X 轴移动至 `45%`，确保完全让出左侧屏幕空间并保持对称间距。
 *   [x] **协调性**: 缩放 (Scale) 和位移 (Translate) 使用相同的 Easing 曲线 `[0.16, 1, 0.3, 1]`。
-*   **验证点**: 卡片移动后，左侧留白区域是否匀称？视觉重心是否平稳？
+*   **验证点**: 卡片移动后，左侧留白区域是否足够容纳登录卡片？视觉重心是否平衡？
 
 ---
 
-## 阶段三：表单入场 (Stage 3: Form Entrance) - [待执行]
-**目标**: 引入交互核心，完成视图构建。
+## 阶段三：双卡片联动 (Stage 3: Dual Card System) - [已完成]
+**目标**: 建立“双卡片”的视觉隐喻，登录页也应被视为一张物理卡片。
 
-*   [ ] **动作**: 登录表单容器从屏幕左侧边缘滑入。
-*   [ ] **配合**: 表单滑入 (Slide In) 应该在卡片右移 (Move Right) 的同时发生，或者稍微延迟 (Stagger) 以产生“推拉”的视觉错觉。
-*   [ ] **细节**: 表单内部元素（输入框、按钮）应启用交错动画 (StaggerChildren)。
-*   **验证点**: 表单滑入是否会分散用户对主页卡片的注意力？两者是否像是联动的机械装置？
+*   [x] **登录页卡片化**:
+    *   **缩放 (Scale)**: `0.9` (与主页卡片一致)。
+    *   **圆角 (Radius)**: `24px`。
+    *   **阴影 (Shadow)**: 添加悬浮阴影。
+    *   **背景 (Background)**: 确保卡片有不透明背景，防止透视。
+*   [x] **入场动画**: 登录卡片从左侧滑入 (`x: -100%` -> `0%` of its container)，最终停留在屏幕左侧中心。
+*   [x] **配合**: 确保左右两张卡片在视觉上是等高、等宽（或比例协调）的并排对齐。
+*   **验证点**: 是否形成了“左侧登录、右侧预览”的并排卡片布局？有没有重叠或穿帮？
 
 ---
 
@@ -51,5 +56,5 @@
 **目标**: 完善交互闭环与氛围感。
 
 *   [ ] **背景**: 恢复背景大文字 (Draft/Archive) 的视差移动。
-*   [ ] **交互**: 调整点击右侧卡片返回 `HOME_FOCUS` 的逻辑。
+*   [ ] **交互**: 调整点击右侧卡片返回 `Home Focus` 的逻辑。
 *   [ ] **移动端**: 检查在小屏幕下的降级表现（通常改为上下堆叠或模态覆盖）。

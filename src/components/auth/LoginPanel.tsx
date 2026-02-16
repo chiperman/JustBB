@@ -56,21 +56,29 @@ export function LoginPanel() {
 
     const loginPanelVariants: Variants = {
         home: {
-            x: '-10%',
+            x: '-100%',
+            scale: 0.9,
             opacity: 0,
+            borderRadius: '24px',
             transition: { duration: 0.6, ease: 'easeIn' },
             zIndex: -1
         },
         card: {
-            x: '-10%',
+            x: '-100%',
+            scale: 0.9,
             opacity: 0,
+            borderRadius: '24px',
             transition: { duration: 0.6, ease: 'easeIn' },
             zIndex: -1
         },
         split: {
             x: '0%', // Occupy left half
+            scale: 0.9,
             opacity: 1,
             zIndex: 20,
+            borderRadius: '24px',
+            backgroundColor: 'var(--background)', // Ensure opacity
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', // Matching shadow
             transition: {
                 duration: 0.8,
                 ease: [0.16, 1, 0.3, 1],

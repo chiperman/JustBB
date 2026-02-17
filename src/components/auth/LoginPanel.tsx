@@ -569,11 +569,11 @@ export function LoginPanel() {
                                                     ))}
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                                                    <RequirementItem met={passwordStrength.metRequirements.length} label="至少 8 位" />
-                                                    <RequirementItem met={passwordStrength.metRequirements.upper && passwordStrength.metRequirements.lower} label="包含大小写" />
-                                                    <RequirementItem met={passwordStrength.metRequirements.number} label="包含数字" />
-                                                    <RequirementItem met={passwordStrength.metRequirements.symbol} label="特殊符号" />
+                                                <div className="flex flex-wrap gap-x-3 gap-y-1.5 opacity-80">
+                                                    <RequirementItem met={passwordStrength.metRequirements.length} label="8位+" />
+                                                    <RequirementItem met={passwordStrength.metRequirements.upper && passwordStrength.metRequirements.lower} label="大小写" />
+                                                    <RequirementItem met={passwordStrength.metRequirements.number} label="数字" />
+                                                    <RequirementItem met={passwordStrength.metRequirements.symbol} label="符号" />
                                                 </div>
                                             </div>
                                         )}
@@ -694,11 +694,11 @@ export function LoginPanel() {
 
 function RequirementItem({ met, label }: { met: boolean; label: string }) {
     return (
-        <div className="flex items-center gap-2 group">
-            <div className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-all duration-300 ${met ? 'bg-green-500/10 text-green-600 scale-110 shadow-[0_0_10px_rgba(34,197,94,0.2)]' : 'bg-foreground/[0.03] text-muted-foreground/20'}`}>
-                {met ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : <div className="w-1 h-1 rounded-full bg-current opacity-40" />}
+        <div className="flex items-center gap-1.5 group">
+            <div className={`flex-shrink-0 w-3.5 h-3.5 rounded-full flex items-center justify-center transition-all duration-300 ${met ? 'bg-green-500/10 text-green-600 scale-110 shadow-[0_0_8px_rgba(34,197,94,0.15)]' : 'bg-foreground/[0.03] text-muted-foreground/20'}`}>
+                {met ? <Check className="w-2 h-2 stroke-[3.5]" /> : <div className="w-0.5 h-0.5 rounded-full bg-current opacity-40" />}
             </div>
-            <span className={`text-[10px] font-sans font-bold uppercase tracking-wider transition-colors duration-300 ${met ? 'text-green-600/80' : 'text-muted-foreground/30'}`}>{label}</span>
+            <span className={`text-[9px] font-sans font-bold uppercase tracking-wider transition-colors duration-300 ${met ? 'text-green-600/80' : 'text-muted-foreground/30'}`}>{label}</span>
         </div>
     );
 }

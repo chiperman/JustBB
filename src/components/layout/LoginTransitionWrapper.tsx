@@ -53,7 +53,8 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
             transition: {
                 type: 'spring',
                 stiffness: 260,
-                damping: 26
+                damping: 26,
+                mass: 1
             }
         },
         split: {

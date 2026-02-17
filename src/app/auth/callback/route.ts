@@ -33,5 +33,5 @@ export async function GET(request: Request) {
     }
 
     // 失败则跳转到登录页并带上错误提示
-    return NextResponse.redirect(`${origin}/admin/login?error=auth-code-error`)
+    return NextResponse.redirect(`${origin}/?error=auth-code-error`)
 }

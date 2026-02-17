@@ -12,7 +12,7 @@ export default function UnauthorizedPage() {
 
     const handleLogout = async () => {
         await logout();
-        router.push('/admin/login');
+        router.push('/');
     };
 
     return (

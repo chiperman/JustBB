@@ -31,16 +31,15 @@ export async function updateSession(request: NextRequest) {
     // 刷新 Session (如果过期)
     const { data: { user } } = await supabase.auth.getUser()
 
-    // 1. 保护管理员路径 /admin (排除登录页)
-    const isLoginPage = request.nextUrl.pathname === '/admin/login'
+    // 1. 保护管理员路径 /admin (排除 OAuth 回调)
     const isAuthCallback = request.nextUrl.pathname.startsWith('/auth/callback')
     const isAdminPath = request.nextUrl.pathname.startsWith('/admin')
 
-    if (isAdminPath && !isLoginPage && !isAuthCallback) {
-        // 未登录 -> 跳转登录
+    if (isAdminPath && !isAuthCallback) {
+        // 未登录 -> 跳转首页
         if (!user) {
             const url = request.nextUrl.clone()
-            url.pathname = '/admin/login'
+            url.pathname = '/'
             return NextResponse.redirect(url)
         }
 
@@ -50,11 +49,6 @@ export async function updateSession(request: NextRequest) {
             url.pathname = '/unauthorized'
             return NextResponse.redirect(url)
         }
-    }
-
-    // 2. 如果已登录且是管理员，访问登录页则跳转主页
-    if (user && isLoginPage && user.app_metadata.role === 'admin') {
-        return NextResponse.redirect(new URL('/', request.url))
     }
 
     return supabaseResponse

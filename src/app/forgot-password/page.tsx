@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
                     </div>
                     <div className="pt-6">
                         <Button asChild variant="outline" className="w-full rounded-xl h-12">
-                            <Link href="/admin/login">返回登录</Link>
+                            <Link href="/">返回首页</Link>
                         </Button>
                     </div>
                 </div>
@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
                 </form>
 
                 <div className="pt-6 text-center">
-                    <Link href="/admin/login" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                    <Link href="/" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                         <ArrowLeft className="mr-2 w-4 h-4" />
                         返回登录
                     </Link>

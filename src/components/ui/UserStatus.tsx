@@ -89,7 +89,7 @@ export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { is
 
     return (
         <Link
-            href="/admin/login"
+            href="/"
             className={cn(
                 "flex items-center gap-2 p-2.5 rounded hover:bg-accent transition-all text-sm text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
                 isCollapsed ? "justify-center" : "w-full"

@@ -3,13 +3,12 @@
 import * as React from 'react';
 import {
     Settings, User, Sun, Moon, Monitor, Type,
-    LogOut, LogIn, Download, Loader2, Lock,
+    LogOut, LogIn, Download, Loader2,
     Unlock, ShieldCheck, UserCircle2
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { logout, getCurrentUser } from '@/actions/auth';
-import { clearUnlockCode } from '@/actions/unlock';
 import { cn } from '@/lib/utils';
 import { useLoginMode } from '@/context/LoginModeContext';
 import {
@@ -36,7 +35,6 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { UnlockDialog } from '@/components/ui/UnlockDialog';
 
 interface SidebarSettingsProps {
     isCollapsed?: boolean;
@@ -50,27 +48,19 @@ interface UserInfo {
 
 export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     const [user, setUser] = React.useState<UserInfo | null>(null);
-    const [isGuest, setIsGuest] = React.useState(false);
     const [loading, setLoading] = React.useState(true);
     const [loggingOut, setLoggingOut] = React.useState(false);
     const [isSans, setIsSans] = React.useState(false);
-    const [isUnlockOpen, setIsUnlockOpen] = React.useState(false);
     const { theme, setTheme } = useTheme();
     const router = useRouter();
     const pathname = usePathname();
     const { setViewMode } = useLoginMode();
 
     React.useEffect(() => {
-        // 获取管理员状态和访客状态
+        // 获取管理员状态
         const checkAuth = async () => {
             const u = await getCurrentUser();
             setUser(u);
-
-            // 简单的访客状态判断：检查是否存在特定的 cookie
-            // 在 Client 组件中，我们可以通过 document.cookie 简单检测
-            const hasAccessCode = document.cookie.includes('memo_access_code=');
-            setIsGuest(hasAccessCode);
-
             setLoading(false);
         };
 
@@ -88,12 +78,6 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
         setUser(null);
         setLoggingOut(false);
         router.refresh();
-    };
-
-    const handleClearGuest = async () => {
-        await clearUnlockCode();
-        setIsGuest(false);
-        window.location.reload();
     };
 
     const toggleFont = () => {
@@ -123,7 +107,6 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     const renderIdentity = () => {
         if (loading) return <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />;
         if (user) return <ShieldCheck className="w-4 h-4 text-primary" />;
-        if (isGuest) return <Unlock className="w-4 h-4 text-amber-500" />;
         return <UserCircle2 className="w-4 h-4 text-muted-foreground" />;
     };
 
@@ -142,18 +125,15 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         <div className="relative shrink-0">
                             <Settings className="w-5 h-5 text-muted-foreground group-hover/settings:text-primary transition-colors" />
                             {/* 状态小圆点提示 */}
-                            {(user || isGuest) && (
-                                <span className={cn(
-                                    "absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background",
-                                    user ? "bg-primary" : "bg-amber-500"
-                                )} />
+                            {user && (
+                                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background bg-primary" />
                             )}
                         </div>
                         {!isCollapsed && (
                             <div className="flex flex-col items-start overflow-hidden">
                                 <span className="text-sm font-medium">设置中心</span>
                                 <span className="text-[10px] text-muted-foreground truncate w-full flex items-center gap-1">
-                                    {user ? (user.email || '管理员') : (isGuest ? '访客 (已解锁)' : '未登录/匿名')}
+                                    {user ? (user.email || '管理员') : '未登录/匿名'}
                                 </span>
                             </div>
                         )}
@@ -166,16 +146,16 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                             <div className="flex items-center gap-2.5">
                                 <div className={cn(
                                     "p-2 rounded-sm",
-                                    user ? "bg-primary/10" : (isGuest ? "bg-amber-100/50 dark:bg-amber-900/20" : "bg-muted")
+                                    user ? "bg-primary/10" : "bg-muted"
                                 )}>
                                     {renderIdentity()}
                                 </div>
                                 <div className="flex flex-col min-w-0">
                                     <p className="text-sm font-semibold truncate leading-none">
-                                        {user ? "正式管理员" : (isGuest ? "授权访客" : "匿名身份")}
+                                        {user ? "正式管理员" : "匿名身份"}
                                     </p>
                                     <p className="text-[11px] text-muted-foreground truncate mt-1">
-                                        {user ? user.email : (isGuest ? "持有有效访问口令" : "当前仅可查看公开内容")}
+                                        {user ? user.email : "当前仅可查看公开内容"}
                                     </p>
                                 </div>
                             </div>
@@ -259,16 +239,6 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                     <div className="px-1 py-1">
                         {!user && (
                             <>
-                                <DropdownMenuItem className="rounded-sm" onClick={() => setIsUnlockOpen(true)}>
-                                    <Lock className="mr-2 h-4 w-4 text-amber-500" />
-                                    <span>{isGuest ? '重新输入口令' : '输入访问口令'}</span>
-                                </DropdownMenuItem>
-                                {isGuest && (
-                                    <DropdownMenuItem className="rounded-sm text-muted-foreground" onClick={handleClearGuest}>
-                                        <Unlock className="mr-2 h-4 w-4" />
-                                        <span>清除口令并锁定</span>
-                                    </DropdownMenuItem>
-                                )}
                                 <DropdownMenuItem className="rounded-sm" onClick={() => {
                                     setViewMode('CARD_VIEW');
                                 }}>
@@ -292,12 +262,6 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* 口令解锁弹窗 */}
-            <UnlockDialog
-                isOpen={isUnlockOpen}
-                onClose={() => setIsUnlockOpen(false)}
-                hint="输入全站通行口令以获取浏览权限"
-            />
         </>
     );
 }

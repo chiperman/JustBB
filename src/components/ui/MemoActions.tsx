@@ -38,6 +38,7 @@ interface MemoActionsProps {
     tags?: string[];
     onEdit?: () => void;
     onOpenChange?: (open: boolean) => void;
+    isAdmin?: boolean;
 }
 
 export function MemoActions({
@@ -49,7 +50,8 @@ export function MemoActions({
     createdAt = '',
     tags = [],
     onEdit,
-    onOpenChange
+    onOpenChange,
+    isAdmin = false
 }: MemoActionsProps) {
     const [isPending, setIsPending] = useState(false);
     const [showDeleteAlert, setShowDeleteAlert] = useState(false);
@@ -200,9 +202,11 @@ export function MemoActions({
                 <DropdownMenuContent align="end" className="w-48">
                     {!isDeleted && (
                         <>
-                            <DropdownMenuItem onClick={onEdit}>
-                                编辑
-                            </DropdownMenuItem>
+                            {isAdmin && (
+                                <DropdownMenuItem onClick={onEdit}>
+                                    编辑
+                                </DropdownMenuItem>
+                            )}
                             <MemoShare
                                 memo={{ id, content, created_at: createdAt, tags, is_pinned: isPinned, is_private: isPrivate, memo_number: 0 } as Memo}
                                 trigger={
@@ -213,25 +217,29 @@ export function MemoActions({
                             />
                         </>
                     )}
-                    <DropdownMenuItem
-                        onClick={handleTogglePin}
-                        disabled={isPending}
-                    >
-                        {isPinned ? '取消置顶' : '置顶'}
-                    </DropdownMenuItem>
+                    {isAdmin && (
+                        <>
+                            <DropdownMenuItem
+                                onClick={handleTogglePin}
+                                disabled={isPending}
+                            >
+                                {isPinned ? '取消置顶' : '置顶'}
+                            </DropdownMenuItem>
 
-                    <DropdownMenuItem
-                        onClick={handleTogglePrivate}
-                        disabled={isPending}
-                    >
-                        {isPrivate ? '取消私密' : '设为私密'}
-                    </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={handleTogglePrivate}
+                                disabled={isPending}
+                            >
+                                {isPrivate ? '取消私密' : '设为私密'}
+                            </DropdownMenuItem>
 
-                    <DropdownMenuSeparator />
+                            <DropdownMenuSeparator />
 
-                    <DropdownMenuItem onClick={() => setShowDeleteAlert(true)} className="text-destructive focus:text-destructive focus:bg-destructive/5">
-                        删除
-                    </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setShowDeleteAlert(true)} className="text-destructive focus:text-destructive focus:bg-destructive/5">
+                                删除
+                            </DropdownMenuItem>
+                        </>
+                    )}
                 </DropdownMenuContent>
             </DropdownMenu>
 

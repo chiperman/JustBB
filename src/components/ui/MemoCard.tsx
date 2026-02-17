@@ -88,7 +88,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                         </span>
                     )}
                 </div>
-                {!memo.is_locked && isAdmin && (
+                {!memo.is_locked && (
                     <div className="flex items-center gap-2 group">
                         <Button
                             variant="ghost"
@@ -115,6 +115,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                             tags={memo.tags ?? []}
                             onEdit={() => onEditChange?.(true)}
                             onOpenChange={setIsMenuOpen}
+                            isAdmin={isAdmin}
                         />
                     </div>
                 )}

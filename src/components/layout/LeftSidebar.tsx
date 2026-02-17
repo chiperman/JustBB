@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { SidebarSettings } from "./SidebarSettings";
-import { motion, useMotionValue, useSpring, useTransform, useVelocity } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform, useVelocity, AnimatePresence } from 'framer-motion';
 
 export interface LeftSidebarProps {
     onClose?: () => void;
@@ -24,13 +24,17 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
     const isMobile = !!onClose;
     const effectiveIsCollapsed = isMobile ? false : isCollapsed;
 
-    // 雅致流动模型 (Refined Liquid Model)
+    // 统一 Spring 配置 (Unified Spring Config)
+    const springConfig = {
+        stiffness: 300,
+        damping: 40,
+        mass: 1
+    };
+
+    // 雅致流动模型 (Refined Liquid Model) - Activity Indicator
+    // 同步使用统一的 Spring 配置
     const y = useMotionValue(0);
-    const springY = useSpring(y, {
-        stiffness: 400,
-        damping: 28,
-        mass: 1.0
-    });
+    const springY = useSpring(y, springConfig);
 
     // 捕获速度并映射为克制的形变比例
     const velocity = useVelocity(springY);
@@ -74,21 +78,60 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
         }
     };
 
+    // 动画变体配置
+    const sidebarVariants = {
+        expanded: { width: "18rem" }, // w-72
+        collapsed: { width: "5rem" }  // w-20
+    };
+
+    const labelVariants = {
+        expanded: {
+            opacity: 1,
+            width: "auto",
+            x: 0,
+            transition: { delay: 0.1, duration: 0.2 }
+        },
+        collapsed: {
+            opacity: 0,
+            width: 0,
+            x: -10,
+            transition: { duration: 0.1 }
+        }
+    };
+
+    const sectionVariants = {
+        expanded: {
+            opacity: 1,
+            height: "auto",
+            transition: { delay: 0.1, duration: 0.3 }
+        },
+        collapsed: {
+            opacity: 0,
+            height: 0,
+            transition: { duration: 0.2 }
+        }
+    };
+
     return (
-        <aside
+        <motion.aside
+            initial={effectiveIsCollapsed ? "collapsed" : "expanded"}
+            animate={effectiveIsCollapsed ? "collapsed" : "expanded"}
+            variants={sidebarVariants}
+            transition={springConfig}
             className={cn(
-                "h-full flex flex-col border-r border-border bg-background/50 backdrop-blur-md transition-[width,padding,background-color] duration-300 ease-in-out group/sidebar relative",
-                effectiveIsCollapsed ? "w-20 p-2" : "w-72 p-2"
+                "h-full flex flex-col border-r border-border bg-background/50 backdrop-blur-md overflow-hidden group/sidebar relative",
+                // 移除 CSS transition 类，移除 w- 类（由 motion 控制）
+                // 保持 padding
+                effectiveIsCollapsed ? "p-2" : "p-2"
             )}
         >
 
-            {/* Top Area: Settings + Toggle (Always Header Mode) */}
+            {/* Top Area: Settings + Toggle */}
             <div className={cn(
                 "mb-[24px]",
-                // Always use row layout unless collapsed (then column)
                 !effectiveIsCollapsed ? "flex items-center gap-1 pr-1" : "pb-2 flex flex-col gap-4"
             )}>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 h-9 overflow-hidden">
                     <SidebarSettings
                         isCollapsed={effectiveIsCollapsed}
                     />
@@ -98,26 +141,39 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                     variant="ghost"
                     onClick={handleToggle}
                     className={cn(
-                        "text-muted-foreground hover:text-primary shrink-0 rounded-sm",
+                        "text-muted-foreground hover:text-primary shrink-0 rounded-sm transition-colors",
+                        // 使用 layout 属性处理位置变化，减少 CSS 类突变
                         effectiveIsCollapsed ? "w-full justify-center h-9 p-2" : "h-8 w-8 px-0"
                     )}
                     aria-label={isMobile ? "关闭侧边栏" : (effectiveIsCollapsed ? "展开侧边栏" : "收起侧边栏")}
+                    asChild
                 >
-                    {isMobile ? (
-                        <PanelLeftClose className="size-4" />
-                    ) : (
-                        effectiveIsCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />
-                    )}
+                    <motion.button>
+                        {isMobile ? (
+                            <PanelLeftClose className="size-4" />
+                        ) : (
+                            effectiveIsCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />
+                        )}
+                    </motion.button>
                 </Button>
             </div>
 
-            <div className={cn("transition-all duration-300", effectiveIsCollapsed ? "h-0 opacity-0 invisible overflow-hidden" : "h-auto opacity-100 visible mb-[24px] px-1")}>
+            {/* Heatmap Area */}
+            <motion.div
+                variants={sectionVariants}
+                className="overflow-hidden mb-[24px] px-1 min-w-[17rem]"
+            >
                 <Suspense fallback={<div className="h-40 w-full animate-pulse bg-muted/20 rounded-sm" />}>
-                    <Heatmap />
+                    {/* 使用 key 强制重新渲染或保持状态，视需求而定。这里直接渲染 */}
+                    <div className={effectiveIsCollapsed ? "pointer-events-none" : ""}>
+                        <Heatmap />
+                    </div>
                 </Suspense>
-            </div>
+            </motion.div>
 
-            <nav className="flex-1 px-1 space-y-1 overflow-y-auto custom-scrollbar mb-[24px] relative">
+            {/* Navigation */}
+            <nav className="flex-1 px-1 space-y-1 overflow-y-auto overflow-x-hidden custom-scrollbar mb-[24px] relative">
+                {/* Active Indicator */}
                 <motion.div
                     style={{
                         y: springY,
@@ -140,7 +196,7 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                             href={item.href}
                             onClick={() => handleItemClick(item.href)}
                             className={cn(
-                                "flex items-center p-2 h-9 rounded-sm transition-all group relative hover:bg-accent hover:text-accent-foreground", // 固定高度 h-9 (36px)
+                                "flex items-center p-2 h-9 rounded-sm transition-colors group relative hover:bg-accent hover:text-accent-foreground",
                                 effectiveIsCollapsed ? "justify-center gap-0" : "px-3 gap-3",
                                 isActive
                                     ? "text-primary font-medium"
@@ -154,16 +210,23 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                             )}>
                                 {item.icon}
                             </span>
-                            <span className={cn(
-                                "text-[14px] font-normal whitespace-nowrap transition-all duration-300",
-                                effectiveIsCollapsed ? "w-0 opacity-0 overflow-hidden" : "w-auto opacity-100"
-                            )}>{item.label}</span>
+
+                            <motion.span
+                                variants={labelVariants}
+                                className="text-[14px] font-normal whitespace-nowrap"
+                            >
+                                {item.label}
+                            </motion.span>
                         </Link>
                     );
                 })}
             </nav>
 
-            <div className={cn("transition-all duration-300", effectiveIsCollapsed ? "h-0 opacity-0 invisible overflow-hidden" : "h-auto opacity-100 visible mb-[24px] px-1")}>
+            {/* Popular Tags */}
+            <motion.div
+                variants={sectionVariants}
+                className="overflow-hidden mb-[24px] px-1 min-w-[17rem]"
+            >
                 <h3 className="text-[24px] font-bold text-foreground leading-tight tracking-tight mb-4 flex items-center gap-2">
                     热门标签
                 </h3>
@@ -176,12 +239,16 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                 </div>}>
                     <TagCloud />
                 </Suspense>
-            </div>
+            </motion.div>
 
-            <div className={cn("transition-all duration-300", effectiveIsCollapsed ? "h-0 opacity-0 invisible overflow-hidden" : "h-auto opacity-100 visible mb-[24px] px-1")}>
+            {/* On This Day */}
+            <motion.div
+                variants={sectionVariants}
+                className="overflow-hidden mb-[24px] px-1 min-w-[17rem]"
+            >
                 <OnThisDay />
-            </div>
+            </motion.div>
 
-        </aside>
+        </motion.aside>
     );
 }

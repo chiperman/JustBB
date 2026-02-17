@@ -35,6 +35,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SidebarSettingsProps {
     isCollapsed?: boolean;
@@ -129,14 +130,23 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                 <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background bg-primary" />
                             )}
                         </div>
-                        {!isCollapsed && (
-                            <div className="flex flex-col items-start overflow-hidden">
-                                <span className="text-[14px] font-normal text-foreground">设置中心</span>
-                                <span className="text-[12px] font-normal text-stone-400 truncate w-full flex items-center gap-1">
-                                    {user ? (user.email || '管理员') : '未登录/匿名'}
-                                </span>
-                            </div>
-                        )}
+
+                        <AnimatePresence>
+                            {!isCollapsed && (
+                                <motion.div
+                                    initial={{ opacity: 0, width: 0, x: -10 }}
+                                    animate={{ opacity: 1, width: "auto", x: 0 }}
+                                    exit={{ opacity: 0, width: 0, x: -10 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="flex flex-col items-start overflow-hidden whitespace-nowrap"
+                                >
+                                    <span className="text-[14px] font-normal text-foreground">设置中心</span>
+                                    <span className="text-[12px] font-normal text-stone-400 truncate w-full flex items-center gap-1">
+                                        {user ? (user.email || '管理员') : '未登录/匿名'}
+                                    </span>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="start" className="w-64 rounded-sm border-border/40 backdrop-blur-md bg-popover/90 p-1 shadow-2xl">

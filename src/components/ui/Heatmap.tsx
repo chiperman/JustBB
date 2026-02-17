@@ -139,16 +139,16 @@ export const Heatmap = memo(function Heatmap() {
             loading ? "opacity-40 animate-pulse cursor-default" : "cursor-pointer group/stats hover:opacity-80"
         )}>
             <div className="flex flex-col items-center">
-                <span className="text-3xl tracking-tight leading-none">{displayStats.totalMemos}</span>
-                <span className="text-[11px] text-muted-foreground mt-1">笔记</span>
+                <span className="text-3xl tracking-tight leading-none font-bold">{displayStats.totalMemos}</span>
+                <span className="text-[12px] font-normal text-stone-400 mt-1">笔记</span>
             </div>
             <div className="flex flex-col items-center">
-                <span className="text-3xl tracking-tight leading-none">{displayStats.totalTags}</span>
-                <span className="text-[11px] text-muted-foreground mt-1">标签</span>
+                <span className="text-3xl tracking-tight leading-none font-bold">{displayStats.totalTags}</span>
+                <span className="text-[12px] font-normal text-stone-400 mt-1">标签</span>
             </div>
             <div className="flex flex-col items-center">
-                <span className="text-3xl tracking-tight leading-none">{displayTotalActiveDays}</span>
-                <span className="text-[11px] text-muted-foreground mt-1">天</span>
+                <span className="text-3xl tracking-tight leading-none font-bold">{displayTotalActiveDays}</span>
+                <span className="text-[12px] font-normal text-stone-400 mt-1">天</span>
             </div>
         </div>
     );
@@ -166,7 +166,7 @@ export const Heatmap = memo(function Heatmap() {
             <div className="relative pt-2" onMouseLeave={() => setHoveredDate(null)}>
                 <div className="relative overflow-visible heatmap-content-wrapper">
                     <div
-                        className="grid grid-rows-7 grid-flow-col gap-[5px] justify-center"
+                        className="grid grid-rows-7 grid-flow-col gap-[4px] justify-center"
                         style={{ gridTemplateRows: 'repeat(7, 14px)' }}
                     >
                         {heatmapDays.map((dateStr) => (
@@ -191,14 +191,14 @@ export const Heatmap = memo(function Heatmap() {
                     {hoveredDate && (
                         <div
                             className={cn(
-                                "absolute z-[999] px-2.5 py-1.5 text-[10px] font-medium text-white bg-black/95 backdrop-blur-md rounded pointer-events-none mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-2xl border border-white/20 whitespace-nowrap",
+                                "absolute z-[999] px-2.5 py-1.5 text-[10px] font-normal text-white bg-black/95 backdrop-blur-md rounded pointer-events-none mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-2xl border border-white/20 whitespace-nowrap",
                                 hoveredDate.align === 'center' && "-translate-x-1/2 -translate-y-full",
                                 hoveredDate.align === 'left' && "-translate-y-full ml-[-7px]",
                                 hoveredDate.align === 'right' && "-translate-x-full -translate-y-full mr-[-7px]"
                             )}
                             style={{ left: hoveredDate.left, top: hoveredDate.top }}
                         >
-                            <span className="text-[#9be9a8] font-bold">{hoveredDate.count} 笔记</span>
+                            <span className="text-[#9be9a8] font-normal">{hoveredDate.count} 笔记</span>
                             <span className="mx-1.5 opacity-40">/</span>
                             <span>{hoveredDate.date}</span>
                         </div>
@@ -206,7 +206,7 @@ export const Heatmap = memo(function Heatmap() {
                 </div>
 
                 {/* Month labels at bottom */}
-                <div className="flex justify-between mt-2 px-1 text-[11px] text-muted-foreground font-medium opacity-60">
+                <div className="flex justify-between mt-2 px-1 text-[12px] text-stone-400 font-normal opacity-60">
                     <span className="flex-1 text-center">十一月</span>
                     <span className="flex-1 text-center">十二月</span>
                     <span className="flex-1 text-center">一月</span>

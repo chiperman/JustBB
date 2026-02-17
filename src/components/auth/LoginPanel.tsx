@@ -101,7 +101,7 @@ export function LoginPanel() {
             setError(null);
             setShowPassword(false);
             setIsEmailValid(true);
-            setOtp(['', '', '', '', '', '']);
+            setOtp(['', '', '', '', '', '', '', '']);
             setPasswordStrength({
                 score: 0,
                 label: '',
@@ -160,6 +160,9 @@ export function LoginPanel() {
         setError(null);
         const password = formData.get('password') as string;
 
+        // Ensure email is present in formData
+        formData.set('email', email);
+
         // Basic password validation
         if (!password || password.length < 8) {
             setError('密码至少需要8位字符');
@@ -208,8 +211,9 @@ export function LoginPanel() {
         formData.set('email', email);
 
         if (authMode === 'REGISTER') {
-            const otp = formData.get('otp') as string;
             const password = formData.get('password') as string;
+            const otpValue = otp.join('');
+            formData.set('otp', otpValue);
 
             // Re-verify password strength on final submit just in case
             if (!password || password.length < 8 || passwordStrength.score < 5) {
@@ -233,13 +237,13 @@ export function LoginPanel() {
             }
 
             // Verify OTP
-            if (!otp || otp.length !== 6) {
-                setError('请输入6位验证码');
+            if (!otpValue || otpValue.length !== 8) {
+                setError('请输入8位验证码');
                 setLoading(false);
                 return;
             }
 
-            const result = await verifyOtp(email, otp);
+            const result = await verifyOtp(email, otpValue);
             if (result.success) {
                 setViewMode('CARD_VIEW');
                 setTimeout(() => window.location.reload(), 500);
@@ -318,20 +322,20 @@ export function LoginPanel() {
         }
     };
 
-    const [otp, setOtp] = useState(['', '', '', '', '', '']);
+    const [otp, setOtp] = useState(['', '', '', '', '', '', '', '']);
     const otpInputs = useRef<(HTMLInputElement | null)[]>([]);
 
     const handleOtpChange = (index: number, value: string) => {
         if (value.length > 1) {
             // Handle paste
-            const pastedData = value.slice(0, 6).split('');
+            const pastedData = value.slice(0, 8).split('');
             const newOtp = [...otp];
             pastedData.forEach((char, i) => {
-                if (index + i < 6) newOtp[index + i] = char;
+                if (index + i < 8) newOtp[index + i] = char;
             });
             setOtp(newOtp);
             // Focus last filled or next
-            const nextIndex = Math.min(index + pastedData.length, 5);
+            const nextIndex = Math.min(index + pastedData.length, 7);
             otpInputs.current[nextIndex]?.focus();
             return;
         }
@@ -340,7 +344,7 @@ export function LoginPanel() {
         newOtp[index] = value;
         setOtp(newOtp);
 
-        if (value && index < 5) {
+        if (value && index < 7) {
             otpInputs.current[index + 1]?.focus();
         }
     };
@@ -348,6 +352,26 @@ export function LoginPanel() {
     const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Backspace' && !otp[index] && index > 0) {
             otpInputs.current[index - 1]?.focus();
+        }
+    };
+
+    const handlePasteOtp = async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            // Extract the first 8 digits found in the text
+            const digits = text.replace(/[^0-9]/g, '').slice(0, 8).split('');
+            if (digits.length > 0) {
+                const newOtp = [...otp];
+                digits.forEach((digit, i) => {
+                    if (i < 8) newOtp[i] = digit;
+                });
+                setOtp(newOtp);
+                // Focus the next available input or the last one
+                const nextIndex = Math.min(digits.length, 7);
+                otpInputs.current[nextIndex]?.focus();
+            }
+        } catch (err) {
+            console.error('Failed to read clipboard:', err);
         }
     };
 
@@ -462,6 +486,7 @@ export function LoginPanel() {
                                 <Mail className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/10 group-focus-within:text-primary transition-colors duration-500 z-10" />
                                 <Input
                                     id="email"
+                                    name="email"
                                     value={email}
                                     onChange={(e) => {
                                         setEmail(e.target.value);
@@ -587,28 +612,40 @@ export function LoginPanel() {
                                                     htmlFor="otp-0"
                                                     className="block text-[12px] font-serif font-medium text-foreground/40 italic"
                                                 >
-                                                    安全验证码 (6位)
+                                                    安全验证码 (8位)
                                                 </label>
-                                                <motion.div whileTap={{ scale: 0.95 }}>
-                                                    <Button
-                                                        type="button"
-                                                        disabled={countdown > 0 || loading}
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            const form = e.currentTarget.closest('form');
-                                                            if (form) {
-                                                                const formData = new FormData(form);
-                                                                handleSendCode(formData);
-                                                            }
-                                                        }}
-                                                        variant="ghost"
-                                                        className="h-6 px-0 text-primary font-serif italic text-[11px] hover:bg-transparent hover:text-primary/70 transition-all min-w-[60px] border-b border-primary/10 rounded-none"
-                                                    >
-                                                        {countdown > 0 ? `${countdown}s` : (otpSent ? '重新获取' : '获取验证码')}
-                                                    </Button>
-                                                </motion.div>
+                                                <div className="flex items-center gap-3">
+                                                    <motion.div whileTap={{ scale: 0.95 }}>
+                                                        <Button
+                                                            type="button"
+                                                            onClick={handlePasteOtp}
+                                                            variant="ghost"
+                                                            className="h-6 px-0 text-muted-foreground/40 font-sans text-[10px] hover:bg-transparent hover:text-primary transition-all uppercase tracking-widest"
+                                                        >
+                                                            粘贴
+                                                        </Button>
+                                                    </motion.div>
+                                                    <motion.div whileTap={{ scale: 0.95 }}>
+                                                        <Button
+                                                            type="button"
+                                                            disabled={countdown > 0 || loading}
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                const form = e.currentTarget.closest('form');
+                                                                if (form) {
+                                                                    const formData = new FormData(form);
+                                                                    handleSendCode(formData);
+                                                                }
+                                                            }}
+                                                            variant="ghost"
+                                                            className="h-6 px-0 text-primary font-serif italic text-[11px] hover:bg-transparent hover:text-primary/70 transition-all min-w-[60px] border-b border-primary/10 rounded-none"
+                                                        >
+                                                            {countdown > 0 ? `${countdown}s` : (otpSent ? '重新获取' : '获取验证码')}
+                                                        </Button>
+                                                    </motion.div>
+                                                </div>
                                             </div>
-                                            <div className="grid grid-cols-6 gap-3 py-4">
+                                            <div className="grid grid-cols-8 gap-2 py-4">
                                                 {otp.map((digit, index) => (
                                                     <div
                                                         key={`otp-${index}`}
@@ -630,9 +667,6 @@ export function LoginPanel() {
                                                     </div>
                                                 ))}
                                             </div>
-                                            <p className="text-[10px] text-muted-foreground/30 font-sans ml-1 text-center italic">
-                                                验证码已发送至您的加密邮箱
-                                            </p>
                                         </div>
                                     )}
                                 </motion.div>

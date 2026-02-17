@@ -67,6 +67,9 @@
     - **预加载感**: 使用 `viewport: { margin: '200px' }`。确保元素在进入屏幕前已提前开始弹性入场，实现“无感”生长。
     - **单项反馈**: 位移 (y:20) + 渐变 + 缩放 (Spring: Snappy)。
     - **流动性 (Flow)**: 强制使用 `layout` 属性配合稳定的 `memo.id` Key。当 SSR 数据与后台全量数据同步时，新旧元素应平滑位移衔接，严禁产生瞬间重置或闪烁。
+*   **组件内部状态 (Internal State Transitions)**:
+    - **高度稳定性**: 对于展开/收起 (Disclosure) 类组件，应使用 `AnimatePresence` 配合 `height: 0/auto`，而非 `layout`，以确保在动态加载内容时避免与外部布局容器产生弹性动效冲突。
+    - **内容切换编排**: 内部状态切换（如从 Loading 到数据列表）应使用 `mode="wait"` 的 `AnimatePresence`，赋予 `opacity` 和微量位移 (y: 5) 过渡，消除闪现感。
 
 ### 5.3 交互细节
 *   **统一悬停背景 (Unified Hover Background)**: 全站所有非语义化交互元素在悬停时，统一使用 `rgba(0,0,0,0.05)` (Tailwind `bg-accent`)，文字/图标颜色保持稳定。

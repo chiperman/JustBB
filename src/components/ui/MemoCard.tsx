@@ -37,12 +37,17 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
     const toggleBacklinks = async () => {
         if (!showBacklinks && backlinks.length === 0) {
             setLoadingBacklinks(true);
-            const { getBacklinks } = await import('@/actions/references');
-            const data = await getBacklinks(memo.memo_number);
-            setBacklinks(data);
-            setLoadingBacklinks(false);
+            setShowBacklinks(true); // Open immediately to start height animation
+            try {
+                const { getBacklinks } = await import('@/actions/references');
+                const data = await getBacklinks(memo.memo_number);
+                setBacklinks(data);
+            } finally {
+                setLoadingBacklinks(false);
+            }
+        } else {
+            setShowBacklinks(!showBacklinks);
         }
-        setShowBacklinks(!showBacklinks);
     };
 
     if (isEditing) {
@@ -144,39 +149,58 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
             <AnimatePresence>
                 {showBacklinks && (
                     <motion.div
-                        layout
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                        transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }} // Smooth height
                         className="mt-4 pt-4 border-t border-border overflow-hidden"
                         id={`backlinks-${memo.id}`}
                         role="region"
                         aria-label="反向引用列表"
                     >
-                        <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                        <p className="text-xs font-semibold text-muted-foreground mb-4 flex items-center gap-2">
                             <span className="w-1 h-3 bg-primary/30 rounded-full" />
                             Refered by:
                         </p>
-                        {loadingBacklinks ? (
-                            <div className="text-xs text-muted-foreground animate-pulse">Loading references...</div>
-                        ) : backlinks.length > 0 ? (
-                            <div className="space-y-2">
-                                {backlinks.map(link => (
-                                    <div key={link.id} className="text-xs bg-muted/30 p-2 rounded-sm flex justify-between items-center group/link hover:bg-accent transition-colors">
-                                        <span className="text-muted-foreground truncate max-w-[200px]">{link.content.substring(0, 30)}...</span>
-                                        <a
-                                            href={`/?q=${link.memo_number}`}
-                                            className="text-primary font-mono font-medium hover:underline focus-visible:ring-1 focus-visible:ring-primary/40 rounded px-1"
-                                        >
-                                            #{link.memo_number}
-                                        </a>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-xs text-muted-foreground italic">No references found.</div>
-                        )}
+                        <div className="min-h-[40px] relative">
+                            <AnimatePresence mode="wait">
+                                {loadingBacklinks ? (
+                                    <motion.div
+                                        key="loading"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="text-xs text-muted-foreground animate-pulse"
+                                    >
+                                        Loading references...
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="list"
+                                        initial={{ opacity: 0, y: 5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -5 }}
+                                        className="space-y-2"
+                                    >
+                                        {backlinks.length > 0 ? (
+                                            backlinks.map(link => (
+                                                <div key={link.id} className="text-xs bg-muted/30 p-2 rounded-sm flex justify-between items-center group/link hover:bg-accent transition-colors">
+                                                    <span className="text-muted-foreground truncate max-w-[200px]">{link.content.substring(0, 30)}...</span>
+                                                    <a
+                                                        href={`/?q=${link.memo_number}`}
+                                                        className="text-primary font-mono font-medium hover:underline focus-visible:ring-1 focus-visible:ring-primary/40 rounded px-1"
+                                                    >
+                                                        #{link.memo_number}
+                                                    </a>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-xs text-muted-foreground italic">No references found.</div>
+                                        )}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

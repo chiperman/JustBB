@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { MemoCard } from './MemoCard';
 import { getAllMemos } from '@/actions/search';
 import { Loader2 } from 'lucide-react';
@@ -162,67 +163,110 @@ export function MemoFeed({ initialMemos, searchParams, adminCode, isAdmin = fals
         };
     }, [isManualClick, setActiveId, displayedMemos]);
 
+    const containerVariants: Variants = {
+        initial: { opacity: 1 },
+        animate: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.03, // Snappy stagger
+                delayChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants: Variants = {
+        initial: { opacity: 0, y: 20, scale: 0.98 },
+        animate: {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            transition: {
+                type: 'spring',
+                stiffness: 260,
+                damping: 26
+            }
+        },
+        exit: {
+            opacity: 0,
+            scale: 0.98,
+            transition: { duration: 0.2 }
+        }
+    };
+
     return (
         <div className="space-y-6">
-            <div className="columns-1 gap-6 space-y-6">
-                {displayedMemos.map((memo, index) => {
-                    // 使用与 stats.ts 一致的本地时区逻辑 (UTC+8) 构建日期 ID
-                    // 否则 00:00-08:00 的记录会被归到前一天，导致锚点 ID 不匹配
-                    const utcDate = new Date(memo.created_at);
-                    const localDate = new Date(utcDate.getTime() + 8 * 60 * 60 * 1000);
-                    const currentDate = localDate.toISOString().split('T')[0];
+            <motion.div
+                variants={containerVariants}
+                initial="initial"
+                animate="animate"
+                className="columns-1 gap-6 space-y-6"
+            >
+                <AnimatePresence mode="popLayout">
+                    {displayedMemos.map((memo, index) => {
+                        // 使用与 stats.ts 一致的本地时区逻辑 (UTC+8) 构建日期 ID
+                        // 否则 00:00-08:00 的记录会被归到前一天，导致锚点 ID 不匹配
+                        const utcDate = new Date(memo.created_at);
+                        const localDate = new Date(utcDate.getTime() + 8 * 60 * 60 * 1000);
+                        const currentDate = localDate.toISOString().split('T')[0];
 
-                    const currentYear = currentDate.split('-')[0];
-                    const currentMonth = currentDate.split('-')[1];
+                        const currentYear = currentDate.split('-')[0];
+                        const currentMonth = currentDate.split('-')[1];
 
-                    const prevMemo = index > 0 ? displayedMemos[index - 1] : null;
-                    let prevDateFull = null;
-                    if (prevMemo) {
-                        const prevUtcDate = new Date(prevMemo.created_at);
-                        const prevLocalDate = new Date(prevUtcDate.getTime() + 8 * 60 * 60 * 1000);
-                        prevDateFull = prevLocalDate.toISOString().split('T')[0];
-                    }
+                        const prevMemo = index > 0 ? displayedMemos[index - 1] : null;
+                        let prevDateFull = null;
+                        if (prevMemo) {
+                            const prevUtcDate = new Date(prevMemo.created_at);
+                            const prevLocalDate = new Date(prevUtcDate.getTime() + 8 * 60 * 60 * 1000);
+                            prevDateFull = prevLocalDate.toISOString().split('T')[0];
+                        }
 
-                    const prevYear = prevDateFull ? prevDateFull.split('-')[0] : null;
-                    const prevMonth = prevDateFull ? prevDateFull.split('-')[1] : null;
+                        const prevYear = prevDateFull ? prevDateFull.split('-')[0] : null;
+                        const prevMonth = prevDateFull ? prevDateFull.split('-')[1] : null;
 
-                    const isFirstOfYear = currentYear !== prevYear;
-                    const isFirstOfMonth = currentMonth !== prevMonth || isFirstOfYear;
-                    const isFirstOfDay = currentDate !== prevDateFull;
+                        const isFirstOfYear = currentYear !== prevYear;
+                        const isFirstOfMonth = currentMonth !== prevMonth || isFirstOfYear;
+                        const isFirstOfDay = currentDate !== prevDateFull;
 
-                    return (
-                        <div key={memo.id} id={`memo-${memo.id}`} className="break-inside-avoid relative animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-backwards scroll-mt-4" style={{ animationDelay: `${index * 50}ms` }}>
-                            {isFirstOfYear && (
-                                <div
-                                    id={`year-${currentYear}`}
-                                    className="absolute -top-4 invisible"
-                                    aria-hidden="true"
+                        return (
+                            <motion.div
+                                key={memo.id}
+                                id={`memo-${memo.id}`}
+                                variants={itemVariants}
+                                layout
+                                className="break-inside-avoid relative scroll-mt-4"
+                            >
+                                {isFirstOfYear && (
+                                    <div
+                                        id={`year-${currentYear}`}
+                                        className="absolute -top-4 invisible"
+                                        aria-hidden="true"
+                                    />
+                                )}
+                                {isFirstOfMonth && (
+                                    <div
+                                        id={`month-${currentYear}-${parseInt(currentMonth)}`}
+                                        className="absolute -top-4 invisible"
+                                        aria-hidden="true"
+                                    />
+                                )}
+                                {isFirstOfDay && (
+                                    <div
+                                        id={`date-${currentDate}`}
+                                        className="absolute -top-4 invisible"
+                                        aria-hidden="true"
+                                    />
+                                )}
+                                <MemoCard
+                                    memo={memo}
+                                    isAdmin={isAdmin}
+                                    isEditing={editingId === memo.id}
+                                    onEditChange={(editing) => setEditingId(editing ? memo.id : null)}
                                 />
-                            )}
-                            {isFirstOfMonth && (
-                                <div
-                                    id={`month-${currentYear}-${parseInt(currentMonth)}`}
-                                    className="absolute -top-4 invisible"
-                                    aria-hidden="true"
-                                />
-                            )}
-                            {isFirstOfDay && (
-                                <div
-                                    id={`date-${currentDate}`}
-                                    className="absolute -top-4 invisible"
-                                    aria-hidden="true"
-                                />
-                            )}
-                            <MemoCard
-                                memo={memo}
-                                isAdmin={isAdmin}
-                                isEditing={editingId === memo.id}
-                                onEditChange={(editing) => setEditingId(editing ? memo.id : null)}
-                            />
-                        </div>
-                    );
-                })}
-            </div>
+                            </motion.div>
+                        );
+                    })}
+                </AnimatePresence>
+            </motion.div>
 
             {!isFullLoaded && (
                 <div className="flex justify-center p-4">

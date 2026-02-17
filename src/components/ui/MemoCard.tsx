@@ -7,7 +7,7 @@ import { Pin, Lock, MoreHorizontal, Link2 } from 'lucide-react';
 import { memo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn, formatDate } from '@/lib/utils';
-import { useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
 import { Memo } from '@/types/memo';
@@ -47,7 +47,14 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
 
     if (isEditing) {
         return (
-            <article className="bg-card border border-border rounded-sm p-6 shadow-md ring-2 ring-primary/20 animate-in fade-in duration-200">
+            <motion.article
+                layout
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="bg-card border border-border rounded-sm p-6 shadow-md ring-2 ring-primary/20"
+            >
                 <MemoEditor
                     mode="edit"
                     memo={memo}
@@ -55,7 +62,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                     onCancel={() => onEditChange?.(false)}
                     onSuccess={() => onEditChange?.(false)}
                 />
-            </article>
+            </motion.article>
         );
     }
 
@@ -134,38 +141,45 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
             </div>
 
             {/* 引用展示区 */}
-            {showBacklinks && (
-                <div
-                    className="mt-4 pt-4 border-t border-border animate-in fade-in slide-in-from-top-1 duration-200"
-                    id={`backlinks-${memo.id}`}
-                    role="region"
-                    aria-label="反向引用列表"
-                >
-                    <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-2">
-                        <span className="w-1 h-3 bg-primary/30 rounded-full" />
-                        Refered by:
-                    </p>
-                    {loadingBacklinks ? (
-                        <div className="text-xs text-muted-foreground animate-pulse">Loading references...</div>
-                    ) : backlinks.length > 0 ? (
-                        <div className="space-y-2">
-                            {backlinks.map(link => (
-                                <div key={link.id} className="text-xs bg-muted/30 p-2 rounded-sm flex justify-between items-center group/link hover:bg-accent transition-colors">
-                                    <span className="text-muted-foreground truncate max-w-[200px]">{link.content.substring(0, 30)}...</span>
-                                    <a
-                                        href={`/?q=${link.memo_number}`}
-                                        className="text-primary font-mono font-medium hover:underline focus-visible:ring-1 focus-visible:ring-primary/40 rounded px-1"
-                                    >
-                                        #{link.memo_number}
-                                    </a>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-xs text-muted-foreground italic">No references found.</div>
-                    )}
-                </div>
-            )}
+            <AnimatePresence>
+                {showBacklinks && (
+                    <motion.div
+                        layout
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                        className="mt-4 pt-4 border-t border-border overflow-hidden"
+                        id={`backlinks-${memo.id}`}
+                        role="region"
+                        aria-label="反向引用列表"
+                    >
+                        <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                            <span className="w-1 h-3 bg-primary/30 rounded-full" />
+                            Refered by:
+                        </p>
+                        {loadingBacklinks ? (
+                            <div className="text-xs text-muted-foreground animate-pulse">Loading references...</div>
+                        ) : backlinks.length > 0 ? (
+                            <div className="space-y-2">
+                                {backlinks.map(link => (
+                                    <div key={link.id} className="text-xs bg-muted/30 p-2 rounded-sm flex justify-between items-center group/link hover:bg-accent transition-colors">
+                                        <span className="text-muted-foreground truncate max-w-[200px]">{link.content.substring(0, 30)}...</span>
+                                        <a
+                                            href={`/?q=${link.memo_number}`}
+                                            className="text-primary font-mono font-medium hover:underline focus-visible:ring-1 focus-visible:ring-primary/40 rounded px-1"
+                                        >
+                                            #{link.memo_number}
+                                        </a>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-xs text-muted-foreground italic">No references found.</div>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* 底部交互与标签 */}
 

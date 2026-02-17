@@ -54,7 +54,7 @@
 | **Gentle Spring** | `{ stiffness: 200, damping: 24 }` | 柔和、延迟 | 侧滑面板、低优先级的位移。 |
 | **Soft Spring** | `{ stiffness: 100, damping: 25 }` | 沉重、放松 | 主布局元素，大卡片入场。 |
 | **UI Feedback** | `{ stiffness: 300, damping: 30 }` | 灵敏、反馈 | 按钮点击缩放、警告框、模态窗。 |
-| **Ultra-Jelly** | `{ stiffness: 600, damping: 12 }` | 极高回弹、Q弹 | 侧边栏导航指示条、果冻感组件。 |
+| **Refined Liquid** | `{ stiffness: 400, damping: 28 }` | 雅致、克制、高级 | 侧边栏导航指示条。 |
 
 ### 5.3 关键切换标准 (Critical Transition Standards)
 为保证设计一致性，以下切换逻辑为系统核心基石，**未经深思熟虑严禁随意更改**：
@@ -71,10 +71,10 @@
 *   **组件内部状态 (Internal State Transitions)**:
     - **高度稳定性**: 对于展开/收起 (Disclosure) 类组件，应使用 `AnimatePresence` 配合 `height: 0/auto`，而非 `layout`，以确保在动态加载内容时避免与外部布局容器产生弹性动效冲突。
     - **内容切换编排**: 内部状态切换（如从 Loading 到数据列表）应使用 `mode="wait"` 的 `AnimatePresence`，赋予 `opacity` 和微量位移 (y: 5) 过渡，消除闪现感。
-*   **极致果冻动力学 (Ultra-Jelly Kinetics)**:
-    - **逻辑**: 使用 `useSpring` (Stiffness: 600, Damping: 12) 驱动 Y 轴位移，并利用 `useVelocity` 捕获瞬时速度。
-    - **体积守恒拉伸 (Squash & Stretch)**: 运动时 `scaleY` 拉长 (最高 2.2x)，`scaleX` 同步缩窄 (最低 0.4x)。
-    - **撞击感**: 由于极低的阻尼比，落位时会产生明显的物理余波抖动，模拟实体果冻的碰撞反馈。
+*   **雅致流动模型 (Refined Liquid Model)**:
+    - **逻辑**: 使用 `useSpring` (Stiffness: 400, Damping: 28) 驱动 Y 轴位移，模拟临界阻尼的高级感。
+    - **克制拉伸 (Subtle Stretch)**: 运动时 `scaleY` 轻微拉长 (最高 1.3x)，`scaleX` 同步微缩 (最低 0.9x)。
+    - **稳定性**: 消除过度回弹，仅保留极细微的动态指向感。
 
 ### 5.3 交互细节
 *   **统一悬停背景 (Unified Hover Background)**: 全站所有非语义化交互元素在悬停时，统一使用 `rgba(0,0,0,0.05)` (Tailwind `bg-accent`)，文字/图标颜色保持稳定。

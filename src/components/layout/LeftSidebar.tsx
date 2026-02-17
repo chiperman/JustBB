@@ -24,18 +24,19 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
     const isMobile = !!onClose;
     const effectiveIsCollapsed = isMobile ? false : isCollapsed;
 
-    // 极致果冻动力学 (Ultra-Jelly Kinetics)
+    // 雅致流动模型 (Refined Liquid Model)
     const y = useMotionValue(0);
     const springY = useSpring(y, {
-        stiffness: 600,
-        damping: 12,
-        mass: 0.5
+        stiffness: 400,
+        damping: 28,
+        mass: 1.0
     });
 
-    // 捕获速度并映射为“体积守恒”拉伸比例
+    // 捕获速度并映射为克制的形变比例
     const velocity = useVelocity(springY);
-    const scaleY = useTransform(velocity, [-1200, 0, 1200], [2.2, 1, 2.2]);
-    const scaleX = useTransform(velocity, [-1200, 0, 1200], [0.4, 1, 0.4]);
+    // 移动时轻微拉长（scaleY 1.3），轻微变细（scaleX 0.9）
+    const scaleY = useTransform(velocity, [-1200, 0, 1200], [1.3, 1, 1.3]);
+    const scaleX = useTransform(velocity, [-1200, 0, 1200], [0.9, 1, 0.9]);
     const opacity = useTransform(springY, [-100, 0, 1000], [0, 1, 1]);
 
     // 同步外部路由变化到本地状态和物理引擎

@@ -24,10 +24,9 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
     const isMobile = !!onClose;
     const effectiveIsCollapsed = isMobile ? false : isCollapsed;
 
-    // 统一 Spring 配置 (Unified Spring Config)
     const springConfig = {
-        stiffness: 300,
-        damping: 40,
+        stiffness: 350,
+        damping: 35,
         mass: 1
     };
 
@@ -89,7 +88,7 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
             opacity: 1,
             width: "auto",
             x: 0,
-            transition: { delay: 0.1, duration: 0.2 }
+            transition: { duration: 0.2 }
         },
         collapsed: {
             opacity: 0,
@@ -97,6 +96,20 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
             x: -10,
             transition: { duration: 0.1 }
         }
+    };
+
+    const navVariants = {
+        expanded: {
+            transition: { staggerChildren: 0.07, delayChildren: 0.1 }
+        },
+        collapsed: {
+            transition: { staggerChildren: 0.05, staggerDirection: -1 }
+        }
+    };
+
+    const navItemVariants = {
+        expanded: { opacity: 1, x: 0 },
+        collapsed: { opacity: 1, x: 0 }
     };
 
     const sectionVariants = {
@@ -118,6 +131,7 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
             animate={effectiveIsCollapsed ? "collapsed" : "expanded"}
             variants={sidebarVariants}
             transition={springConfig}
+            style={{ willChange: "width" }}
             className={cn(
                 "h-full flex flex-col border-r border-border bg-background/50 backdrop-blur-md overflow-hidden group/sidebar relative",
                 // 移除 CSS transition 类，移除 w- 类（由 motion 控制）
@@ -172,7 +186,10 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
             </motion.div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-1 space-y-1 overflow-y-auto overflow-x-hidden custom-scrollbar mb-[24px] relative">
+            <motion.nav
+                variants={navVariants}
+                className="flex-1 px-1 space-y-1 overflow-y-auto overflow-x-hidden custom-scrollbar mb-[24px] relative"
+            >
                 {/* Active Indicator */}
                 <motion.div
                     style={{
@@ -185,42 +202,43 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                     className="absolute left-0 w-1 h-5 bg-primary rounded-full z-10"
                 />
 
-                {navItems.map((item) => {
+                {navItems.map((item, index) => {
                     const isActive = item.href === '/'
                         ? activeHref === '/'
                         : activeHref.startsWith(item.href);
 
                     return (
-                        <Link
-                            key={item.label}
-                            href={item.href}
-                            onClick={() => handleItemClick(item.href)}
-                            className={cn(
-                                "flex items-center p-2 h-9 rounded-sm transition-colors group relative hover:bg-accent hover:text-accent-foreground",
-                                effectiveIsCollapsed ? "justify-center gap-0" : "px-3 gap-3",
-                                isActive
-                                    ? "text-primary font-medium"
-                                    : "text-muted-foreground"
-                            )}
-                            title={item.label}
-                        >
-                            <span className={cn(
-                                "transition-colors shrink-0",
-                                isActive ? "text-primary" : "text-muted-foreground"
-                            )}>
-                                {item.icon}
-                            </span>
-
-                            <motion.span
-                                variants={labelVariants}
-                                className="text-[14px] font-normal whitespace-nowrap"
+                        <motion.div variants={navItemVariants} key={item.label}>
+                            <Link
+                                href={item.href}
+                                onClick={() => handleItemClick(item.href)}
+                                className={cn(
+                                    "flex items-center p-2 h-9 rounded-sm transition-colors group relative hover:bg-accent hover:text-accent-foreground",
+                                    effectiveIsCollapsed ? "justify-center gap-0" : "px-3 gap-3",
+                                    isActive
+                                        ? "text-primary font-medium"
+                                        : "text-muted-foreground"
+                                )}
+                                title={item.label}
                             >
-                                {item.label}
-                            </motion.span>
-                        </Link>
+                                <span className={cn(
+                                    "transition-colors shrink-0",
+                                    isActive ? "text-primary" : "text-muted-foreground"
+                                )}>
+                                    {item.icon}
+                                </span>
+
+                                <motion.span
+                                    variants={labelVariants}
+                                    className="text-[14px] font-normal whitespace-nowrap"
+                                >
+                                    {item.label}
+                                </motion.span>
+                            </Link>
+                        </motion.div>
                     );
                 })}
-            </nav>
+            </motion.nav>
 
             {/* Popular Tags */}
             <motion.div

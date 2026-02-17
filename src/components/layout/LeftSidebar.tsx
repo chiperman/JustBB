@@ -1,16 +1,17 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
 import { TagCloud } from '../ui/TagCloud';
 import { Heatmap } from '../ui/Heatmap';
 import { OnThisDay } from '../ui/OnThisDay';
-import { Home, Tag, Trash2, Image as GalleryIcon, PanelLeftClose, PanelLeftOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, Tag, Trash2, Image as GalleryIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { SidebarSettings } from "./SidebarSettings";
-import { motion, useMotionValue, useSpring, useTransform, useVelocity, AnimatePresence } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform, useVelocity } from 'framer-motion';
+import { getCurrentUser } from '@/actions/auth';
 
 export interface LeftSidebarProps {
     onClose?: () => void;
@@ -19,7 +20,16 @@ export interface LeftSidebarProps {
 export function LeftSidebar({ onClose }: LeftSidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const pathname = usePathname();
-    const [activeHref, setActiveHref] = useState(pathname);
+    const [isAdmin, setIsAdmin] = useState(false);
+
+
+    useEffect(() => {
+        const checkRole = async () => {
+            const user = await getCurrentUser();
+            setIsAdmin(user?.role === 'admin');
+        };
+        checkRole();
+    }, []);
 
     const isMobile = !!onClose;
     const effectiveIsCollapsed = isMobile ? false : isCollapsed;
@@ -42,32 +52,37 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
     const scaleX = useTransform(velocity, [-1200, 0, 1200], [0.9, 1, 0.9]);
     const opacity = useTransform(springY, [-100, 0, 1000], [0, 1, 1]);
 
-    // 同步外部路由变化到本地状态和物理引擎
+    const navItems = useMemo(() => {
+        const items = [
+            { icon: <Home className="size-4" />, label: '首页', href: '/' },
+            { icon: <GalleryIcon className="size-4" />, label: '画廊', href: '/gallery' },
+            { icon: <Tag className="size-4" />, label: '标签', href: '/tags' },
+        ];
+
+        if (isAdmin) {
+            items.push({ icon: <Trash2 className="size-4" />, label: '回收站', href: '/trash' });
+        }
+
+        return items;
+    }, [isAdmin]);
+
+    // 同步外部路由变化到物理引擎
     useEffect(() => {
-        setActiveHref(pathname);
         const index = navItems.findIndex(item =>
             item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
         );
         if (index !== -1) {
             y.set(index * 40 + 8);
         }
-    }, [pathname]);
+    }, [pathname, navItems, y]);
 
     const handleItemClick = (href: string) => {
-        setActiveHref(href);
         const index = navItems.findIndex(item => item.href === href);
         if (index !== -1) {
             y.set(index * 40 + 8);
         }
         if (isMobile) onClose();
     };
-
-    const navItems = [
-        { icon: <Home className="size-4" />, label: '首页', href: '/' },
-        { icon: <GalleryIcon className="size-4" />, label: '画廊', href: '/gallery' },
-        { icon: <Tag className="size-4" />, label: '标签', href: '/tags' },
-        { icon: <Trash2 className="size-4" />, label: '回收站', href: '/trash' },
-    ];
 
     const handleToggle = () => {
         if (isMobile) {
@@ -202,10 +217,10 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                     className="absolute left-0 w-1 h-5 bg-primary rounded-full z-10"
                 />
 
-                {navItems.map((item, index) => {
+                {navItems.map((item) => {
                     const isActive = item.href === '/'
-                        ? activeHref === '/'
-                        : activeHref.startsWith(item.href);
+                        ? pathname === '/'
+                        : pathname.startsWith(item.href);
 
                     return (
                         <motion.div variants={navItemVariants} key={item.label}>

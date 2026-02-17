@@ -2,12 +2,18 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { Memo } from '@/types/memo';
+import { isAdmin } from './auth';
 
 export async function getTrashMemos(): Promise<Memo[]> {
+    // 权限校验
+    if (!(await isAdmin())) {
+        console.warn('Unauthorized attempt to fetch trash memos');
+        return [];
+    }
+
     const supabase = await createClient();
     // 使用 Admin 客户端直接查询，不依赖 RPC (或创建专用 RPC)
-    // 回收站数据是敏感的，所以必须鉴权。这里 Admin Client 默认拥有所有权限，
-    // 在真实场景应该校验当前用户 session，但既然是单人版我们假设能调 Action 就是有权限。
+    // 回收站数据是敏感的，所以必须鉴权。
     const { data, error } = await supabase
         .from('memos')
         .select('*')
@@ -25,3 +31,4 @@ export async function getTrashMemos(): Promise<Memo[]> {
         is_locked: memo.is_private // 垃圾箱里的私密内容暂时也锁定
     })) as Memo[];
 }
+

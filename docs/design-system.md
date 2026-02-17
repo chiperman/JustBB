@@ -33,10 +33,27 @@
 *   **标准化规范**: 全站所有容器（卡片）、交互元素（按钮、输入框）、标识类元素（标签、ID、提及）以及多媒体附件（图片）统一使用 2px 微圆角。严禁出现多种圆角弧度并存的情况，确保视觉上的绝对一致性与几何严整感。所有高亮背景类元素（如选中的导航项、标签云、记录中的提及）统一遵循此规则。
 
 ## 5. 交互反馈与动效
-*   **统一悬停背景 (Unified Hover Background)**: 全站所有非语义化（非删除/危险操作）的交互元素在悬停时，统一使用 `rgba(0,0,0,0.05)` (Tailwind `bg-accent`) 作为背景色，且保持文字/图标颜色稳定，不产生额外跳动。
-*   **通知系统**: 采用全局 **Toast 通知** 展示操作反馈（成功/警告/错误），取代原生 `alert`。
-*   **对话框**: 所有 `confirm` 与 `prompt` 逻辑均替换为定制化的 **AlertDialog** 与 **PromptDialog**，支持毛玻璃背景 (`backdrop-blur`)。
-*   **动效**: 基于 **Framer Motion** 实现瀑布流卡片的平滑加载与渐显，移除冗余布局抖动。
+
+### 5.1 核心哲学 (Motion Philosophy)
+*   **重于快 (Weight over Speed)**: 物体应当感觉有质量。使用较低的刚度 (Stiffness) 和较高的阻尼 (Damping)。
+*   **编排感 (Orchestration)**: 元素按顺序流动 (Stagger)，引导用户的视线。
+*   **触觉反馈 (Tactile Feedback)**: 交互 (Hover) 响应灵敏但扎实。
+*   **氛围感 (Atmosphere)**: 背景缓慢呼吸，让空间感觉充满生机。
+
+### 5.2 物理参数 (Physics Constants)
+几乎所有的运动都使用 **Spring (弹簧)** 物理模型 (基于 Framer Motion)。
+
+| 参数 (Parameter) | 值 | 感觉 | 适用场景 |
+| :--- | :--- | :--- | :--- |
+| **Stiffness** | `100` | 沉重、放松 | 主布局元素，大卡片入场。 |
+| **Damping** | `25` | 克制、无振荡 | 防止“果冻效应”，确立高级质感。 |
+| **Stiffness** | `220` | 灵敏、流畅 | 中型元素，警告框，模态窗。 |
+
+### 5.3 交互细节
+*   **统一悬停背景 (Unified Hover Background)**: 全站所有非语义化交互元素在悬停时，统一使用 `rgba(0,0,0,0.05)` (Tailwind `bg-accent`)，文字/图标颜色保持稳定。
+*   **通知系统**: 采用全局 **Toast 通知** 展示操作反馈，取代原生 `alert`。
+*   **对话框**: 替换为定制化的 **AlertDialog**，支持毛玻璃背景 (`backdrop-blur`)。
+*   **动效**: 基于 **Framer Motion** 实现列表/卡片的错落 (Stagger) 入场，移除布局抖动。
 
 ## 6. 组件规范 (Component Standards)
 
@@ -47,6 +64,7 @@
     *   **阴影 (Shadow)**: `shadow-2xl` (深邃阴影)。
     *   **边框 (Border)**: `border-border/40` (柔和边框)。
 *   **极简触发器 (Minimalist Trigger)**: 对于上下文明确的选择器（如年份切换），推荐使用 `variant="ghost"` 的无边框文本样式，通过排版（大字号/加粗）来体现层级，而非传统的输入框样式。
+
 ## 7. 时间线规范 (Timeline System)
 
 ### 7.1 结构定义
@@ -72,3 +90,13 @@
 ### 8.3 代码块 (Code Blocks)
 *   **样式**: `bg-muted/50` 柔和背景，`border-border/40` 微边框。
 *   **字体**: `font-mono`, `text-sm`。
+
+## 9. 工程规范 (Engineering Standards)
+
+### 9.1 Git 规范
+*   **原子化提交 (Atomic Commits)**: 每个 Commit 只做一件事（即：一个 Commit 解决一个微型任务）。
+*   **Commit 规范 (Commitizen)**: 强制采用 `type(scope): subject` 格式。主题与正文使用 **中文**。
+*   **Git Hooks**: 使用 Husky + lint-staged 在提交前自动执行代码格式化（Prettier/ESLint）与规范检查。
+
+### 9.2 客户端缓存 (MemoCache)
+*   **策略**: 离线优先 (Offline-First)。使用 `localStorage` 持久化，通过 SSR 首屏直出与后台异步校验同步数据，平衡加载速度与数据新鲜度。

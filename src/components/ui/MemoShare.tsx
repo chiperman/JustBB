@@ -75,10 +75,10 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                 </DialogHeader>
 
                 {/* 预览/截图区域 */}
-                <div className="w-full overflow-hidden rounded-lg shadow-sm border bg-stone-100 flex justify-center py-6">
+                <div className="w-full max-h-[70vh] overflow-y-auto rounded-lg shadow-sm border bg-stone-100 flex justify-center py-6 custom-scrollbar">
                     <div
                         ref={posterRef}
-                        className="w-[320px] bg-[#fffaf5] p-6 text-stone-800 relative shadow-lg flex flex-col gap-4"
+                        className="w-[360px] bg-[#fffaf5] p-6 text-stone-800 relative shadow-lg flex flex-col gap-4 h-fit"
                         style={{ fontFamily: 'serif' }} // 简单的衬线体增强质感
                     >
                         {/* Header */}

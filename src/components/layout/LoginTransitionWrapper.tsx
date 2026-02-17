@@ -1,21 +1,32 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { useLoginMode } from '@/context/LoginModeContext';
 import { LoginPanel } from '@/components/auth/LoginPanel';
 
 export function LoginTransitionWrapper({ children }: { children: React.ReactNode }) {
     const { viewMode, setViewMode } = useLoginMode();
+    const prevViewModeRef = useRef(viewMode);
 
-    // Automatic transition from CARD_VIEW to SPLIT_VIEW
+    // Automatic transition logic
     useEffect(() => {
         if (viewMode === 'CARD_VIEW') {
             const timer = setTimeout(() => {
-                setViewMode('SPLIT_VIEW');
+                // If we came from HOME_FOCUS, go to SPLIT_VIEW
+                if (prevViewModeRef.current === 'HOME_FOCUS') {
+                    setViewMode('SPLIT_VIEW');
+                }
+                // If we came from SPLIT_VIEW, go to HOME_FOCUS
+                else if (prevViewModeRef.current === 'SPLIT_VIEW') {
+                    setViewMode('HOME_FOCUS');
+                }
             }, 600);
             return () => clearTimeout(timer);
         }
+
+        // Update the ref to the current mode AFTER checking (so it's the "previous" next time)
+        prevViewModeRef.current = viewMode;
     }, [viewMode, setViewMode]);
 
     const homeTransitionVariants: Variants = {
@@ -101,7 +112,7 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
                     whileHover={viewMode === 'SPLIT_VIEW' ? "hover" : undefined}
                     className={`absolute inset-0 z-10 origin-center overflow-hidden bg-background ${viewMode === 'SPLIT_VIEW' ? 'cursor-pointer' : ''}`}
                     style={{ borderRadius: viewMode === 'HOME_FOCUS' ? 0 : 24 }}
-                    onClick={() => viewMode === 'SPLIT_VIEW' && setViewMode('HOME_FOCUS')}
+                    onClick={() => viewMode === 'SPLIT_VIEW' && setViewMode('CARD_VIEW')}
                 >
                     <div className="w-full h-full shadow-2xl overflow-hidden border border-black/5 dark:border-white/5" style={{ borderRadius: 'inherit' }}>
                         {/* Actual Home Page Content */}

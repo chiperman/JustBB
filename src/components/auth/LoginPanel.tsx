@@ -31,8 +31,8 @@ export function LoginPanel() {
         const result = await login(formData);
 
         if (result.success) {
-            // Success transition
-            setViewMode('HOME_FOCUS');
+            // Success transition - go through CARD_VIEW first
+            setViewMode('CARD_VIEW');
             setTimeout(() => {
                 router.refresh();
                 // If we are already on home, refresh to update auth state

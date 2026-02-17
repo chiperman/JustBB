@@ -152,41 +152,45 @@ export function MemoActions({
     if (isDeleted) {
         return (
             <div className="flex gap-2">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleRestore}
-                    disabled={isPending}
-                    className="rounded-sm text-green-600 hover:text-green-700 hover:bg-green-50"
-                    title="恢复"
-                >
-                    <RotateCcw className="w-4 h-4" />
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowPermanentDeleteAlert(true)}
-                    disabled={isPending}
-                    className="rounded-sm text-red-600 hover:text-red-700 hover:bg-red-50"
-                    title="彻底删除"
-                >
-                    <Trash2 className="w-4 h-4" />
-                </Button>
+                {isAdmin && (
+                    <>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleRestore}
+                            disabled={isPending}
+                            className="rounded-sm text-green-600 hover:text-green-700 hover:bg-green-50"
+                            title="恢复"
+                        >
+                            <RotateCcw className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setShowPermanentDeleteAlert(true)}
+                            disabled={isPending}
+                            className="rounded-sm text-red-600 hover:text-red-700 hover:bg-red-50"
+                            title="彻底删除"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </Button>
 
-                <AlertDialog open={showPermanentDeleteAlert} onOpenChange={setShowPermanentDeleteAlert}>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>确定要彻底销毁吗？</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                此操作不可逆，该记录将从数据库中物理删除。
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>取消</AlertDialogCancel>
-                            <AlertDialogAction onClick={handlePermanentDelete} className="bg-red-600 hover:bg-red-700">彻底销毁</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                        <AlertDialog open={showPermanentDeleteAlert} onOpenChange={setShowPermanentDeleteAlert}>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>确定要彻底销毁吗？</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        此操作不可逆，该记录将从数据库中物理删除。
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>取消</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handlePermanentDelete} className="bg-red-600 hover:bg-red-700">彻底销毁</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </>
+                )}
             </div>
         );
     }

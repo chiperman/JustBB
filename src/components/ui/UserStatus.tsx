@@ -12,6 +12,7 @@ interface UserInfo {
     id: string;
     email?: string;
     created_at: string;
+    role?: string;
 }
 
 export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { isCollapsed?: boolean }) {
@@ -55,12 +56,12 @@ export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { is
                         "flex items-center gap-2 p-2 bg-muted/40 rounded border border-border/50 group/status transition-all",
                         isCollapsed ? "justify-center" : "w-full"
                     )}
-                    title={user.email || '管理员'}
+                    title={user.email || '用户'}
                 >
-                    <User className="w-4 h-4 text-primary shrink-0" />
+                    <User className={cn("w-4 h-4 shrink-0", user.role === 'admin' ? "text-primary" : "text-muted-foreground")} />
                     {!isCollapsed && (
                         <span className="text-xs text-muted-foreground truncate flex-1 font-medium">
-                            {user.email || '管理员'}
+                            {user.email} {user.role === 'admin' ? '(管理员)' : '(普通用户)'}
                         </span>
                     )}
                 </div>

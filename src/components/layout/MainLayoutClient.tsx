@@ -24,12 +24,12 @@ export function MainLayoutClient({ memos, searchParams, adminCode }: MainLayoutC
     useEffect(() => {
         const checkAuth = async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            setIsAdmin(!!user);
+            setIsAdmin(user?.app_metadata?.role === 'admin');
         };
         checkAuth();
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
-            setIsAdmin(!!session?.user);
+            setIsAdmin(session?.user?.app_metadata?.role === 'admin');
         });
 
         return () => subscription.unsubscribe();

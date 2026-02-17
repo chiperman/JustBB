@@ -45,6 +45,7 @@ interface UserInfo {
     id: string;
     email?: string;
     created_at: string;
+    role?: string;
 }
 
 export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
@@ -107,7 +108,8 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     // 身份显示逻辑容器
     const renderIdentity = () => {
         if (loading) return <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />;
-        if (user) return <ShieldCheck className="w-4 h-4 text-primary" />;
+        if (user?.role === 'admin') return <ShieldCheck className="w-4 h-4 text-primary" />;
+        if (user) return <User className="w-4 h-4 text-muted-foreground" />;
         return <UserCircle2 className="w-4 h-4 text-muted-foreground" />;
     };
 
@@ -142,7 +144,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                 >
                                     <span className="text-[14px] font-normal text-foreground">设置中心</span>
                                     <span className="text-[12px] font-normal text-stone-400 truncate w-full flex items-center gap-1">
-                                        {user ? (user.email || '管理员') : '未登录/匿名'}
+                                        {user ? user.email : '未登录/匿名'}
                                     </span>
                                 </motion.div>
                             )}
@@ -162,7 +164,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                 </div>
                                 <div className="flex flex-col min-w-0">
                                     <p className="text-sm font-normal truncate leading-none">
-                                        {user ? "正式管理员" : "匿名身份"}
+                                        {user ? (user.role === 'admin' ? "正式管理员" : "普通用户") : "匿名身份"}
                                     </p>
                                     <p className="text-[11px] text-muted-foreground truncate mt-1">
                                         {user ? user.email : "当前仅可查看公开内容"}
@@ -218,8 +220,8 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                 <DropdownMenuItem
                                     className="rounded-sm disabled:opacity-40"
                                     onSelect={(e) => e.preventDefault()}
-                                    disabled={!user}
-                                    title={!user ? "仅管理员可导出数据" : undefined}
+                                    disabled={user?.role !== 'admin'}
+                                    title={user?.role !== 'admin' ? "仅管理员可导出数据" : undefined}
                                 >
                                     <Download className="mr-2 h-4 w-4" />
                                     <span>备份全站记录 (MD)</span>
@@ -255,7 +257,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                     setViewMode('CARD_VIEW');
                                 }}>
                                     <LogIn className="mr-2 h-4 w-4 text-primary" />
-                                    <span>管理员登录</span>
+                                    <span>登录系统</span>
                                 </DropdownMenuItem>
                             </>
                         )}
@@ -267,7 +269,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                 disabled={loggingOut}
                             >
                                 {loggingOut ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
-                                <span>登出管理系统</span>
+                                <span>{user.role === 'admin' ? "登出管理系统" : "退出登录"}</span>
                             </DropdownMenuItem>
                         )}
                     </div>

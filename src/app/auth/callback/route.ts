@@ -12,13 +12,7 @@ export async function GET(request: Request) {
         const supabase = await createClient()
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
-            // 严格权限校验：只有 admin 角色可以登录
-            const { data: { user } } = await supabase.auth.getUser()
-            if (user?.app_metadata?.role !== 'admin') {
-                await supabase.auth.signOut()
-                return NextResponse.redirect(`${origin}/unauthorized`)
-            }
-
+            // 登录成功后直接跳转，权限由中间件在路由级别控制
             const forwardedHost = request.headers.get('x-forwarded-host')
             const isLocalEnv = process.env.NODE_ENV === 'development'
             if (isLocalEnv) {

@@ -27,13 +27,12 @@ export async function login(formData: FormData): Promise<{ success: boolean; err
     }
 
     // 检查管理员权限
-    // Check for admin role OR standard user role from metadata
+    // 权限逻辑统一使用 app_metadata.role
     const isAdmin = data.user?.app_metadata?.role === 'admin';
-    const isUser = data.user?.user_metadata?.role === 'user';
 
-    if (!isAdmin && !isUser) {
-        await supabase.auth.signOut();
-        return { success: false, error: '账户权限不足' };
+    // 允许所有人登录，只需确认为已验证用户
+    if (!data.user) {
+        return { success: false, error: '登录失败' };
     }
 
     revalidatePath('/', 'layout');
@@ -55,7 +54,7 @@ export async function signup(formData: FormData): Promise<{ success: boolean; er
         password,
         options: {
             data: {
-                role: 'user', // Default role for new signups
+                // 不再在此处设置权限相关的 role，仅保留基础信息
             },
         },
     });

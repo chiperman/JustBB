@@ -21,7 +21,7 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
                 else if (prevViewModeRef.current === 'SPLIT_VIEW') {
                     setViewMode('HOME_FOCUS');
                 }
-            }, 600);
+            }, 400); // Faster transition timer
             return () => clearTimeout(timer);
         }
 
@@ -36,7 +36,12 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
             opacity: 1,
             filter: 'blur(0px) brightness(1)',
             borderRadius: '0px',
-            transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+            transition: {
+                type: 'spring',
+                stiffness: 260,
+                damping: 26,
+                mass: 1
+            }
         },
         card: {
             scale: 0.9,
@@ -45,7 +50,11 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
             filter: 'blur(0px) brightness(1)',
             borderRadius: '24px',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+            transition: {
+                type: 'spring',
+                stiffness: 260,
+                damping: 26
+            }
         },
         split: {
             scale: 0.9,
@@ -53,7 +62,11 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
             opacity: 1,
             filter: 'blur(4px) brightness(0.95)',
             borderRadius: '24px',
-            transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+            transition: {
+                type: 'spring',
+                stiffness: 200,
+                damping: 24
+            }
         },
         hover: {
             scale: 0.9,

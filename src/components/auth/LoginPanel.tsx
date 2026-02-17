@@ -37,7 +37,7 @@ export function LoginPanel() {
                 router.refresh();
                 // If we are already on home, refresh to update auth state
                 window.location.reload();
-            }, 800);
+            }, 500); // Matched with transition duration
         } else {
             setError(result.error || '登录失败');
         }
@@ -60,7 +60,7 @@ export function LoginPanel() {
             scale: 0.9,
             opacity: 0,
             borderRadius: '24px',
-            transition: { duration: 0.6, ease: 'easeIn' },
+            transition: { duration: 0.4, ease: [0.32, 0, 0.67, 0] },
             zIndex: -1
         },
         card: {
@@ -68,7 +68,7 @@ export function LoginPanel() {
             scale: 0.9,
             opacity: 0,
             borderRadius: '24px',
-            transition: { duration: 0.6, ease: 'easeIn' },
+            transition: { duration: 0.4, ease: [0.32, 0, 0.67, 0] },
             zIndex: -1
         },
         split: {
@@ -80,10 +80,11 @@ export function LoginPanel() {
             backgroundColor: 'var(--background)', // Ensure opacity
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', // Matching shadow
             transition: {
-                duration: 0.8,
-                ease: [0.16, 1, 0.3, 1],
-                staggerChildren: 0.1,
-                delayChildren: 0.2
+                type: 'spring',
+                stiffness: 200,
+                damping: 25,
+                staggerChildren: 0.05, // physics-no-excessive-stagger
+                delayChildren: 0.1
             }
         }
     };
@@ -94,7 +95,7 @@ export function LoginPanel() {
         split: {
             y: 0,
             opacity: 1,
-            transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+            transition: { type: 'spring', stiffness: 300, damping: 30 }
         }
     };
 
@@ -123,32 +124,36 @@ export function LoginPanel() {
                 <div className="space-y-12">
                     {/* Social Login */}
                     <motion.div variants={itemVariants} className="grid grid-cols-2 gap-6">
-                        <Button
-                            variant="outline"
-                            onClick={() => handleOAuthLogin('github')}
-                            disabled={!!oauthLoading}
-                            className="w-full h-14 group cursor-pointer transition-all duration-500 border-black/10 hover:bg-black/5 rounded-none border-0 border-b bg-transparent"
-                        >
-                            {oauthLoading === 'github' ? (
-                                <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                            ) : (
-                                <Github className="w-5 h-5 mr-3 text-muted-foreground group-hover:text-primary transition-colors" />
-                            )}
-                            <span className="font-sans font-bold tracking-widest text-[11px] uppercase">GitHub</span>
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={() => handleOAuthLogin('google')}
-                            disabled={!!oauthLoading}
-                            className="w-full h-14 group cursor-pointer transition-all duration-500 border-black/10 hover:bg-black/5 rounded-none border-0 border-b bg-transparent"
-                        >
-                            {oauthLoading === 'google' ? (
-                                <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                            ) : (
-                                <span className="mr-3 font-bold text-lg leading-none text-muted-foreground group-hover:text-primary transition-colors">G</span>
-                            )}
-                            <span className="font-sans font-bold tracking-widest text-[11px] uppercase">Google</span>
-                        </Button>
+                        <motion.div whileTap={{ scale: 0.96 }}>
+                            <Button
+                                variant="outline"
+                                onClick={() => handleOAuthLogin('github')}
+                                disabled={!!oauthLoading}
+                                className="w-full h-14 group cursor-pointer transition-all duration-500 border-black/10 hover:bg-black/5 rounded-none border-0 border-b bg-transparent"
+                            >
+                                {oauthLoading === 'github' ? (
+                                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                ) : (
+                                    <Github className="w-5 h-5 mr-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                                )}
+                                <span className="font-sans font-bold tracking-widest text-[11px] uppercase">GitHub</span>
+                            </Button>
+                        </motion.div>
+                        <motion.div whileTap={{ scale: 0.96 }}>
+                            <Button
+                                variant="outline"
+                                onClick={() => handleOAuthLogin('google')}
+                                disabled={!!oauthLoading}
+                                className="w-full h-14 group cursor-pointer transition-all duration-500 border-black/10 hover:bg-black/5 rounded-none border-0 border-b bg-transparent"
+                            >
+                                {oauthLoading === 'google' ? (
+                                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                ) : (
+                                    <span className="mr-3 font-bold text-lg leading-none text-muted-foreground group-hover:text-primary transition-colors">G</span>
+                                )}
+                                <span className="font-sans font-bold tracking-widest text-[11px] uppercase">Google</span>
+                            </Button>
+                        </motion.div>
                     </motion.div>
 
                     <motion.div variants={itemVariants} className="relative">
@@ -259,26 +264,28 @@ export function LoginPanel() {
                         )}
 
                         <motion.div variants={itemVariants}>
-                            <Button
-                                type="submit"
-                                disabled={loading || !!oauthLoading}
-                                className="w-full h-16 bg-primary hover:bg-black text-white rounded-none font-bold tracking-[0.3em] uppercase transition-all duration-700 shadow-2xl shadow-primary/20 group"
-                            >
-                                {loading ? (
-                                    <Loader2 className="w-5 h-5 animate-spin mr-3 opacity-50" />
-                                ) : (
-                                    <span className="flex items-center">
-                                        Enter the Study
-                                        <motion.span
-                                            initial={{ x: 0 }}
-                                            whileHover={{ x: 5 }}
-                                            className="ml-3"
-                                        >
-                                            →
-                                        </motion.span>
-                                    </span>
-                                )}
-                            </Button>
+                            <motion.div whileTap={{ scale: 0.98 }}>
+                                <Button
+                                    type="submit"
+                                    disabled={loading || !!oauthLoading}
+                                    className="w-full h-16 bg-primary hover:bg-black text-white rounded-none font-bold tracking-[0.3em] uppercase transition-all duration-700 shadow-2xl shadow-primary/20 group"
+                                >
+                                    {loading ? (
+                                        <Loader2 className="w-5 h-5 animate-spin mr-3 opacity-50" />
+                                    ) : (
+                                        <span className="flex items-center">
+                                            Enter the Study
+                                            <motion.span
+                                                initial={{ x: 0 }}
+                                                whileHover={{ x: 5 }}
+                                                className="ml-3"
+                                            >
+                                                →
+                                            </motion.span>
+                                        </span>
+                                    )}
+                                </Button>
+                            </motion.div>
                         </motion.div>
                     </form>
                 </div>

@@ -35,6 +35,11 @@
 ## 5. 交互反馈与动效
 
 ### 5.1 核心哲学 (Motion Philosophy)
+*   **12 动画原则 (12 Principles of Animation)**: 全站动效需遵循迪士尼 12 动画原则（Web 适配版），重点包括：
+    - **Timing (时间感)**: 用户触发的动画应在 300ms-500ms 内完成，平衡响应性与优雅感。
+    - **Physics (物理特性)**: 使用 Spring (弹簧) 物理特性描述运动，赋予 UI 重量感与回弹感。
+    - **Active States (点击反馈)**: 所有交互元素必须具备 `whileTap` 点击缩放反馈（推荐 `scale: 0.98`）。
+    - **Follow Through (跟随动作)**: 复杂切换时，次要元素（如背景装饰）应配合主元素产生位移滞后。
 *   **重于快 (Weight over Speed)**: 物体应当感觉有质量。使用较低的刚度 (Stiffness) 和较高的阻尼 (Damping)。
 *   **编排感 (Orchestration)**: 元素按顺序流动 (Stagger)，引导用户的视线。
 *   **触觉反馈 (Tactile Feedback)**: 交互 (Hover) 响应灵敏但扎实。
@@ -45,9 +50,18 @@
 
 | 参数 (Parameter) | 值 | 感觉 | 适用场景 |
 | :--- | :--- | :--- | :--- |
-| **Stiffness** | `100` | 沉重、放松 | 主布局元素，大卡片入场。 |
-| **Damping** | `25` | 克制、无振荡 | 防止“果冻效应”，确立高级质感。 |
-| **Stiffness** | `220` | 灵敏、流畅 | 中型元素，警告框，模态窗。 |
+| **Snappy Spring** | `{ stiffness: 260, damping: 26 }` | 干脆、自然 | 首页卡片转换、页面核心切换。 |
+| **Gentle Spring** | `{ stiffness: 200, damping: 24 }` | 柔和、延迟 | 侧滑面板、低优先级的位移。 |
+| **Soft Spring** | `{ stiffness: 100, damping: 25 }` | 沉重、放松 | 主布局元素，大卡片入场。 |
+| **UI Feedback** | `{ stiffness: 300, damping: 30 }` | 灵敏、反馈 | 按钮点击缩放、警告框、模态窗。 |
+
+### 5.3 关键切换标准 (Critical Transition Standards)
+为保证设计一致性，以下切换逻辑为系统核心基石，**未经深思熟虑严禁随意更改**：
+*   **登录切换 (Login Transition)**:
+    - 阶段一：首页全屏 $\rightarrow$ 中央卡片（Spring: Snappy）。
+    - 阶段二：首页卡片向右侧偏移（Spring: Gentle） + 背景模糊。
+    - 阶段三：登录面板从左侧滑入 + 元素 Stagger (50ms 延迟)。
+    - **逆向过程**: 点击首页预览区域必须执行上述过程的严格对称逆转，带自然回弹。
 
 ### 5.3 交互细节
 *   **统一悬停背景 (Unified Hover Background)**: 全站所有非语义化交互元素在悬停时，统一使用 `rgba(0,0,0,0.05)` (Tailwind `bg-accent`)，文字/图标颜色保持稳定。

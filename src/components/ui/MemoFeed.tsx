@@ -233,6 +233,8 @@ export function MemoFeed({ initialMemos, searchParams, adminCode, isAdmin = fals
                                 id={`memo-${memo.id}`}
                                 variants={itemVariants}
                                 layout
+                                whileInView="animate"
+                                viewport={{ once: true, margin: '200px' }}
                                 className="break-inside-avoid relative scroll-mt-4"
                             >
                                 {isFirstOfYear && (

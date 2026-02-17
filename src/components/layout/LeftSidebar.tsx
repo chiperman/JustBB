@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect } from 'react';
 import { TagCloud } from '../ui/TagCloud';
 import { Heatmap } from '../ui/Heatmap';
 import { OnThisDay } from '../ui/OnThisDay';
-import { Home, Tag, Trash2, Image as GalleryIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Home, Tag, Trash2, Image as GalleryIcon, PanelLeftClose, PanelLeftOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -60,10 +60,10 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
     };
 
     const navItems = [
-        { icon: <Home className="w-5 h-5" />, label: '首页', href: '/' },
-        { icon: <GalleryIcon className="w-5 h-5" />, label: '画廊', href: '/gallery' },
-        { icon: <Tag className="w-5 h-5" />, label: '标签', href: '/tags' },
-        { icon: <Trash2 className="w-5 h-5" />, label: '回收站', href: '/trash' },
+        { icon: <Home className="size-4" />, label: '首页', href: '/' },
+        { icon: <GalleryIcon className="size-4" />, label: '画廊', href: '/gallery' },
+        { icon: <Tag className="size-4" />, label: '标签', href: '/tags' },
+        { icon: <Trash2 className="size-4" />, label: '回收站', href: '/trash' },
     ];
 
     const handleToggle = () => {
@@ -77,28 +77,36 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
     return (
         <aside
             className={cn(
-                "h-full flex flex-col border-r border-border bg-background/50 backdrop-blur-md transition-[width,padding,background-color] duration-300 ease-in-out group/sidebar",
+                "h-full flex flex-col border-r border-border bg-background/50 backdrop-blur-md transition-[width,padding,background-color] duration-300 ease-in-out group/sidebar relative",
                 effectiveIsCollapsed ? "w-20 p-2" : "w-72 p-2"
             )}
         >
-            {/* SidebarSettings 移动到顶部 */}
-            <div className={cn("mb-[24px]", effectiveIsCollapsed ? "pb-2" : "p-0")}>
-                <SidebarSettings isCollapsed={effectiveIsCollapsed} />
-            </div>
 
-            {/* Toggle 按钮保留在顶部下方 */}
-            <div className={cn("flex items-center justify-start mb-[24px]", effectiveIsCollapsed && "flex-col gap-4 px-1")}>
+            {/* Top Area: Settings + Toggle (Always Header Mode) */}
+            <div className={cn(
+                "mb-[24px]",
+                // Always use row layout unless collapsed (then column)
+                !effectiveIsCollapsed ? "flex items-center gap-1 pr-1" : "pb-2 flex flex-col gap-4"
+            )}>
+                <div className="flex-1 min-w-0">
+                    <SidebarSettings
+                        isCollapsed={effectiveIsCollapsed}
+                    />
+                </div>
+                {/* Toggle Button */}
                 <Button
                     variant="ghost"
-                    size="icon"
                     onClick={handleToggle}
-                    className="h-8 w-8 text-muted-foreground hover:text-primary shrink-0 rounded-sm"
+                    className={cn(
+                        "text-muted-foreground hover:text-primary shrink-0 rounded-sm",
+                        effectiveIsCollapsed ? "w-full justify-center h-9 p-2" : "h-8 w-8 px-0"
+                    )}
                     aria-label={isMobile ? "关闭侧边栏" : (effectiveIsCollapsed ? "展开侧边栏" : "收起侧边栏")}
                 >
                     {isMobile ? (
-                        <PanelLeftClose className="w-5 h-5" />
+                        <PanelLeftClose className="size-4" />
                     ) : (
-                        effectiveIsCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />
+                        effectiveIsCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />
                     )}
                 </Button>
             </div>
@@ -132,11 +140,11 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                             href={item.href}
                             onClick={() => handleItemClick(item.href)}
                             className={cn(
-                                "flex items-center gap-3 p-2 h-9 rounded-sm transition-all group relative", // 固定高度 h-9 (36px)
-                                effectiveIsCollapsed ? "justify-center" : "px-3",
+                                "flex items-center p-2 h-9 rounded-sm transition-all group relative hover:bg-accent hover:text-accent-foreground", // 固定高度 h-9 (36px)
+                                effectiveIsCollapsed ? "justify-center gap-0" : "px-3 gap-3",
                                 isActive
-                                    ? "text-foreground"
-                                    : "text-muted-foreground hover:bg-stone-50/50 dark:hover:bg-stone-900/50"
+                                    ? "text-primary font-medium"
+                                    : "text-muted-foreground"
                             )}
                             title={item.label}
                         >

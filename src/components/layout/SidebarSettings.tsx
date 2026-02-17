@@ -117,13 +117,13 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                     <Button
                         variant="ghost"
                         className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2 h-auto hover:bg-stone-50 dark:hover:bg-stone-900/50 rounded-sm transition-all focus-visible:ring-0 group/settings",
-                            isCollapsed ? "justify-center" : "justify-start"
+                            "w-full flex items-center gap-3 h-9 p-2 hover:bg-accent hover:text-accent-foreground rounded-sm transition-all focus-visible:ring-0 group/settings",
+                            isCollapsed ? "justify-center" : "justify-start px-3"
                         )}
                         aria-label="账号与设置"
                     >
                         <div className="relative shrink-0">
-                            <Settings className="w-5 h-5 text-muted-foreground group-hover/settings:text-primary transition-colors" />
+                            <Settings className="size-4 text-muted-foreground group-hover/settings:text-primary transition-colors" />
                             {/* 状态小圆点提示 */}
                             {user && (
                                 <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background bg-primary" />
@@ -195,6 +195,8 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                             <span>字体风格: {isSans ? '无衬线' : '经典衬线'}</span>
                         </DropdownMenuItem>
                     </div>
+
+
 
                     <DropdownMenuSeparator className="opacity-50" />
 

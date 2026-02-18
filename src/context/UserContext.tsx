@@ -19,18 +19,33 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+const STORAGE_KEY = 'justbb_user_info';
+
 export function UserProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<UserInfo | null>(null);
+    const [user, setUser] = useState<UserInfo | null>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            return saved ? JSON.parse(saved) : null;
+        }
+        return null;
+    });
     const [loading, setLoading] = useState(true);
 
     const refreshUser = useCallback(async () => {
         setLoading(true);
         try {
             const u = await getCurrentUser();
-            setUser(u as UserInfo | null);
+            const userInfo = u as UserInfo | null;
+            setUser(userInfo);
+            if (userInfo) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(userInfo));
+            } else {
+                localStorage.removeItem(STORAGE_KEY);
+            }
         } catch (error) {
             console.error('Failed to fetch user:', error);
             setUser(null);
+            localStorage.removeItem(STORAGE_KEY);
         } finally {
             setLoading(false);
         }

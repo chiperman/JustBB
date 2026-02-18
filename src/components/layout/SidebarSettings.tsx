@@ -91,9 +91,10 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
 
     // 身份显示逻辑容器
     const renderIdentity = () => {
-        if (loading) return <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />;
+        // 如果有缓存的用户数据，优先显示身份图标而不是加载状态
         if (user?.role === 'admin') return <ShieldCheck className="w-4 h-4 text-primary" />;
         if (user) return <User className="w-4 h-4 text-muted-foreground" />;
+        if (loading) return <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />;
         return <UserCircle2 className="w-4 h-4 text-muted-foreground" />;
     };
 
@@ -128,7 +129,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                 >
                                     <span className="text-[14px] font-normal text-foreground">设置中心</span>
                                     <span className="text-[12px] font-normal text-stone-400 truncate w-full flex items-center gap-1">
-                                        {user ? user.email : '未登录/匿名'}
+                                        {user ? user.email : (loading ? '加载中...' : '未登录/匿名')}
                                     </span>
                                 </motion.div>
                             )}

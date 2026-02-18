@@ -8,9 +8,10 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { logout, getCurrentUser } from '@/actions/auth';
+import { logout } from '@/actions/auth';
 import { cn } from '@/lib/utils';
 import { useLoginMode } from '@/context/LoginModeContext';
+import { useUser } from '@/context/UserContext';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -41,16 +42,9 @@ interface SidebarSettingsProps {
     isCollapsed?: boolean;
 }
 
-interface UserInfo {
-    id: string;
-    email?: string;
-    created_at: string;
-    role?: string;
-}
 
 export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
-    const [user, setUser] = React.useState<UserInfo | null>(null);
-    const [loading, setLoading] = React.useState(true);
+    const { user, loading, refreshUser } = useUser();
     const [loggingOut, setLoggingOut] = React.useState(false);
     const [isSans, setIsSans] = React.useState(false);
     const { setTheme } = useTheme();
@@ -58,15 +52,6 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     const { setViewMode } = useLoginMode();
 
     React.useEffect(() => {
-        // 获取管理员状态
-        const checkAuth = async () => {
-            const u = await getCurrentUser();
-            setUser(u);
-            setLoading(false);
-        };
-
-        checkAuth();
-
         const savedFont = localStorage.getItem('font-preference');
         if (savedFont === 'sans') {
             setIsSans(true);
@@ -76,7 +61,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     const handleLogout = async () => {
         setLoggingOut(true);
         await logout();
-        setUser(null);
+        await refreshUser();
         setLoggingOut(false);
         router.refresh();
     };

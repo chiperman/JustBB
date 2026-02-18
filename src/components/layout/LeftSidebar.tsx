@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { SidebarSettings } from "./SidebarSettings";
 import { motion, useMotionValue, useSpring, useTransform, useVelocity } from 'framer-motion';
-import { getCurrentUser } from '@/actions/auth';
+import { useUser } from '@/context/UserContext';
 
 export interface LeftSidebarProps {
     onClose?: () => void;
@@ -20,16 +20,7 @@ export interface LeftSidebarProps {
 export function LeftSidebar({ onClose }: LeftSidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const pathname = usePathname();
-    const [isAdmin, setIsAdmin] = useState(false);
-
-
-    useEffect(() => {
-        const checkRole = async () => {
-            const user = await getCurrentUser();
-            setIsAdmin(user?.role === 'admin');
-        };
-        checkRole();
-    }, []);
+    const { isAdmin } = useUser();
 
     const isMobile = !!onClose;
     const effectiveIsCollapsed = isMobile ? false : isCollapsed;

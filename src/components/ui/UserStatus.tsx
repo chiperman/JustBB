@@ -1,37 +1,23 @@
 'use client';
 
 import { useState, useEffect, memo } from 'react';
-import { logout, getCurrentUser } from '@/actions/auth';
+import { logout } from '@/actions/auth';
 import { useRouter } from 'next/navigation';
 import { LogIn, LogOut, User, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-
-interface UserInfo {
-    id: string;
-    email?: string;
-    created_at: string;
-    role?: string;
-}
+import { useUser } from '@/context/UserContext';
 
 export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { isCollapsed?: boolean }) {
-    const [user, setUser] = useState<UserInfo | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { user, loading, refreshUser } = useUser();
     const [loggingOut, setLoggingOut] = useState(false);
     const router = useRouter();
-
-    useEffect(() => {
-        getCurrentUser().then((u) => {
-            setUser(u);
-            setLoading(false);
-        });
-    }, []);
 
     const handleLogout = async () => {
         setLoggingOut(true);
         await logout();
-        setUser(null);
+        await refreshUser();
         setLoggingOut(false);
         router.refresh();
     };

@@ -1,6 +1,6 @@
 # JustMemo 技术选型总览
 
-> **最后更新日期**：2026-02-18
+> **最后更新日期**：2026-02-18 (优化：引入全局 UserContext)
 
 ---
 
@@ -9,7 +9,7 @@
 | 技术 | 版本 | 说明 |
 |------|------|------|
 | **Next.js** | 15.x | 全栈 React 框架，采用 App Router 模式 |
-| **React** | 19.x | UI 渲染引擎 |
+| **React** | 19.x | UI 渲染引擎与 **Context API** 状态管理 |
 | **TypeScript** | ^5 | 类型安全，严格模式 |
 
 ---
@@ -44,6 +44,7 @@ src/
 ├── app/           # 路由与页面组件（App Router）
 ├── components/    # UI 库与业务组件
 ├── actions/       # Server Actions 逻辑
+├── context/       # React Context 全局状态管理 (User, Timeline, LoginMode)
 ├── lib/           # Supabase Client、工具函数、加密逻辑
 └── types/         # TypeScript 类型定义
 ```

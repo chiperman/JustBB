@@ -423,7 +423,7 @@ export function LoginPanel() {
                 {/* Hero / Brand */}
                 <motion.div variants={itemVariants} className="space-y-4 text-left">
                     <h1 className="text-7xl font-bold tracking-tighter text-primary font-editorial italic underline underline-offset-[12px] decoration-1 decoration-primary/20">JustMemo</h1>
-                    <p className="text-[10px] text-muted-foreground font-sans tracking-[0.5em] uppercase opacity-40 ml-1">The Writer&apos;s Study · Vol 2.0</p>
+                    <p className="text-[10px] text-muted-foreground font-sans tracking-[0.5em] uppercase opacity-40 ml-1">极简笔记与创作空间</p>
                 </motion.div>
 
                 {/* Login Form Container */}
@@ -540,14 +540,14 @@ export function LoginPanel() {
                                                 htmlFor="password"
                                                 className="block text-[12px] font-serif font-medium text-foreground/40 italic"
                                             >
-                                                {authMode === 'REGISTER' ? '设置登录密码' : '安全密码'}
+                                                {authMode === 'REGISTER' ? '设置密码' : '登录密码'}
                                             </label>
                                             {authMode === 'LOGIN' && (
                                                 <Link
                                                     href="/forgot-password"
                                                     className="text-[10px] font-bold text-muted-foreground/20 hover:text-primary transition-colors font-sans uppercase tracking-widest border-b border-muted-foreground/10 pb-0.5"
                                                 >
-                                                    忘记了吗？
+                                                    忘记密码？
                                                 </Link>
                                             )}
                                         </div>
@@ -560,7 +560,7 @@ export function LoginPanel() {
                                                 required
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
-                                                placeholder={authMode === 'REGISTER' ? "至少8位，包含大小写、数字及符号" : "••••••••"}
+                                                placeholder={authMode === 'REGISTER' ? "至少8位，包含大小写、数字及符号" : "请输入密码"}
                                                 style={{
                                                     backgroundColor: 'transparent'
                                                 }}
@@ -612,7 +612,7 @@ export function LoginPanel() {
                                                     htmlFor="otp-0"
                                                     className="block text-[12px] font-serif font-medium text-foreground/40 italic"
                                                 >
-                                                    安全验证码 (8位)
+                                                    验证码 (8位)
                                                 </label>
                                                 <div className="flex items-center gap-3">
                                                     <motion.div whileTap={{ scale: 0.95 }}>
@@ -622,7 +622,7 @@ export function LoginPanel() {
                                                             variant="ghost"
                                                             className="h-6 px-0 text-muted-foreground/40 font-sans text-[10px] hover:bg-transparent hover:text-primary transition-all uppercase tracking-widest"
                                                         >
-                                                            粘贴
+                                                            粘贴验证码
                                                         </Button>
                                                     </motion.div>
                                                     <motion.div whileTap={{ scale: 0.95 }}>
@@ -703,7 +703,7 @@ export function LoginPanel() {
                                     <Loader2 className="w-5 h-5 animate-spin mr-3 opacity-50" />
                                 ) : (
                                     <span className="flex items-center z-10">
-                                        {step === 'EMAIL' ? '验证邮箱' : (authMode === 'REGISTER' ? '完成注册' : '进入实验室')}
+                                        {step === 'EMAIL' ? '下一步' : (authMode === 'REGISTER' ? '注册' : '登录')}
                                         {step === 'EMAIL' && <ArrowRight className="ml-3 w-4 h-4 opacity-50 group-hover:translate-x-1.5 transition-transform duration-500" />}
                                     </span>
                                 )}

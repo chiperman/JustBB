@@ -5,25 +5,35 @@ import { LoginModeProvider } from "@/context/LoginModeContext";
 import { UserProvider } from "@/context/UserContext";
 import { LoginTransitionWrapper } from "@/components/layout/LoginTransitionWrapper";
 import { MobileLayoutWrapper } from "@/components/layout/MobileLayoutWrapper";
+import { TagsProvider } from "@/context/TagsContext";
+import { StatsProvider } from "@/context/StatsContext";
 
 interface ClientLayoutProvidersProps {
     children: React.ReactNode;
+    initialTags?: { tag_name: string; count: number }[];
+    initialStats?: any;
 }
 
 export function ClientLayoutProviders({
     children,
+    initialTags = [],
+    initialStats
 }: ClientLayoutProvidersProps) {
     return (
         <UserProvider>
-            <LoginModeProvider>
-                <TimelineProvider>
-                    <LoginTransitionWrapper>
-                        <MobileLayoutWrapper>
-                            {children}
-                        </MobileLayoutWrapper>
-                    </LoginTransitionWrapper>
-                </TimelineProvider>
-            </LoginModeProvider>
+            <StatsProvider initialData={initialStats}>
+                <LoginModeProvider>
+                    <TagsProvider initialData={initialTags}>
+                        <TimelineProvider>
+                            <LoginTransitionWrapper>
+                                <MobileLayoutWrapper>
+                                    {children}
+                                </MobileLayoutWrapper>
+                            </LoginTransitionWrapper>
+                        </TimelineProvider>
+                    </TagsProvider>
+                </LoginModeProvider>
+            </StatsProvider>
         </UserProvider>
     );
 }

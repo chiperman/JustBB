@@ -3,7 +3,7 @@ import { RightSidebar } from "@/components/layout/RightSidebar";
 import { Suspense } from "react";
 import { ClientLayoutProviders } from "@/components/layout/ClientLayoutProviders";
 import { getAllTags } from "@/actions/tags";
-import { getTimelineStats } from "@/actions/stats";
+import { getTimelineStats, getMemoStats } from "@/actions/stats";
 
 export default async function MainLayout({
     children,
@@ -11,19 +11,20 @@ export default async function MainLayout({
     children: React.ReactNode;
 }) {
     // 在服务端预拉取数据
-    const [initialTags, initialStats] = await Promise.all([
+    const [initialTags, initialTimeline, initialStats] = await Promise.all([
         getAllTags(),
-        getTimelineStats()
+        getTimelineStats(),
+        getMemoStats()
     ]);
 
     return (
-        <ClientLayoutProviders>
+        <ClientLayoutProviders initialTags={initialTags} initialStats={initialStats}>
             <div className="flex h-screen w-full justify-center selection:bg-primary/20 overflow-hidden">
                 <div className="flex w-full max-w-(--breakpoint-2xl) h-full">
                     {/* 左侧导航 - 移动端隐藏 */}
                     <div className="hidden lg:block h-full overflow-y-auto scrollbar-hide border-r border-border/40">
                         <Suspense fallback={<div className="w-64" />}>
-                            <LeftSidebar initialTags={initialTags} />
+                            <LeftSidebar />
                         </Suspense>
                     </div>
 
@@ -35,7 +36,7 @@ export default async function MainLayout({
                     {/* 右侧边栏 - 移动端隐藏 */}
                     <div className="hidden xl:block h-full overflow-y-auto scrollbar-hide border-l border-border/40">
                         <Suspense fallback={<div className="w-80" />}>
-                            <RightSidebar initialData={initialStats} />
+                            <RightSidebar initialData={initialTimeline as any} />
                         </Suspense>
                     </div>
                 </div>

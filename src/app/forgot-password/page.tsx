@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight">找回密码</h1>
                     <p className="text-muted-foreground">
-                        输入您的管理员邮箱，我们将为您发送重置链接。
+                        输入您的注册邮箱，我们将为您发送重置链接。
                     </p>
                 </div>
 

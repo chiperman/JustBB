@@ -82,7 +82,7 @@ export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { is
                     ) : (
                         <LogOut className="w-4 h-4" />
                     )}
-                    {!isCollapsed && <span>登出系统</span>}
+                    {!isCollapsed && <span>退出登录</span>}
                 </Button>
             </div>
         );

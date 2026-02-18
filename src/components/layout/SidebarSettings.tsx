@@ -4,9 +4,9 @@ import * as React from 'react';
 import {
     Settings, User, Sun, Moon, Monitor, Type,
     LogOut, LogIn, Download, Loader2,
-    Unlock, ShieldCheck, UserCircle2
+    ShieldCheck, UserCircle2
 } from 'lucide-react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { logout, getCurrentUser } from '@/actions/auth';
 import { cn } from '@/lib/utils';
@@ -53,9 +53,8 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     const [loading, setLoading] = React.useState(true);
     const [loggingOut, setLoggingOut] = React.useState(false);
     const [isSans, setIsSans] = React.useState(false);
-    const { theme, setTheme } = useTheme();
+    const { setTheme } = useTheme();
     const router = useRouter();
-    const pathname = usePathname();
     const { setViewMode } = useLoginMode();
 
     React.useEffect(() => {
@@ -101,7 +100,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `justbb_export_${new Date().toISOString().slice(0, 10)}.md`;
+        a.download = `JustMemo-Export-${new Date().toISOString().slice(0, 10)}.md`;
         a.click();
     };
 
@@ -269,7 +268,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                 disabled={loggingOut}
                             >
                                 {loggingOut ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
-                                <span>{user.role === 'admin' ? "登出管理系统" : "退出登录"}</span>
+                                <span>退出登录</span>
                             </DropdownMenuItem>
                         )}
                     </div>

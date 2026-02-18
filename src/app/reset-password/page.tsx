@@ -29,11 +29,11 @@ export default function ResetPasswordPage() {
             return;
         }
 
-        if (password.length < 6) {
+        if (password.length < 8) {
             toast({
                 variant: "destructive",
                 title: "密码太弱",
-                description: "新密码至少需要 6 个字符。",
+                description: "新密码至少需要 8 个字符。",
             });
             return;
         }

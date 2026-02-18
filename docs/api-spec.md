@@ -1,5 +1,7 @@
 # JustMemo 接口设计规范 (API Spec)
 
+> **最后更新日期**：2026-02-18
+
 ## 1. 通用响应契约
 所有接口遵循以下统一返回格式：
 ```ts
@@ -89,6 +91,6 @@
 ### 4.3 `getStats` / `getTags`
 *   **功能**: 侧边栏热力图与标签云。
 
-### 4.3 `getArchiveStats`
+### 4.4 `getArchiveStats`
 *   **功能**: 获取右侧月份轴的目录数据。
 *   **返回**: 归档列表 `Array<{ year: number, month: number, count: number }>`

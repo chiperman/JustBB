@@ -1,5 +1,7 @@
 # JustMemo 数据库设计与函数 (SQL)
 
+> **最后更新日期**：2026-02-18
+
 ## 1. 数据模型 (memos 表)
 *   `id`: uuid (PK)
 *   `memo_number`: serial/identity (自增编号：1, 2, 3...，用于展示与引用)

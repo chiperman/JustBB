@@ -1,4 +1,4 @@
-# JustBB
+# JustMemo
 一款不受「转评赞」限制的 MicroBlog
 
 想说什么说什么，
@@ -23,7 +23,7 @@
 | **后端** | Supabase (PostgreSQL + Auth) |
 | **部署** | Vercel |
 
-> 完整技术选型详见 [docs/TECH_STACK.md](docs/TECH_STACK.md)
+> 完整技术选型详见 [docs/tech-stack.md](docs/tech-stack.md)
 
 ## 参与贡献 🤝
 

@@ -1,7 +1,7 @@
 # 登录页/主页切换动效设计文档 (Login Transition Design)
 
-> **版本 (Version)**: 1.1
-> **状态 (Status)**: 已实现 (Implemented)
+> **最后更新日期**：2026-02-18  
+> **状态**: 已实现 (Implemented)
 
 本文档记录了 "JustMemo" 登录页面的交互逻辑、视觉隐喻以及关键技术实现细节。
 
@@ -33,7 +33,6 @@ type ViewMode = 'HOME_FOCUS' | 'CARD_VIEW' | 'SPLIT_VIEW';
 
 2.  **CARD_VIEW (过渡状态)**
     *   **主页预览**: 缩放为居中卡片 (scale: 0.9, x: 0, borderRadius: 24px)。
-    *   **作用**: 作为 `HOME_FOCUS` 与 `SPLIT_VIEW` 之间的缓冲，确保缩放与位位移分步进行。
 
 3.  **SPLIT_VIEW (分屏模式)**
     *   **主页预览**: 缩小并移动到右侧 (scale: 0.9, x: 45%)，进入背景状态 (blur: 4px)。
@@ -41,12 +40,8 @@ type ViewMode = 'HOME_FOCUS' | 'CARD_VIEW' | 'SPLIT_VIEW';
 
 ### 2.2 动画路径 (Transition Paths)
 
-为了实现视觉上的连贯性，我们实现了**对称路径**转换逻辑：
-
 - **进入路径**: `HOME_FOCUS` -> `CARD_VIEW` (停留 600ms) -> `SPLIT_VIEW`
 - **返回路径**: `SPLIT_VIEW` -> `CARD_VIEW` (停留 600ms) -> `HOME_FOCUS`
-
-该逻辑在 `LoginTransitionWrapper` 中通过 `prevViewModeRef` 追踪前一状态实现。
 
 ---
 
@@ -56,13 +51,7 @@ type ViewMode = 'HOME_FOCUS' | 'CARD_VIEW' | 'SPLIT_VIEW';
 使用 `useRef` 记录 `viewMode` 的历史，在 `useEffect` 中根据来源决定 `CARD_VIEW` 的下一步去向。
 
 ### 3.2 动效变体 (Animation Variants)
-使用 `framer-motion` 的 `Variants` 统一管理三种状态的视觉参数：
-- `home`: 全屏展示。
-- `card`: 居中缩放。
-- `split`: 位移压暗。
-
-### 3.3 全局上下文注入与防御
-(保持原有关于 TimelineProvider 和 Safe Return 模式的记录不变...)
+使用 `framer-motion` 的 `Variants` 统一管理三种状态的视觉参数。
 
 ---
 

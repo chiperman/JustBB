@@ -1,6 +1,6 @@
 {
     "name": "JustMemo",
-    "short_name": "JustBB",
+    "short_name": "JustMemo",
     "description": "Just another memo app, but with minimalist aesthetic.",
     "start_url": "/",
     "display": "standalone",

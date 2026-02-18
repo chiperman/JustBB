@@ -26,7 +26,7 @@ export function DataExporter() {
             }
 
             let blob: Blob;
-            let filename = `JustBB-Backup-${new Date().toISOString().slice(0, 10)}`;
+            let filename = `JustMemo-Backup-${new Date().toISOString().slice(0, 10)}`;
 
             if (format === 'json') {
                 blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });

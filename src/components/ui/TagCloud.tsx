@@ -7,13 +7,18 @@ import { cn } from '@/lib/utils';
 import { Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
-export const TagCloud = memo(function TagCloud() {
-    const [tags, setTags] = useState<{ tag_name: string; count: number }[]>([]);
+export const TagCloud = memo(function TagCloud({
+    initialData = []
+}: {
+    initialData?: { tag_name: string; count: number }[]
+}) {
+    const [tags, setTags] = useState<{ tag_name: string; count: number }[]>(initialData || []);
     const searchParams = useSearchParams();
     const router = useRouter();
     const currentQuery = searchParams.get('q');
 
     useEffect(() => {
+        // 如果已经有初始数据，我们可以跳过首次拉取，或者仍然拉取以确保最新（但首屏已渲染）
         getAllTags().then((data) => {
             const sortedTags = [...data]
                 .sort((a, b) => b.count - a.count)

@@ -16,8 +16,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTimeline } from '@/context/TimelineContext';
 
-export function RightSidebar() {
-    const [allDays, setAllDays] = useState<Record<string, { count: number }>>({});
+interface TimelineStats {
+    days: Record<string, { count: number }>;
+}
+
+export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
+    const [allDays, setAllDays] = useState<Record<string, { count: number }>>(initialData?.days || {});
     const router = useRouter();
     const searchParams = useSearchParams();
 

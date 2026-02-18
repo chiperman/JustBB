@@ -15,9 +15,10 @@ import { useUser } from '@/context/UserContext';
 
 export interface LeftSidebarProps {
     onClose?: () => void;
+    initialTags?: { tag_name: string; count: number }[];
 }
 
-export function LeftSidebar({ onClose }: LeftSidebarProps) {
+export function LeftSidebar({ onClose, initialTags }: LeftSidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const pathname = usePathname();
     const { isAdmin, isMounted } = useUser();
@@ -267,7 +268,7 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                         ))}
                     </div>
                 </div>}>
-                    <TagCloud />
+                    <TagCloud initialData={initialTags} />
                 </Suspense>
             </motion.div>
 

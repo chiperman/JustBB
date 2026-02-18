@@ -1,51 +1,45 @@
-'use client';
-
 import { LeftSidebar } from "@/components/layout/LeftSidebar";
 import { RightSidebar } from "@/components/layout/RightSidebar";
-import { MobileLayoutWrapper } from "@/components/layout/MobileLayoutWrapper";
 import { Suspense } from "react";
-import { TimelineProvider } from "@/context/TimelineContext";
-import { LoginModeProvider } from "@/context/LoginModeContext";
-import { UserProvider } from "@/context/UserContext";
-import { LoginTransitionWrapper } from "@/components/layout/LoginTransitionWrapper";
+import { ClientLayoutProviders } from "@/components/layout/ClientLayoutProviders";
+import { getAllTags } from "@/actions/tags";
+import { getTimelineStats } from "@/actions/stats";
 
-export default function MainLayout({
+export default async function MainLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    // 在服务端预拉取数据
+    const [initialTags, initialStats] = await Promise.all([
+        getAllTags(),
+        getTimelineStats()
+    ]);
+
     return (
-        <UserProvider>
-            <LoginModeProvider>
-                <TimelineProvider>
-                    <LoginTransitionWrapper>
-                        <MobileLayoutWrapper>
-                            <div className="flex h-screen w-full justify-center selection:bg-primary/20 overflow-hidden">
-                                <div className="flex w-full max-w-(--breakpoint-2xl) h-full">
-                                    {/* 左侧导航 - 移动端隐藏 */}
-                                    <div className="hidden lg:block h-full overflow-y-auto scrollbar-hide border-r border-border/40">
-                                        <Suspense fallback={<div className="w-64" />}>
-                                            <LeftSidebar />
-                                        </Suspense>
-                                    </div>
+        <ClientLayoutProviders>
+            <div className="flex h-screen w-full justify-center selection:bg-primary/20 overflow-hidden">
+                <div className="flex w-full max-w-(--breakpoint-2xl) h-full">
+                    {/* 左侧导航 - 移动端隐藏 */}
+                    <div className="hidden lg:block h-full overflow-y-auto scrollbar-hide border-r border-border/40">
+                        <Suspense fallback={<div className="w-64" />}>
+                            <LeftSidebar initialTags={initialTags} />
+                        </Suspense>
+                    </div>
 
-                                    {/* 内容流区域 */}
-                                    <main className="flex-1 min-w-0 bg-background h-full flex flex-col overflow-hidden animate-in fade-in duration-500">
-                                        {children}
-                                    </main>
+                    {/* 内容流区域 */}
+                    <main className="flex-1 min-w-0 bg-background h-full flex flex-col overflow-hidden animate-in fade-in duration-500">
+                        {children}
+                    </main>
 
-                                    {/* 右侧边栏 - 移动端隐藏 */}
-                                    <div className="hidden xl:block h-full overflow-y-auto scrollbar-hide border-l border-border/40">
-                                        <Suspense fallback={<div className="w-80" />}>
-                                            <RightSidebar />
-                                        </Suspense>
-                                    </div>
-                                </div>
-                            </div>
-                        </MobileLayoutWrapper>
-                    </LoginTransitionWrapper>
-                </TimelineProvider>
-            </LoginModeProvider>
-        </UserProvider>
+                    {/* 右侧边栏 - 移动端隐藏 */}
+                    <div className="hidden xl:block h-full overflow-y-auto scrollbar-hide border-l border-border/40">
+                        <Suspense fallback={<div className="w-80" />}>
+                            <RightSidebar initialData={initialStats} />
+                        </Suspense>
+                    </div>
+                </div>
+            </div>
+        </ClientLayoutProviders>
     );
 }

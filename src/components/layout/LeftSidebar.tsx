@@ -20,28 +20,10 @@ export interface LeftSidebarProps {
 export function LeftSidebar({ onClose }: LeftSidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const pathname = usePathname();
-    const { isAdmin } = useUser();
+    const { isAdmin, isMounted } = useUser();
 
     const isMobile = !!onClose;
     const effectiveIsCollapsed = isMobile ? false : isCollapsed;
-
-    const springConfig = {
-        stiffness: 350,
-        damping: 35,
-        mass: 1
-    };
-
-    // 雅致流动模型 (Refined Liquid Model) - Activity Indicator
-    // 同步使用统一的 Spring 配置
-    const y = useMotionValue(0);
-    const springY = useSpring(y, springConfig);
-
-    // 捕获速度并映射为克制的形变比例
-    const velocity = useVelocity(springY);
-    // 移动时轻微拉长（scaleY 1.3），轻微变细（scaleX 0.9）
-    const scaleY = useTransform(velocity, [-1200, 0, 1200], [1.3, 1, 1.3]);
-    const scaleX = useTransform(velocity, [-1200, 0, 1200], [0.9, 1, 0.9]);
-    const opacity = useTransform(springY, [-100, 0, 1000], [0, 1, 1]);
 
     const navItems = useMemo(() => {
         const items = [
@@ -56,6 +38,28 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
 
         return items;
     }, [isAdmin]);
+
+    const springConfig = {
+        stiffness: 350,
+        damping: 35,
+        mass: 1
+    };
+
+    // 同步计算初始位移，避免首屏位移闪变
+    const initialIndex = navItems.findIndex(item =>
+        item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
+    );
+    const initialY = initialIndex !== -1 ? initialIndex * 40 + 8 : 0;
+
+    // 雅致流动模型 (Refined Liquid Model) - Activity Indicator
+    const y = useMotionValue(initialY);
+    const springY = useSpring(y, springConfig);
+
+    // 捕获速度并映射为克制的形变比例
+    const velocity = useVelocity(springY);
+    const scaleY = useTransform(velocity, [-1200, 0, 1200], [1.3, 1, 1.3]);
+    const scaleX = useTransform(velocity, [-1200, 0, 1200], [0.9, 1, 0.9]);
+    const opacity = useTransform(springY, [-100, 0, 1000], [0, 1, 1]);
 
     // 同步外部路由变化到物理引擎
     useEffect(() => {
@@ -197,16 +201,18 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                 className="flex-1 px-1 space-y-1 overflow-y-auto overflow-x-hidden custom-scrollbar mb-[24px] relative"
             >
                 {/* Active Indicator */}
-                <motion.div
-                    style={{
-                        y: springY,
-                        scaleY,
-                        scaleX,
-                        opacity,
-                        originY: 0.5
-                    }}
-                    className="absolute left-0 w-1 h-5 bg-primary rounded-full z-10"
-                />
+                {isMounted && (
+                    <motion.div
+                        style={{
+                            y: springY,
+                            scaleY,
+                            scaleX,
+                            opacity,
+                            originY: 0.5
+                        }}
+                        className="absolute left-0 w-1 h-5 bg-primary rounded-full z-10"
+                    />
+                )}
 
                 {navItems.map((item) => {
                     const isActive = item.href === '/'

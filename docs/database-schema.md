@@ -93,6 +93,55 @@ BEGIN
   LIMIT limit_val OFFSET offset_val;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 统计信息聚合函数 (V2)：一次请求获取热力图数据与基础统计
+CREATE OR REPLACE FUNCTION get_memo_stats_v2()
+RETURNS JSONB AS $$
+DECLARE
+  result JSONB;
+BEGIN
+  SELECT jsonb_build_object(
+    'totalMemos', count(*),
+    'totalTags', (SELECT count(DISTINCT unnest(tags)) FROM memos WHERE deleted_at IS NULL),
+    'firstMemoDate', min(created_at),
+    'days', (
+      SELECT jsonb_object_agg(day, jsonb_build_object('count', cnt, 'wordCount', wc))
+      FROM (
+        SELECT 
+          (created_at AT TIME ZONE 'Asia/Shanghai')::DATE::TEXT as day,
+          count(*) as cnt,
+          sum(word_count) as wc
+        FROM memos
+        WHERE deleted_at IS NULL
+        GROUP BY 1
+      ) s
+    )
+  ) INTO result
+  FROM memos 
+  WHERE deleted_at IS NULL;
+  RETURN result;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 时间轴归档函数：获取月份归档计数
+CREATE OR REPLACE FUNCTION get_timeline_stats()
+RETURNS JSONB AS $$
+BEGIN
+  RETURN (
+    SELECT jsonb_build_object(
+      'days', jsonb_object_agg(day, jsonb_build_object('count', cnt))
+    )
+    FROM (
+      SELECT 
+        (created_at AT TIME ZONE 'Asia/Shanghai')::DATE::TEXT as day,
+        count(*) as cnt
+      FROM memos
+      WHERE deleted_at IS NULL
+      GROUP BY 1
+    ) s
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
 ### 支持的 filters 参数

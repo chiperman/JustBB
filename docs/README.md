@@ -13,6 +13,8 @@
     项目技术栈选型、版本说明及目录结构。
 
 ### 🏗️ 架构与规范
+*   [**Logic Architecture**](./logic-architecture.md)  
+    全站数据加载策略、SSR 预拉取机制及跨组件状态同步逻辑。
 *   [**API Spec**](./api-spec.md)  
     Server Actions、RPC 函数及通用响应协议。
 *   [**Database Schema**](./database-schema.md)  

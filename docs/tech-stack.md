@@ -1,6 +1,6 @@
 # JustMemo 技术选型总览
 
-> **最后更新日期**：2026-02-18 (优化：引入全局 UserContext)
+> **最后更新日期**：2026-02-18 (优化：引入全局 TagsContext 与 StatsContext)
 
 ---
 
@@ -44,7 +44,7 @@ src/
 ├── app/           # 路由与页面组件（App Router）
 ├── components/    # UI 库与业务组件
 ├── actions/       # Server Actions 逻辑
-├── context/       # React Context 全局状态管理 (User, Timeline, LoginMode)
+├── context/       # React Context 全局状态管理 (User, Tags, Stats, Timeline, LoginMode)
 ├── lib/           # Supabase Client、工具函数、加密逻辑
 └── types/         # TypeScript 类型定义
 ```

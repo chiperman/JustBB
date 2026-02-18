@@ -88,9 +88,14 @@
     - 过滤掉 `deleted_at IS NOT NULL` 的记录。
     - 针对 Editor 建议与 Feeds 列表共用同一数据源。
 
-### 4.3 `getStats` / `getTags`
-*   **功能**: 侧边栏热力图与标签云。
+### 4.3 `getMemoStats` / `getTimelineStats` (Statistical Actions)
+*   **功能**: 为左侧热力图和右侧时间轴归档提供全量聚合数据。
+*   **特性**: 
+    - 使用专门的 RPC 实现快速聚合。
+    - **配合状态管理**: 结果通常被注入到 `StatsContext` 或 `TimelineContext`。
+    - **自动触发**: 当发布/删除成功后，由前端逻辑手动再次调用以实现增量更新视图。
 
-### 4.4 `getArchiveStats`
-*   **功能**: 获取右侧月份轴的目录数据。
-*   **返回**: 归档列表 `Array<{ year: number, month: number, count: number }>`
+### 4.4 `getAllTags` (Tags Action)
+*   **功能**: 获取全量标签及其计数。
+*   **返回**: `Array<{ tag_name: string, count: number }>`
+*   **集成**: 驱动左侧 `TagCloud` 和编辑器建议项。

@@ -14,6 +14,7 @@ interface UserContextType {
     user: UserInfo | null;
     isAdmin: boolean;
     loading: boolean;
+    isMounted: boolean;
     refreshUser: () => Promise<void>;
 }
 
@@ -30,6 +31,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         return null;
     });
     const [loading, setLoading] = useState(true);
+    const [isMounted, setIsMounted] = useState(false);
 
     const refreshUser = useCallback(async () => {
         setLoading(true);
@@ -52,13 +54,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     useEffect(() => {
+        setIsMounted(true);
         refreshUser();
     }, [refreshUser]);
 
     const isAdmin = user?.role === 'admin';
 
     return (
-        <UserContext.Provider value={{ user, isAdmin, loading, refreshUser }}>
+        <UserContext.Provider value={{ user, isAdmin, loading, isMounted, refreshUser }}>
             {children}
         </UserContext.Provider>
     );

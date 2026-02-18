@@ -60,7 +60,7 @@ interface CustomSuggestionProps extends SuggestionProps {
 // Helper to generate smart snippet
 const generateSnippet = (content: string, query: string): string => {
     // 1. Replace Markdown images with [图片]
-    let text = content.replace(/!\[.*?\]\(.*?\)/g, '[图片]');
+    const text = content.replace(/!\[.*?\]\(.*?\)/g, '[图片]');
 
     // 2. Initial toggle if no query
     if (!query.trim()) return text.substring(0, 100);

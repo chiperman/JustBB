@@ -22,6 +22,7 @@ interface TimelineStats {
 
 export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     const [allDays, setAllDays] = useState<Record<string, { count: number }>>(initialData?.days || {});
+    const [isMounted, setIsMounted] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -33,6 +34,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     const { activeId, setActiveId, setManualClick } = useTimeline();
 
     useEffect(() => {
+        setIsMounted(true);
         getTimelineStats().then((data) => {
             setAllDays(data.days || {});
         });
@@ -169,7 +171,39 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
             </div>
             <div className="flex-1 relative overflow-hidden">
                 <AnimatePresence mode="wait">
-                    {dateFilter ? (
+                    {!isMounted ? (
+                        <motion.div
+                            key="skeleton"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                            className="space-y-8"
+                        >
+                            {[1, 2, 3, 4].map((i) => (
+                                <div key={i} className="relative">
+                                    <TimelineLine className="bg-[var(--heatmap-0)]" />
+                                    <TimelineDot className="bg-[var(--heatmap-0)] border-[var(--heatmap-0)]" />
+                                    <Skeleton className={cn(
+                                        "h-4 mb-6",
+                                        i % 2 === 0 ? "w-16" : "w-12"
+                                    )} />
+                                    <div className="pl-4 space-y-6">
+                                        <div className="space-y-3">
+                                            <Skeleton className={cn(
+                                                "h-3",
+                                                i % 2 === 0 ? "w-12" : "w-14"
+                                            )} />
+                                            <div className="space-y-2">
+                                                <Skeleton className="h-2 w-10" />
+                                                <Skeleton className="h-2 w-8" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </motion.div>
+                    ) : dateFilter ? (
                         <DailyTimeline key="daily" date={dateFilter} />
                     ) : (
                         <motion.div
@@ -177,7 +211,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 10 }}
-                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
                             className="h-full flex flex-col"
                         >
                             <Timeline>
@@ -265,29 +299,8 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
                                         </TimelineItem>
                                     ))
                                 ) : (
-                                    <div className="space-y-8">
-                                        {[1, 2, 3, 4].map((i) => (
-                                            <div key={i} className="relative">
-                                                <TimelineLine className="bg-[var(--heatmap-0)]" />
-                                                <TimelineDot className="bg-[var(--heatmap-0)] border-[var(--heatmap-0)]" />
-                                                <Skeleton className={cn(
-                                                    "h-4 mb-6",
-                                                    i % 2 === 0 ? "w-16" : "w-12"
-                                                )} />
-                                                <div className="pl-4 space-y-6">
-                                                    <div className="space-y-3">
-                                                        <Skeleton className={cn(
-                                                            "h-3",
-                                                            i % 2 === 0 ? "w-12" : "w-14"
-                                                        )} />
-                                                        <div className="space-y-2">
-                                                            <Skeleton className="h-2 w-10" />
-                                                            <Skeleton className="h-2 w-8" />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
+                                    <div className="text-xs text-muted-foreground/50 py-4 font-mono">
+                                        暂无记录
                                     </div>
                                 )}
                             </Timeline>

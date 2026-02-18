@@ -63,21 +63,19 @@ const HeatmapCell = memo(({
 
 HeatmapCell.displayName = 'HeatmapCell';
 
+import { useStats } from '@/context/StatsContext';
+
+// ... interface and HeatmapCell definition stay the same ...
+
 export const Heatmap = memo(function Heatmap() {
-    const [stats, setStats] = useState<HeatmapStats | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { stats, isLoading: contextLoading, isMounted } = useStats();
     const [hoveredDate, setHoveredDate] = useState<{ date: string; count: number; left: number; top: number; align: 'left' | 'center' | 'right' } | null>(null);
     const shouldReduceMotion = useReducedMotion();
     const router = useRouter();
     const searchParams = useSearchParams();
     const activeDate = searchParams.get('date');
 
-    useEffect(() => {
-        getMemoStats().then((data) => {
-            setStats(data as HeatmapStats);
-            setLoading(false);
-        });
-    }, []);
+    const loading = !isMounted || contextLoading;
 
     // 计算总天数
     const totalActiveDays = useMemo(() => {

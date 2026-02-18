@@ -11,6 +11,8 @@ import { updateMemoContent } from '@/actions/update';
 import { getAllMemos } from '@/actions/search';
 import { Command, CommandList, CommandItem, CommandEmpty, CommandGroup } from './command';
 import { getAllTags } from '@/actions/tags';
+import { useTags } from '@/context/TagsContext';
+import { useStats } from '@/context/StatsContext';
 import { memoCache, CacheItem } from '@/lib/memo-cache'; // Import local cache
 
 // Tiptap imports
@@ -92,6 +94,8 @@ interface MemoEditorProps {
 }
 
 export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isCollapsed: isPropCollapsed = false, hideFullscreen = false, contextMemos = [] }: MemoEditorProps) {
+    const { refreshTags } = useTags();
+    const { refreshStats } = useStats();
     const [content, setContent] = useState(memo?.content || '');
     const [tags, setTags] = useState<string[]>(memo?.tags || []);
     const [isPending, setIsPending] = useState(false);
@@ -678,6 +682,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         // Actually logic below was dealing with 'suggestionItems' state directly.
                         // Now we rely on fetchMentionSuggestions re-running if needed, 
                         // or next time user opens suggestions.
+                        refreshTags();
+                        refreshStats();
                     }
                 }
 

@@ -91,13 +91,10 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
 
     // 身份显示逻辑容器
     const renderIdentity = () => {
-        // Hydration 防御：在挂载前显示静默状态，避免 SSR 不匹配
-        if (!isMounted) return <UserCircle2 className="w-4 h-4 text-muted-foreground" />;
-
         // 如果有缓存的用户数据，优先显示身份图标而不是加载状态
         if (user?.role === 'admin') return <ShieldCheck className="w-4 h-4 text-primary" />;
         if (user) return <User className="w-4 h-4 text-muted-foreground" />;
-        if (loading) return <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />;
+        if (loading && !user) return <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />;
         return <UserCircle2 className="w-4 h-4 text-muted-foreground" />;
     };
 
@@ -115,8 +112,8 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                     >
                         <div className="relative shrink-0">
                             <Settings className="size-4 text-muted-foreground group-hover/settings:text-primary transition-colors" />
-                            {/* 状态小圆点提示 - 仅在挂载后且有用户时显示 */}
-                            {isMounted && user && (
+                            {/* 状态小圆点提示 - 有用户时立即显示 */}
+                            {user && (
                                 <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background bg-primary" />
                             )}
                         </div>
@@ -124,15 +121,17 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         <AnimatePresence>
                             {!isCollapsed && (
                                 <motion.div
-                                    initial={{ opacity: 0, width: 0, x: -10 }}
-                                    animate={{ opacity: 1, width: "auto", x: 0 }}
+                                    key="content"
                                     exit={{ opacity: 0, width: 0, x: -10 }}
                                     transition={{ duration: 0.2 }}
                                     className="flex flex-col items-start overflow-hidden whitespace-nowrap"
                                 >
                                     <span className="text-[14px] font-normal text-foreground">设置中心</span>
-                                    <span className="text-[12px] font-normal text-stone-400 truncate w-full flex items-center gap-1">
-                                        {!isMounted ? '...' : (user ? user.email : (loading ? '加载中...' : '未登录/匿名'))}
+                                    <span
+                                        className="text-[12px] font-normal text-stone-400 truncate w-full flex items-center gap-1"
+                                        suppressHydrationWarning
+                                    >
+                                        {user ? user.email : (loading ? '加载中...' : '未登录/匿名')}
                                     </span>
                                 </motion.div>
                             )}

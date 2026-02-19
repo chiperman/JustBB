@@ -25,7 +25,7 @@ export function TagsProvider({
     initialData?: TagData[];
 }) {
     const [tags, setTags] = useState<TagData[]>(initialData);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(initialData.length === 0);
     const [isMounted, setIsMounted] = useState(false);
 
     const refreshTags = useCallback(async () => {

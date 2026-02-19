@@ -59,7 +59,7 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
     const velocity = useVelocity(springY);
     const scaleY = useTransform(velocity, [-1200, 0, 1200], [1.3, 1, 1.3]);
     const scaleX = useTransform(velocity, [-1200, 0, 1200], [0.9, 1, 0.9]);
-    const opacity = useTransform(springY, [-100, 0, 1000], [0, 1, 1]);
+    const opacity = useTransform(springY, [-100, 0, 1000], [1, 1, 1]);
 
     // 同步外部路由变化到物理引擎
     useEffect(() => {
@@ -200,19 +200,17 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                 variants={navVariants}
                 className="flex-1 px-1 space-y-1 overflow-y-auto overflow-x-hidden custom-scrollbar mb-[24px] relative"
             >
-                {/* Active Indicator */}
-                {isMounted && (
-                    <motion.div
-                        style={{
-                            y: springY,
-                            scaleY,
-                            scaleX,
-                            opacity,
-                            originY: 0.5
-                        }}
-                        className="absolute left-0 w-1 h-5 bg-primary rounded-full z-10"
-                    />
-                )}
+                {/* Active Indicator - 首屏即现 */}
+                <motion.div
+                    style={{
+                        y: springY,
+                        scaleY,
+                        scaleX,
+                        opacity,
+                        originY: 0.5
+                    }}
+                    className="absolute left-0 w-1 h-5 bg-primary rounded-full z-10"
+                />
 
                 {navItems.map((item) => {
                     const isActive = item.href === '/'

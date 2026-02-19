@@ -101,14 +101,12 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
             {/* Background Decorative Text */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
                 <motion.span
-                    initial={{ opacity: 0, x: -50 }}
                     animate={{ opacity: 0.05, x: 0 }}
                     className="absolute top-[10%] left-[5%] text-[10vw] font-editorial italic text-black dark:text-white"
                 >
                     JustMemo Draft
                 </motion.span>
                 <motion.span
-                    initial={{ opacity: 0, x: 50 }}
                     animate={{ opacity: 0.03, x: 0 }}
                     className="absolute bottom-[15%] right-[10%] text-[4vw] font-editorial text-black dark:text-white"
                 >

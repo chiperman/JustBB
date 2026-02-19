@@ -36,7 +36,7 @@ export const TagCloud = memo(function TagCloud() {
 
     return (
         <AnimatePresence mode="wait">
-            {!isMounted ? (
+            {(!isMounted && tags.length === 0) || (isLoading && tags.length === 0) ? (
                 <motion.div
                     key="skeleton"
                     initial={{ opacity: 0 }}
@@ -65,10 +65,8 @@ export const TagCloud = memo(function TagCloud() {
             ) : (
                 <motion.div
                     key="content"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
                     transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                    className={cn("flex flex-wrap gap-2", isLoading && "animate-pulse")}
+                    className="flex flex-wrap gap-2"
                 >
                     {topTags.map(({ tag_name, count }) => {
                         const isActive = currentQuery === tag_name;

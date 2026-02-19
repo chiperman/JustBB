@@ -171,7 +171,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
             </div>
             <div className="flex-1 relative overflow-hidden">
                 <AnimatePresence mode="wait">
-                    {!isMounted ? (
+                    {!isMounted && Object.keys(allDays).length === 0 ? (
                         <motion.div
                             key="skeleton"
                             initial={{ opacity: 0 }}
@@ -208,8 +208,6 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
                     ) : (
                         <motion.div
                             key="main-timeline"
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 10 }}
                             transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
                             className="h-full flex flex-col"

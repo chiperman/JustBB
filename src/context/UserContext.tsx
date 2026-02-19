@@ -24,7 +24,7 @@ const STORAGE_KEY = 'justbb_user_info';
 
 export function UserProvider({ children, initialUser = null }: { children: React.ReactNode; initialUser?: UserInfo | null }) {
     const [user, setUser] = useState<UserInfo | null>(initialUser);
-    const [loading, setLoading] = useState(!initialUser);
+    const [loading, setLoading] = useState(false); // 初始 loading 设为 false，因为我们可能有 initialUser
     const [isMounted, setIsMounted] = useState(false);
 
     const refreshUser = useCallback(async () => {

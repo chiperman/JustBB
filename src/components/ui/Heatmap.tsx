@@ -134,7 +134,7 @@ export const Heatmap = memo(function Heatmap() {
     const StatsTrigger = (
         <div className={cn(
             "grid grid-cols-3 gap-2 transition-opacity",
-            loading ? "opacity-40 animate-pulse cursor-default" : "cursor-pointer group/stats hover:opacity-80"
+            loading ? "cursor-default" : "cursor-pointer group/stats hover:opacity-80"
         )}>
             <div className="flex flex-col items-center">
                 <span className="text-3xl tracking-tight leading-none font-bold">{displayStats.totalMemos}</span>

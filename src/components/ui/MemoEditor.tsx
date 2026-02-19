@@ -756,10 +756,18 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
     return (
         <motion.section
+            layout
+            transition={{
+                type: "spring",
+                damping: 25,
+                stiffness: 200,
+                mass: 1
+            }}
             initial={false}
             className={cn(
                 "bg-card border border-border rounded-sm relative focus-within:shadow-md",
-                isActuallyCollapsed ? "px-4 py-3 shadow-none min-h-[50px]" : cn("p-6 shadow-sm flex flex-col items-stretch", hideFullscreen ? "h-full min-h-[500px]" : "min-h-[120px]")
+                "p-6 shadow-sm flex flex-col items-stretch",
+                isActuallyCollapsed ? "shadow-none" : cn(hideFullscreen ? "h-full min-h-[500px]" : "min-h-[120px]")
             )}>
             <motion.div
                 layout
@@ -776,10 +784,15 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         layout
                         ref={editorContainerRef}
                         className={cn(
-                            "relative",
+                            "relative transition-all duration-300",
                             hideFullscreen ? "flex-1 overflow-hidden flex flex-col min-h-0" : "max-h-[500px] overflow-y-auto scrollbar-hover",
-                            isActuallyCollapsed ? "min-h-[24px]" : "min-h-[120px]"
-                        )}>
+                            isActuallyCollapsed ? "max-h-[3rem] overflow-hidden pointer-events-none" : "min-h-[120px]"
+                        )}
+                        style={isActuallyCollapsed ? {
+                            maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
+                            WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
+                        } : undefined}
+                    >
 
                         <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "min-h-0")} />
                     </motion.div>
@@ -880,176 +893,170 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     layout
                     initial={false}
                     animate={{
-                        maxHeight: isActuallyCollapsed ? 0 : 60,
+                        maxHeight: isActuallyCollapsed ? 0 : 200,
                         opacity: isActuallyCollapsed ? 0 : 1,
                         marginTop: isActuallyCollapsed ? 0 : 16,
                         paddingTop: isActuallyCollapsed ? 0 : 20,
                         borderTopWidth: isActuallyCollapsed ? 0 : 1
                     }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="overflow-hidden bg-transparent border-border"
+                    className="overflow-hidden bg-transparent border-t border-border/50"
                 >
-
                     <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1">
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={handleTogglePrivate}
-                                className={cn(
-                                    "text-[10px] font-bold uppercase tracking-widest",
-                                    isPrivate ? "text-primary bg-primary/5" : "text-muted-foreground"
-                                )}
-                                aria-label={isPrivate ? "设为公开内容" : "设为私密内容"}
-                                aria-pressed={isPrivate}
+                                className={cn("h-8 px-2 gap-1.5", isPrivate ? "text-primary bg-primary/5" : "text-muted-foreground")}
                             >
-                                {isPrivate ? <Lock className="w-3 h-3" aria-hidden="true" /> : <LockOpen className="w-3 h-3" aria-hidden="true" />}
-                                私密
+                                {isPrivate ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
+                                <span className="text-xs font-medium">{isPrivate ? '私密' : '公开'}</span>
                             </Button>
+
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setIsPinned(!isPinned)}
-                                className={cn(
-                                    "text-[10px] font-bold uppercase tracking-widest",
-                                    isPinned ? "text-primary bg-primary/5" : "text-muted-foreground"
-                                )}
-                                aria-label={isPinned ? "取消置顶" : "置顶此内容"}
-                                aria-pressed={isPinned}
+                                className={cn("h-8 px-2 gap-1.5", isPinned ? "text-primary bg-primary/5" : "text-muted-foreground")}
                             >
-                                <Pin className="w-3 h-3" fill={isPinned ? "currentColor" : "none"} aria-hidden="true" /> 置顶
+                                <Pin className={cn("w-4 h-4", isPinned && "fill-current")} />
+                                <span className="text-xs font-medium">置顶</span>
                             </Button>
-                            {!isFullscreen && !hideFullscreen && (
+
+                            {!hideFullscreen && (
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => setIsFullscreen(true)}
-                                    className="text-muted-foreground hover:text-primary transition-colors h-8 w-8 p-0"
-                                    aria-label="全屏编辑"
+                                    className="h-8 px-2 text-muted-foreground"
                                 >
-                                    <Maximize2 className="w-3.5 h-3.5" />
+                                    <Maximize2 className="w-4 h-4" />
                                 </Button>
                             )}
-                            <span className="text-[10px] text-muted-foreground/40 tabular-nums ml-1">
-                                {content.trim().length} 字
-                            </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            {mode === 'edit' && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={onCancel}
-                                    className="rounded-sm text-xs text-muted-foreground hover:text-foreground"
-                                >
-                                    取消
-                                </Button>
+
+                        <div className="flex items-center gap-3">
+                            {content.length > 0 && (
+                                <div className="text-[10px] font-mono text-muted-foreground/50">
+                                    {content.length} / 2000
+                                </div>
                             )}
-                            <Button
-                                onClick={handlePublishClick}
-                                disabled={isPending || !content.trim()}
-                                className={cn(
-                                    "rounded-sm px-7",
-                                    !shouldReduceMotion && "active:scale-95"
+                            <div className="flex items-center gap-2">
+                                {(mode === 'edit' || content.trim()) && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            if (mode === 'edit') {
+                                                onCancel?.();
+                                            } else {
+                                                editor?.commands.setContent('');
+                                                setContent('');
+                                                setTags([]);
+                                            }
+                                        }}
+                                        className="h-8 px-3 text-muted-foreground hover:text-foreground transition-colors"
+                                    >
+                                        取消
+                                    </Button>
                                 )}
-                            >
-                                {isPending ? (
-                                    <>
-                                        <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        {mode === 'edit' ? '更新中...' : '发布中...'}
-                                    </>
-                                ) : (
-                                    mode === 'edit' ? '更新' : '发布'
-                                )}
-                            </Button>
+                                <Button
+                                    size="sm"
+                                    onClick={handlePublishClick}
+                                    disabled={!content.trim() || isPending}
+                                    className="h-8 px-4 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all"
+                                >
+                                    {isPending ? '提交中...' : mode === 'edit' ? '保存' : '发布'}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </motion.div>
+            </AnimatePresence>
 
-                <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
-                    <DialogContent
-                        className="max-w-5xl h-[92vh] flex flex-col p-0 gap-0 overflow-hidden bg-background"
-                        closeIcon={<Minimize2 className="h-4 w-4" />}
-                        animateOffset={false}
-                    >
-                        <DialogTitle className="sr-only">全屏编辑内容</DialogTitle>
-                        <div className="flex-1 overflow-hidden flex items-start justify-center px-6 pt-10 bg-black/5">
-                            <div className="max-w-4xl w-full mx-auto flex flex-col h-[85vh]">
-                                <MemoEditor
-                                    mode={mode}
-                                    memo={memo}
-                                    isCollapsed={false}
-                                    hideFullscreen={true}
-                                    contextMemos={contextMemos}
-                                    onCancel={() => {
-                                        setIsFullscreen(false);
-                                        onCancel?.();
-                                    }}
-                                    onSuccess={() => {
-                                        setIsFullscreen(false);
-                                        onSuccess?.();
-                                    }}
-                                />
-                            </div>
+            <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
+                <DialogContent
+                    className="max-w-5xl h-[92vh] flex flex-col p-0 gap-0 overflow-hidden bg-background"
+                    closeIcon={<Minimize2 className="h-4 w-4" />}
+                    animateOffset={false}
+                >
+                    <DialogTitle className="sr-only">全屏编辑内容</DialogTitle>
+                    <div className="flex-1 overflow-hidden flex items-start justify-center px-6 pt-10 bg-black/5">
+                        <div className="max-w-4xl w-full mx-auto flex flex-col h-[85vh]">
+                            <MemoEditor
+                                mode={mode}
+                                memo={memo}
+                                isCollapsed={false}
+                                hideFullscreen={true}
+                                contextMemos={contextMemos}
+                                onCancel={() => {
+                                    setIsFullscreen(false);
+                                    onCancel?.();
+                                }}
+                                onSuccess={() => {
+                                    setIsFullscreen(false);
+                                    onSuccess?.();
+                                }}
+                            />
                         </div>
-                    </DialogContent>
-                </Dialog>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
-                <Dialog open={showPrivateDialog} onOpenChange={setShowPrivateDialog}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>设置访问口令</DialogTitle>
-                        </DialogHeader>
-                        <div className="flex flex-col gap-4 py-4">
-                            <div className="space-y-2">
-                                <label htmlFor="access-code" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 after:content-['*'] after:ml-0.5 after:text-red-500">
-                                    访问口令
-                                </label>
-                                <div className="relative">
-                                    <Input
-                                        id="access-code"
-                                        type={showAccessCode ? "text" : "password"}
-                                        value={accessCode}
-                                        onChange={(e) => setAccessCode(e.target.value)}
-                                        placeholder="请输入访问口令"
-                                        className="pr-10"
-                                    />
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => setShowAccessCode(!showAccessCode)}
-                                        className="absolute right-0 top-0 h-full"
-                                        aria-label={showAccessCode ? "隐藏口令" : "显示口令"}
-                                    >
-                                        {showAccessCode ? (
-                                            <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                                        ) : (
-                                            <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                                        )}
-                                    </Button>
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <label htmlFor="access-hint" className="text-sm font-medium leading-none">
-                                    口令提示 (选填)
-                                </label>
+            <Dialog open={showPrivateDialog} onOpenChange={setShowPrivateDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>设置访问口令</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-4 py-4">
+                        <div className="space-y-2">
+                            <label htmlFor="access-code" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 after:content-['*'] after:ml-0.5 after:text-red-500">
+                                访问口令
+                            </label>
+                            <div className="relative">
                                 <Input
-                                    id="access-hint"
-                                    value={accessHint}
-                                    onChange={(e) => setAccessHint(e.target.value)}
-                                    placeholder="例如：我的生日"
+                                    id="access-code"
+                                    type={showAccessCode ? "text" : "password"}
+                                    value={accessCode}
+                                    onChange={(e) => setAccessCode(e.target.value)}
+                                    placeholder="请输入访问口令"
+                                    className="pr-10"
                                 />
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setShowAccessCode(!showAccessCode)}
+                                    className="absolute right-0 top-0 h-full"
+                                    aria-label={showAccessCode ? "隐藏口令" : "显示口令"}
+                                >
+                                    {showAccessCode ? (
+                                        <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                    ) : (
+                                        <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                    )}
+                                </Button>
                             </div>
                         </div>
-                        <DialogFooter>
-                            <Button variant="ghost" onClick={() => setShowPrivateDialog(false)}>取消</Button>
-                            <Button onClick={performPublish} disabled={!accessCode}>发布</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </motion.div >
-        </motion.section >
-
+                        <div className="space-y-2">
+                            <label htmlFor="access-hint" className="text-sm font-medium leading-none">
+                                口令提示 (选填)
+                            </label>
+                            <Input
+                                id="access-hint"
+                                value={accessHint}
+                                onChange={(e) => setAccessHint(e.target.value)}
+                                placeholder="例如：我的生日"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setShowPrivateDialog(false)}>取消</Button>
+                        <Button onClick={performPublish} disabled={!accessCode}>发布</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </motion.section>
     );
 }

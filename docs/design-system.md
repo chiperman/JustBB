@@ -55,7 +55,7 @@
 *   **去果冻化 (De-Jelly)**：彻底移除了编辑器内部的所有 `layout` 投影属性。这一改动直接消除了 Framer Motion 在容器尺寸变化时对文字进行的拉伸补偿（即“果冻感”），确保文字在展开过程中保持绝对的视觉形态稳定。
 *   **物理参数 hardening**：将物理模型调整为 `Stiffness: 400, Damping: 30`。这套响应更敏捷的参数大幅减少了动画末端的冗余震荡（Oscillation），使整个动效显得更加“坚硬”且具有高级感。
 *   **硬件加速 (GPU Acceleration)**：通过 `will-change: transform, height, opacity` 保留了 60FPS 的极致流畅度，而不依赖于 2D 缩放投影。
-(例如 `pt-8 pb-4`) 和 CSS `transition` (如 `background-color`) 来处理滚动状态切换，确保物理位置在任何缩放/收缩动画下都保持绝对静止。
+*   **固定尺寸驱动**: 采用固定的 `padding` (例如 `pt-8 pb-4`) 和 CSS `transition` (如 `background-color`) 来处理滚动状态切换，确保物理位置在任何缩放/收缩动画下都保持绝对静止。
 *   **内卷化动画**: 嵌套组件（如 `MemoEditor`）的伸缩应通过内部 `animate` 属性自驱动，确保其尺寸变化被局限在组件容器内，不干扰父级布局投影。
 
 ## 6. 时间线规范 (Timeline System)

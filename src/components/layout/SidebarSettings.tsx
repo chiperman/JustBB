@@ -111,7 +111,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         aria-label="账号与设置"
                     >
                         <div className="relative shrink-0">
-                            <Settings className="size-4 text-muted-foreground group-hover/settings:text-primary transition-colors" />
+                            <Settings className="size-4 text-muted-foreground transition-colors" />
                             {/* 状态小圆点提示 - 有用户时立即显示 */}
                             {user && (
                                 <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background bg-primary" />

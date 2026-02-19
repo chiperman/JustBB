@@ -40,7 +40,7 @@
 *   **12 动画原则 (12 Principles of Animation)**: 全站动效需遵循迪士尼 12 动画原则（Web 适配版），重点包括：
     - **Timing (时间感)**: 用户触发的动画应在 300ms-500ms 内完成，平衡响应性与优雅感。
     - **Physics (物理特性)**: 使用 Spring (弹簧) 物理特性描述运动，赋予 UI 重量感与回弹感。
-*   **重于快 (Weight over Speed)**: 物体应当感觉有质量。使用较低的刚度 (Stiffness) 和较高的阻尼 (Damping)。
+*   **响应性与反馈 (Fast & Rebound)**: 核心交互（如编辑器收缩）应追求快速响应。推荐参数：`Stiffness: 300`, `Damping: 20`, `Mass: 0.8`。这种配置提供极快的触发感，并伴有轻微的物理回弹（Overshoot），增强视觉活力。
 
 ### 5.2 关键切换标准 (Critical Transition Standards)
 *   **登录切换 (Login Transition)**:
@@ -49,7 +49,12 @@
     - 阶段三：登录面板从左侧滑入 + 元素 Stagger (50ms 延迟)。
 *   **内容列表 (Memo List)**:
     - **入场编排**: 采用视口触发方案 (`whileInView`)。
-    - **流动性 (Flow)**: 强制使用 `layout` 属性配合稳定的 `memo.id` Key。
+    - **流动性 (Flow)**: 强制使用 `layout` 属性配合稳定的 `memo.id` Key，处理列表项的增删与重新排序。
+
+### 5.3 布局稳定性规范 (Layout Stability)
+*   **物理隔离 (Physical Isolation)**: 对于吸顶 (Sticky) 的全局 UI 元素（如 Brand、搜索框），**禁止使用** Framer Motion 的 `layout` 属性。
+*   **固定尺寸驱动**: 采用固定的 `padding` (例如 `pt-8 pb-4`) 和 CSS `transition` (如 `background-color`) 来处理滚动状态切换，确保物理位置在任何缩放/收缩动画下都保持绝对静止。
+*   **内卷化动画**: 嵌套组件（如 `MemoEditor`）的伸缩应通过内部 `animate` 属性自驱动，确保其尺寸变化被局限在组件容器内，不干扰父级布局投影。
 
 ## 6. 时间线规范 (Timeline System)
 

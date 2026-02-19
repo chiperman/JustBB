@@ -1,5 +1,7 @@
 # JustMemo 文档中心 (Documentation)
 
+> **最后更新**：2026-02-19 (重构：顶部布局稳定性与动效性能优化)
+
 欢迎使用 JustMemo 开发者文档。本项目是一个深度致敬 Anthropic 风格、基于 Next.js 15 和 Supabase 构建的高性能私有笔记系统。
 
 ---

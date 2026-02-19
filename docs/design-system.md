@@ -40,7 +40,7 @@
 *   **12 动画原则 (12 Principles of Animation)**: 全站动效需遵循迪士尼 12 动画原则（Web 适配版），重点包括：
     - **Timing (时间感)**: 用户触发的动画应在 300ms-500ms 内完成，平衡响应性与优雅感。
     - **Physics (物理特性)**: 使用 Spring (弹簧) 物理特性描述运动，赋予 UI 重量感与回弹感。
-*   **坚实与稳定 (Solid & Stable)**: 核心伸缩交互（如编辑器收缩）应追求快速且无形变的响应。推荐参数：`Stiffness: 400`, `Damping: 30`, `Mass: 1.0`。此配置能提供极佳的确定感，避免视觉震荡。
+*   **坚实与稳定 (Solid & Stable)**: 核心伸缩交互（如编辑器收缩）应追求快速且无形变的响应。推荐参数：`Stiffness: 350`, `Damping: 40`, `Mass: 1.0`。此配置能提供极佳的确定感，避免视觉震荡。
 
 ### 5.2 关键切换标准 (Critical Transition Standards)
 *   **登录切换 (Login Transition)**:
@@ -53,10 +53,10 @@
 
 ### 5.3 布局稳定性规范 (Layout Stability)
 *   **去果冻化 (De-Jelly)**：彻底移除了编辑器内部的所有 `layout` 投影属性。这一改动直接消除了 Framer Motion 在容器尺寸变化时对文字进行的拉伸补偿（即“果冻感”），确保文字在展开过程中保持绝对的视觉形态稳定。
-*   **物理参数 hardening**：将物理模型调整为 `Stiffness: 400, Damping: 30`。这套响应更敏捷的参数大幅减少了动画末端的冗余震荡（Oscillation），使整个动效显得更加“坚硬”且具有高级感。
-*   **硬件加速 (GPU Acceleration)**：通过 `will-change: transform, height, opacity` 保留了 60FPS 的极致流畅度，而不依赖于 2D 缩放投影。
+*   **物理参数 hardening**：将物理模型调整为 `Stiffness: 350, Damping: 40`。这套响应更敏捷的参数大幅减少了动画末端的冗余震荡（Oscillation），使整个动效显得更加“坚硬”且具有高级感。
+*   **硬件加速 (GPU Acceleration)**：通过 `will-change: transform, min-height, opacity` 保留了 60FPS 的极致流畅度，而不依赖于 2D 缩放投影。
 *   **固定尺寸驱动**: 采用固定的 `padding` (例如 `pt-8 pb-4`) 和 CSS `transition` (如 `background-color`) 来处理滚动状态切换，确保物理位置在任何缩放/收缩动画下都保持绝对静止。
-*   **内卷化动画**: 嵌套组件（如 `MemoEditor`）的伸缩应通过内部 `animate` 属性自驱动，确保其尺寸变化被局限在组件容器内，不干扰父级布局投影。
+*   **内卷化动画**: 嵌套组件（如 `MemoEditor`）的伸缩应通过内部 `animate` 属性自驱动（如控制 `minHeight`），确保其尺寸变化被局限在组件容器内，并引入 `isAnimating` 状态在动画期间临时锁定 `overflow` 与控制遮罩 (`mask-image`)，以隔离渲染开销并确保长文本动效流畅。
 
 ## 6. 时间线规范 (Timeline System)
 

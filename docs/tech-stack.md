@@ -1,6 +1,6 @@
 # JustMemo 技术选型总览
 
-> **最后更新日期**：2026-02-18 (优化：引入全局 TagsContext 与 StatsContext)
+> **最后更新日期**：2026-02-19 (优化：同步 SSR 性能优化与 Git 技能规范)
 
 ---
 
@@ -8,7 +8,7 @@
 
 | 技术 | 版本 | 说明 |
 |------|------|------|
-| **Next.js** | 15.x | 全栈 React 框架，采用 App Router 模式 |
+| **Next.js** | 16.1.6 | 全栈 React 框架，采用 App Router 模式 |
 | **React** | 19.x | UI 渲染引擎与 **Context API** 状态管理 |
 | **TypeScript** | ^5 | 类型安全，严格模式 |
 
@@ -57,6 +57,14 @@ src/
 |------|------|
 | **Vercel** | 生产环境托管，与 GitHub 自动集成 |
 | **Supabase Cloud** | 数据库与认证服务 |
+
+---
+
+## 6. 工程规范 (Engineering Standards)
+
+### 6.1 Git 规范
+*   **原子化提交 (Atomic Commits)**：每个 Commit 只做一件事。
+*   **Commit 规范 (Commitizen)**：强制采用 `type(scope): subject` 格式，并遵循 `.agent/skills/git-commit` 技能定义的执行协议。主题与正文使用 **中文**。
 
 ---
 

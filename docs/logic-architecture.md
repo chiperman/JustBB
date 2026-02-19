@@ -13,13 +13,14 @@
 ### 1.1 首屏加载全路径
 1.  **用户请求**：浏览器发起 URL 请求。
 2.  **服务端并行抓取**：在 `app/(main)/layout.tsx` 中，利用 `Promise.all` 并发调用 Server Actions。
+    - `getUser()`：获取当前用户信息及角色权限。
     - `getAllTags()`：获取全局标签云数据。
     - `getTimelineStats()`：获取右侧时间轴归档计数。
     - `getMemoStats()`：获取热力图格点及顶栏统计（笔记数/标签数/活跃天数）。
 3.  **内联注入**：服务器将抓取到的数据以 props 形式传递给 `ClientLayoutProviders`。
 4.  **客户端水合 (Hydration)**：
-    - 各个 Context Provider（`TagsProvider`, `StatsProvider`, `TimelineProvider`）接收 `initialData` 作为初始状态。
-    - **零延迟渲染**：侧边栏组件（`TagCloud`, `Heatmap`, `Timeline`）在加载时直接从 Context 读取数据，无需在浏览器端再次发起 Fetch 请求。
+    - 各个 Context Provider（`UserProvider`, `TagsProvider`, `StatsProvider`, `TimelineProvider`）接收 `initialData` 作为初始状态。
+    - **零延迟渲染**：用户信息、侧边栏组件（`TagCloud`, `Heatmap`, `Timeline`）在加载时直接从 Context 读取数据，消除首屏 Loading 闪烁。
 
 ### 1.2 动态同步机制 (Real-time Sync)
 当数据发生变更（如发布/删除笔记）时，系统通过以下链路保证全站同步：
@@ -52,7 +53,7 @@ graph LR
 `MemoEditor` 采用了 Tiptap 扩展与本地缓存相结合的设计：
 
 1.  **本地全量索引**：`MemoCache` 在页面挂载后静默加载所有笔记的编号与内容，实现极速的 `@编号` 建议。
-2.  **性能驱动的动画**: `MemoEditor` 放弃了全局的 `layout` 投影，转而使用内部显式的 `animate` 属性。这种“内卷化”设计确保了编辑器高度变化不会干扰到吸顶 Header 的稳定性。
+2.  **性能驱动的动画**: `MemoEditor` 放弃了全局的 `layout` 投影，转而使用内部显式的 `animate` 属性控制 `minHeight`。通过 `isAnimating` 状态管理，在动画期间动态切换 `overflow` 和 `mask-image` 表现，确保长文本展开时的 60FPS 渲染性能，并实现背景色通过独立层的 Opacity 平滑淡入淡出。
 3.  **联动更新**：利用 `useStats` 和 `useTags` 的 Hook，在发布成功的回调里瞬间通知全站 Sidebar 更新。
 
 ---

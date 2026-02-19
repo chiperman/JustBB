@@ -162,8 +162,10 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const [displayLimit, setDisplayLimit] = useState(20); // Initial limit changed to 20 per plan
     const [suggestionTrigger, setSuggestionTrigger] = useState<string | null>(null);
     const [isIndexLoading, setIsIndexLoading] = useState(true);
+    const [suggestionPosition, setSuggestionPosition] = useState<{ top: number; left: number } | null>(null);
     const filteredMentionsRef = useRef<SuggestionItem[]>([]);
     const suggestionTriggerRef = useRef<string | null>(null);
+    const editorContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         suggestionTriggerRef.current = suggestionTrigger;
@@ -304,16 +306,38 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     char: '@',
                     pluginKey: mentionPluginKey,
                     render: () => {
+                        const updatePosition = (props: any) => {
+                            const rect = props.clientRect?.();
+                            if (rect && editorContainerRef.current) {
+                                const containerRect = editorContainerRef.current.getBoundingClientRect();
+                                const scrollContainer = editorContainerRef.current;
+
+                                // Calculate top/left relative to container, accounting for scroll
+                                let left = rect.left - containerRect.left;
+                                let top = rect.bottom - containerRect.top + scrollContainer.scrollTop;
+
+                                // Prevent overflow on the right
+                                const popupPadding = 20;
+                                const maxLeft = containerRect.width - 370; // 350px width + buffer
+                                if (left > maxLeft) left = maxLeft;
+                                if (left < 0) left = 10;
+
+                                setSuggestionPosition({ top, left });
+                            }
+                        };
+
                         return {
                             onStart: (props) => {
                                 suggestionPropsRef.current = props;
                                 setShowSuggestions(true);
                                 setSuggestionTrigger('@');
                                 fetchMentionSuggestions(props.query, false);
+                                updatePosition(props);
                             },
                             onUpdate: (props) => {
                                 suggestionPropsRef.current = props;
                                 fetchMentionSuggestions(props.query, true);
+                                updatePosition(props);
                             },
                             onExit: () => {
                                 setShowSuggestions(false);
@@ -390,18 +414,39 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         return true;
                     },
                     render: () => {
+                        const updatePosition = (props: any) => {
+                            const rect = props.clientRect?.();
+                            if (rect && editorContainerRef.current) {
+                                const containerRect = editorContainerRef.current.getBoundingClientRect();
+                                const scrollContainer = editorContainerRef.current;
+
+                                // Calculate top/left relative to container, accounting for scroll
+                                let left = rect.left - containerRect.left;
+                                let top = rect.bottom - containerRect.top + scrollContainer.scrollTop;
+
+                                // Prevent overflow on the right
+                                const popupPadding = 10;
+                                const maxLeft = containerRect.width - 370; // 350px width + buffer
+                                if (left > maxLeft) left = maxLeft;
+                                if (left < 0) left = 10;
+
+                                setSuggestionPosition({ top, left });
+                            }
+                        };
+
                         return {
                             onStart: (props) => {
                                 suggestionPropsRef.current = props;
                                 setShowSuggestions(true);
                                 setSuggestionTrigger('#');
                                 fetchHashtagSuggestions(props.query);
+                                updatePosition(props);
                             },
                             onUpdate: (props) => {
                                 suggestionPropsRef.current = props;
                                 fetchHashtagSuggestions(props.query);
-                            },
-                            onExit: () => {
+                                updatePosition(props);
+                            }, onExit: () => {
                                 setShowSuggestions(false);
                                 setSuggestionTrigger(null);
                                 suggestionPropsRef.current = null;
@@ -731,6 +776,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
                     <motion.div
                         layout
+                        ref={editorContainerRef}
                         className={cn(
                             "relative",
                             hideFullscreen ? "flex-1 overflow-hidden flex flex-col min-h-0" : "max-h-[500px] overflow-y-auto scrollbar-hover",
@@ -738,84 +784,88 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         )}>
 
                         <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "min-h-0")} />
-                    </motion.div>
 
-                    {showSuggestions && (suggestions.length > 0 || isLoading || mentionQueryRef.current.startsWith('#')) && (
-                        <div
-                            className="absolute top-full left-0 mt-2 z-50 w-full max-w-[350px]"
-                            onMouseDown={(e) => e.preventDefault()} // 防止点击弹窗导致编辑器失焦
-                        >
-                            <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden flex flex-col max-h-[450px]">
-                                {isLoading || (isIndexLoading && suggestions.length === 0) ? (
-                                    <div className="px-3 py-6 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight">
-                                        加载中...
-                                    </div>
-                                ) : null}
-                                {suggestions.length > 0 ? (
-                                    <ul
-                                        ref={suggestionListRef}
-                                        className="divide-y divide-border/40 overflow-y-auto scrollbar-hover flex-1 min-h-0"
-                                        onScroll={handleSuggestionScroll}
-                                    >
-                                        {suggestions.map((item, index) => (
-                                            <li
-                                                key={item.id}
-                                                onClick={() => handleSelectSuggestion(item)}
-                                                className={cn(
-                                                    "flex flex-col gap-1.5 px-3 py-2.5 cursor-pointer outline-none transition-colors relative",
-                                                    index === selectedIndex
-                                                        ? "bg-accent text-accent-foreground"
-                                                        : "hover:bg-accent/50 text-foreground"
-                                                )}
-                                            >
-                                                {item.label.startsWith('#') ? (
-                                                    <div className="flex justify-between items-center w-full">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-xs text-foreground/80">{item.label}</span>
-                                                            {item.subLabel && (
-                                                                <span className="text-[10px] text-muted-foreground/60 italic font-mono">
-                                                                    {item.subLabel}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        {item.count !== undefined && (
-                                                            <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
-                                                                {item.count}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <>
+                        {showSuggestions && (suggestions.length > 0 || isLoading || (suggestionTrigger === '#' && mentionQueryRef.current.length > 0)) && suggestionPosition && (
+                            <div
+                                className="absolute z-50 w-full max-w-[350px]"
+                                style={{
+                                    top: suggestionPosition.top,
+                                    left: suggestionPosition.left,
+                                }}
+                                onMouseDown={(e) => e.preventDefault()} // 防止点击弹窗导致编辑器失焦
+                            >
+                                <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden flex flex-col max-h-[450px]">
+                                    {isLoading || (isIndexLoading && suggestions.length === 0) ? (
+                                        <div className="px-3 py-6 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight">
+                                            加载中...
+                                        </div>
+                                    ) : null}
+                                    {suggestions.length > 0 ? (
+                                        <ul
+                                            ref={suggestionListRef}
+                                            className="divide-y divide-border/40 overflow-y-auto scrollbar-hover flex-1 min-h-0"
+                                            onScroll={handleSuggestionScroll}
+                                        >
+                                            {suggestions.map((item, index) => (
+                                                <li
+                                                    key={item.id}
+                                                    onClick={() => handleSelectSuggestion(item)}
+                                                    className={cn(
+                                                        "flex flex-col gap-1.5 px-3 py-2.5 cursor-pointer outline-none transition-colors relative",
+                                                        index === selectedIndex
+                                                            ? "bg-accent text-accent-foreground"
+                                                            : "hover:bg-accent/50 text-foreground"
+                                                    )}
+                                                >
+                                                    {item.label.startsWith('#') ? (
                                                         <div className="flex justify-between items-center w-full">
-                                                            <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
-                                                                {item.created_at ? new Date(item.created_at).toLocaleString('zh-CN', {
-                                                                    year: 'numeric',
-                                                                    month: '2-digit',
-                                                                    day: '2-digit',
-                                                                    hour: '2-digit',
-                                                                    minute: '2-digit',
-                                                                    second: '2-digit',
-                                                                    hour12: false
-                                                                }).replace(/\//g, '-') : ''}
-                                                            </span>
-                                                            {item.memo_number !== undefined && (
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs text-foreground/80">{item.label}</span>
+                                                                {item.subLabel && (
+                                                                    <span className="text-[10px] text-muted-foreground/60 italic font-mono">
+                                                                        {item.subLabel}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            {item.count !== undefined && (
                                                                 <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
-                                                                    #{item.memo_number}
+                                                                    {item.count}
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <div className="text-xs leading-relaxed text-foreground/80 break-words pr-2">
-                                                            {item.subLabel && renderHighlightedText(item.subLabel, mentionQuery)}
-                                                        </div>
-                                                    </>
-                                                )}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : null}
+                                                    ) : (
+                                                        <>
+                                                            <div className="flex justify-between items-center w-full">
+                                                                <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
+                                                                    {item.created_at ? new Date(item.created_at).toLocaleString('zh-CN', {
+                                                                        year: 'numeric',
+                                                                        month: '2-digit',
+                                                                        day: '2-digit',
+                                                                        hour: '2-digit',
+                                                                        minute: '2-digit',
+                                                                        second: '2-digit',
+                                                                        hour12: false
+                                                                    }).replace(/\//g, '-') : ''}
+                                                                </span>
+                                                                {item.memo_number !== undefined && (
+                                                                    <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
+                                                                        #{item.memo_number}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-xs leading-relaxed text-foreground/80 break-words pr-2">
+                                                                {item.subLabel && renderHighlightedText(item.subLabel, mentionQuery)}
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : null}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </motion.div>
                 </div>
 
 

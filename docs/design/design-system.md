@@ -51,7 +51,90 @@
     - 入场编排: 采用视口触发方案 (`whileInView`)。
     - 流动性 (Flow): 强制使用 `layout` 属性配合稳定的 `memo.id` Key，处理列表项的增删与重新排序。
 
-### 5.3 布局稳定性规范 (Layout Stability)
+### 5.4 动画技术规范 (Animation Technical Specs)
+
+为了确保全站动效的一致性与高发，所有动画实现必须遵循以下规范。我们主要使用 `framer-motion` 作为动画库。
+
+#### 5.4.1 标准参数 (Standard Parameters)
+
+在 `framer-motion` 中通用的 `transition` 配置（代码引用自 `@/lib/animation.ts`）：
+
+```typescript
+export const spring = {
+  stiff: {
+    type: "spring",
+    stiffness: 500,
+    damping: 30,
+    restDelta: 0.001
+  },
+  default: {
+    type: "spring",
+    stiffness: 350,
+    damping: 40, // 略微增加阻尼，减少过度回弹
+    mass: 1,
+    restDelta: 0.001
+  },
+  soft: {
+    type: "spring",
+    stiffness: 200,
+    damping: 25,
+    restDelta: 0.001
+  }
+};
+
+export const ease = {
+  out: [0.22, 1, 0.36, 1], // easeOutQuint - 快速进入，缓慢停止
+  in: [0.64, 0, 0.78, 0],  // easeInQuint - 缓慢开始，快速结束（用于退出）
+  inOut: [0.83, 0, 0.17, 1] // easeInOutQuint
+};
+
+export const duration = {
+  fast: 0.2, // 微交互 (Hover, Click)
+  default: 0.3, // 界面过渡 (Modal, Page)
+  slow: 0.5 // 复杂编排 (Sequence)
+};
+```
+
+#### 5.4.2 常用模式 (Common Patterns)
+
+**1. 模态框/对话框 (Modals/Dialogs)**
+
+-   **Enter**: Scale 0.95 -> 1, Opacity 0 -> 1 (`spring.default`)
+-   **Exit**: Scale 1 -> 0.95, Opacity 1 -> 0 (`duration.fast`, `ease.in`)
+
+**2. 列表项 (List Items)**
+
+-   **Enter**: Opacity 0 -> 1, Y 20 -> 0 (带有 staggerChildren)
+-   **Exit**: Opacity 1 -> 0, Height auto -> 0 (使用 `layout` 属性平滑布局)
+
+**3. 侧边栏/抽屉 (Sidebar/Drawer)**
+
+-   **Enter**: X -100% -> 0% (`spring.stiff` 此时阻尼可稍小，确保跟手)
+-   **Exit**: X 0% -> -100% (`ease.in`, `duration.default`)
+
+**4. 显隐切换 (Toggle Visibility) - *如 MemoEditor***
+
+-   **Enter**: Height 0 -> auto, Opacity 0 -> 1
+-   **Exit**: Height auto -> 0, Opacity 1 -> 0
+-   **关键点**: 使用 `layout` 属性处理高度变化，避免布局跳变。
+
+```tsx
+<motion.div
+  initial={{ opacity: 0, height: 0 }}
+  animate={{ opacity: 1, height: "auto" }}
+  exit={{ opacity: 0, height: 0 }}
+  transition={spring.default}
+  style={{ overflow: "hidden" }} // 动画过程中防止内容溢出
+/>
+```
+
+#### 5.4.3 实现检查清单 (Checklist)
+
+-   [ ] **Layout Thrashing**: 是否在动画高频触发时读取了布局属性（offsetWidth 等）？考虑使用 `layout` prop 或 `transform`。
+-   [ ] **Will Change**: 对于复杂动画，是否添加了 `will-change: transform, opacity`？
+-   [ ] **Reduced Motion**: 是否尊重用户的 `prefers-reduced-motion` 设置？
+
+### 5.5 布局稳定性规范 (Layout Stability)
 *   去果冻化 (De-Jelly)：彻底移除了编辑器内部的所有 `layout` 投影属性。这一改动直接消除了 Framer Motion 在容器尺寸变化时对文字进行的拉伸补偿（即“果冻感”），确保文字在展开过程中保持绝对的视觉形态稳定。
 *   物理参数 hardening：将物理模型调整为 `Stiffness: 350, Damping: 40`。这套响应更敏捷的参数大幅减少了动画末端的冗余震荡（Oscillation），使整个动效显得更加“坚硬”且具有高级感。
 *   硬件加速 (GPU Acceleration)：通过 `will-change: transform, min-height, opacity` 保留了 60FPS 的极致流畅度，而不依赖于 2D 缩放投影。

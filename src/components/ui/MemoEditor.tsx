@@ -48,6 +48,7 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { AnimatePresence, motion } from 'framer-motion';
+import { spring } from '@/lib/animation';
 
 import { Memo, TagStat } from '@/types/memo';
 import { Editor } from '@tiptap/react';
@@ -761,34 +762,42 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
     return (
         <motion.section
+            layout
+            initial={{ opacity: 0, height: 0 }}
             animate={{
+                opacity: 1,
+                height: isActuallyCollapsed ? "auto" : (hideFullscreen ? 500 : "auto"),
+                minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? 500 : 120),
                 paddingTop: 24,
                 paddingBottom: 24,
                 paddingLeft: 24,
                 paddingRight: 24,
-                minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? 500 : 120),
                 boxShadow: isActuallyCollapsed ? "none" : "0 1px 2px 0 rgb(0 0 0 / 0.05)",
             }}
+            exit={{
+                opacity: 0,
+                height: 0,
+                marginBottom: 0,
+                overflow: 'hidden',
+                transition: {
+                    opacity: { duration: 0.2 },
+                    height: { duration: 0.3, ease: [0.64, 0, 0.78, 0] }
+                }
+            }}
             transition={{
-                default: {
-                    type: "spring",
-                    damping: 40,
-                    stiffness: 350,
-                    mass: 1.0,
-                    restDelta: 0.001
-                },
+                default: spring.default,
                 boxShadow: {
                     duration: 0.3,
                     ease: "easeInOut"
-                }
+                },
+                opacity: { duration: 0.2 }
             }}
             onAnimationStart={() => setIsAnimating(true)}
             onAnimationComplete={() => setIsAnimating(false)}
             style={{
                 willChange: "transform, height, opacity",
-                minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? 500 : 120),
+                overflow: 'hidden'
             }}
-            initial={false}
             onClick={() => {
                 if (isActuallyCollapsed && editor) {
                     editor.commands.focus('end');
@@ -853,7 +862,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "min-h-0")} />
                     </motion.div>
 
-                    {showSuggestions && (suggestions.length > 0 || isLoading || (suggestionTrigger === '#' && mentionQueryRef.current.length > 0)) && suggestionPosition && (
+                    {showSuggestions && suggestionPosition && (
                         <div
                             className="absolute z-50 w-full max-w-[350px]"
                             style={{

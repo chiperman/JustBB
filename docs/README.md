@@ -20,7 +20,7 @@
 
 ### 🎨 设计与体验 (Design)
 *   [Design System](./design/design-system.md)  
-    视觉风格、配色系统、排版规范及交互动画哲学。
+    视觉风格、配色系统、排版规范及**全局动画技术规范**。
 *   [Login Transition](./design/login-transition.md)  
     专项设计：登录页/主页平滑切换动效的实现逻辑。
 

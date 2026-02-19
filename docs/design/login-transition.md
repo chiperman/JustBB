@@ -5,6 +5,9 @@
 
 本文档记录了 "JustMemo" 登录页面的交互逻辑、视觉隐喻以及关键技术实现细节。
 
+> [!NOTE]
+> 本项目的通用动画参数（缓动、时长、Spring 配置）已统一移至 **[Design System - Animation Specs](design-system.md#54-动画技术规范-animation-technical-specs)**。请优先参考该文档以保持一致性。
+
 ---
 
 ## 1. 需求背景 (Requirements)

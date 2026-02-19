@@ -9,6 +9,7 @@ import { FeedHeader } from "@/components/ui/FeedHeader";
 import { MemoCardSkeleton } from "@/components/ui/MemoCardSkeleton";
 import { Memo } from "@/types/memo";
 import { useUser } from '@/context/UserContext';
+import { useSelection } from '@/context/SelectionContext';
 
 interface MainLayoutClientProps {
     memos: Memo[];
@@ -22,6 +23,7 @@ export function MainLayoutClient({ memos, searchParams, adminCode, initialIsAdmi
     // Prevent flash of "not admin" state during hydration by using initialIsAdmin while loading
     const effectiveIsAdmin = loading ? (initialIsAdmin ?? false) : isAdmin;
     const [isScrolled, setIsScrolled] = useState(false);
+    const { isSelectionMode } = useSelection();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     const handleScroll = () => {
@@ -46,7 +48,9 @@ export function MainLayoutClient({ memos, searchParams, adminCode, initialIsAdmi
                 <div className="max-w-4xl mx-auto w-full">
                     <div className="space-y-4">
                         <FeedHeader />
-                        {effectiveIsAdmin && <MemoEditor isCollapsed={isScrolled} contextMemos={memos} />}
+                        {effectiveIsAdmin && !isSelectionMode && (
+                            <MemoEditor isCollapsed={isScrolled} contextMemos={memos} />
+                        )}
                     </div>
                 </div>
             </div>

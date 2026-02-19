@@ -94,6 +94,10 @@ interface MemoEditorProps {
     contextMemos?: Memo[]; // 增加上下文 Memos 用于即时搜索
 }
 
+// Draft Persistence Keys
+const DRAFT_CONTENT_KEY = 'memo_editor_draft_content';
+const DRAFT_IS_PRIVATE_KEY = 'memo_editor_draft_is_private';
+
 export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isCollapsed: isPropCollapsed = false, hideFullscreen = false, contextMemos = [] }: MemoEditorProps) {
     const { refreshTags } = useTags();
     const { refreshStats } = useStats();
@@ -109,6 +113,20 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const [showAccessCode, setShowAccessCode] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
+
+    // Draft Loading Effect
+    useEffect(() => {
+        if (mode === 'create' && !memo && typeof window !== 'undefined') {
+            const draftContent = localStorage.getItem(DRAFT_CONTENT_KEY);
+            const draftIsPrivate = localStorage.getItem(DRAFT_IS_PRIVATE_KEY);
+
+            if (draftIsPrivate) {
+                setIsPrivate(draftIsPrivate === 'true');
+            }
+
+            // Content is restored when editor is ready, see below
+        }
+    }, [mode, memo]);
 
     // 计算最终是否收缩：属性要求收缩 且 未获得焦点 且 为创建模式 且 内容为空或未改变原始内容（或者强制收缩）
     const isActuallyCollapsed = isPropCollapsed && !isFocused && mode === 'create';
@@ -510,8 +528,19 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         content: memo?.content || '',
         onUpdate: ({ editor }) => {
             const text = editor.getText();
+            const html = editor.getHTML(); // Use HTML if we want to preserve some structure, but getText is used for persistence in current logic? 
+            // Current login uses 'text' for setContent. 
+            // But preserving draft might be better with text if we only support text?
+            // The editor supports extension-starter-kit but with many things disabled.
+            // Let's stick to text for consistency with setContent(text).
+
             setContent(text);
             setError(null);
+
+            // Save Draft
+            if (mode === 'create') {
+                localStorage.setItem(DRAFT_CONTENT_KEY, text); // Saving plain text as per current simplified editor
+            }
 
             // 实时同步内容中的标签到 tags 状态
             // 采用正则从纯文本中提取，确保即使未转换为 Node 的标签也能被识别
@@ -584,8 +613,30 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     });
 
     useEffect(() => {
-        if (editor && memo?.content && mode === 'edit') {
-            editor.commands.setContent(memo.content);
+        if (editor) {
+            if (mode === 'edit' && memo?.content) {
+                editor.commands.setContent(memo.content);
+            } else if (mode === 'create') {
+                // Restore draft if exists
+                const draftContent = localStorage.getItem(DRAFT_CONTENT_KEY);
+                if (draftContent && draftContent.trim()) {
+                    // Check if editor is empty to avoid overwriting user input if race condition?
+                    // Actually this only runs when editor changes or mode changes.
+                    // On initial load, editor is empty.
+                    if (editor.getText().trim() === '') {
+                        editor.commands.setContent(draftContent);
+                        // Trigger onUpdate to set tags? setContent on editor usually triggers update transaction?
+                        // If not, we might need to manually set content state.
+                        setContent(draftContent);
+
+                        // Manually trigger tag extraction for drafted content
+                        const hashtagRegex = /(?:^|\s|(?<=[^a-zA-Z0-9]))#([\w\u4e00-\u9fa5]+)/g;
+                        const matches = draftContent.matchAll(hashtagRegex);
+                        const extractedTags = Array.from(new Set(Array.from(matches).map(m => m[1])));
+                        setTags(extractedTags);
+                    }
+                }
+            }
         }
     }, [editor, memo, mode]);
 
@@ -661,8 +712,13 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     };
 
     const handleTogglePrivate = () => {
-        setIsPrivate(!isPrivate);
-        if (!isPrivate) {
+        const newState = !isPrivate;
+        setIsPrivate(newState);
+        if (mode === 'create') {
+            localStorage.setItem(DRAFT_IS_PRIVATE_KEY, String(newState));
+        }
+
+        if (!newState) {
             // Turning on: reset any previous inputs
             setAccessCode('');
             setAccessHint('');
@@ -737,6 +793,10 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 }
 
                 if (mode === 'create') {
+                    // Clear Draft
+                    localStorage.removeItem(DRAFT_CONTENT_KEY);
+                    localStorage.removeItem(DRAFT_IS_PRIVATE_KEY);
+
                     editor?.commands.setContent('');
                     setContent('');
                     setTags([]);
@@ -1019,9 +1079,14 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                             if (mode === 'edit') {
                                                 onCancel?.();
                                             } else {
+                                                // Clear Draft
+                                                localStorage.removeItem(DRAFT_CONTENT_KEY);
+                                                localStorage.removeItem(DRAFT_IS_PRIVATE_KEY);
+
                                                 editor?.commands.setContent('');
                                                 setContent('');
                                                 setTags([]);
+                                                setIsPrivate(false); // Reset private state
                                             }
                                         }}
                                         className="h-8 px-3 text-muted-foreground hover:text-foreground transition-colors"

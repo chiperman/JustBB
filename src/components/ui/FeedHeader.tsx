@@ -74,16 +74,8 @@ export function FeedHeader() {
 
     if (isSelectionMode) {
         return (
-            <div className="flex items-center justify-between gap-4 py-2 h-10 animate-in fade-in slide-in-from-top-1 duration-200">
+            <div className="flex items-center justify-between gap-4 py-2 h-10">
                 <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleSelectionMode(false)}
-                        className="h-8 w-8 p-0 rounded-sm hover:bg-accent"
-                    >
-                        <X className="w-4 h-4" />
-                    </Button>
                     <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-primary">
                             {selectedIds.size} SELECTED

@@ -919,9 +919,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     animate={{
                         height: isActuallyCollapsed ? 0 : "auto",
                         opacity: isActuallyCollapsed ? 0 : 1,
-                        marginTop: isActuallyCollapsed ? 0 : 16,
-                        paddingTop: isActuallyCollapsed ? 0 : 20,
-                        borderTopWidth: isActuallyCollapsed ? 0 : 1
                     }}
                     transition={{
                         type: "spring",
@@ -930,9 +927,9 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         mass: 1.2
                     }}
                     style={{ willChange: "opacity, height" }}
-                    className="overflow-hidden bg-transparent border-t border-border/50"
+                    className="overflow-hidden bg-transparent"
                 >
-                    <div className="flex justify-between items-center">
+                    <div className="pt-5 mt-4 border-t border-border/50 flex justify-between items-center">
                         <div className="flex items-center gap-1">
                             <Button
                                 variant="ghost"

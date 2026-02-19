@@ -124,11 +124,10 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                     key="content"
                                     exit={{ opacity: 0, width: 0, x: -10 }}
                                     transition={{ duration: 0.2 }}
-                                    className="flex flex-col items-start overflow-hidden whitespace-nowrap"
+                                    className="flex flex-col items-start overflow-hidden whitespace-nowrap flex-1"
                                 >
-                                    <span className="text-[14px] font-normal text-foreground">设置中心</span>
                                     <span
-                                        className="text-[12px] font-normal text-stone-400 truncate w-full flex items-center gap-1"
+                                        className="text-[14px] font-normal text-foreground truncate w-full flex items-center gap-1"
                                         suppressHydrationWarning
                                     >
                                         {user ? user.email : (loading ? '加载中...' : '未登录/匿名')}

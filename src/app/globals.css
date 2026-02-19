@@ -203,6 +203,12 @@ body.font-sans {
   background: rgba(255, 255, 255, 0.2);
 }
 
+@utility scrollbar-overlay {
+  overflow-y: overlay !important;
+  /* 确保在支持的浏览器中不占据内容宽度 */
+  scrollbar-gutter: stable;
+}
+
 /* Specific utilities */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;

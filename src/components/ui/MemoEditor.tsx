@@ -588,6 +588,12 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         }
     }, [editor, memo, mode]);
 
+    useEffect(() => {
+        if (isActuallyCollapsed && editorContainerRef.current) {
+            editorContainerRef.current.scrollTop = 0;
+        }
+    }, [isActuallyCollapsed]);
+
     const suggestionListRef = useRef<HTMLUListElement>(null);
 
     useLayoutEffect(() => {
@@ -779,7 +785,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             initial={false}
             onClick={() => {
                 if (isActuallyCollapsed && editor) {
-                    editor.commands.focus();
+                    editor.commands.focus('end');
                 }
             }}
             className={cn(
@@ -796,8 +802,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     <motion.div
                         ref={editorContainerRef}
                         animate={{
-                            maxHeight: isActuallyCollapsed ? 24 : 500, // Reduced from 26 to 24 to keep compact with standard padding
-                            overflow: (isActuallyCollapsed || isAnimating) ? "hidden" : "visible"
+                            maxHeight: isActuallyCollapsed ? 26 : 500, // Reduced from 24 to 20 to ensure single line showing
+                            overflow: (isActuallyCollapsed || isAnimating) ? "hidden" : (hideFullscreen ? "visible" : "overlay")
                         }}
                         transition={{
                             type: "spring",
@@ -817,7 +823,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         }}
                         className={cn(
                             "relative overflow-hidden",
-                            hideFullscreen ? "flex-1 flex flex-col min-h-0" : "overflow-y-auto scrollbar-hover min-h-[120px]",
+                            hideFullscreen ? "flex-1 flex flex-col min-h-0" : (isActuallyCollapsed ? "min-h-0 scrollbar-hide" : "scrollbar-overlay scrollbar-hover min-h-[120px]"),
                             isActuallyCollapsed && "pointer-events-none"
                         )}
 

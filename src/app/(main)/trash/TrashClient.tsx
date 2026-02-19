@@ -148,9 +148,8 @@ export default function TrashClient() {
                                                 ABANDONED
                                             </div>
                                             <div className={cn(
-                                                "transition-all duration-500 rounded-sm overflow-hidden",
-                                                "opacity-60 grayscale-[0.4] hover:opacity-100 hover:grayscale-0",
-                                                "border-dashed"
+                                                "transition-all duration-500 rounded-sm",
+                                                "opacity-60 grayscale-[0.4] hover:opacity-100 hover:grayscale-0"
                                             )}>
                                                 <MemoCard memo={memo} />
                                             </div>

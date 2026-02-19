@@ -20,7 +20,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useSelection } from '@/context/SelectionContext';
 import { useUser } from '@/context/UserContext';
-import { X, Trash2, Tag, CheckSquare, ChevronDown, ArrowUpDown, Home, Loader2 } from 'lucide-react';
+import { X, Trash2, Tag, CheckSquare, ChevronDown, ArrowUpDown, Home, Loader2, RotateCcw } from 'lucide-react';
 import { batchDeleteMemos } from '@/actions/delete';
 import { batchAddTagsToMemos } from '@/actions/update';
 import { TagSelectDialog } from './TagSelectDialog';
@@ -115,10 +115,11 @@ export function FeedHeader() {
                         variant="ghost"
                         size="sm"
                         onClick={clearSelection}
-                        className="h-8 text-xs text-muted-foreground hover:text-primary px-2"
+                        className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-primary px-2 rounded-sm"
                         disabled={selectedIds.size === 0}
                     >
-                        重置状态
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>重置</span>
                     </Button>
                 </div>
 

@@ -95,22 +95,27 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                 isSelectionMode && isSelected && "ring-2 ring-primary border-primary/50 shadow-sm"
             )}
         >
-            {/* 选择模式下的多选框 */}
-            {isSelectionMode && (
-                <div
-                    className="absolute top-4 left-4 z-20"
-                    onClick={(e) => e.stopPropagation()} // 阻止冒泡，避免触发 handleCardClick
-                >
-                    <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={() => toggleId(memo.id)}
-                        className="h-5 w-5 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                    />
-                </div>
-            )}
+
             {/* 顶部元信息 */}
-            <div className={cn("flex items-center justify-between mb-4", isSelectionMode && "pl-8")}>
+            <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
+                    {/* 选择模式下的多选框 */}
+                    {isSelectionMode && (
+                        <div
+                            className="flex items-center justify-center cursor-pointer"
+                            onClick={(e: React.MouseEvent) => {
+                                e.stopPropagation();
+                                toggleId(memo.id);
+                            }}
+                        >
+                            <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleId(memo.id)}
+                                onClick={(e: React.MouseEvent) => e.stopPropagation()} // 阻止冒泡到父级 div
+                                className="h-3.5 w-3.5 rounded-full border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-[background-color,border-color] duration-200 cursor-pointer"
+                            />
+                        </div>
+                    )}
                     <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded-sm">
                         #{memo.memo_number}
                     </span>

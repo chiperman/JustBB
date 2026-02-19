@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 interface SelectionContextType {
     isSelectionMode: boolean;
@@ -16,6 +17,17 @@ const SelectionContext = createContext<SelectionContextType | undefined>(undefin
 export function SelectionProvider({ children }: { children: React.ReactNode }) {
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const pathname = usePathname();
+
+    // Reset selection mode when navigation occurs (except for trash page where it's always on)
+    useEffect(() => {
+        if (pathname === '/trash') {
+            setIsSelectionMode(true);
+        } else {
+            setIsSelectionMode(false);
+            setSelectedIds(new Set());
+        }
+    }, [pathname]);
 
     const toggleSelectionMode = useCallback((enabled?: boolean) => {
         setIsSelectionMode(prev => {

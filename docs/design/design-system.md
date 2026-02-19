@@ -141,6 +141,8 @@ export const duration = {
 *   固定尺寸驱动: 采用固定的 `padding` (例如 `pt-8 pb-4`) 和 CSS `transition` (如 `background-color`) 来处理滚动状态切换，确保物理位置在任何缩放/收缩动画下都保持绝对静止。
 *   内卷化动画: 嵌套组件（如 MemoEditor）的伸缩应通过内部 animate 属性自驱动（如控制 minHeight），确保其尺寸变化被局限在组件容器内，并引入 isAnimating 状态在动画期间临时锁定 overflow 与控制遮罩 (mask-image)，以隔离渲染开销并确保长文本动效流畅。
 
+> 详细的编辑器动画策略与防抖动实现，请参阅: [编辑器动画策略 (Editor Animation Strategy)](./editor-transitions.md)
+
 ### 5.4 交互反馈规范 (Interactive Feedback)
 *   悬停可见 (Hover-Visible): 为了保持卡片视觉整洁，MemoCard 的操作按钮默认隐藏，仅在鼠标悬停在卡片区域时显现。
 *   复制反馈: 代码块点击复制后，图标与文字颜色瞬间切换为 primary 橙色，提供清晰的操作回响。

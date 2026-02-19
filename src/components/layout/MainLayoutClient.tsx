@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { cn } from "@/lib/utils";
-import { motion, LayoutGroup } from 'framer-motion';
+import { motion, LayoutGroup, AnimatePresence } from 'framer-motion';
 import { MemoEditor } from "@/components/ui/MemoEditor";
 import { MemoFeed } from '@/components/ui/MemoFeed';
 import { FeedHeader } from "@/components/ui/FeedHeader";
@@ -48,9 +48,11 @@ export function MainLayoutClient({ memos, searchParams, adminCode, initialIsAdmi
                 <div className="max-w-4xl mx-auto w-full">
                     <div className="space-y-4">
                         <FeedHeader />
-                        {effectiveIsAdmin && !isSelectionMode && (
-                            <MemoEditor isCollapsed={isScrolled} contextMemos={memos} />
-                        )}
+                        <AnimatePresence mode="wait">
+                            {effectiveIsAdmin && !isSelectionMode && (
+                                <MemoEditor key="memo-editor" isCollapsed={isScrolled} contextMemos={memos} />
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
             </div>

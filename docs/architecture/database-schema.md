@@ -1,6 +1,6 @@
 # JustMemo 数据库设计与函数 (SQL)
 
-> **最后更新日期**：2026-02-18
+> 最后更新：2026-02-19
 
 ## 1. 数据模型 (memos 表)
 *   `id`: uuid (PK)
@@ -140,6 +140,19 @@ BEGIN
       GROUP BY 1
     ) s
   );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 标签提取函数：获取所有已使用的标签
+CREATE OR REPLACE FUNCTION get_distinct_tags()
+RETURNS TABLE (tag_name TEXT, count BIGINT) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT unnest(tags) as tag_name, count(*) as count
+  FROM memos
+  WHERE deleted_at IS NULL
+  GROUP BY tag_name
+  ORDER BY count DESC;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 ```

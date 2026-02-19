@@ -314,7 +314,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
                                 // Calculate top/left relative to container, accounting for scroll
                                 let left = rect.left - containerRect.left;
-                                let top = rect.bottom - containerRect.top + scrollContainer.scrollTop;
+                                let top = rect.bottom - containerRect.top + scrollContainer.scrollTop + 8;
 
                                 // Prevent overflow on the right
                                 const popupPadding = 20;
@@ -422,7 +422,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
                                 // Calculate top/left relative to container, accounting for scroll
                                 let left = rect.left - containerRect.left;
-                                let top = rect.bottom - containerRect.top + scrollContainer.scrollTop;
+                                let top = rect.bottom - containerRect.top + scrollContainer.scrollTop + 8;
 
                                 // Prevent overflow on the right
                                 const popupPadding = 10;

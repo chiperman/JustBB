@@ -754,7 +754,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
     return (
         <motion.section
-            layout
             animate={{
                 paddingTop: 24, // p-6
                 paddingBottom: 24,
@@ -766,9 +765,9 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             whileTap={isActuallyCollapsed ? { scale: 0.98 } : undefined}
             transition={{
                 type: "spring",
-                damping: 25,
-                stiffness: 200,
-                mass: 1.2
+                damping: 30,
+                stiffness: 400,
+                mass: 1.0
             }}
             style={{ willChange: "transform, height, opacity" }}
             initial={false}
@@ -789,16 +788,15 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     <label htmlFor="memo-content" className="sr-only">Memo内容</label>
 
                     <motion.div
-                        layout
                         ref={editorContainerRef}
                         animate={{
                             maxHeight: isActuallyCollapsed ? 48 : 500, // 3rem = 48px
                         }}
                         transition={{
                             type: "spring",
-                            damping: 25,
-                            stiffness: 200,
-                            mass: 1.2
+                            damping: 30,
+                            stiffness: 400,
+                            mass: 1.0
                         }}
                         style={{
                             willChange: "transform, max-height",
@@ -914,7 +912,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 }
 
                 <motion.div
-                    layout
                     initial={false}
                     animate={{
                         height: isActuallyCollapsed ? 0 : "auto",
@@ -922,9 +919,9 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     }}
                     transition={{
                         type: "spring",
-                        damping: 25,
-                        stiffness: 200,
-                        mass: 1.2
+                        damping: 30,
+                        stiffness: 400,
+                        mass: 1.0
                     }}
                     style={{ willChange: "opacity, height" }}
                     className="overflow-hidden bg-transparent"

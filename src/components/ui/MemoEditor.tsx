@@ -768,14 +768,19 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 paddingRight: 24,
                 minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? 500 : 120),
                 boxShadow: isActuallyCollapsed ? "none" : "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-                backgroundColor: isActuallyCollapsed ? "transparent" : "var(--card)",
             }}
             transition={{
-                type: "spring",
-                damping: 40,
-                stiffness: 350,
-                mass: 1.0,
-                restDelta: 0.001
+                default: {
+                    type: "spring",
+                    damping: 40,
+                    stiffness: 350,
+                    mass: 1.0,
+                    restDelta: 0.001
+                },
+                boxShadow: {
+                    duration: 0.3,
+                    ease: "easeInOut"
+                }
             }}
             onAnimationStart={() => setIsAnimating(true)}
             onAnimationComplete={() => setIsAnimating(false)}
@@ -789,10 +794,16 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 }
             }}
             className={cn(
-                "bg-card border border-border rounded-sm relative focus-within:shadow-md",
+                "border border-border rounded-sm relative focus-within:shadow-md",
                 "flex flex-col items-stretch",
                 isActuallyCollapsed ? "shadow-none cursor-pointer hover:bg-accent/5" : (hideFullscreen ? "h-full" : "")
             )}>
+            <motion.div
+                className="absolute inset-0 bg-card rounded-sm pointer-events-none"
+                initial={false}
+                animate={{ opacity: isActuallyCollapsed ? 0 : 1 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+            />
             <motion.div
                 className="w-full flex-1 flex flex-col min-h-0"
             >
@@ -802,7 +813,9 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     <motion.div
                         ref={editorContainerRef}
                         animate={{
-                            maxHeight: isActuallyCollapsed ? 26 : 500, // Reduced from 24 to 20 to ensure single line showing
+                            height: isActuallyCollapsed ? 26 : "auto",
+                            minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? 0 : 120), // Animate minHeight to avoid snap
+                            opacity: 1, // Ensure opacity is always 1 unless we want to fade out
                             overflow: (isActuallyCollapsed || isAnimating) ? "hidden" : (hideFullscreen ? "visible" : "overlay")
                         }}
                         transition={{
@@ -813,7 +826,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             restDelta: 0.001
                         }}
                         style={{
-                            willChange: "transform, max-height",
+                            willChange: "transform, height, min-height",
+                            maxHeight: 500, // Fixed max-height, let height animation handle the collapse
                             maskImage: isActuallyCollapsed && !isAnimating
                                 ? 'linear-gradient(to bottom, black 90%, transparent 100%)'
                                 : 'none',
@@ -823,7 +837,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         }}
                         className={cn(
                             "relative overflow-hidden",
-                            hideFullscreen ? "flex-1 flex flex-col min-h-0" : (isActuallyCollapsed ? "min-h-0 scrollbar-hide" : "scrollbar-overlay scrollbar-hover min-h-[120px]"),
+                            hideFullscreen ? "flex-1 flex flex-col min-h-0" : (isActuallyCollapsed ? "min-h-0 scrollbar-hide" : "scrollbar-overlay scrollbar-hover"), // Removed min-h-[120px] class
                             isActuallyCollapsed && "pointer-events-none"
                         )}
 

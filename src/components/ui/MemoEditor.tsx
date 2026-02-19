@@ -107,6 +107,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const [showPrivateDialog, setShowPrivateDialog] = useState(false);
     const [showAccessCode, setShowAccessCode] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
+    const [isAnimating, setIsAnimating] = useState(false);
 
     // 计算最终是否收缩：属性要求收缩 且 未获得焦点 且 为创建模式 且 内容为空或未改变原始内容（或者强制收缩）
     const isActuallyCollapsed = isPropCollapsed && !isFocused && mode === 'create';
@@ -767,9 +768,20 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 type: "spring",
                 damping: 40,
                 stiffness: 350,
-                mass: 1.0
+                mass: 1.0,
+                restDelta: 0.001
             }}
-            style={{ willChange: "transform, height, opacity" }}
+            onAnimationStart={() => setIsAnimating(true)}
+            onAnimationComplete={() => setIsAnimating(false)}
+            style={{
+                willChange: "transform, height, opacity",
+                maskImage: isActuallyCollapsed && !isAnimating
+                    ? "linear-gradient(to bottom, black 50%, transparent 100%)"
+                    : "none",
+                WebkitMaskImage: isActuallyCollapsed && !isAnimating
+                    ? "linear-gradient(to bottom, black 50%, transparent 100%)"
+                    : "none",
+            }}
             initial={false}
             onClick={() => {
                 if (isActuallyCollapsed && editor) {
@@ -791,6 +803,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         ref={editorContainerRef}
                         animate={{
                             maxHeight: isActuallyCollapsed ? 48 : 500, // 3rem = 48px
+                            overflow: (isActuallyCollapsed || isAnimating) ? "hidden" : "visible"
                         }}
                         transition={{
                             type: "spring",

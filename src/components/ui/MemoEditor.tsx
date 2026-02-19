@@ -973,7 +973,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         </div>
                     </div>
                 </motion.div>
-            </AnimatePresence>
+            </motion.div>
 
             <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
                 <DialogContent

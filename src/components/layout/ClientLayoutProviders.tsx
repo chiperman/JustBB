@@ -2,7 +2,7 @@
 
 import { TimelineProvider } from "@/context/TimelineContext";
 import { LoginModeProvider } from "@/context/LoginModeContext";
-import { UserProvider } from "@/context/UserContext";
+import { UserProvider, UserInfo } from "@/context/UserContext";
 import { LoginTransitionWrapper } from "@/components/layout/LoginTransitionWrapper";
 import { MobileLayoutWrapper } from "@/components/layout/MobileLayoutWrapper";
 import { TagsProvider } from "@/context/TagsContext";
@@ -17,10 +17,11 @@ interface ClientLayoutProvidersProps {
 export function ClientLayoutProviders({
     children,
     initialTags = [],
-    initialStats
-}: ClientLayoutProvidersProps) {
+    initialStats,
+    initialUser
+}: ClientLayoutProvidersProps & { initialUser?: UserInfo | null }) {
     return (
-        <UserProvider>
+        <UserProvider initialUser={initialUser}>
             <StatsProvider initialData={initialStats}>
                 <LoginModeProvider>
                     <TagsProvider initialData={initialTags}>

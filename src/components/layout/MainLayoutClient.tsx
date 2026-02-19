@@ -1,39 +1,27 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { AuthChangeEvent, Session } from '@supabase/supabase-js';
+import { useState, useRef } from 'react';
 import { cn } from "@/lib/utils";
 import { MemoEditor } from "@/components/ui/MemoEditor";
 import { MemoFeed } from '@/components/ui/MemoFeed';
 import { FeedHeader } from "@/components/ui/FeedHeader";
 import { MemoCardSkeleton } from "@/components/ui/MemoCardSkeleton";
 import { Memo } from "@/types/memo";
-import { supabase } from '@/lib/supabase';
+import { useUser } from '@/context/UserContext';
 
 interface MainLayoutClientProps {
     memos: Memo[];
     searchParams: any;
     adminCode?: string;
+    initialIsAdmin?: boolean;
 }
 
-export function MainLayoutClient({ memos, searchParams, adminCode }: MainLayoutClientProps) {
+export function MainLayoutClient({ memos, searchParams, adminCode, initialIsAdmin = false }: MainLayoutClientProps) {
+    const { isAdmin, loading } = useUser();
+    // Prevent flash of "not admin" state during hydration by using initialIsAdmin while loading
+    const effectiveIsAdmin = loading ? (initialIsAdmin ?? false) : isAdmin;
     const [isScrolled, setIsScrolled] = useState(false);
-    const [isAdmin, setIsAdmin] = useState(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const checkAuth = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setIsAdmin(user?.app_metadata?.role === 'admin');
-        };
-        checkAuth();
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
-            setIsAdmin(session?.user?.app_metadata?.role === 'admin');
-        });
-
-        return () => subscription.unsubscribe();
-    }, []);
 
     const handleScroll = () => {
         if (scrollContainerRef.current) {
@@ -54,7 +42,7 @@ export function MainLayoutClient({ memos, searchParams, adminCode }: MainLayoutC
                 <div className="max-w-4xl mx-auto w-full">
                     <div className="space-y-4">
                         <FeedHeader />
-                        {isAdmin && <MemoEditor isCollapsed={isScrolled} contextMemos={memos} />}
+                        {effectiveIsAdmin && <MemoEditor isCollapsed={isScrolled} contextMemos={memos} />}
                     </div>
                 </div>
             </div>
@@ -70,7 +58,7 @@ export function MainLayoutClient({ memos, searchParams, adminCode }: MainLayoutC
                         initialMemos={memos ?? []}
                         searchParams={searchParams}
                         adminCode={adminCode}
-                        isAdmin={isAdmin}
+                        isAdmin={effectiveIsAdmin}
                     />
                     {memos.length === 0 && <MemoCardSkeleton />}
                 </div>

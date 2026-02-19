@@ -22,15 +22,9 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'justbb_user_info';
 
-export function UserProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<UserInfo | null>(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            return saved ? JSON.parse(saved) : null;
-        }
-        return null;
-    });
-    const [loading, setLoading] = useState(true);
+export function UserProvider({ children, initialUser = null }: { children: React.ReactNode; initialUser?: UserInfo | null }) {
+    const [user, setUser] = useState<UserInfo | null>(initialUser);
+    const [loading, setLoading] = useState(!initialUser);
     const [isMounted, setIsMounted] = useState(false);
 
     const refreshUser = useCallback(async () => {

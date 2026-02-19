@@ -5,20 +5,23 @@ import { ClientLayoutProviders } from "@/components/layout/ClientLayoutProviders
 import { getAllTags } from "@/actions/tags";
 import { getTimelineStats, getMemoStats } from "@/actions/stats";
 
+import { getCurrentUser } from "@/actions/auth";
+
 export default async function MainLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
     // 在服务端预拉取数据
-    const [initialTags, initialTimeline, initialStats] = await Promise.all([
+    const [initialTags, initialTimeline, initialStats, user] = await Promise.all([
         getAllTags(),
         getTimelineStats(),
-        getMemoStats()
+        getMemoStats(),
+        getCurrentUser()
     ]);
 
     return (
-        <ClientLayoutProviders initialTags={initialTags} initialStats={initialStats}>
+        <ClientLayoutProviders initialTags={initialTags} initialStats={initialStats} initialUser={user}>
             <div className="flex h-screen w-full justify-center selection:bg-primary/20 overflow-hidden">
                 <div className="flex w-full max-w-(--breakpoint-2xl) h-full">
                     {/* 左侧导航 - 移动端隐藏 */}

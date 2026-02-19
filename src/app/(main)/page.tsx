@@ -2,6 +2,7 @@ import { getMemos, getArchivedMemos } from "@/actions/fetchMemos";
 import { Memo } from "@/types/memo";
 import { cookies } from 'next/headers';
 import { MainLayoutClient } from "@/components/layout/MainLayoutClient";
+import { isAdmin as checkIsAdmin } from "@/actions/auth";
 
 export default async function MemoPage(props: {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -20,16 +21,24 @@ export default async function MemoPage(props: {
   const dateStr = typeof searchParams?.date === 'string' ? searchParams.date : undefined;
   const sortStr = typeof searchParams?.sort === 'string' ? searchParams.sort : 'newest';
 
-  let memos: Memo[] = [];
-  if (yearStr && monthStr) {
-    const year = parseInt(yearStr);
-    const month = parseInt(monthStr);
-    if (!isNaN(year) && !isNaN(month)) {
-      memos = (await getArchivedMemos(year, month)) || [];
-    }
-  } else {
-    memos = (await getMemos({ limit: 20, query, adminCode, tag: tagStr, date: dateStr, sort: sortStr })) || [];
-  }
+  // 同时获取 Memos 和管理权限（并行执行）
+  const [memosResult, isAdmin] = await Promise.all([
+    (async () => {
+      if (yearStr && monthStr) {
+        const year = parseInt(yearStr);
+        const month = parseInt(monthStr);
+        if (!isNaN(year) && !isNaN(month)) {
+          return (await getArchivedMemos(year, month)) || [];
+        }
+        return [];
+      } else {
+        return (await getMemos({ limit: 20, query, adminCode, tag: tagStr, date: dateStr, sort: sortStr })) || [];
+      }
+    })(),
+    checkIsAdmin()
+  ]);
+
+  const memos = memosResult as Memo[];
 
   const flattenedSearchParams = {
     query: Array.isArray(searchParams?.q) ? searchParams.q[0] : searchParams?.q,
@@ -46,6 +55,7 @@ export default async function MemoPage(props: {
       memos={memos}
       searchParams={flattenedSearchParams}
       adminCode={adminCode}
+      initialIsAdmin={isAdmin}
     />
   );
 }

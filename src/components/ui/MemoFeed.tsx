@@ -62,7 +62,18 @@ export function MemoFeed({ initialMemos, searchParams, adminCode, isAdmin = fals
     useEffect(() => {
         const syncData = async () => {
             // A. Try loading from local cache first (Instant)
-            if (memoCache.getInitialized()) {
+            // CRITICAL: Merge SSR data (initialMemos) into cache persistency, 
+            // BUT do not update state from cache if we already have fresh SSR data.
+            // This prevents "SSR (Pinned) -> Cache (Unpinned) -> Network (Pinned)" flash.
+            if (initialMemos && initialMemos.length > 0) {
+                memoCache.mergeItems(initialMemos);
+            }
+
+            // Only fallback to cache for display if we have NO SSR data (e.g. offline/error/empty)
+            // Otherwise, trust the SSR data until the background fetch completes.
+            const hasSSRData = initialMemos && initialMemos.length > 0;
+
+            if (!hasSSRData && memoCache.getInitialized()) {
                 const cached = memoCache.getItems() as unknown as Memo[];
                 if (cached.length > 0) {
                     setAllMemos(cached);
@@ -106,22 +117,16 @@ export function MemoFeed({ initialMemos, searchParams, adminCode, isAdmin = fals
 
     // 3. Derived State: Apply Filters
     const displayedMemos = useMemo(() => {
-        if (isFullLoaded && allMemos.length > 0) {
-            // Client-side filtering (Fast, 0 latency)
-            return clientFilterMemos(allMemos, {
-                ...searchParams,
-                isAdmin,
-                isOnline
-            });
-        } else {
-            // Fallback to SSR initial data (Server-side filtered)
-            // SSR 数据已经由服务器完成了初步过滤，但在离线补全逻辑中也需要再次确认
-            return clientFilterMemos(initialMemos, {
-                ...searchParams,
-                isAdmin,
-                isOnline
-            });
-        }
+        const sourceMemos = (isFullLoaded && allMemos.length > 0) ? allMemos : initialMemos;
+
+        // 当 sourceMemos 与已合并的缓存长度一致时，优先使用 allMemos 以保持状态同步
+        const activeMemos = (isFullLoaded && allMemos.length >= sourceMemos.length) ? allMemos : sourceMemos;
+
+        return clientFilterMemos(activeMemos, {
+            ...searchParams,
+            isAdmin,
+            isOnline
+        });
     }, [isFullLoaded, allMemos, searchParams, initialMemos, isAdmin, isOnline]);
 
 

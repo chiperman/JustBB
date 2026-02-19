@@ -27,13 +27,13 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
 
     const navItems = useMemo(() => {
         const items = [
-            { icon: <Home className="size-4" />, label: '首页', href: '/' },
-            { icon: <GalleryIcon className="size-4" />, label: '画廊', href: '/gallery' },
-            { icon: <Tag className="size-4" />, label: '标签', href: '/tags' },
+            { icon: <Home className="size-3.5" />, label: '首页', href: '/' },
+            { icon: <GalleryIcon className="size-3.5" />, label: '画廊', href: '/gallery' },
+            { icon: <Tag className="size-3.5" />, label: '标签', href: '/tags' },
         ];
 
         if (isAdmin) {
-            items.push({ icon: <Trash2 className="size-4" />, label: '回收站', href: '/trash' });
+            items.push({ icon: <Trash2 className="size-3.5" />, label: '回收站', href: '/trash' });
         }
 
         return items;
@@ -232,7 +232,7 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                                 title={item.label}
                             >
                                 <span className={cn(
-                                    "transition-colors shrink-0",
+                                    "transition-colors shrink-0 flex items-center justify-center",
                                     isActive ? "text-primary" : "text-muted-foreground"
                                 )}>
                                     {item.icon}
@@ -240,7 +240,7 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
 
                                 <motion.span
                                     variants={labelVariants}
-                                    className="text-[14px] font-normal whitespace-nowrap"
+                                    className="text-[14px] font-normal whitespace-nowrap flex items-center"
                                 >
                                     {item.label}
                                 </motion.span>

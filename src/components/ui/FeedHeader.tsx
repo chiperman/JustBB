@@ -91,13 +91,13 @@ export function FeedHeader() {
                 </div>
             ) : (
                 <div className="flex items-center gap-1.5 overflow-hidden">
-                    <div className="flex items-baseline whitespace-nowrap">
+                    <div className="flex items-center whitespace-nowrap">
                         <Link
                             href="/"
-                            className="group flex items-baseline gap-1.5 px-2 py-1 rounded-sm hover:bg-primary/5 transition-colors mr-1"
+                            className="group flex items-center gap-1.5 px-2 py-1 rounded-sm hover:bg-primary/5 transition-colors mr-1"
                             title="返回首页并重置过滤器"
                         >
-                            <Home className="size-3.5 text-primary/70 group-hover:text-primary transition-colors translate-y-[2px] self-center" />
+                            <Home className="size-3.5 text-primary/70 group-hover:text-primary transition-colors" />
                             <span className="text-sm font-bold tracking-tight text-primary/90 group-hover:text-primary transition-colors">
                                 JustMemo
                             </span>
@@ -113,44 +113,46 @@ export function FeedHeader() {
                         )}
                     </div>
 
-                    {isAdmin && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-sm transition-all focus-visible:ring-0"
-                                    aria-label="更多选项"
-                                >
-                                    <ChevronDown className="w-4 h-4 transition-transform group-data-[state=open]:rotate-180" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" side="bottom" className="w-48">
-                                <DropdownMenuItem
-                                    className="cursor-pointer gap-2"
-                                    onClick={() => toggleSelectionMode(true)}
-                                >
-                                    <CheckSquare className="w-4 h-4" />
-                                    <span>选择笔记</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger className="cursor-pointer gap-2">
-                                        <ArrowUpDown className="w-4 h-4" />
-                                        <span>排序方式</span>
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuPortal>
-                                        <DropdownMenuSubContent>
-                                            <DropdownMenuRadioGroup value={currentSort} onValueChange={handleSortChange}>
-                                                <DropdownMenuRadioItem value="newest" className="cursor-pointer">创建时间，从新到旧</DropdownMenuRadioItem>
-                                                <DropdownMenuRadioItem value="oldest" className="cursor-pointer">创建时间，从旧到新</DropdownMenuRadioItem>
-                                            </DropdownMenuRadioGroup>
-                                        </DropdownMenuSubContent>
-                                    </DropdownMenuPortal>
-                                </DropdownMenuSub>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-sm transition-all focus-visible:ring-0"
+                                aria-label="更多选项"
+                            >
+                                <ChevronDown className="size-3.5 transition-transform group-data-[state=open]:rotate-180" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" side="bottom" className="w-48">
+                            {isAdmin && (
+                                <>
+                                    <DropdownMenuItem
+                                        className="cursor-pointer gap-2"
+                                        onClick={() => toggleSelectionMode(true)}
+                                    >
+                                        <CheckSquare className="w-4 h-4" />
+                                        <span>选择笔记</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                </>
+                            )}
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger className="cursor-pointer gap-2">
+                                    <ArrowUpDown className="w-4 h-4" />
+                                    <span>排序方式</span>
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuPortal>
+                                    <DropdownMenuSubContent>
+                                        <DropdownMenuRadioGroup value={currentSort} onValueChange={handleSortChange}>
+                                            <DropdownMenuRadioItem value="newest" className="cursor-pointer">创建时间，从新到旧</DropdownMenuRadioItem>
+                                            <DropdownMenuRadioItem value="oldest" className="cursor-pointer">创建时间，从旧到新</DropdownMenuRadioItem>
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuPortal>
+                            </DropdownMenuSub>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             )}
 

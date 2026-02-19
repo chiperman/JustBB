@@ -48,11 +48,14 @@ export function MemoFeed({ initialMemos, searchParams, adminCode, isAdmin = fals
         };
     }, []);
 
-    // Initial sync with SSR data
+    // Initial sync with SSR data and subsequent updates from router.refresh()
     useEffect(() => {
-        if (!isFullLoaded) {
-            // Can't replace displayed directly here strictly, 
-            // but we rely on derived state below
+        if (initialMemos && initialMemos.length > 0) {
+            memoCache.mergeItems(initialMemos);
+            // If already full loaded, we want to ensure allMemos is updated with fresh SSR data
+            if (isFullLoaded) {
+                setAllMemos(memoCache.getItems() as unknown as Memo[]);
+            }
         }
     }, [initialMemos, isFullLoaded]);
 

@@ -19,10 +19,14 @@ import { batchDeleteMemos, batchRestoreMemos, batchPermanentDeleteMemos } from '
 import { batchAddTagsToMemos } from '@/actions/update';
 import { TagSelectDialog } from './TagSelectDialog';
 import { cn } from '@/lib/utils';
+import { useTags } from '@/context/TagsContext';
+import { useRouter } from 'next/navigation';
 
 export function SelectionToolbar() {
     const pathname = usePathname();
+    const router = useRouter();
     const { isSelectionMode, selectedIds, clearSelection, toggleSelectionMode } = useSelection();
+    const { refreshTags } = useTags();
     const { toast } = useToast();
 
     const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
@@ -43,6 +47,8 @@ export function SelectionToolbar() {
             if (res.success) {
                 toast({ title: '已批量删除', description: `成功删除 ${selectedIds.size} 条笔记` });
                 clearSelection();
+                refreshTags();
+                router.refresh();
             } else {
                 toast({ title: '删除失败', description: res.error, variant: 'destructive' });
             }
@@ -60,6 +66,8 @@ export function SelectionToolbar() {
             if (res.success) {
                 toast({ title: '已恢复', description: `成功恢复 ${selectedIds.size} 条笔记` });
                 clearSelection();
+                refreshTags();
+                router.refresh();
             } else {
                 toast({ title: '操作失败', description: res.error, variant: 'destructive' });
             }
@@ -78,6 +86,8 @@ export function SelectionToolbar() {
             if (res.success) {
                 toast({ title: '永久删除成功', description: `已彻底删除 ${selectedIds.size} 条笔记`, variant: 'destructive' });
                 clearSelection();
+                refreshTags();
+                router.refresh();
             } else {
                 toast({ title: '操作失败', description: res.error, variant: 'destructive' });
             }
@@ -93,6 +103,8 @@ export function SelectionToolbar() {
             if (res.success) {
                 toast({ title: '已批量添加标签', description: `成功为 ${selectedIds.size} 条笔记添加了标签` });
                 clearSelection();
+                refreshTags();
+                router.refresh();
             } else {
                 toast({ title: '添加失败', description: res.error, variant: 'destructive' });
             }

@@ -132,7 +132,7 @@ export function SelectionToolbar() {
                     >
                         <div className="flex items-center gap-3 pr-3 border-r border-border/40">
                             <span className="text-xs font-mono font-medium text-primary">
-                                {selectedIds.size.toString().padStart(2, '0')}
+                                {selectedIds.size}
                             </span>
                             <div className="text-[10px] uppercase font-mono tracking-tighter text-muted-foreground/60 leading-none">
                                 SELECTED

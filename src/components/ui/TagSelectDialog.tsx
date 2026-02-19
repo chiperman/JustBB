@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { getAllTags } from '@/actions/tags';
+import { useTags } from '@/context/TagsContext';
 import { Tag, Plus, X, Loader2, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,29 +16,17 @@ interface TagSelectDialogProps {
 }
 
 export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogProps) {
-    const [allTags, setAllTags] = useState<{ tag_name: string; count: number }[]>([]);
+    const { tags: allTags, isLoading } = useTags();
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [inputValue, setInputValue] = useState('');
-    const [loading, setLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
-            fetchTags();
             setSelectedTags([]);
             setInputValue('');
         }
     }, [isOpen]);
-
-    const fetchTags = async () => {
-        setLoading(true);
-        try {
-            const tags = await getAllTags();
-            setAllTags(tags);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const toggleTag = (tagName: string) => {
         setSelectedTags(prev =>
@@ -128,7 +116,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
 
                     {/* 推荐标签列表 */}
                     <div className="max-h-[200px] overflow-y-auto scrollbar-hide">
-                        {loading ? (
+                        {isLoading ? (
                             <div className="flex justify-center py-8">
                                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground/40" />
                             </div>

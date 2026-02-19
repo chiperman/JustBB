@@ -83,25 +83,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
-                    {/* 已选标签 */}
-                    <div className="flex flex-wrap gap-2 min-h-[32px] p-2 rounded-sm border border-dashed border-border/60 bg-accent/5">
-                        {selectedTags.length === 0 ? (
-                            <span className="text-xs text-muted-foreground italic flex items-center h-6">请选择或输入标签...</span>
-                        ) : (
-                            selectedTags.map(tag => (
-                                <Badge
-                                    key={tag}
-                                    variant="secondary"
-                                    className="gap-1 px-2 py-0.5 rounded-sm bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-default"
-                                >
-                                    {tag}
-                                    <button onClick={() => toggleTag(tag)} className="hover:text-destructive">
-                                        <X className="w-3 h-3" />
-                                    </button>
-                                </Badge>
-                            ))
-                        )}
-                    </div>
+
 
                     {/* 搜索与输入 */}
                     <div className="flex gap-2">
@@ -125,6 +107,24 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                             <Plus className="w-4 h-4" />
                         </Button>
                     </div>
+
+                    {/* 已选标签 - 紧凑展示 */}
+                    {selectedTags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 px-0.5">
+                            {selectedTags.map(tag => (
+                                <Badge
+                                    key={tag}
+                                    variant="secondary"
+                                    className="gap-1 px-2 py-0.5 rounded-sm bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-default text-[10px]"
+                                >
+                                    {tag}
+                                    <button onClick={() => toggleTag(tag)} className="hover:text-destructive">
+                                        <X className="w-2.5 h-2.5" />
+                                    </button>
+                                </Badge>
+                            ))}
+                        </div>
+                    )}
 
                     {/* 推荐标签列表 */}
                     <div className="max-h-[200px] overflow-y-auto scrollbar-hide">

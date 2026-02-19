@@ -156,7 +156,7 @@ export function SelectionToolbar() {
                                         className="h-8 gap-2 text-xs hover:bg-primary/5 hover:text-primary rounded-sm transition-all"
                                     >
                                         <Tag className="w-3.5 h-3.5" />
-                                        <span>标签</span>
+                                        <span>添加标签</span>
                                     </Button>
                                     <Button
                                         variant="ghost"

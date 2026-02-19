@@ -803,7 +803,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             type: "spring",
                             damping: 40,
                             stiffness: 350,
-                            mass: 1.0
+                            mass: 1.0,
+                            restDelta: 0.001
                         }}
                         style={{
                             willChange: "transform, max-height",
@@ -927,7 +928,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         type: "spring",
                         damping: 40,
                         stiffness: 350,
-                        mass: 1.0
+                        mass: 1.0,
+                        restDelta: 0.001
                     }}
                     style={{ willChange: "opacity, height" }}
                     className="overflow-hidden bg-transparent"

@@ -575,8 +575,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 class: cn(
                     "tiptap prose prose-sm max-w-none focus:outline-none text-foreground/80 leading-relaxed font-sans tracking-normal",
                     hideFullscreen ? "flex-1 h-full overflow-y-auto scrollbar-hover px-1 focus:outline-none" : "min-h-[120px]",
-                    "text-base",
-                    isActuallyCollapsed && "[&_p]:m-0"
+                    "text-base"
+                    // Removed instant margin jump: isActuallyCollapsed && "[&_p]:m-0"
                 ),
             },
         },
@@ -817,8 +817,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         }}
                         className={cn(
                             "relative overflow-hidden",
-                            hideFullscreen ? "flex-1 flex flex-col min-h-0" : "overflow-y-auto scrollbar-hover",
-                            isActuallyCollapsed ? "pointer-events-none" : "min-h-[120px]"
+                            hideFullscreen ? "flex-1 flex flex-col min-h-0" : "overflow-y-auto scrollbar-hover min-h-[120px]",
+                            isActuallyCollapsed && "pointer-events-none"
                         )}
 
                     >

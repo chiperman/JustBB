@@ -786,6 +786,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             onAnimationComplete={() => setIsAnimating(false)}
             style={{
                 willChange: "transform, height, opacity",
+                minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? 500 : 120),
             }}
             initial={false}
             onClick={() => {
@@ -826,6 +827,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             restDelta: 0.001
                         }}
                         style={{
+                            minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? 0 : 120),
                             willChange: "transform, height, min-height",
                             maxHeight: 500, // Fixed max-height, let height animation handle the collapse
                             maskImage: isActuallyCollapsed && !isAnimating
@@ -843,6 +845,11 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
                     >
 
+                        {!editor && (
+                            <div className="tiptap prose prose-sm max-w-none text-muted-foreground/50 leading-relaxed font-sans tracking-normal text-base absolute inset-0 pointer-events-none">
+                                <p>Wanna memo something? JustMemo it!</p>
+                            </div>
+                        )}
                         <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "min-h-0")} />
                     </motion.div>
 

@@ -759,14 +759,15 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 paddingBottom: 24,
                 paddingLeft: 24,
                 paddingRight: 24,
+                minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? 500 : 120),
                 boxShadow: isActuallyCollapsed ? "none" : "0 1px 2px 0 rgb(0 0 0 / 0.05)",
                 backgroundColor: isActuallyCollapsed ? "transparent" : "var(--card)",
             }}
             whileTap={isActuallyCollapsed ? { scale: 0.98 } : undefined}
             transition={{
                 type: "spring",
-                damping: 30,
-                stiffness: 400,
+                damping: 40,
+                stiffness: 350,
                 mass: 1.0
             }}
             style={{ willChange: "transform, height, opacity" }}
@@ -779,7 +780,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             className={cn(
                 "bg-card border border-border rounded-sm relative focus-within:shadow-md",
                 "flex flex-col items-stretch",
-                isActuallyCollapsed ? "shadow-none cursor-pointer hover:bg-accent/5" : cn(hideFullscreen ? "h-full min-h-[500px]" : "min-h-[120px]")
+                isActuallyCollapsed ? "shadow-none cursor-pointer hover:bg-accent/5" : (hideFullscreen ? "h-full" : "")
             )}>
             <motion.div
                 className="w-full flex-1 flex flex-col min-h-0"
@@ -794,8 +795,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         }}
                         transition={{
                             type: "spring",
-                            damping: 30,
-                            stiffness: 400,
+                            damping: 40,
+                            stiffness: 350,
                             mass: 1.0
                         }}
                         style={{
@@ -919,8 +920,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     }}
                     transition={{
                         type: "spring",
-                        damping: 30,
-                        stiffness: 400,
+                        damping: 40,
+                        stiffness: 350,
                         mass: 1.0
                     }}
                     style={{ willChange: "opacity, height" }}

@@ -165,7 +165,7 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                     variant="ghost"
                     onClick={handleToggle}
                     className={cn(
-                        "text-muted-foreground hover:text-primary shrink-0 rounded-sm transition-colors",
+                        "text-muted-foreground shrink-0 rounded-sm transition-colors",
                         // 使用 layout 属性处理位置变化，减少 CSS 类突变
                         effectiveIsCollapsed ? "w-full justify-center h-9 p-2" : "h-8 w-8 px-0"
                     )}

@@ -763,7 +763,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 boxShadow: isActuallyCollapsed ? "none" : "0 1px 2px 0 rgb(0 0 0 / 0.05)",
                 backgroundColor: isActuallyCollapsed ? "transparent" : "var(--card)",
             }}
-            whileTap={isActuallyCollapsed ? { scale: 0.98 } : undefined}
             transition={{
                 type: "spring",
                 damping: 40,

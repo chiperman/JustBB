@@ -48,7 +48,7 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { AnimatePresence, motion } from 'framer-motion';
-import { spring } from '@/lib/animation';
+import { spring, ease, duration } from '@/lib/animation';
 
 import { Memo, TagStat } from '@/types/memo';
 import { Editor } from '@tiptap/react';
@@ -92,13 +92,14 @@ interface MemoEditorProps {
     isCollapsed?: boolean;
     hideFullscreen?: boolean;
     contextMemos?: Memo[]; // 增加上下文 Memos 用于即时搜索
+    className?: string;
 }
 
 // Draft Persistence Keys
 const DRAFT_CONTENT_KEY = 'memo_editor_draft_content';
 const DRAFT_IS_PRIVATE_KEY = 'memo_editor_draft_is_private';
 
-export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isCollapsed: isPropCollapsed = false, hideFullscreen = false, contextMemos = [] }: MemoEditorProps) {
+export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isCollapsed: isPropCollapsed = false, hideFullscreen = false, contextMemos = [], className }: MemoEditorProps) {
     const { refreshTags } = useTags();
     const { refreshStats } = useStats();
     const [content, setContent] = useState(memo?.content || '');
@@ -335,7 +336,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 // Calculate top/left relative to our outer relative container
                                 // Use rect.bottom (viewport bottom) - parentRect.top (viewport top)
                                 let left = rect.left - parentRect.left;
-                                let top = rect.bottom - parentRect.top + 8; // Added 8px offset
+                                const top = rect.bottom - parentRect.top + 8; // Added 8px offset
 
                                 // Prevent overflow on the right
                                 const maxLeft = parentRect.width - 370; // 350px width + buffer
@@ -441,7 +442,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
                                 // Calculate top/left relative to our outer relative container
                                 let left = rect.left - parentRect.left;
-                                let top = rect.bottom - parentRect.top + 8; // Added 8px offset
+                                const top = rect.bottom - parentRect.top + 8; // Added 8px offset
 
                                 // Prevent overflow on the right
                                 const maxLeft = parentRect.width - 370; // 350px width + buffer
@@ -822,7 +823,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
     return (
         <motion.section
-            layout
+
             initial={{ opacity: 0, height: 0 }}
             animate={{
                 opacity: 1,
@@ -845,12 +846,13 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 }
             }}
             transition={{
-                default: spring.default,
+                height: isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out },
+                minHeight: isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out },
                 boxShadow: {
                     duration: 0.3,
                     ease: "easeInOut"
                 },
-                opacity: { duration: 0.2 }
+                opacity: { duration: duration.fast }
             }}
             onAnimationStart={() => setIsAnimating(true)}
             onAnimationComplete={() => setIsAnimating(false)}
@@ -866,7 +868,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             className={cn(
                 "border border-border rounded-sm relative focus-within:shadow-md",
                 "flex flex-col items-stretch",
-                isActuallyCollapsed ? "shadow-none cursor-pointer hover:bg-accent/5" : (hideFullscreen ? "h-full" : "")
+                isActuallyCollapsed ? "shadow-none cursor-pointer hover:bg-accent/5" : (hideFullscreen ? "h-full" : ""),
+                className
             )}>
             <motion.div
                 className="absolute inset-0 bg-card rounded-sm pointer-events-none"
@@ -889,11 +892,9 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             overflow: (isActuallyCollapsed || isAnimating) ? "hidden" : (hideFullscreen ? "visible" : "overlay")
                         }}
                         transition={{
-                            type: "spring",
-                            damping: 40,
-                            stiffness: 350,
-                            mass: 1.0,
-                            restDelta: 0.001
+                            height: isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out },
+                            minHeight: isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out },
+                            opacity: { duration: duration.fast }
                         }}
                         style={{
                             minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? 0 : 120),
@@ -1021,11 +1022,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         opacity: isActuallyCollapsed ? 0 : 1,
                     }}
                     transition={{
-                        type: "spring",
-                        damping: 40,
-                        stiffness: 350,
-                        mass: 1.0,
-                        restDelta: 0.001
+                        height: isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out },
+                        opacity: { duration: duration.fast }
                     }}
                     style={{ willChange: "opacity, height" }}
                     className="overflow-hidden bg-transparent"

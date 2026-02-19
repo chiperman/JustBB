@@ -13,7 +13,7 @@ import { useSelection } from '@/context/SelectionContext';
 
 interface MainLayoutClientProps {
     memos: Memo[];
-    searchParams: any;
+    searchParams: Record<string, string | string[] | undefined>;
     adminCode?: string;
     initialIsAdmin?: boolean;
 }
@@ -49,8 +49,13 @@ export function MainLayoutClient({ memos, searchParams, adminCode, initialIsAdmi
                     <div className="space-y-4">
                         <FeedHeader />
                         <AnimatePresence mode="wait">
-                            {effectiveIsAdmin && !isSelectionMode && (
-                                <MemoEditor key="memo-editor" isCollapsed={isScrolled} contextMemos={memos} />
+                            {effectiveIsAdmin && (
+                                <MemoEditor
+                                    key="memo-editor"
+                                    isCollapsed={isScrolled}
+                                    contextMemos={memos}
+                                    className={isSelectionMode ? "hidden" : ""}
+                                />
                             )}
                         </AnimatePresence>
                     </div>

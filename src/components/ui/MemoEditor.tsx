@@ -754,6 +754,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
     return (
         <motion.section
+            layout
             animate={{
                 paddingTop: 24, // p-6
                 paddingBottom: 24,
@@ -765,10 +766,11 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             whileTap={isActuallyCollapsed ? { scale: 0.98 } : undefined}
             transition={{
                 type: "spring",
-                damping: 20,
-                stiffness: 300,
-                mass: 0.8
+                damping: 25,
+                stiffness: 200,
+                mass: 1.2
             }}
+            style={{ willChange: "transform, height, opacity" }}
             initial={false}
             onClick={() => {
                 if (isActuallyCollapsed && editor) {
@@ -787,28 +789,33 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     <label htmlFor="memo-content" className="sr-only">Memo内容</label>
 
                     <motion.div
+                        layout
                         ref={editorContainerRef}
                         animate={{
                             maxHeight: isActuallyCollapsed ? 48 : 500, // 3rem = 48px
                         }}
                         transition={{
                             type: "spring",
-                            damping: 20,
-                            stiffness: 300,
-                            mass: 0.8
+                            damping: 25,
+                            stiffness: 200,
+                            mass: 1.2
+                        }}
+                        style={{
+                            willChange: "transform, max-height",
+                            ...(isActuallyCollapsed ? {
+                                maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
+                                WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
+                            } : {
+                                maskImage: 'none',
+                                WebkitMaskImage: 'none',
+                            })
                         }}
                         className={cn(
                             "relative overflow-hidden",
                             hideFullscreen ? "flex-1 flex flex-col min-h-0" : "overflow-y-auto scrollbar-hover",
                             isActuallyCollapsed ? "pointer-events-none" : "min-h-[120px]"
                         )}
-                        style={isActuallyCollapsed ? {
-                            maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
-                            WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
-                        } : {
-                            maskImage: 'none',
-                            WebkitMaskImage: 'none',
-                        }}
+
                     >
 
                         <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "min-h-0")} />
@@ -907,6 +914,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 }
 
                 <motion.div
+                    layout
                     initial={false}
                     animate={{
                         height: isActuallyCollapsed ? 0 : "auto",
@@ -917,10 +925,11 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     }}
                     transition={{
                         type: "spring",
-                        damping: 20,
-                        stiffness: 300,
-                        mass: 0.8
+                        damping: 25,
+                        stiffness: 200,
+                        mass: 1.2
                     }}
+                    style={{ willChange: "opacity, height" }}
                     className="overflow-hidden bg-transparent border-t border-border/50"
                 >
                     <div className="flex justify-between items-center">

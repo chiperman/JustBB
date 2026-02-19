@@ -120,3 +120,43 @@ export async function updateMemoContent(formData: FormData) {
     // However, to satisfy strictly typed return:
     return { success: true, data: updatedData as Memo };
 }
+export async function batchAddTagsToMemos(ids: string[], tags: string[]) {
+    if (!await isAdmin()) return { success: false, error: '权限不足' };
+    if (ids.length === 0 || tags.length === 0) return { success: true };
+
+    const supabase = await createClient();
+
+    // 获取当前标签以并合并
+    const { data: memos, error: fetchError } = await supabase
+        .from('memos')
+        .select('id, tags')
+        .in('id', ids);
+
+    if (fetchError) {
+        console.error('Error fetching memos for batch tagging:', fetchError);
+        return { success: false, error: '获取笔记数据失败' };
+    }
+
+    // 并行更新
+    const results = await Promise.all(memos.map(memo => {
+        const existingTags = memo.tags || [];
+        const combinedTags = Array.from(new Set([...existingTags, ...tags]));
+        return supabase
+            .from('memos')
+            .update({
+                tags: combinedTags,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', memo.id);
+    }));
+
+    const hasError = results.some(r => r.error);
+
+    if (hasError) {
+        console.error('Some batch tag updates failed');
+        return { success: false, error: '部分笔记标签更新失败' };
+    }
+
+    revalidatePath('/');
+    return { success: true };
+}

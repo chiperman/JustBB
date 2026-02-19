@@ -16,10 +16,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from './SearchInput';
-import { ChevronDown, CheckCircle, ArrowUpDown, Home } from 'lucide-react';
-
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useSelection } from '@/context/SelectionContext';
+import { useUser } from '@/context/UserContext';
+import { X, Trash2, Tag, CheckSquare, ChevronDown, ArrowUpDown, Home, Loader2 } from 'lucide-react';
+import { batchDeleteMemos } from '@/actions/delete';
+import { batchAddTagsToMemos } from '@/actions/update';
+import { TagSelectDialog } from './TagSelectDialog';
+import { useToast } from '@/hooks/use-toast';
 
 export function FeedHeader() {
     const router = useRouter();
@@ -32,6 +37,99 @@ export function FeedHeader() {
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    const { isSelectionMode, toggleSelectionMode, selectedIds, clearSelection } = useSelection();
+    const { isAdmin } = useUser();
+    const { toast } = useToast();
+    const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleBatchDelete = async () => {
+        if (selectedIds.size === 0) return;
+        if (!window.confirm(`确定要将选中的 ${selectedIds.size} 条笔记放入回收站吗？`)) return;
+
+        setIsDeleting(true);
+        try {
+            const res = await batchDeleteMemos(Array.from(selectedIds));
+            if (res.success) {
+                toast({ title: '已批量删除', description: `成功删除 ${selectedIds.size} 条笔记` });
+                toggleSelectionMode(false);
+            } else {
+                toast({ title: '删除失败', description: res.error, variant: 'destructive' });
+            }
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const handleBatchAddTags = async (tags: string[]) => {
+        const res = await batchAddTagsToMemos(Array.from(selectedIds), tags);
+        if (res.success) {
+            toast({ title: '已添加标签', description: `成功为 ${selectedIds.size} 条笔记添加了标签` });
+            toggleSelectionMode(false);
+        } else {
+            toast({ title: '添加失败', description: res.error, variant: 'destructive' });
+        }
+    };
+
+    if (isSelectionMode) {
+        return (
+            <div className="flex items-center justify-between gap-4 py-2 h-10 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="flex items-center gap-4">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleSelectionMode(false)}
+                        className="h-8 w-8 p-0 rounded-sm hover:bg-accent"
+                    >
+                        <X className="w-4 h-4" />
+                    </Button>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-primary">已选中 {selectedIds.size} 项</span>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 gap-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-sm"
+                        onClick={() => setIsTagDialogOpen(true)}
+                        disabled={selectedIds.size === 0}
+                    >
+                        <Tag className="w-4 h-4" />
+                        <span className="hidden sm:inline">添加标签</span>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-sm"
+                        onClick={handleBatchDelete}
+                        disabled={selectedIds.size === 0 || isDeleting}
+                    >
+                        {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        <span className="hidden sm:inline">删除</span>
+                    </Button>
+                    <div className="w-px h-4 bg-border mx-1" />
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearSelection}
+                        className="h-8 text-xs text-muted-foreground hover:text-primary px-2"
+                        disabled={selectedIds.size === 0}
+                    >
+                        重置状态
+                    </Button>
+                </div>
+
+                <TagSelectDialog
+                    isOpen={isTagDialogOpen}
+                    onClose={() => setIsTagDialogOpen(false)}
+                    onConfirm={handleBatchAddTags}
+                />
+            </div>
+        );
+    }
 
     const handleSortChange = (value: string) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -64,39 +162,44 @@ export function FeedHeader() {
                     )}
                 </div>
 
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-sm transition-all focus-visible:ring-0"
-                            aria-label="更多选项"
-                        >
-                            <ChevronDown className="w-4 h-4 transition-transform group-data-[state=open]:rotate-180" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" side="bottom" className="w-48">
-                        <DropdownMenuItem className="cursor-pointer gap-2">
-                            <CheckCircle className="w-4 h-4" />
-                            <span>选择笔记</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger className="cursor-pointer gap-2">
-                                <ArrowUpDown className="w-4 h-4" />
-                                <span>排序方式</span>
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    <DropdownMenuRadioGroup value={currentSort} onValueChange={handleSortChange}>
-                                        <DropdownMenuRadioItem value="newest" className="cursor-pointer">创建时间，从新到旧</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="oldest" className="cursor-pointer">创建时间，从旧到新</DropdownMenuRadioItem>
-                                    </DropdownMenuRadioGroup>
-                                </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                {isAdmin && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-sm transition-all focus-visible:ring-0"
+                                aria-label="更多选项"
+                            >
+                                <ChevronDown className="w-4 h-4 transition-transform group-data-[state=open]:rotate-180" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" side="bottom" className="w-48">
+                            <DropdownMenuItem
+                                className="cursor-pointer gap-2"
+                                onClick={() => toggleSelectionMode(true)}
+                            >
+                                <CheckSquare className="w-4 h-4" />
+                                <span>选择笔记</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger className="cursor-pointer gap-2">
+                                    <ArrowUpDown className="w-4 h-4" />
+                                    <span>排序方式</span>
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuPortal>
+                                    <DropdownMenuSubContent>
+                                        <DropdownMenuRadioGroup value={currentSort} onValueChange={handleSortChange}>
+                                            <DropdownMenuRadioItem value="newest" className="cursor-pointer">创建时间，从新到旧</DropdownMenuRadioItem>
+                                            <DropdownMenuRadioItem value="oldest" className="cursor-pointer">创建时间，从旧到新</DropdownMenuRadioItem>
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuPortal>
+                            </DropdownMenuSub>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
             </div>
 
             <div className="flex-1 max-w-sm">

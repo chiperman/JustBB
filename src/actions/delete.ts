@@ -76,3 +76,21 @@ export async function emptyTrash() {
     revalidatePath('/trash');
     return { success: true };
 }
+export async function batchDeleteMemos(ids: string[]) {
+    if (!await isAdmin()) return { success: false, error: '权限不足' };
+    if (ids.length === 0) return { success: true };
+
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('memos')
+        .update({ deleted_at: new Date().toISOString() })
+        .in('id', ids);
+
+    if (error) {
+        console.error('Error batch deleting memos:', error);
+        return { success: false, error: '批量删除失败' };
+    }
+
+    revalidatePath('/');
+    return { success: true };
+}

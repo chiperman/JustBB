@@ -9,6 +9,8 @@ import { useRouter } from 'next/navigation';
 import { cn, formatDate } from '@/lib/utils';
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useSelection } from '@/context/SelectionContext';
 
 import { Memo } from '@/types/memo';
 import { UnlockDialog } from './UnlockDialog';
@@ -25,6 +27,17 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const shouldReduceMotion = useReducedMotion();
+    const { isSelectionMode, selectedIds, toggleId } = useSelection();
+    const isSelected = selectedIds.has(memo.id);
+
+    const handleCardClick = (e: React.MouseEvent) => {
+        if (isSelectionMode) {
+            // Prevent event from triggering unwanted actions if any (though we hide them)
+            e.preventDefault();
+            toggleId(memo.id);
+            return;
+        }
+    };
 
     const handleUnlock = () => {
         setIsUnlockOpen(true);
@@ -74,13 +87,29 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
     return (
         <motion.article
             layout
+            onClick={handleCardClick}
             className={cn(
                 "relative bg-card rounded-sm p-6 transition-all border border-border focus-within:ring-2 focus-within:ring-primary/10",
-                memo.is_pinned && "bg-primary/5 border-primary/20"
+                memo.is_pinned && "bg-primary/5 border-primary/20",
+                isSelectionMode && "cursor-pointer hover:border-primary/40 select-none",
+                isSelectionMode && isSelected && "ring-2 ring-primary border-primary/50 shadow-sm"
             )}
         >
+            {/* 选择模式下的多选框 */}
+            {isSelectionMode && (
+                <div
+                    className="absolute top-4 left-4 z-20"
+                    onClick={(e) => e.stopPropagation()} // 阻止冒泡，避免触发 handleCardClick
+                >
+                    <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleId(memo.id)}
+                        className="h-5 w-5 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    />
+                </div>
+            )}
             {/* 顶部元信息 */}
-            <div className="flex items-center justify-between mb-4">
+            <div className={cn("flex items-center justify-between mb-4", isSelectionMode && "pl-8")}>
                 <div className="flex items-center gap-3">
                     <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded-sm">
                         #{memo.memo_number}
@@ -103,7 +132,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                         </span>
                     )}
                 </div>
-                {!memo.is_locked && (
+                {!memo.is_locked && !isSelectionMode && (
                     <div className="flex items-center gap-2 group">
                         <Button
                             variant="ghost"

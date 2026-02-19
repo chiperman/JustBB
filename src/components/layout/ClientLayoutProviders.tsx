@@ -7,6 +7,7 @@ import { LoginTransitionWrapper } from "@/components/layout/LoginTransitionWrapp
 import { MobileLayoutWrapper } from "@/components/layout/MobileLayoutWrapper";
 import { TagsProvider } from "@/context/TagsContext";
 import { StatsProvider } from "@/context/StatsContext";
+import { SelectionProvider } from "@/context/SelectionContext";
 
 interface ClientLayoutProvidersProps {
     children: React.ReactNode;
@@ -25,13 +26,15 @@ export function ClientLayoutProviders({
             <StatsProvider initialData={initialStats}>
                 <LoginModeProvider>
                     <TagsProvider initialData={initialTags}>
-                        <TimelineProvider>
-                            <LoginTransitionWrapper>
-                                <MobileLayoutWrapper>
-                                    {children}
-                                </MobileLayoutWrapper>
-                            </LoginTransitionWrapper>
-                        </TimelineProvider>
+                        <SelectionProvider>
+                            <TimelineProvider>
+                                <LoginTransitionWrapper>
+                                    <MobileLayoutWrapper>
+                                        {children}
+                                    </MobileLayoutWrapper>
+                                </LoginTransitionWrapper>
+                            </TimelineProvider>
+                        </SelectionProvider>
                     </TagsProvider>
                 </LoginModeProvider>
             </StatsProvider>

@@ -126,10 +126,10 @@ export async function batchAddTagsToMemos(ids: string[], tags: string[]) {
 
     const supabase = await createClient();
 
-    // 获取当前标签以并合并
+    // 获取当前标签和内容以便合并
     const { data: memos, error: fetchError } = await supabase
         .from('memos')
-        .select('id, tags')
+        .select('id, tags, content')
         .in('id', ids);
 
     if (fetchError) {
@@ -141,10 +141,26 @@ export async function batchAddTagsToMemos(ids: string[], tags: string[]) {
     const results = await Promise.all(memos.map(memo => {
         const existingTags = memo.tags || [];
         const combinedTags = Array.from(new Set([...existingTags, ...tags]));
+
+        let newContent = memo.content || '';
+        const tagsToAppend = tags.filter(tag => {
+            // 检查内容中是否已经包含该标签（以 #tag 形式）
+            const hashtag = `#${tag}`;
+            const escapedTag = hashtag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(?:^|\\s|(?<=[^a-zA-Z0-9]))${escapedTag}(?:$|\\s|(?=[^a-zA-Z0-9]))`, 'g');
+            return !regex.test(newContent);
+        });
+
+        if (tagsToAppend.length > 0) {
+            const appendStr = ' ' + tagsToAppend.map(t => `#${t}`).join(' ');
+            newContent = newContent.trimEnd() + appendStr;
+        }
+
         return supabase
             .from('memos')
             .update({
                 tags: combinedTags,
+                content: newContent,
                 updated_at: new Date().toISOString()
             })
             .eq('id', memo.id);

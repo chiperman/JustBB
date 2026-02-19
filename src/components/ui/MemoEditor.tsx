@@ -575,8 +575,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 class: cn(
                     "tiptap prose prose-sm max-w-none focus:outline-none text-foreground/80 leading-relaxed font-sans tracking-normal",
                     hideFullscreen ? "flex-1 h-full overflow-y-auto scrollbar-hover px-1 focus:outline-none" : "min-h-[120px]",
-                    isActuallyCollapsed ? "min-h-[24px]" : "min-h-[120px]",
-                    "text-base"
+                    "text-base",
+                    isActuallyCollapsed && "[&_p]:m-0"
                 ),
             },
         },
@@ -756,7 +756,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     return (
         <motion.section
             animate={{
-                paddingTop: 24, // p-6
+                paddingTop: 24,
                 paddingBottom: 24,
                 paddingLeft: 24,
                 paddingRight: 24,
@@ -775,12 +775,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             onAnimationComplete={() => setIsAnimating(false)}
             style={{
                 willChange: "transform, height, opacity",
-                maskImage: isActuallyCollapsed && !isAnimating
-                    ? "linear-gradient(to bottom, black 50%, transparent 100%)"
-                    : "none",
-                WebkitMaskImage: isActuallyCollapsed && !isAnimating
-                    ? "linear-gradient(to bottom, black 50%, transparent 100%)"
-                    : "none",
             }}
             initial={false}
             onClick={() => {
@@ -802,7 +796,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     <motion.div
                         ref={editorContainerRef}
                         animate={{
-                            maxHeight: isActuallyCollapsed ? 48 : 500, // 3rem = 48px
+                            maxHeight: isActuallyCollapsed ? 24 : 500, // Reduced from 26 to 24 to keep compact with standard padding
                             overflow: (isActuallyCollapsed || isAnimating) ? "hidden" : "visible"
                         }}
                         transition={{
@@ -813,13 +807,12 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         }}
                         style={{
                             willChange: "transform, max-height",
-                            ...(isActuallyCollapsed ? {
-                                maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
-                                WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
-                            } : {
-                                maskImage: 'none',
-                                WebkitMaskImage: 'none',
-                            })
+                            maskImage: isActuallyCollapsed && !isAnimating
+                                ? 'linear-gradient(to bottom, black 90%, transparent 100%)'
+                                : 'none',
+                            WebkitMaskImage: isActuallyCollapsed && !isAnimating
+                                ? 'linear-gradient(to bottom, black 90%, transparent 100%)'
+                                : 'none',
                         }}
                         className={cn(
                             "relative overflow-hidden",

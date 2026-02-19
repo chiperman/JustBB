@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { cn } from "@/lib/utils";
+import { motion, LayoutGroup } from 'framer-motion';
 import { MemoEditor } from "@/components/ui/MemoEditor";
 import { MemoFeed } from '@/components/ui/MemoFeed';
 import { FeedHeader } from "@/components/ui/FeedHeader";
@@ -33,12 +34,15 @@ export function MainLayoutClient({ memos, searchParams, adminCode, initialIsAdmi
     return (
         <div className="flex flex-col h-screen overflow-hidden bg-accent/20 font-sans">
             {/* 固定顶部区域 - 品牌、搜索 & 编辑器 */}
-            <div className={cn(
-                "flex-none z-30 px-4 md:px-10 md:pr-[calc(2.5rem+4px)] transition-all duration-300 sticky top-0",
-                isScrolled
-                    ? "bg-background/80 backdrop-blur-2xl border-b border-border/40 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)] pt-6 pb-4"
-                    : "bg-background/20 pt-10 pb-6"
-            )}>
+            {/* 固定顶部区域 - 品牌、搜索 & 编辑器 */}
+            <div
+                className={cn(
+                    "flex-none z-30 px-4 md:px-10 md:pr-[calc(2.5rem+4px)] sticky top-0 pt-8 pb-4 transition-all duration-300 ease-in-out",
+                    isScrolled
+                        ? "bg-background/80 backdrop-blur-2xl border-b border-border/40 shadow-sm"
+                        : "bg-background/0"
+                )}
+            >
                 <div className="max-w-4xl mx-auto w-full">
                     <div className="space-y-4">
                         <FeedHeader />

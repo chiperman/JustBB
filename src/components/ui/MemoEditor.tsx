@@ -22,7 +22,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import LinkExtension from '@tiptap/extension-link';
 import Mention from '@tiptap/extension-mention';
-import CharacterCount from '@tiptap/extension-character-count';
+
 import { PluginKey, Plugin } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
@@ -503,9 +503,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             LinkExtension.configure({
                 openOnClick: false,
             }),
-            CharacterCount.configure({
-                limit: 2000,
-            }),
+
         ],
         content: memo?.content || '',
         onUpdate: ({ editor }) => {
@@ -756,42 +754,61 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
     return (
         <motion.section
-            layout
+            animate={{
+                paddingTop: 24, // p-6
+                paddingBottom: 24,
+                paddingLeft: 24,
+                paddingRight: 24,
+                boxShadow: isActuallyCollapsed ? "none" : "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+                backgroundColor: isActuallyCollapsed ? "transparent" : "var(--card)",
+            }}
+            whileTap={isActuallyCollapsed ? { scale: 0.98 } : undefined}
             transition={{
                 type: "spring",
-                damping: 25,
-                stiffness: 200,
-                mass: 1
+                damping: 20,
+                stiffness: 300,
+                mass: 0.8
             }}
             initial={false}
+            onClick={() => {
+                if (isActuallyCollapsed && editor) {
+                    editor.commands.focus();
+                }
+            }}
             className={cn(
                 "bg-card border border-border rounded-sm relative focus-within:shadow-md",
-                "p-6 shadow-sm flex flex-col items-stretch",
-                isActuallyCollapsed ? "shadow-none" : cn(hideFullscreen ? "h-full min-h-[500px]" : "min-h-[120px]")
+                "flex flex-col items-stretch",
+                isActuallyCollapsed ? "shadow-none cursor-pointer hover:bg-accent/5" : cn(hideFullscreen ? "h-full min-h-[500px]" : "min-h-[120px]")
             )}>
             <motion.div
-                layout
-                transition={{
-                    duration: 0.3,
-                    ease: [0.23, 1, 0.32, 1]
-                }}
                 className="w-full flex-1 flex flex-col min-h-0"
             >
                 <div ref={relativeGroupRef} className="relative group w-full flex-1 flex flex-col min-h-0">
                     <label htmlFor="memo-content" className="sr-only">Memo内容</label>
 
                     <motion.div
-                        layout
                         ref={editorContainerRef}
+                        animate={{
+                            maxHeight: isActuallyCollapsed ? 48 : 500, // 3rem = 48px
+                        }}
+                        transition={{
+                            type: "spring",
+                            damping: 20,
+                            stiffness: 300,
+                            mass: 0.8
+                        }}
                         className={cn(
-                            "relative transition-all duration-300",
-                            hideFullscreen ? "flex-1 overflow-hidden flex flex-col min-h-0" : "max-h-[500px] overflow-y-auto scrollbar-hover",
-                            isActuallyCollapsed ? "max-h-[3rem] overflow-hidden pointer-events-none" : "min-h-[120px]"
+                            "relative overflow-hidden",
+                            hideFullscreen ? "flex-1 flex flex-col min-h-0" : "overflow-y-auto scrollbar-hover",
+                            isActuallyCollapsed ? "pointer-events-none" : "min-h-[120px]"
                         )}
                         style={isActuallyCollapsed ? {
                             maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
                             WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
-                        } : undefined}
+                        } : {
+                            maskImage: 'none',
+                            WebkitMaskImage: 'none',
+                        }}
                     >
 
                         <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "min-h-0")} />
@@ -890,16 +907,20 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 }
 
                 <motion.div
-                    layout
                     initial={false}
                     animate={{
-                        maxHeight: isActuallyCollapsed ? 0 : 200,
+                        height: isActuallyCollapsed ? 0 : "auto",
                         opacity: isActuallyCollapsed ? 0 : 1,
                         marginTop: isActuallyCollapsed ? 0 : 16,
                         paddingTop: isActuallyCollapsed ? 0 : 20,
                         borderTopWidth: isActuallyCollapsed ? 0 : 1
                     }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    transition={{
+                        type: "spring",
+                        damping: 20,
+                        stiffness: 300,
+                        mass: 0.8
+                    }}
                     className="overflow-hidden bg-transparent border-t border-border/50"
                 >
                     <div className="flex justify-between items-center">
@@ -937,10 +958,10 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         </div>
 
                         <div className="flex items-center gap-3">
-                            {content.length > 0 && (
-                                <div className="text-[10px] font-mono text-muted-foreground/50">
-                                    {content.length} / 2000
-                                </div>
+                            {content.trim().length > 0 && (
+                                <span className="text-[10px] text-muted-foreground/40 tabular-nums ml-1">
+                                    {content.trim().length} 字
+                                </span>
                             )}
                             <div className="flex items-center gap-2">
                                 {(mode === 'edit' || content.trim()) && (

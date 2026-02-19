@@ -130,16 +130,7 @@ export function SelectionToolbar() {
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                         className="fixed bottom-8 left-1/2 z-50 flex items-center gap-3 px-4 py-2 bg-background/95 backdrop-blur-xl border border-border/50 shadow-2xl rounded-sm min-w-[320px] max-w-[90vw]"
                     >
-                        <div className="flex items-center gap-3 pr-3 border-r border-border/40">
-                            <span className="text-xs font-mono font-medium text-primary">
-                                {selectedIds.size}
-                            </span>
-                            <div className="text-[10px] uppercase font-mono tracking-tighter text-muted-foreground/60 leading-none">
-                                SELECTED
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-1 flex-1">
+                        <div className="flex items-center gap-1 flex-1 px-2">
                             {isTrashPage ? (
                                 <>
                                     <Button
@@ -211,7 +202,7 @@ export function SelectionToolbar() {
                         </div>
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence >
 
             {!isTrashPage && (
                 <TagSelectDialog
@@ -219,7 +210,8 @@ export function SelectionToolbar() {
                     onClose={() => setIsTagDialogOpen(false)}
                     onConfirm={handleBatchAddTags}
                 />
-            )}
+            )
+            }
         </>
     );
 }

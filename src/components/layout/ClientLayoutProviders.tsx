@@ -8,6 +8,7 @@ import { MobileLayoutWrapper } from "@/components/layout/MobileLayoutWrapper";
 import { TagsProvider } from "@/context/TagsContext";
 import { StatsProvider } from "@/context/StatsContext";
 import { SelectionProvider } from "@/context/SelectionContext";
+import { SelectionToolbar } from "@/components/ui/SelectionToolbar";
 
 interface ClientLayoutProvidersProps {
     children: React.ReactNode;
@@ -31,6 +32,7 @@ export function ClientLayoutProviders({
                                 <LoginTransitionWrapper>
                                     <MobileLayoutWrapper>
                                         {children}
+                                        <SelectionToolbar />
                                     </MobileLayoutWrapper>
                                 </LoginTransitionWrapper>
                             </TimelineProvider>

@@ -85,49 +85,16 @@ export function FeedHeader() {
                         <X className="w-4 h-4" />
                     </Button>
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-primary">已选中 {selectedIds.size} 项</span>
+                        <span className="text-sm font-medium text-primary">已开启选择模式</span>
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest opacity-50 px-2 py-0.5 bg-accent/30 rounded-full font-mono">
+                            {selectedIds.size} selected
+                        </span>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 gap-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-sm"
-                        onClick={() => setIsTagDialogOpen(true)}
-                        disabled={selectedIds.size === 0}
-                    >
-                        <Tag className="w-4 h-4" />
-                        <span className="hidden sm:inline">添加标签</span>
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-sm"
-                        onClick={handleBatchDelete}
-                        disabled={selectedIds.size === 0 || isDeleting}
-                    >
-                        {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                        <span className="hidden sm:inline">删除</span>
-                    </Button>
-                    <div className="w-px h-4 bg-border mx-1" />
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={clearSelection}
-                        className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-primary px-2 rounded-sm"
-                        disabled={selectedIds.size === 0}
-                    >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>重置</span>
-                    </Button>
+                <div className="flex items-center gap-2 text-muted-foreground italic text-xs opacity-50">
+                    使用底部菜单进行批量操作
                 </div>
-
-                <TagSelectDialog
-                    isOpen={isTagDialogOpen}
-                    onClose={() => setIsTagDialogOpen(false)}
-                    onConfirm={handleBatchAddTags}
-                />
             </div>
         );
     }

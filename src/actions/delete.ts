@@ -94,3 +94,41 @@ export async function batchDeleteMemos(ids: string[]) {
     revalidatePath('/');
     return { success: true };
 }
+export async function batchRestoreMemos(ids: string[]) {
+    if (!await isAdmin()) return { success: false, error: '权限不足' };
+    if (ids.length === 0) return { success: true };
+
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('memos')
+        .update({ deleted_at: null })
+        .in('id', ids);
+
+    if (error) {
+        console.error('Error batch restoring memos:', error);
+        return { success: false, error: '批量恢复失败' };
+    }
+
+    revalidatePath('/trash');
+    revalidatePath('/');
+    return { success: true };
+}
+
+export async function batchPermanentDeleteMemos(ids: string[]) {
+    if (!await isAdmin()) return { success: false, error: '权限不足' };
+    if (ids.length === 0) return { success: true };
+
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('memos')
+        .delete()
+        .in('id', ids);
+
+    if (error) {
+        console.error('Error batch permanently deleting memos:', error);
+        return { success: false, error: '批量删除失败' };
+    }
+
+    revalidatePath('/trash');
+    return { success: true };
+}

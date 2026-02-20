@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from './SearchInput';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useSelection } from '@/context/SelectionContext';
 import { useUser } from '@/context/UserContext';
@@ -30,7 +30,7 @@ import { useToast } from '@/hooks/use-toast';
 export function FeedHeader() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const pathname = usePathname();
+
     const currentSort = searchParams.get('sort') || 'newest';
     const activeDate = searchParams.get('date');
 

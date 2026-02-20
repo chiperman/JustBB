@@ -202,7 +202,7 @@ export function MemoFeed({ initialMemos, searchParams, adminCode, isAdmin = fals
         <div className="space-y-6">
             <motion.div
                 variants={containerVariants}
-                initial="initial"
+                initial={false}
                 animate="animate"
                 className="columns-1 gap-6 space-y-6"
             >

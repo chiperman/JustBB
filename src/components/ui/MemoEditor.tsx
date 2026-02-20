@@ -824,7 +824,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     return (
         <motion.section
 
-            initial={{ opacity: 0, height: 0 }}
+            initial={false}
             animate={{
                 opacity: 1,
                 height: isActuallyCollapsed ? "auto" : (hideFullscreen ? 500 : "auto"),

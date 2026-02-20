@@ -67,7 +67,7 @@ export function MainLayoutClient({
     const handleScroll = () => {
         if (scrollContainerRef.current) {
             const scrollTop = scrollContainerRef.current.scrollTop;
-            setIsScrolled(scrollTop > 20);
+            setIsScrolled(scrollTop > 100);
         }
     };
 

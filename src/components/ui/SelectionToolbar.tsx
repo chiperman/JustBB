@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useSelection } from '@/context/SelectionContext';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useView } from '@/context/ViewContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,7 +24,7 @@ import { useTags } from '@/context/TagsContext';
 import { useStats } from '@/context/StatsContext';
 
 export function SelectionToolbar() {
-    const pathname = usePathname();
+    const { currentView } = useView();
     const router = useRouter();
     const { isSelectionMode, selectedIds, clearSelection, toggleSelectionMode } = useSelection();
     const { refreshTags } = useTags();
@@ -33,7 +34,7 @@ export function SelectionToolbar() {
     const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
     const [isPending, setIsPending] = useState(false);
 
-    const isTrashPage = pathname === '/trash';
+    const isTrashPage = currentView === '/trash';
     const hasSelection = selectedIds.size > 0;
 
     if (!isSelectionMode) return null;

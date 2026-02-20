@@ -6,7 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useTags } from '@/context/TagsContext';
-import { Tag, Plus, X, Loader2, Search } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+    Tag01Icon as Tag,
+    Add01Icon as Plus,
+    Cancel01Icon as X,
+    Loading01Icon as Loader2,
+    Search01Icon as Search
+} from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
 
 interface TagSelectDialogProps {
@@ -65,7 +72,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
             <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-md border-border/40 shadow-2xl rounded-sm">
                 <DialogHeader>
                     <DialogTitle className="text-lg font-bold flex items-center gap-2">
-                        <Tag className="w-5 h-5 text-primary" />
+                        <HugeiconsIcon icon={Tag} size={20} className="text-primary" />
                         批量添加标签
                     </DialogTitle>
                 </DialogHeader>
@@ -76,7 +83,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                     {/* 搜索与输入 */}
                     <div className="flex gap-2">
                         <div className="relative flex-1">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <HugeiconsIcon icon={Search} size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                             <Input
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
@@ -92,7 +99,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                             disabled={!inputValue.trim()}
                             className="h-9 px-3 rounded-sm"
                         >
-                            <Plus className="w-4 h-4" />
+                            <HugeiconsIcon icon={Plus} size={16} />
                         </Button>
                     </div>
 
@@ -107,7 +114,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                                 >
                                     {tag}
                                     <button onClick={() => toggleTag(tag)} className="hover:text-destructive">
-                                        <X className="w-2.5 h-2.5" />
+                                        <HugeiconsIcon icon={X} size={10} />
                                     </button>
                                 </Badge>
                             ))}
@@ -118,7 +125,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                     <div className="max-h-[200px] overflow-y-auto scrollbar-hide">
                         {isLoading ? (
                             <div className="flex justify-center py-8">
-                                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground/40" />
+                                <HugeiconsIcon icon={Loader2} size={24} className="animate-spin text-muted-foreground/40" />
                             </div>
                         ) : (
                             <div className="flex flex-wrap gap-2">
@@ -154,7 +161,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                         disabled={selectedTags.length === 0 || isSubmitting}
                         className="rounded-sm"
                     >
-                        {isSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                        {isSubmitting && <HugeiconsIcon icon={Loader2} size={16} className="animate-spin mr-2" />}
                         确认添加
                     </Button>
                 </DialogFooter>

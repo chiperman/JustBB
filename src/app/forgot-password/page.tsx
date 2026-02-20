@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { KeyRound, Mail, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Key01Icon as KeyRound, Mail01Icon as Mail, ArrowLeft01Icon as ArrowLeft, Loading01Icon as Loader2, CheckmarkCircle01Icon as CheckCircle2 } from '@hugeicons/core-free-icons';
 import Link from 'next/link';
 import { sendPasswordResetEmail } from '@/actions/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -43,7 +44,7 @@ export default function ForgotPasswordPage() {
                 <div className="max-w-md w-full space-y-8 text-center bg-card border border-border rounded-3xl p-10 shadow-xl">
                     <div className="flex justify-center">
                         <div className="p-4 bg-primary/10 rounded-full">
-                            <CheckCircle2 className="w-12 h-12 text-primary" />
+                            <HugeiconsIcon icon={CheckCircle2} size={48} className="text-primary" />
                         </div>
                     </div>
                     <div className="space-y-3">
@@ -68,7 +69,7 @@ export default function ForgotPasswordPage() {
             <div className="max-w-md w-full space-y-8 bg-card border border-border rounded-3xl p-10 shadow-xl">
                 <div className="flex flex-col items-center text-center space-y-4">
                     <div className="p-3 bg-primary/10 rounded-2xl">
-                        <KeyRound className="w-8 h-8 text-primary" />
+                        <HugeiconsIcon icon={KeyRound} size={32} className="text-primary" />
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight">找回密码</h1>
                     <p className="text-muted-foreground">
@@ -80,7 +81,7 @@ export default function ForgotPasswordPage() {
                     <div className="space-y-2">
                         <Label htmlFor="email" className="text-sm font-medium ml-1">邮箱地址</Label>
                         <div className="relative">
-                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <HugeiconsIcon icon={Mail} size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                             <Input
                                 id="email"
                                 type="email"
@@ -94,13 +95,13 @@ export default function ForgotPasswordPage() {
                     </div>
 
                     <Button type="submit" className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all active:scale-[0.98]" disabled={isLoading}>
-                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : '发送重置链接'}
+                        {isLoading ? <HugeiconsIcon icon={Loader2} size={20} className="animate-spin" /> : '发送重置链接'}
                     </Button>
                 </form>
 
                 <div className="pt-6 text-center">
                     <Link href="/" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                        <ArrowLeft className="mr-2 w-4 h-4" />
+                        <HugeiconsIcon icon={ArrowLeft} size={16} className="mr-2" />
                         返回登录
                     </Link>
                 </div>

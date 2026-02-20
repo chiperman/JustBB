@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Menu01Icon as Menu, Cancel01Icon as X } from '@hugeicons/core-free-icons';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 interface MobileMenuButtonProps {
@@ -21,9 +22,9 @@ export function MobileMenuButton({ isOpen, onClick }: MobileMenuButtonProps) {
             aria-label={isOpen ? '关闭菜单' : '打开菜单'}
         >
             {isOpen ? (
-                <X className="w-5 h-5" aria-hidden="true" />
+                <HugeiconsIcon icon={X} size={20} aria-hidden="true" />
             ) : (
-                <Menu className="w-5 h-5" aria-hidden="true" />
+                <HugeiconsIcon icon={Menu} size={20} aria-hidden="true" />
             )}
         </Button>
     );

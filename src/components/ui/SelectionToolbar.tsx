@@ -6,15 +6,16 @@ import { useRouter } from 'next/navigation';
 import { useView } from '@/context/ViewContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { HugeiconsIcon } from '@hugeicons/react';
 import {
-    Trash2,
-    Tag,
-    X,
-    RotateCcw,
-    ArchiveRestore,
-    Loader2,
-    ShieldAlert
-} from 'lucide-react';
+    Delete02Icon as Trash2,
+    Tag01Icon as Tag,
+    Cancel01Icon as X,
+    ArrowTurnBackwardIcon as RotateCcw,
+    ArchiveRestore as ArchiveRestore,
+    Loading01Icon as Loader2,
+    AlertCircleIcon as ShieldAlert
+} from '@hugeicons/core-free-icons';
 import { useToast } from '@/hooks/use-toast';
 import { batchDeleteMemos, batchRestoreMemos, batchPermanentDeleteMemos } from '@/actions/delete';
 import { batchAddTagsToMemos } from '@/actions/update';
@@ -141,7 +142,7 @@ export function SelectionToolbar() {
                                         disabled={!hasSelection || isPending}
                                         className="h-8 gap-2 text-xs hover:bg-primary/5 hover:text-primary rounded-sm transition-all"
                                     >
-                                        <ArchiveRestore className="w-3.5 h-3.5" />
+                                        <HugeiconsIcon icon={ArchiveRestore} size={14} />
                                         <span>恢复</span>
                                     </Button>
                                     <Button
@@ -151,7 +152,7 @@ export function SelectionToolbar() {
                                         disabled={!hasSelection || isPending}
                                         className="h-8 gap-2 text-xs hover:bg-destructive/5 hover:text-destructive rounded-sm transition-all"
                                     >
-                                        <ShieldAlert className="w-3.5 h-3.5" />
+                                        <HugeiconsIcon icon={ShieldAlert} size={14} />
                                         <span>彻底删除</span>
                                     </Button>
                                 </>
@@ -164,7 +165,7 @@ export function SelectionToolbar() {
                                         disabled={!hasSelection || isPending}
                                         className="h-8 gap-2 text-xs hover:bg-primary/5 hover:text-primary rounded-sm transition-all"
                                     >
-                                        <Tag className="w-3.5 h-3.5" />
+                                        <HugeiconsIcon icon={Tag} size={14} />
                                         <span>添加标签</span>
                                     </Button>
                                     <Button
@@ -174,7 +175,7 @@ export function SelectionToolbar() {
                                         disabled={!hasSelection || isPending}
                                         className="h-8 gap-2 text-xs hover:bg-destructive/10 hover:text-destructive rounded-sm transition-all"
                                     >
-                                        {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                        {isPending ? <HugeiconsIcon icon={Loader2} size={14} className="animate-spin" /> : <HugeiconsIcon icon={Trash2} size={14} />}
                                         <span>删除</span>
                                     </Button>
                                 </>
@@ -190,7 +191,7 @@ export function SelectionToolbar() {
                                 className="h-8 px-2 rounded-sm text-muted-foreground hover:text-primary transition-colors"
                                 title="重置选择"
                             >
-                                <RotateCcw className="w-3.5 h-3.5" />
+                                <HugeiconsIcon icon={RotateCcw} size={14} />
                             </Button>
                             <Button
                                 variant="ghost"
@@ -198,7 +199,7 @@ export function SelectionToolbar() {
                                 onClick={() => toggleSelectionMode(false)}
                                 className="h-8 w-8 p-0 rounded-sm hover:bg-accent transition-colors"
                             >
-                                <X className="w-4 h-4 text-muted-foreground" />
+                                <HugeiconsIcon icon={X} size={16} className="text-muted-foreground" />
                             </Button>
                         </div>
                     </motion.div>

@@ -1,11 +1,21 @@
 'use client';
 
 import * as React from 'react';
+import { HugeiconsIcon } from '@hugeicons/react';
 import {
-    Settings, User, Sun, Moon, Monitor, Type,
-    LogOut, LogIn, Download, Loader2,
-    ShieldCheck, UserCircle2
-} from 'lucide-react';
+    Settings02Icon as Settings,
+    UserIcon as User,
+    Sun01Icon as Sun,
+    Moon01Icon as Moon,
+    ComputerIcon as Monitor,
+    TextFontIcon as Type,
+    Logout02Icon as LogOut,
+    Login03Icon as LogIn,
+    Download02Icon as Download,
+    Loading01Icon as Loader2,
+    ShieldCheck,
+    UserCircleIcon as UserCircle
+} from '@hugeicons/core-free-icons';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { logout } from '@/actions/auth';
@@ -92,10 +102,10 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     // 身份显示逻辑容器
     const renderIdentity = () => {
         // 如果有缓存的用户数据，优先显示身份图标而不是加载状态
-        if (user?.role === 'admin') return <ShieldCheck className="w-4 h-4 text-primary" />;
-        if (user) return <User className="w-4 h-4 text-muted-foreground" />;
-        if (loading && !user) return <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />;
-        return <UserCircle2 className="w-4 h-4 text-muted-foreground" />;
+        if (user?.role === 'admin') return <HugeiconsIcon icon={ShieldCheck} size={16} className="text-primary" />;
+        if (user) return <HugeiconsIcon icon={User} size={16} className="text-muted-foreground" />;
+        if (loading && !user) return <HugeiconsIcon icon={Loader2} size={16} className="animate-spin text-muted-foreground" />;
+        return <HugeiconsIcon icon={UserCircle} size={16} className="text-muted-foreground" />;
     };
 
     return (
@@ -111,7 +121,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         aria-label="账号与设置"
                     >
                         <div className="relative shrink-0">
-                            <Settings className="size-4 text-muted-foreground transition-colors" />
+                            <HugeiconsIcon icon={Settings} size={16} className="text-muted-foreground transition-colors" />
                             {/* 状态小圆点提示 - 有用户时立即显示 */}
                             {user && (
                                 <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background bg-primary" />
@@ -167,21 +177,21 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         <DropdownMenuLabel className="px-2 py-1.5 text-[12px] font-normal text-stone-400 uppercase tracking-wider font-sans">Settings / 偏好</DropdownMenuLabel>
                         <DropdownMenuSub>
                             <DropdownMenuSubTrigger className="rounded-sm">
-                                <Sun className="mr-2 h-4 w-4" />
+                                <HugeiconsIcon icon={Sun} size={16} className="mr-2" />
                                 <span>外观主题</span>
                             </DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                                 <DropdownMenuSubContent className="rounded-sm ml-1">
                                     <DropdownMenuItem className="rounded-sm" onClick={() => setTheme('light')}>
-                                        <Sun className="mr-2 h-4 w-4" />
+                                        <HugeiconsIcon icon={Sun} size={16} className="mr-2" />
                                         <span>浅色模式</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem className="rounded-sm" onClick={() => setTheme('dark')}>
-                                        <Moon className="mr-2 h-4 w-4" />
+                                        <HugeiconsIcon icon={Moon} size={16} className="mr-2" />
                                         <span>深色模式</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem className="rounded-sm" onClick={() => setTheme('system')}>
-                                        <Monitor className="mr-2 h-4 w-4" />
+                                        <HugeiconsIcon icon={Monitor} size={16} className="mr-2" />
                                         <span>跟随系统</span>
                                     </DropdownMenuItem>
                                 </DropdownMenuSubContent>
@@ -189,7 +199,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         </DropdownMenuSub>
 
                         <DropdownMenuItem className="rounded-sm" onClick={toggleFont}>
-                            <Type className="mr-2 h-4 w-4" />
+                            <HugeiconsIcon icon={Type} size={16} className="mr-2" />
                             <span>字体风格: {isSans ? '无衬线' : '经典衬线'}</span>
                         </DropdownMenuItem>
                     </div>
@@ -209,14 +219,14 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                     disabled={user?.role !== 'admin'}
                                     title={user?.role !== 'admin' ? "仅管理员可导出数据" : undefined}
                                 >
-                                    <Download className="mr-2 h-4 w-4" />
+                                    <HugeiconsIcon icon={Download} size={16} className="mr-2" />
                                     <span>备份全站记录 (MD)</span>
                                 </DropdownMenuItem>
                             </AlertDialogTrigger>
                             <AlertDialogContent className="rounded-sm border-border/50">
                                 <AlertDialogHeader>
                                     <AlertDialogTitle className="flex items-center gap-2 text-primary">
-                                        <Download className="w-5 h-5" />
+                                        <HugeiconsIcon icon={Download} size={20} />
                                         确认导出数据？
                                     </AlertDialogTitle>
                                     <AlertDialogDescription>
@@ -242,7 +252,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                 <DropdownMenuItem className="rounded-sm" onClick={() => {
                                     setViewMode('CARD_VIEW');
                                 }}>
-                                    <LogIn className="mr-2 h-4 w-4 text-primary" />
+                                    <HugeiconsIcon icon={LogIn} size={16} className="mr-2 text-primary" />
                                     <span>登录系统</span>
                                 </DropdownMenuItem>
                             </>
@@ -254,7 +264,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                 onClick={handleLogout}
                                 disabled={loggingOut}
                             >
-                                {loggingOut ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
+                                <HugeiconsIcon icon={loggingOut ? Loader2 : LogOut} size={16} className={cn("mr-2", loggingOut && "animate-spin")} />
                                 <span>退出登录</span>
                             </DropdownMenuItem>
                         )}

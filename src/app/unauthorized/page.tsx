@@ -1,7 +1,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ShieldAlert, ArrowLeft, LogOut } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { UserWarningIcon as ShieldAlert, ArrowLeft01Icon as ArrowLeft, Logout01Icon as LogOut } from '@hugeicons/core-free-icons';
 import Link from 'next/link';
 import { logout } from '@/actions/auth';
 import { useRouter } from 'next/navigation';
@@ -20,7 +21,7 @@ export default function UnauthorizedPage() {
             <div className="max-w-md w-full space-y-8 text-center bg-card border border-border rounded-3xl p-10 shadow-xl">
                 <div className="flex justify-center">
                     <div className="p-4 bg-destructive/10 rounded-full">
-                        <ShieldAlert className="w-12 h-12 text-destructive" />
+                        <HugeiconsIcon icon={ShieldAlert} size={48} className="text-destructive" />
                     </div>
                 </div>
 
@@ -34,12 +35,12 @@ export default function UnauthorizedPage() {
                 <div className="pt-6 flex flex-col gap-3">
                     <Button asChild variant="outline" className="rounded-xl h-12">
                         <Link href="/">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            <HugeiconsIcon icon={ArrowLeft} size={16} className="mr-2" />
                             返回首页
                         </Link>
                     </Button>
                     <Button onClick={handleLogout} className="rounded-xl h-12 bg-primary hover:bg-primary/90">
-                        <LogOut className="mr-2 h-4 w-4" />
+                        <HugeiconsIcon icon={LogOut} size={16} className="mr-2" />
                         切换账号登录
                     </Button>
                 </div>

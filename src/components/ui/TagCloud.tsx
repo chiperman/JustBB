@@ -4,7 +4,7 @@ import { useEffect, useState, memo } from 'react';
 import { getAllTags } from '@/actions/tags';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Tag } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { Badge } from '@/components/ui/badge';
 
 import { useTags } from '@/context/TagsContext';

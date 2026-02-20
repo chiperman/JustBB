@@ -11,7 +11,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { unlockWithCode } from '@/actions/unlock';
-import { Lock } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { CircleLock01Icon as Lock } from '@hugeicons/core-free-icons';
 import { useRouter } from 'next/navigation';
 
 interface UnlockDialogProps {
@@ -49,7 +50,7 @@ export function UnlockDialog({ isOpen, onClose, hint }: UnlockDialogProps) {
             <DialogContent className="sm:max-w-md bg-card border-border">
                 <DialogHeader>
                     <div className="flex items-center gap-2 text-primary mb-2">
-                        <Lock className="w-5 h-5" aria-hidden="true" />
+                        <HugeiconsIcon icon={Lock} size={20} aria-hidden="true" />
                         <DialogTitle>请输入解锁口令</DialogTitle>
                     </div>
                     {hint && (

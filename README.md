@@ -20,6 +20,7 @@
 |------|------|
 | **框架** | Next.js 16.1.6 + React 19 + TypeScript |
 | **样式** | Tailwind CSS 4 + Framer Motion |
+| **图标** | Hugeicons (@hugeicons/react) |
 | **后端** | Supabase (PostgreSQL + Auth) |
 | **部署** | Vercel |
 

@@ -1,6 +1,7 @@
 'use client';
 
-import { Search } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Search01Icon } from '@hugeicons/core-free-icons';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDebouncedCallback } from 'use-debounce';
 import { Input } from './input';
@@ -22,7 +23,7 @@ export function SearchInput() {
     return (
         <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                <Search className="h-4 w-4 text-muted-foreground" />
+                <HugeiconsIcon icon={Search01Icon} size={16} className="text-muted-foreground" />
             </div>
             <Input
                 type="text"

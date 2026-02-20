@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { format, eachMonthOfInterval, startOfYear, endOfYear, getYear } from 'date-fns';
 import { cn } from "@/lib/utils";
-import { Share } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Share01Icon as Share } from '@hugeicons/core-free-icons';
 import { motion } from 'framer-motion';
 
 interface DayStats {
@@ -111,7 +112,7 @@ function YearlyStatsItem({ year, stats }: { year: number; stats: Record<string, 
                     <h2 className="text-2xl font-bold tracking-tight font-serif">{year}</h2>
                 </div>
                 <button className="p-2 hover:bg-black/5 rounded-full transition-colors">
-                    <Share className="w-4 h-4 text-muted-foreground" />
+                    <HugeiconsIcon icon={Share} size={16} className="text-muted-foreground" />
                 </button>
             </div>
 

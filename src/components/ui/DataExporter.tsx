@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { exportAllMemos } from '@/actions/export';
-import { FileDown, FileJson, Loader2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { FileDownloadIcon as FileDown, File02Icon as FileJson, Loading01Icon as Loader2 } from '@hugeicons/core-free-icons';
 import { Memo } from '@/types/memo';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -105,7 +106,7 @@ export function DataExporter() {
                     className="flex items-center gap-2"
                     aria-label="导出完整数据为 JSON 格式"
                 >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <FileJson className="w-4 h-4" aria-hidden="true" />}
+                    {loading ? <HugeiconsIcon icon={Loader2} size={16} className="animate-spin" aria-hidden="true" /> : <HugeiconsIcon icon={FileJson} size={16} aria-hidden="true" />}
                     导出 JSON (完整)
                 </Button>
                 <Button
@@ -115,7 +116,7 @@ export function DataExporter() {
                     className="flex items-center gap-2"
                     aria-label="导出数据为 CSV 格式"
                 >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <FileDown className="w-4 h-4" aria-hidden="true" />}
+                    {loading ? <HugeiconsIcon icon={Loader2} size={16} className="animate-spin" aria-hidden="true" /> : <HugeiconsIcon icon={FileDown} size={16} aria-hidden="true" />}
                     导出 CSV
                 </Button>
             </div>

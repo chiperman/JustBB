@@ -3,7 +3,8 @@
 import { useState, useEffect, memo } from 'react';
 import { logout } from '@/actions/auth';
 import { useRouter } from 'next/navigation';
-import { LogIn, LogOut, User, Loader2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Login03Icon as LogIn, Logout03Icon as LogOut, UserIcon as User, Loading01Icon as Loader2 } from '@hugeicons/core-free-icons';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -56,7 +57,7 @@ export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { is
                         )}
                         title={user.email || '用户'}
                     >
-                        <User className={cn("w-4 h-4 shrink-0", user.role === 'admin' ? "text-primary" : "text-muted-foreground")} />
+                        <HugeiconsIcon icon={User} size={16} className={cn("shrink-0", user.role === 'admin' ? "text-primary" : "text-muted-foreground")} />
                         {!isCollapsed && (
                             <span className="text-xs text-muted-foreground truncate flex-1 font-medium">
                                 {user.email} {user.role === 'admin' ? '(管理员)' : '(普通用户)'}
@@ -76,9 +77,9 @@ export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { is
                         title={isCollapsed ? "退出登录" : undefined}
                     >
                         {loggingOut ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <HugeiconsIcon icon={Loader2} size={16} className="animate-spin" />
                         ) : (
-                            <LogOut className="w-4 h-4" />
+                            <HugeiconsIcon icon={LogOut} size={16} />
                         )}
                         {!isCollapsed && <span>退出登录</span>}
                     </Button>
@@ -99,7 +100,7 @@ export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { is
                         )}
                         title={isCollapsed ? "管理员登录" : undefined}
                     >
-                        <LogIn className="w-4 h-4" />
+                        <HugeiconsIcon icon={LogIn} size={16} />
                         {!isCollapsed && <span>管理员登录</span>}
                     </Link>
                 </motion.div>

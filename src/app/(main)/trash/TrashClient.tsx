@@ -3,7 +3,8 @@
 import { getTrashMemos } from "@/actions/fetchTrash";
 import { emptyTrash } from "@/actions/delete";
 import { MemoCard } from "@/components/ui/MemoCard";
-import { Trash2, Archive, Loader2, Sparkles } from "lucide-react";
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Delete02Icon as Trash2, Archive02Icon as Archive, Loading01Icon as Loader2, SparklesIcon as Sparkles } from '@hugeicons/core-free-icons';
 import { Memo } from "@/types/memo";
 import { useEffect, useState, useTransition } from "react";
 import { usePageDataCache } from "@/context/PageDataCache";
@@ -79,7 +80,7 @@ export default function TrashClient() {
                         <header className="mb-10 flex items-end justify-between border-b border-border/20 pb-8">
                             <div className="space-y-3">
                                 <h2 className="text-3xl font-serif font-bold tracking-tight italic flex items-center gap-3">
-                                    <Archive className="w-8 h-8 text-muted-foreground/40" /> 回收站
+                                    <HugeiconsIcon icon={Archive} size={32} className="text-muted-foreground/40" /> 回收站
                                 </h2>
                                 <p className="text-muted-foreground text-sm font-sans tracking-wide opacity-70 italic">
                                     Fragments intended for oblivion. {"\n"}
@@ -99,7 +100,7 @@ export default function TrashClient() {
                                                 className="text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all text-[10px] uppercase font-mono tracking-widest gap-2 rounded-sm h-7"
                                                 disabled={isPending}
                                             >
-                                                {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                                                {isPending ? <HugeiconsIcon icon={Loader2} size={12} className="animate-spin" /> : <HugeiconsIcon icon={Trash2} size={12} />}
                                                 Empty Trash
                                             </Button>
                                         </AlertDialogTrigger>
@@ -127,7 +128,7 @@ export default function TrashClient() {
 
                         {isLoading ? (
                             <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground/40" />
+                                <HugeiconsIcon icon={Loader2} size={24} className="animate-spin text-muted-foreground/40" />
                                 <span className="text-xs text-muted-foreground/60 font-mono uppercase tracking-widest">Retrieving archive...</span>
                             </div>
                         ) : memos.length === 0 ? (
@@ -136,7 +137,7 @@ export default function TrashClient() {
                                 animate={{ opacity: 1 }}
                                 className="flex flex-col items-center justify-center py-24 bg-muted/5 rounded-sm border border-dashed border-border/30"
                             >
-                                <Sparkles className="w-8 h-8 text-muted-foreground/20 mb-4" />
+                                <HugeiconsIcon icon={Sparkles} size={32} className="text-muted-foreground/20 mb-4" />
                                 <p className="font-serif italic text-muted-foreground opacity-40">尘埃落定，这里空无一物。</p>
                             </motion.div>
                         ) : (

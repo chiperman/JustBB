@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Tag as TagIcon } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Tag01Icon as TagIcon } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
 import { usePageDataCache } from '@/context/PageDataCache';
 import { getAllTags } from '@/actions/tags';
@@ -69,7 +70,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
                     <section>
                         <header className="mb-12 border-b border-border/20 pb-8">
                             <h2 className="text-3xl font-serif font-bold tracking-tight mb-3 italic flex items-center gap-3">
-                                <TagIcon className="w-8 h-8 text-primary/60" /> 标签墙
+                                <HugeiconsIcon icon={TagIcon} size={32} className="text-primary/60" /> 标签墙
                             </h2>
                             <p className="text-muted-foreground text-sm font-sans tracking-wide opacity-70 italic">
                                 Organize your thoughts through structural indices. {"\n"}
@@ -121,7 +122,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
                                                         <span className="text-lg font-serif font-bold text-foreground group-hover:text-primary transition-colors leading-tight">
                                                             {tag.tag_name}
                                                         </span>
-                                                        <TagIcon className="w-3 h-3 text-muted-foreground/30 group-hover:text-primary/40 transition-colors" />
+                                                        <HugeiconsIcon icon={TagIcon} size={12} className="text-muted-foreground/30 group-hover:text-primary/40 transition-colors" />
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest opacity-50">Count</span>

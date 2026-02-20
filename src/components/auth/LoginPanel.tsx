@@ -3,7 +3,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { login, signup, signInWithOAuth, verifyOtp, checkUserExists } from '@/actions/auth';
 import { useRouter } from 'next/navigation';
-import { Lock, Mail, Loader2, Github, Eye, EyeOff, ArrowRight, Edit2, Check, X } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+    CircleLock01Icon as Lock,
+    Mail01Icon as Mail,
+    Loading01Icon as Loader2,
+    GithubIcon as Github,
+    ViewIcon as Eye,
+    ViewOffIcon as EyeOff,
+    ArrowRight01Icon as ArrowRight,
+    PencilEdit01Icon as Edit2,
+    CheckmarkCircle01Icon as Check,
+    Cancel01Icon as X
+} from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -439,9 +451,9 @@ export function LoginPanel() {
                                 className="w-full h-14 group cursor-pointer transition-all duration-300 border-foreground/10 hover:bg-foreground/[0.03] rounded-none border-0 border-b bg-transparent"
                             >
                                 {oauthLoading === 'github' ? (
-                                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                    <HugeiconsIcon icon={Loader2} size={20} className="animate-spin text-primary" />
                                 ) : (
-                                    <Github className="w-5 h-5 mr-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                                    <HugeiconsIcon icon={Github} size={20} className="mr-3 text-muted-foreground group-hover:text-primary transition-colors" />
                                 )}
                                 <span className="font-sans font-bold tracking-widest text-[11px] uppercase">GitHub</span>
                             </Button>
@@ -455,7 +467,7 @@ export function LoginPanel() {
                                 className="w-full h-14 group cursor-pointer transition-all duration-300 border-foreground/10 hover:bg-foreground/[0.03] rounded-none border-0 border-b bg-transparent"
                             >
                                 {oauthLoading === 'google' ? (
-                                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                    <HugeiconsIcon icon={Loader2} size={20} className="animate-spin text-primary" />
                                 ) : (
                                     <span className="mr-3 font-bold text-lg leading-none text-muted-foreground group-hover:text-primary transition-colors">G</span>
                                 )}
@@ -483,7 +495,7 @@ export function LoginPanel() {
                                 电子邮箱
                             </label>
                             <div className="relative group">
-                                <Mail className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/10 group-focus-within:text-primary transition-colors duration-500 z-10" />
+                                <HugeiconsIcon icon={Mail} size={16} className="absolute left-0 top-1/2 -translate-y-1/2 text-muted-foreground/10 group-focus-within:text-primary transition-colors duration-500 z-10" />
                                 <Input
                                     id="email"
                                     name="email"
@@ -511,7 +523,7 @@ export function LoginPanel() {
                                         }}
                                         className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-muted-foreground/30 hover:text-primary transition-colors z-20"
                                     >
-                                        <Edit2 className="w-3 h-3" />
+                                        <HugeiconsIcon icon={Edit2} size={12} />
                                     </button>
                                 )}
                                 <motion.div
@@ -552,7 +564,7 @@ export function LoginPanel() {
                                             )}
                                         </div>
                                         <div className="relative group">
-                                            <Lock className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/10 group-focus-within:text-primary transition-colors duration-500 z-10" />
+                                            <HugeiconsIcon icon={Lock} size={16} className="absolute left-0 top-1/2 -translate-y-1/2 text-muted-foreground/10 group-focus-within:text-primary transition-colors duration-500 z-10" />
                                             <Input
                                                 id="password"
                                                 name="password"
@@ -578,7 +590,7 @@ export function LoginPanel() {
                                                 aria-label={showPassword ? "收起密码" : "显示密码"}
                                                 className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground/20 hover:text-primary transition-colors duration-500 focus:outline-none cursor-pointer"
                                             >
-                                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                {showPassword ? <HugeiconsIcon icon={EyeOff} size={16} /> : <HugeiconsIcon icon={Eye} size={16} />}
                                             </button>
                                         </div>
 
@@ -700,11 +712,11 @@ export function LoginPanel() {
                                     className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"
                                 />
                                 {loading ? (
-                                    <Loader2 className="w-5 h-5 animate-spin mr-3 opacity-50" />
+                                    <HugeiconsIcon icon={Loader2} size={20} className="animate-spin mr-3 opacity-50" />
                                 ) : (
                                     <span className="flex items-center z-10">
                                         {step === 'EMAIL' ? '下一步' : (authMode === 'REGISTER' ? '注册' : '登录')}
-                                        {step === 'EMAIL' && <ArrowRight className="ml-3 w-4 h-4 opacity-50 group-hover:translate-x-1.5 transition-transform duration-500" />}
+                                        {step === 'EMAIL' && <HugeiconsIcon icon={ArrowRight} size={16} className="ml-3 opacity-50 group-hover:translate-x-1.5 transition-transform duration-500" />}
                                     </span>
                                 )}
                             </Button>
@@ -730,7 +742,7 @@ function RequirementItem({ met, label }: { met: boolean; label: string }) {
     return (
         <div className="flex items-center gap-1.5 group">
             <div className={`flex-shrink-0 w-3.5 h-3.5 rounded-full flex items-center justify-center transition-all duration-300 ${met ? 'bg-green-500/10 text-green-600 scale-110 shadow-[0_0_8px_rgba(34,197,94,0.15)]' : 'bg-foreground/[0.03] text-muted-foreground/20'}`}>
-                {met ? <Check className="w-2 h-2 stroke-[3.5]" /> : <div className="w-0.5 h-0.5 rounded-full bg-current opacity-40" />}
+                {met ? <HugeiconsIcon icon={Check} size={8} className="stroke-[3.5]" /> : <div className="w-0.5 h-0.5 rounded-full bg-current opacity-40" />}
             </div>
             <span className={`text-[9px] font-sans font-bold uppercase tracking-wider transition-colors duration-300 ${met ? 'text-green-600/80' : 'text-muted-foreground/30'}`}>{label}</span>
         </div>

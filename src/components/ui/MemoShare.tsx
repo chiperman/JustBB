@@ -3,7 +3,8 @@
 import { useState, useRef, useCallback } from 'react';
 import { toPng } from 'html-to-image';
 import { QRCodeSVG } from 'qrcode.react';
-import { Download, Share2, Loader2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Download01Icon as Download, Share01Icon as Share2, Loading01Icon as Loader2 } from '@hugeicons/core-free-icons';
 import {
     Dialog,
     DialogContent,
@@ -65,7 +66,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
             <DialogTrigger asChild>
                 {trigger || (
                     <Button variant="ghost" size="icon" className="rounded-full hover:bg-accent" title="分享" aria-label="生成海报分享">
-                        <Share2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+                        <HugeiconsIcon icon={Share2} size={16} className="text-muted-foreground" aria-hidden="true" />
                     </Button>
                 )}
             </DialogTrigger>
@@ -131,7 +132,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                         disabled={isGenerating}
                         className="flex-1"
                     >
-                        {isGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+                        {isGenerating ? <HugeiconsIcon icon={Loader2} size={16} className="mr-2 animate-spin" /> : <HugeiconsIcon icon={Download} size={16} className="mr-2" />}
                         保存图片
                     </Button>
                     <Button
@@ -155,7 +156,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                         }}
                         aria-label="更多分享方式"
                     >
-                        <Share2 className="w-4 h-4 mr-2" aria-hidden="true" />
+                        <HugeiconsIcon icon={Share2} size={16} className="mr-2" aria-hidden="true" />
                         更多分享
                     </Button>
                 </div>

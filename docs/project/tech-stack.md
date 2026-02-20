@@ -22,7 +22,7 @@
 | Tailwind CSS | ^4 | 原子化 CSS 框架 |
 | Radix UI | ^1.x | 无障碍组件原语 |
 | Framer Motion | ^12.x | 动画与过渡效果 |
-| lucide-react | ^0.5xx | 图标库 |
+| Hugeicons (@hugeicons/react) | ^0.5xx | 图标库，用于全站图标，提供现代化视觉效果。配合自研 HugeiconsIcon Wrapper 确保尺寸、对齐与无障碍特性的全局统一。 |
 | next-themes | ^0.4 | 深/浅色/系统主题切换 |
 
 ---

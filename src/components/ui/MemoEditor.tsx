@@ -3,7 +3,18 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createMemo } from '@/actions/memos';
 import { useRouter } from 'next/navigation';
-import { X, Pin, Lock, LockOpen, Hash, Eye, EyeOff, Maximize2, Minimize2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+    Cancel01Icon as X,
+    PinIcon as Pin,
+    LockIcon as Lock,
+    CircleUnlock01Icon as LockOpen,
+    HashtagIcon as Hash,
+    ViewIcon as Eye,
+    ViewOffSlashIcon as EyeOff,
+    Maximize01Icon as Maximize2,
+    Minimize01Icon as Minimize2
+} from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
 import { Input } from './input';
@@ -1036,7 +1047,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 onClick={handleTogglePrivate}
                                 className={cn("h-8 px-2 gap-1.5", isPrivate ? "text-primary bg-primary/5" : "text-muted-foreground")}
                             >
-                                {isPrivate ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
+                                {isPrivate ? <HugeiconsIcon icon={Lock} size={16} /> : <HugeiconsIcon icon={LockOpen} size={16} />}
                                 <span className="text-xs font-medium">{isPrivate ? '私密' : '公开'}</span>
                             </Button>
 
@@ -1046,7 +1057,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 onClick={() => setIsPinned(!isPinned)}
                                 className={cn("h-8 px-2 gap-1.5", isPinned ? "text-primary bg-primary/5" : "text-muted-foreground")}
                             >
-                                <Pin className={cn("w-4 h-4", isPinned && "fill-current")} />
+                                <HugeiconsIcon icon={Pin} size={16} className={cn(isPinned && "fill-current")} />
                                 <span className="text-xs font-medium">置顶</span>
                             </Button>
 
@@ -1057,7 +1068,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                     onClick={() => setIsFullscreen(true)}
                                     className="h-8 px-2 text-muted-foreground"
                                 >
-                                    <Maximize2 className="w-4 h-4" />
+                                    <HugeiconsIcon icon={Maximize2} size={16} />
                                 </Button>
                             )}
                         </div>
@@ -1109,7 +1120,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
                 <DialogContent
                     className="max-w-5xl h-[92vh] flex flex-col p-0 gap-0 overflow-hidden bg-background"
-                    closeIcon={<Minimize2 className="h-4 w-4" />}
+                    closeIcon={<HugeiconsIcon icon={Minimize2} size={16} />}
                     animateOffset={false}
                 >
                     <DialogTitle className="sr-only">全屏编辑内容</DialogTitle>
@@ -1163,9 +1174,9 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                     aria-label={showAccessCode ? "隐藏口令" : "显示口令"}
                                 >
                                     {showAccessCode ? (
-                                        <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                        <HugeiconsIcon icon={EyeOff} size={16} className="text-muted-foreground" aria-hidden="true" />
                                     ) : (
-                                        <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                        <HugeiconsIcon icon={Eye} size={16} className="text-muted-foreground" aria-hidden="true" />
                                     )}
                                 </Button>
                             </div>

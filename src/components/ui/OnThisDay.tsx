@@ -2,7 +2,8 @@
 
 import { useEffect, useState, memo } from 'react';
 import { getOnThisDayMemos } from '@/actions/history';
-import { History } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Clock01Icon as History } from '@hugeicons/core-free-icons';
 import { Memo } from '@/types/memo';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from 'framer-motion';
@@ -37,6 +38,7 @@ export const OnThisDay = memo(function OnThisDay({ initialMemos }: { initialMemo
                 id="history-title"
                 className="text-[24px] font-bold text-foreground leading-tight tracking-tight mb-4 flex items-center gap-2"
             >
+                <HugeiconsIcon icon={History} size={24} className="text-primary" />
                 去年今日
             </h3>
             <ul className="flex flex-col gap-[16px]" role="list">

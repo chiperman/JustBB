@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Lock, ShieldCheck, Loader2, CheckCircle2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { CircleLock01Icon as Lock, ShieldCheck, Loading01Icon as Loader2, CheckmarkCircle01Icon as CheckCircle2 } from '@hugeicons/core-free-icons';
 import { updatePassword } from '@/actions/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -68,7 +69,7 @@ export default function ResetPasswordPage() {
                 <div className="max-w-md w-full space-y-8 text-center bg-card border border-border rounded-3xl p-10 shadow-xl">
                     <div className="flex justify-center">
                         <div className="p-4 bg-primary/10 rounded-full">
-                            <CheckCircle2 className="w-12 h-12 text-primary" />
+                            <HugeiconsIcon icon={CheckCircle2} size={48} className="text-primary" />
                         </div>
                     </div>
                     <div className="space-y-3">
@@ -78,7 +79,7 @@ export default function ResetPasswordPage() {
                         </p>
                     </div>
                     <div className="pt-4">
-                        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+                        <HugeiconsIcon icon={Loader2} size={32} className="animate-spin text-primary mx-auto" />
                     </div>
                 </div>
             </div>
@@ -90,7 +91,7 @@ export default function ResetPasswordPage() {
             <div className="max-w-md w-full space-y-8 bg-card border border-border rounded-3xl p-10 shadow-xl">
                 <div className="flex flex-col items-center text-center space-y-4">
                     <div className="p-3 bg-primary/10 rounded-2xl">
-                        <ShieldCheck className="w-8 h-8 text-primary" />
+                        <HugeiconsIcon icon={ShieldCheck} size={32} className="text-primary" />
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight">设置新密码</h1>
                     <p className="text-muted-foreground">
@@ -132,7 +133,7 @@ export default function ResetPasswordPage() {
                     </div>
 
                     <Button type="submit" className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/20 mt-4 transition-all active:scale-[0.98]" disabled={isLoading}>
-                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : '更新密码并登录'}
+                        {isLoading ? <HugeiconsIcon icon={Loader2} size={20} className="animate-spin" /> : '更新密码并登录'}
                     </Button>
                 </form>
             </div>

@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { deleteMemo, restoreMemo, permanentDeleteMemo } from '@/actions/delete';
 import { updateMemoState } from '@/actions/update';
 import { memoCache } from '@/lib/memo-cache';
-import { Trash2, RotateCcw, MoreHorizontal } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Delete02Icon, RotateLeft01Icon, MoreHorizontalIcon } from '@hugeicons/core-free-icons';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -162,7 +163,7 @@ export function MemoActions({
                             className="rounded-sm text-green-600 hover:text-green-700 hover:bg-green-50"
                             title="恢复"
                         >
-                            <RotateCcw className="w-4 h-4" />
+                            <HugeiconsIcon icon={RotateLeft01Icon} size={16} />
                         </Button>
                         <Button
                             variant="ghost"
@@ -172,7 +173,7 @@ export function MemoActions({
                             className="rounded-sm text-red-600 hover:text-red-700 hover:bg-red-50"
                             title="彻底删除"
                         >
-                            <Trash2 className="w-4 h-4" />
+                            <HugeiconsIcon icon={Delete02Icon} size={16} />
                         </Button>
 
                         <AlertDialog open={showPermanentDeleteAlert} onOpenChange={setShowPermanentDeleteAlert}>
@@ -200,7 +201,7 @@ export function MemoActions({
             <DropdownMenu onOpenChange={onOpenChange}>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8 p-0 hover:bg-accent rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 transition-all">
-                        <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                        <HugeiconsIcon icon={MoreHorizontalIcon} size={16} className="text-muted-foreground" />
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">

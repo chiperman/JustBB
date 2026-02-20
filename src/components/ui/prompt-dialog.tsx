@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Eye, EyeOff } from "lucide-react"
+import { HugeiconsIcon } from '@hugeicons/react'
+import { ViewIcon as Eye, ViewOffSlashIcon as EyeOff } from "@hugeicons/core-free-icons"
 
 interface PromptDialogProps {
     open: boolean
@@ -105,9 +106,9 @@ export function PromptDialog({
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                             >
                                 {showPassword ? (
-                                    <EyeOff className="h-4 w-4" />
+                                    <HugeiconsIcon icon={EyeOff} size={16} />
                                 ) : (
-                                    <Eye className="h-4 w-4" />
+                                    <HugeiconsIcon icon={Eye} size={16} />
                                 )}
                             </button>
                         )}

@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Type } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Txt01Icon as Type } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 
@@ -38,7 +39,7 @@ export function FontToggle() {
             title={`当前字体: ${isSans ? '无衬线' : '衬线'}`}
             aria-label={`切换字体，当前: ${isSans ? '无衬线' : '衬线'}`}
         >
-            <Type className="w-4 h-4" aria-hidden="true" />
+            <HugeiconsIcon icon={Type} size={16} aria-hidden="true" />
         </Button>
     );
 }

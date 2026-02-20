@@ -3,7 +3,8 @@
 import * as React from 'react';
 import * as HoverCardPrimitive from '@radix-ui/react-hover-card';
 import { cn } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Loading01Icon as Loader2 } from '@hugeicons/core-free-icons';
 
 const HoverCard = HoverCardPrimitive.Root;
 const HoverCardTrigger = HoverCardPrimitive.Trigger;
@@ -64,7 +65,7 @@ export function MemoHoverPreview({ memoNumber, children }: MemoHoverPreviewProps
                     <div className="text-sm">
                         {loading ? (
                             <div className="flex items-center gap-2 text-muted-foreground">
-                                <span className="w-3 h-3 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                                <HugeiconsIcon icon={Loader2} size={12} className="animate-spin text-primary" />
                                 <span className="text-xs font-medium animate-pulse">Loading…</span>
                             </div>
                         ) : (

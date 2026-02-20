@@ -23,7 +23,8 @@ import {
     DialogTrigger,
     DialogClose,
 } from "@/components/ui/dialog";
-import { X } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon as X } from '@hugeicons/core-free-icons';
 import { Button } from "@/components/ui/button";
 import {
     Select,
@@ -215,7 +216,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
 
                     <DialogClose asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-black/5 z-10">
-                            <X className="h-4 w-4" />
+                            <HugeiconsIcon icon={X} size={16} />
                         </Button>
                     </DialogClose>
                 </div>

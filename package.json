@@ -12,6 +12,8 @@
     "release": "standard-version"
   },
   "dependencies": {
+    "@hugeicons/core-free-icons": "^3.1.1",
+    "@hugeicons/react": "^1.1.5",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-hover-card": "^1.1.15",
@@ -32,7 +34,6 @@
     "date-fns": "^4.1.0",
     "framer-motion": "^12.29.2",
     "html-to-image": "^1.11.13",
-    "lucide-react": "^0.563.0",
     "next": "16.1.6",
     "next-themes": "^0.4.6",
     "qrcode.react": "^4.2.0",

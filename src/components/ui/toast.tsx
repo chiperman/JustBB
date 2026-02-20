@@ -3,7 +3,8 @@
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
-import { X, CheckCircle2, AlertCircle, Info } from "lucide-react"
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Cancel01Icon as X, Tick02Icon as CheckCircle2, AlertCircleIcon as AlertCircle, InformationCircleIcon as Info } from "@hugeicons/core-free-icons"
 
 import { cn } from "@/lib/utils"
 
@@ -84,7 +85,7 @@ const ToastClose = React.forwardRef<
         toast-close=""
         {...props}
     >
-        <X className="h-4 w-4" />
+        <HugeiconsIcon icon={X} size={16} />
     </ToastPrimitives.Close>
 )
 )

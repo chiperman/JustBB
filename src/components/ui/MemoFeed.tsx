@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { MemoCard } from './MemoCard';
 import { getAllMemos } from '@/actions/search';
-import { Loader2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Loading01Icon as Loader2 } from '@hugeicons/core-free-icons';
 import { Memo } from '@/types/memo';
 import { useTimeline } from '@/context/TimelineContext';
 import { memoCache } from '@/lib/memo-cache';
@@ -277,7 +278,7 @@ export function MemoFeed({ initialMemos, searchParams, adminCode, isAdmin = fals
 
             {!isFullLoaded && (
                 <div className="flex justify-center p-4">
-                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    <HugeiconsIcon icon={Loader2} size={24} className="animate-spin text-muted-foreground" />
                     <span className="ml-2 text-xs text-muted-foreground">Loading full history...</span>
                 </div>
             )}

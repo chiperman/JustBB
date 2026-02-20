@@ -20,7 +20,18 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useSelection } from '@/context/SelectionContext';
 import { useUser } from '@/context/UserContext';
-import { X, Trash2, Tag, CheckSquare, ChevronDown, ArrowUpDown, Home, Loader2, RotateCcw } from 'lucide-react';
+import {
+    HugeiconsIcon,
+} from '@hugeicons/react';
+import {
+    Delete02Icon,
+    Tag01Icon,
+    CheckmarkSquare02Icon,
+    ArrowDown01Icon,
+    Sorting05Icon,
+    Home01Icon,
+    Loading01Icon
+} from '@hugeicons/core-free-icons';
 import { batchDeleteMemos } from '@/actions/delete';
 import { batchAddTagsToMemos } from '@/actions/update';
 import { TagSelectDialog } from './TagSelectDialog';
@@ -97,7 +108,11 @@ export function FeedHeader() {
                             className="group flex items-center gap-1.5 px-2 py-1 rounded-sm hover:bg-primary/5 transition-colors mr-1"
                             title="返回首页并重置过滤器"
                         >
-                            <Home className="size-3.5 text-primary/70 group-hover:text-primary transition-colors" />
+                            <HugeiconsIcon
+                                icon={Home01Icon}
+                                size={14}
+                                className="text-primary/70 group-hover:text-primary transition-colors"
+                            />
                             <span className="text-sm font-bold tracking-tight text-primary/90 group-hover:text-primary transition-colors">
                                 JustMemo
                             </span>
@@ -121,7 +136,11 @@ export function FeedHeader() {
                                 className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-sm transition-all focus-visible:ring-0"
                                 aria-label="更多选项"
                             >
-                                <ChevronDown className="size-3.5 transition-transform group-data-[state=open]:rotate-180" />
+                                <HugeiconsIcon
+                                    icon={ArrowDown01Icon}
+                                    size={14}
+                                    className="transition-transform group-data-[state=open]:rotate-180"
+                                />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" side="bottom" className="w-48">
@@ -131,7 +150,7 @@ export function FeedHeader() {
                                         className="cursor-pointer gap-2"
                                         onClick={() => toggleSelectionMode(true)}
                                     >
-                                        <CheckSquare className="w-4 h-4" />
+                                        <HugeiconsIcon icon={CheckmarkSquare02Icon} size={16} />
                                         <span>选择笔记</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
@@ -139,7 +158,7 @@ export function FeedHeader() {
                             )}
                             <DropdownMenuSub>
                                 <DropdownMenuSubTrigger className="cursor-pointer gap-2">
-                                    <ArrowUpDown className="w-4 h-4" />
+                                    <HugeiconsIcon icon={Sorting05Icon} size={16} />
                                     <span>排序方式</span>
                                 </DropdownMenuSubTrigger>
                                 <DropdownMenuPortal>

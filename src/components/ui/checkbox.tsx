@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
-import { Check } from "lucide-react"
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Tick01Icon as Check } from "@hugeicons/core-free-icons"
 
 import { cn } from "@/lib/utils"
 
@@ -21,7 +22,7 @@ const Checkbox = React.forwardRef<
         <CheckboxPrimitive.Indicator
             className={cn("flex items-center justify-center text-current h-full w-full")}
         >
-            <Check className="h-3 w-3" />
+            <HugeiconsIcon icon={Check} size={12} />
         </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
 ))

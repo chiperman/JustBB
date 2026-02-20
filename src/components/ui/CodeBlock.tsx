@@ -2,7 +2,8 @@
 
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { Copy, Check } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Copy01Icon as Copy, CheckmarkCircle01Icon as Check } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,7 @@ export function CodeBlock({ language, value }: CodeBlockProps) {
                     className="h-7 px-2 text-xs bg-background/80 hover:bg-background backdrop-blur-md shadow-sm border border-border"
                     title="Copy code"
                 >
-                    {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied ? <HugeiconsIcon icon={Check} size={14} className="text-primary" /> : <HugeiconsIcon icon={Copy} size={14} />}
                     {copied && <span className="text-[10px] text-primary font-medium ml-1">Copied</span>}
                 </Button>
             </div>

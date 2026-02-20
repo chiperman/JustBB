@@ -4,7 +4,8 @@ import { Suspense, useState, useEffect, useMemo } from 'react';
 import { TagCloud } from '../ui/TagCloud';
 import { Heatmap } from '../ui/Heatmap';
 import { OnThisDay } from '../ui/OnThisDay';
-import { Home, Tag, Trash2, Image as GalleryIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Home01Icon, Tag01Icon, Delete02Icon, Image01Icon as GalleryIcon, PanelLeftCloseIcon, PanelLeftOpenIcon } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { SidebarSettings } from "./SidebarSettings";
@@ -36,13 +37,13 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
 
     const navItems = useMemo(() => {
         const items = [
-            { icon: <Home className="size-3.5" />, label: '首页', href: '/' },
-            { icon: <GalleryIcon className="size-3.5" />, label: '画廊', href: '/gallery' },
-            { icon: <Tag className="size-3.5" />, label: '标签', href: '/tags' },
+            { icon: <HugeiconsIcon icon={Home01Icon} size={14} />, label: '首页', href: '/' },
+            { icon: <HugeiconsIcon icon={GalleryIcon} size={14} />, label: '画廊', href: '/gallery' },
+            { icon: <HugeiconsIcon icon={Tag01Icon} size={14} />, label: '标签', href: '/tags' },
         ];
 
         if (isAdmin) {
-            items.push({ icon: <Trash2 className="size-3.5" />, label: '回收站', href: '/trash' });
+            items.push({ icon: <HugeiconsIcon icon={Delete02Icon} size={14} />, label: '回收站', href: '/trash' });
         }
 
         return items;
@@ -187,9 +188,9 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
                 >
                     <motion.button>
                         {isMobile ? (
-                            <PanelLeftClose className="size-4" />
+                            <HugeiconsIcon icon={PanelLeftCloseIcon} size={16} />
                         ) : (
-                            effectiveIsCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />
+                            effectiveIsCollapsed ? <HugeiconsIcon icon={PanelLeftOpenIcon} size={16} /> : <HugeiconsIcon icon={PanelLeftCloseIcon} size={16} />
                         )}
                     </motion.button>
                 </Button>

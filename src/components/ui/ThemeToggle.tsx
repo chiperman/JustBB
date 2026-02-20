@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { MoonIcon as Moon, Sun01Icon as Sun, ComputerIcon as Monitor } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
@@ -22,9 +23,9 @@ export function ThemeToggle() {
     }
 
     const themes = [
-        { name: 'light', icon: <Sun className="w-4 h-4" />, label: '浅色' },
-        { name: 'dark', icon: <Moon className="w-4 h-4" />, label: '深色' },
-        { name: 'system', icon: <Monitor className="w-4 h-4" />, label: '自动' },
+        { name: 'light', icon: <HugeiconsIcon icon={Sun} size={16} />, label: '浅色' },
+        { name: 'dark', icon: <HugeiconsIcon icon={Moon} size={16} />, label: '深色' },
+        { name: 'system', icon: <HugeiconsIcon icon={Monitor} size={16} />, label: '自动' },
     ];
 
     const currentTheme = themes.find((t) => t.name === theme) || themes[2];
@@ -44,9 +45,9 @@ export function ThemeToggle() {
             title={`当前主题: ${currentTheme.label}`}
             aria-label={`切换主题，当前: ${currentTheme.label}`}
         >
-            {currentTheme.name === 'light' && <Sun className="w-4 h-4" aria-hidden="true" />}
-            {currentTheme.name === 'dark' && <Moon className="w-4 h-4" aria-hidden="true" />}
-            {currentTheme.name === 'system' && <Monitor className="w-4 h-4" aria-hidden="true" />}
+            {currentTheme.name === 'light' && <HugeiconsIcon icon={Sun} size={16} aria-hidden="true" />}
+            {currentTheme.name === 'dark' && <HugeiconsIcon icon={Moon} size={16} aria-hidden="true" />}
+            {currentTheme.name === 'system' && <HugeiconsIcon icon={Monitor} size={16} aria-hidden="true" />}
         </Button>
     );
 }

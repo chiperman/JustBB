@@ -3,7 +3,8 @@
 import { MemoContent } from './MemoContent';
 import { MemoActions } from './MemoActions';
 import { MemoEditor } from './MemoEditor';
-import { Pin, Lock, MoreHorizontal, Link2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { PinIcon, LockIcon, Link02Icon } from '@hugeicons/core-free-icons';
 import { memo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn, formatDate } from '@/lib/utils';
@@ -129,8 +130,8 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                             hour12: false
                         }).replace(/\//g, '-')}
                     </time>
-                    {memo.is_pinned && <Pin className="w-3.5 h-3.5 text-primary" fill="currentColor" aria-hidden="true" />}
-                    {memo.is_private && <Lock className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />}
+                    {memo.is_pinned && <HugeiconsIcon icon={PinIcon} size={14} className="text-primary fill-current" aria-hidden="true" />}
+                    {memo.is_private && <HugeiconsIcon icon={LockIcon} size={14} className="text-muted-foreground" aria-hidden="true" />}
                     {memo.word_count !== undefined && (
                         <span className="text-[10px] text-muted-foreground/60">
                             {memo.word_count} 字
@@ -152,7 +153,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                             aria-label="查看引用"
                             title="查看引用"
                         >
-                            <Link2 className="w-4 h-4" />
+                            <HugeiconsIcon icon={Link02Icon} size={16} />
                         </Button>
                         <MemoActions
                             id={memo.id}
@@ -263,7 +264,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                         )}
                         aria-label="解密内容"
                     >
-                        <Lock className="w-3 h-3 text-primary" aria-hidden="true" />
+                        <HugeiconsIcon icon={LockIcon} size={12} className="text-primary" aria-hidden="true" />
                         <span>解密记录以阅读正文</span>
                     </button>
                 </div>

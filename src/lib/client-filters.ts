@@ -21,11 +21,11 @@ export function clientFilterMemos(memos: Memo[], params: FilterParams): Memo[] {
     if (!isOnline) {
         // 离线状态：强制不可见所有私密或加密内容 (不管是否登录)
         result = result.filter(m => !m.is_private && !m.access_code);
-    } else if (!isAdmin) {
-        // 在线但非管理员：只显示公开且未加密的内容
-        // (注意：这里通常由后端 RLS 保证，但前端过滤器提供双重保障)
-        result = result.filter(m => !m.is_private && !m.access_code);
     }
+    // 在线状态下，放开对 is_private 的过滤。
+    // 如果是非管理员，后端 RPC 会返回 content='' 且 is_locked=true 的占位记录，
+    // 前端 MemoCard 能够识别并渲染为“锁定”样式。
+    // 如果是管理员，则能看到完整内容。
     // else: 如果是在线管理员，显示全部 (result 保持不变)
 
     // 1. Tag Filter

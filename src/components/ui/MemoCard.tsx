@@ -121,7 +121,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                         #{memo.memo_number}
                     </span>
                     <time className="text-xs text-muted-foreground font-sans">
-                        {new Date(memo.created_at).toLocaleString('zh-CN', {
+                        {memo.is_locked ? '****年**月**日 *:*' : new Date(memo.created_at).toLocaleString('zh-CN', {
                             year: 'numeric',
                             month: '2-digit',
                             day: '2-digit',
@@ -134,7 +134,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                     {memo.is_private && <HugeiconsIcon icon={LockIcon} size={14} className="text-muted-foreground" aria-hidden="true" />}
                     {memo.word_count !== undefined && (
                         <span className="text-[10px] text-muted-foreground/60">
-                            {memo.word_count} 字
+                            {memo.is_locked ? '*' : memo.word_count} 字
                         </span>
                     )}
                 </div>

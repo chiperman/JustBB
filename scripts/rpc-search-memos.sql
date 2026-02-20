@@ -41,7 +41,11 @@ BEGIN
       WHEN m.access_code IS NOT NULL AND m.access_code = crypt(input_code, m.access_code) THEN FALSE
       ELSE TRUE
     END as is_locked,
-    m.word_count
+    -- 脫敏處理：當為私密且未解鎖時，返回 0。
+    CASE 
+      WHEN (m.is_private = TRUE AND NOT (auth.uid() IS NOT NULL OR (m.access_code IS NOT NULL AND m.access_code = crypt(input_code, m.access_code)))) THEN 0
+      ELSE m.word_count
+    END as word_count
   FROM memos m
   WHERE 
     -- 1. 软删除过滤

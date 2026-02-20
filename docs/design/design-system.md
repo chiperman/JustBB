@@ -1,6 +1,6 @@
 # JustMemo 设计系统 (Design System)
 
-> 最后更新：2026-02-19
+> 最后更新：2026-02-21 (新增：Hugeicons 系统迁移与私密视觉规范)
 
 ## 1. 视觉风格
 *   定调: 深度致敬 Anthropic 风格，追求纸质书写的温润感与学术优雅。
@@ -183,6 +183,15 @@ export const duration = {
 
 ### 9.1 等高匹配原则 (Equal-Height Principle)
 *   **核心逻辑**: 图标的像素高度应尽可能与文本的字号（Font Size）或视觉重心高度一致。
+*   **图标库 (Icons)**: 全面迁移至 [Hugeicons](https://hugeicons.com/) (`@hugeicons/react`)。
+    - **逻辑关联**: 优先使用 Rounded 或 Soft 风格图标以契合整体温润的 UI 基调。
+    - **私密记录专项设计**:
+        - 解密按钮 & 卡片标识: 使用 `ChatLock01Icon`。
+        - 菜单“设为私密”图标: 使用 `ChatLock01Icon` / `ChatUnlock01Icon`。
+        - 置顶图标: 使用 `PinIcon`。
+*   **字阶 (Typography)**: 严格遵循由 `src/utils/baseline.css` 定义的流式比例：
+    - 正文: `text-sm` (14px) 到 `text-base` (16px) 的自适应。
+    - 辅助/元数据: `text-[10px]` 到 `text-xs` (12px)。
 *   **标准尺寸**: 
     - 对于 `14px` (text-sm) 的正文或导航文字，图标应统一使用 `size-3.5` (14px)。
     - 对于 `16px` (text-base) 的文字，图标应使用 `size-4` (16px)。

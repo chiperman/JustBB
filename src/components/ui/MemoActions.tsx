@@ -5,7 +5,7 @@ import { deleteMemo, restoreMemo, permanentDeleteMemo } from '@/actions/delete';
 import { updateMemoState } from '@/actions/update';
 import { memoCache } from '@/lib/memo-cache';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Delete02Icon, RotateLeft01Icon, MoreHorizontalIcon, PencilEdit01Icon, Share01Icon, PinIcon, LockIcon, ViewIcon } from '@hugeicons/core-free-icons';
+import { Delete02Icon, RotateLeft01Icon, MoreHorizontalIcon, PencilEdit01Icon, Share01Icon, PinIcon, ChatLock01Icon, ChatUnlock01Icon } from '@hugeicons/core-free-icons';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -238,7 +238,7 @@ export function MemoActions({
                                 onClick={handleTogglePrivate}
                                 disabled={isPending}
                             >
-                                <HugeiconsIcon icon={isPrivate ? ViewIcon : LockIcon} size={16} className="mr-2" />
+                                <HugeiconsIcon icon={isPrivate ? ChatUnlock01Icon : ChatLock01Icon} size={16} className="mr-2" />
                                 {isPrivate ? '取消私密' : '设为私密'}
                             </DropdownMenuItem>
 

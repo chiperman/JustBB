@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { getTimelineStats } from '@/actions/stats';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import {
     Timeline,
     TimelineContent,
@@ -24,7 +24,11 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     const [allDays, setAllDays] = useState<Record<string, { count: number }>>(initialData?.days || {});
     const [isMounted, setIsMounted] = useState(false);
     const router = useRouter();
+    const pathname = usePathname(); // Get current pathname
     const searchParams = useSearchParams();
+
+    // Only display on homepage
+    const isHomePage = pathname === '/';
 
     // 读取 URL 筛选参数
     const dateFilter = searchParams.get('date');
@@ -154,6 +158,8 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     };
+
+    if (!isHomePage) return null;
 
     return (
         <aside className="hidden xl:flex w-80 h-full flex-col p-6 border-l border-border bg-background/50 backdrop-blur-md">

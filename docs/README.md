@@ -10,7 +10,8 @@
 
 ### 🏗️ 架构与规范 (Architecture)
 *   [Logic Architecture](./architecture/logic-architecture.md)  
-    全站数据加载策略、SSR 预拉取机制及跨组件状态同步逻辑。
+*   [Logic Architecture](./architecture/logic-architecture.md)  
+    **[NEW]** 详解 Hybird SPA 架构、PageDataCache 缓存策略及去骨架屏的无感导航设计。
 *   [API Spec](./architecture/api-spec.md)  
     Server Actions、RPC 函数及通用响应协议。
 *   [Database Schema](./architecture/database-schema.md)  

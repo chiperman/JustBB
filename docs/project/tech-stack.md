@@ -11,6 +11,7 @@
 | Next.js | 16.1.6 | 全栈 React 框架，采用 App Router 模式 |
 | React | 19.x | UI 渲染引擎与 Context API 状态管理 |
 | TypeScript | ^5 | 类型安全，严格模式 |
+| Hybrid SPA Routing | Custom | 基于 ViewContext + History API 的客户端路由，实现无刷新导航 |
 
 ---
 

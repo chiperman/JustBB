@@ -5,14 +5,12 @@ import { TagCloud } from '../ui/TagCloud';
 import { Heatmap } from '../ui/Heatmap';
 import { OnThisDay } from '../ui/OnThisDay';
 import { Home, Tag, Trash2, Image as GalleryIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { usePathname } from 'next/navigation';
 import { SidebarSettings } from "./SidebarSettings";
 import { motion, useMotionValue, useSpring, useTransform, useVelocity } from 'framer-motion';
 import { useUser } from '@/context/UserContext';
-import { useNavigation } from '@/context/NavigationContext';
+import { useView } from '@/context/ViewContext';
 
 import { Memo } from '@/types/memo';
 
@@ -23,16 +21,15 @@ export interface LeftSidebarProps {
 
 export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const pathname = usePathname();
+    const { currentView, navigate } = useView();
     // Optimistic UI: 立即响应点击，不等待路由跳转
-    const [optimisticPath, setOptimisticPath] = useState(pathname);
+    const [optimisticPath, setOptimisticPath] = useState(currentView);
 
     useEffect(() => {
-        setOptimisticPath(pathname);
-    }, [pathname]);
+        setOptimisticPath(currentView);
+    }, [currentView]);
 
     const { isAdmin, isMounted } = useUser();
-    const { startNavigation } = useNavigation();
 
     const isMobile = !!onClose;
     const effectiveIsCollapsed = isMobile ? false : isCollapsed;
@@ -86,8 +83,8 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
     }, [currentPath, navItems, y]);
 
     const handleItemClick = (href: string) => {
-        setOptimisticPath(href); // Immediate update
-        startNavigation(href);  // 立即切换内容区域到骨架屏
+        setOptimisticPath(href);
+        navigate(href);  // pushState + 客户端切换，零服务器往返
         const index = navItems.findIndex(item => item.href === href);
         if (index !== -1) {
             y.set(index * 40 + 8);
@@ -235,11 +232,10 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
 
                     return (
                         <motion.div variants={navItemVariants} key={item.label}>
-                            <Link
-                                href={item.href}
+                            <button
                                 onClick={() => handleItemClick(item.href)}
                                 className={cn(
-                                    "flex items-center p-2 h-9 rounded-sm transition-colors group relative hover:bg-accent hover:text-accent-foreground",
+                                    "flex items-center p-2 h-9 rounded-sm transition-colors group relative hover:bg-accent hover:text-accent-foreground w-full text-left cursor-pointer",
                                     effectiveIsCollapsed ? "justify-center gap-0" : "px-3 gap-3",
                                     isActive
                                         ? "text-primary font-medium"
@@ -260,7 +256,7 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
                                 >
                                     {item.label}
                                 </motion.span>
-                            </Link>
+                            </button>
                         </motion.div>
                     );
                 })}

@@ -9,7 +9,8 @@ import { TagsProvider } from "@/context/TagsContext";
 import { StatsProvider } from "@/context/StatsContext";
 import { SelectionProvider } from "@/context/SelectionContext";
 import { SelectionToolbar } from "@/components/ui/SelectionToolbar";
-import { NavigationProvider } from "@/context/NavigationContext";
+import { ViewProvider } from "@/context/ViewContext";
+import { PageDataCacheProvider } from "@/context/PageDataCache";
 
 interface ClientLayoutProvidersProps {
     children: React.ReactNode;
@@ -25,24 +26,26 @@ export function ClientLayoutProviders({
 }: ClientLayoutProvidersProps & { initialUser?: UserInfo | null }) {
     return (
         <UserProvider initialUser={initialUser}>
-            <NavigationProvider>
-                <StatsProvider initialData={initialStats}>
-                    <LoginModeProvider>
-                        <TagsProvider initialData={initialTags}>
-                            <SelectionProvider>
-                                <TimelineProvider>
-                                    <LoginTransitionWrapper>
-                                        <MobileLayoutWrapper>
-                                            {children}
-                                            <SelectionToolbar />
-                                        </MobileLayoutWrapper>
-                                    </LoginTransitionWrapper>
-                                </TimelineProvider>
-                            </SelectionProvider>
-                        </TagsProvider>
-                    </LoginModeProvider>
-                </StatsProvider>
-            </NavigationProvider>
+            <PageDataCacheProvider>
+                <ViewProvider>
+                    <StatsProvider initialData={initialStats}>
+                        <LoginModeProvider>
+                            <TagsProvider initialData={initialTags}>
+                                <SelectionProvider>
+                                    <TimelineProvider>
+                                        <LoginTransitionWrapper>
+                                            <MobileLayoutWrapper>
+                                                {children}
+                                                <SelectionToolbar />
+                                            </MobileLayoutWrapper>
+                                        </LoginTransitionWrapper>
+                                    </TimelineProvider>
+                                </SelectionProvider>
+                            </TagsProvider>
+                        </LoginModeProvider>
+                    </StatsProvider>
+                </ViewProvider>
+            </PageDataCacheProvider>
         </UserProvider>
     );
 }

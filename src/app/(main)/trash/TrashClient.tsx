@@ -6,6 +6,7 @@ import { MemoCard } from "@/components/ui/MemoCard";
 import { Trash2, Archive, Loader2, Sparkles } from "lucide-react";
 import { Memo } from "@/types/memo";
 import { useEffect, useState, useTransition } from "react";
+import { usePageDataCache } from "@/context/PageDataCache";
 
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -24,22 +25,28 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export default function TrashClient() {
-    const [memos, setMemos] = useState<Memo[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { getCache, setCache } = usePageDataCache();
+    const cached = getCache('/trash');
+    const [memos, setMemos] = useState<Memo[]>(cached?.memos ?? []);
+    const [isLoading, setIsLoading] = useState(!cached);
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
 
     useEffect(() => {
+        // stale-while-revalidate：缓存命中也后台刷新
         let isMounted = true;
         const load = async () => {
             const data = await getTrashMemos();
             if (isMounted) {
-                setMemos(data || []);
+                const result = data || [];
+                setMemos(result);
+                setCache('/trash', { memos: result });
                 setIsLoading(false);
             }
         };
         load();
         return () => { isMounted = false; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
 
@@ -53,6 +60,7 @@ export default function TrashClient() {
                     variant: "destructive",
                 });
                 setMemos([]);
+                setCache('/trash', { memos: [] });
             } else {
                 toast({
                     title: "操作失败",

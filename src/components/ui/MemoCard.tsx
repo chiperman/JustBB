@@ -4,7 +4,7 @@ import { MemoContent } from './MemoContent';
 import { MemoActions } from './MemoActions';
 import { MemoEditor } from './MemoEditor';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { PinIcon, LockIcon, Link02Icon } from '@hugeicons/core-free-icons';
+import { PinIcon, ChatLock01Icon as LockIcon, Link02Icon } from '@hugeicons/core-free-icons';
 import { memo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn, formatDate } from '@/lib/utils';

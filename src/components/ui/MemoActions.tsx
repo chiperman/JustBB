@@ -5,7 +5,7 @@ import { deleteMemo, restoreMemo, permanentDeleteMemo } from '@/actions/delete';
 import { updateMemoState } from '@/actions/update';
 import { memoCache } from '@/lib/memo-cache';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Delete02Icon, RotateLeft01Icon, MoreHorizontalIcon } from '@hugeicons/core-free-icons';
+import { Delete02Icon, RotateLeft01Icon, MoreHorizontalIcon, PencilEdit01Icon, Share01Icon, PinIcon, LockIcon, ViewIcon } from '@hugeicons/core-free-icons';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -209,6 +209,7 @@ export function MemoActions({
                         <>
                             {isAdmin && (
                                 <DropdownMenuItem onClick={onEdit}>
+                                    <HugeiconsIcon icon={PencilEdit01Icon} size={16} className="mr-2" />
                                     编辑
                                 </DropdownMenuItem>
                             )}
@@ -216,6 +217,7 @@ export function MemoActions({
                                 memo={{ id, content, created_at: createdAt, tags, is_pinned: isPinned, is_private: isPrivate, memo_number: 0 } as Memo}
                                 trigger={
                                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                        <HugeiconsIcon icon={Share01Icon} size={16} className="mr-2" />
                                         分享
                                     </DropdownMenuItem>
                                 }
@@ -228,6 +230,7 @@ export function MemoActions({
                                 onClick={handleTogglePin}
                                 disabled={isPending}
                             >
+                                <HugeiconsIcon icon={PinIcon} size={16} className="mr-2" />
                                 {isPinned ? '取消置顶' : '置顶'}
                             </DropdownMenuItem>
 
@@ -235,12 +238,14 @@ export function MemoActions({
                                 onClick={handleTogglePrivate}
                                 disabled={isPending}
                             >
+                                <HugeiconsIcon icon={isPrivate ? ViewIcon : LockIcon} size={16} className="mr-2" />
                                 {isPrivate ? '取消私密' : '设为私密'}
                             </DropdownMenuItem>
 
                             <DropdownMenuSeparator />
 
                             <DropdownMenuItem onClick={() => setShowDeleteAlert(true)} className="text-destructive focus:text-destructive focus:bg-destructive/5">
+                                <HugeiconsIcon icon={Delete02Icon} size={16} className="mr-2" />
                                 删除
                             </DropdownMenuItem>
                         </>

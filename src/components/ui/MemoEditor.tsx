@@ -140,7 +140,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         }
     }, [mode, memo]);
 
-    // 计算最终是否收缩：属性要求收缩 且 未获得焦点 且 为创建模式 且 内容为空或未改变原始内容（或者强制收缩）
+    // 计算最终是否收缩：属性要求收缩 且 未获得焦点 且 为创建模式
     const isActuallyCollapsed = isPropCollapsed && !isFocused && mode === 'create';
 
     // Suggestion system states
@@ -551,7 +551,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
             // Save Draft
             if (mode === 'create') {
-                localStorage.setItem(DRAFT_CONTENT_KEY, text); // Saving plain text as per current simplified editor
+                localStorage.setItem(DRAFT_CONTENT_KEY, JSON.stringify(editor.getJSON())); // Saving JSON to preserve structure/newlines
             }
 
             // 实时同步内容中的标签到 tags 状态
@@ -616,7 +616,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             attributes: {
                 class: cn(
                     "tiptap prose prose-sm max-w-none focus:outline-none text-foreground/80 leading-relaxed font-sans tracking-normal",
-                    hideFullscreen ? "flex-1 h-full overflow-y-auto scrollbar-hover px-1 focus:outline-none" : "min-h-[120px]",
+                    hideFullscreen ? "flex-1 min-h-full px-1 focus:outline-none" : "min-h-[120px]",
                     "text-base"
                     // Removed instant margin jump: isActuallyCollapsed && "[&_p]:m-0"
                 ),
@@ -633,13 +633,18 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 const draftContent = localStorage.getItem(DRAFT_CONTENT_KEY);
                 if (draftContent && draftContent.trim()) {
                     // Check if editor is empty to avoid overwriting user input if race condition?
-                    // Actually this only runs when editor changes or mode changes.
-                    // On initial load, editor is empty.
                     if (editor.getText().trim() === '') {
-                        editor.commands.setContent(draftContent);
-                        // Trigger onUpdate to set tags? setContent on editor usually triggers update transaction?
-                        // If not, we might need to manually set content state.
-                        setContent(draftContent);
+                        try {
+                            const json = JSON.parse(draftContent);
+                            editor.commands.setContent(json);
+                        } catch (e) {
+                            // Fallback to plain text for legacy drafts
+                            editor.commands.setContent(draftContent);
+                        }
+
+                        // Trigger onUpdate logic manually for initial load
+                        const text = editor.getText();
+                        setContent(text);
 
                         // Manually trigger tag extraction for drafted content
                         const hashtagRegex = /(?:^|\s|(?<=[^a-zA-Z0-9]))#([\w\u4e00-\u9fa5]+)/g;
@@ -651,6 +656,46 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             }
         }
     }, [editor, memo, mode]);
+
+    // Fullscreen Sync Effect: 当从全屏切回普通模式时，强制同步最新的 Draft 到首页编辑器
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        // 仅在主视图模式下监听全屏状态的“消失”动作
+        if (!hideFullscreen && !isFullscreen && mode === 'create' && editor) {
+            const draftContent = localStorage.getItem(DRAFT_CONTENT_KEY);
+            const currentText = editor.getText();
+
+            if (draftContent !== null) {
+                let needsSync = false;
+                try {
+                    const json = JSON.parse(draftContent);
+                    // Try to avoid unnecessary updates if possible, but JSON comparison is hard.
+                    // Simple text check as baseline.
+                    needsSync = true; // For JSON we'll just sync if exists to be safe
+                    editor.commands.setContent(json);
+                } catch (e) {
+                    // Legacy plain text sync
+                    if (draftContent !== currentText) {
+                        needsSync = true;
+                        editor.commands.setContent(draftContent);
+                    }
+                }
+
+                if (needsSync) {
+                    console.log('[Sync] Pulling structured content from draft after fullscreen close');
+                    const text = editor.getText();
+                    setContent(text);
+
+                    // 同时同步标签
+                    const hashtagRegex = /(?:^|\s|(?<=[^a-zA-Z0-9]))#([\w\u4e00-\u9fa5]+)/g;
+                    const matches = text.matchAll(hashtagRegex);
+                    const extractedTags = Array.from(new Set(Array.from(matches).map(m => m[1])));
+                    setTags(extractedTags);
+                }
+            }
+        }
+    }, [isFullscreen, hideFullscreen, mode, editor]);
 
     useEffect(() => {
         if (isActuallyCollapsed && editorContainerRef.current) {
@@ -838,8 +883,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             initial={false}
             animate={{
                 opacity: 1,
-                height: isActuallyCollapsed ? "auto" : (hideFullscreen ? 500 : "auto"),
-                minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? 500 : 120),
+                height: isActuallyCollapsed ? "auto" : (hideFullscreen ? "100%" : "auto"),
+                minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? "100%" : 120),
                 paddingTop: 24,
                 paddingBottom: 24,
                 paddingLeft: 24,
@@ -869,16 +914,27 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             onAnimationComplete={() => setIsAnimating(false)}
             style={{
                 willChange: "transform, height, opacity",
-                overflow: 'hidden'
+                overflow: (isActuallyCollapsed || isAnimating) ? 'hidden' : 'visible'
             }}
-            onClick={() => {
-                if (isActuallyCollapsed && editor) {
-                    editor.commands.focus('end');
+            onClick={(e) => {
+                // 仅在点击处于边缘空白区域（非编辑器正文）且没有正在选择文字时触发
+                if ((isActuallyCollapsed || hideFullscreen) && editor) {
+                    const selection = window.getSelection();
+                    if (selection && selection.toString().length > 0) {
+                        return; // 如果有选区，不干扰
+                    }
+
+                    // 如果点击的目标是 section 或者是 editor 容器内部的垫片（非编辑器本身）
+                    const target = e.target as HTMLElement;
+                    if (target === e.currentTarget || target.closest('.editor-full-height-trigger')) {
+                        editor.commands.focus('end');
+                    }
                 }
             }}
             className={cn(
                 "border border-border rounded-sm relative focus-within:shadow-md",
                 "flex flex-col items-stretch",
+                "selection:bg-primary/30", // Increased opacity for better visibility
                 isActuallyCollapsed ? "shadow-none cursor-pointer hover:bg-accent/5" : (hideFullscreen ? "h-full" : ""),
                 className
             )}>
@@ -897,10 +953,10 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     <motion.div
                         ref={editorContainerRef}
                         animate={{
-                            height: isActuallyCollapsed ? 26 : "auto",
-                            minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? 0 : 120), // Animate minHeight to avoid snap
+                            height: isActuallyCollapsed ? 26 : (hideFullscreen ? "100%" : "auto"),
+                            minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? "100%" : 120), // Animate minHeight to avoid snap
                             opacity: 1, // Ensure opacity is always 1 unless we want to fade out
-                            overflow: (isActuallyCollapsed || isAnimating) ? "hidden" : (hideFullscreen ? "visible" : "overlay")
+                            overflow: (isActuallyCollapsed || isAnimating) ? "hidden" : "visible"
                         }}
                         transition={{
                             height: isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out },
@@ -910,7 +966,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         style={{
                             minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? 0 : 120),
                             willChange: "transform, height, min-height",
-                            maxHeight: 500, // Fixed max-height, let height animation handle the collapse
+                            maxHeight: hideFullscreen ? 'none' : 500, // Fixed max-height, let height animation handle the collapse
                             maskImage: isActuallyCollapsed && !isAnimating
                                 ? 'linear-gradient(to bottom, black 90%, transparent 100%)'
                                 : 'none',
@@ -919,9 +975,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 : 'none',
                         }}
                         className={cn(
-                            "relative overflow-hidden",
-                            hideFullscreen ? "flex-1 flex flex-col min-h-0" : (isActuallyCollapsed ? "min-h-0 scrollbar-hide" : "scrollbar-overlay scrollbar-hover"), // Removed min-h-[120px] class
-                            isActuallyCollapsed && "pointer-events-none"
+                            "relative",
+                            isActuallyCollapsed ? "min-h-0 scrollbar-hide overflow-hidden" : (hideFullscreen ? "overflow-y-auto scrollbar-hover flex-1" : "overflow-visible")
                         )}
 
                     >
@@ -931,7 +986,12 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 <p>Wanna memo something? JustMemo it!</p>
                             </div>
                         )}
-                        <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "min-h-0")} />
+                        <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "h-full")} />
+
+                        {/* 展开捕捉层：在收缩状态下占据整个编辑区，确保点击任意位置均可无感触发展开 */}
+                        {isActuallyCollapsed && (
+                            <div className="absolute inset-0 z-10 cursor-pointer editor-full-height-trigger" />
+                        )}
                     </motion.div>
 
                     {showSuggestions && suggestionPosition && (
@@ -941,9 +1001,13 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 top: suggestionPosition.top,
                                 left: suggestionPosition.left,
                             }}
-                            onMouseDown={(e) => e.preventDefault()} // 防止点击弹窗导致编辑器失焦
+                            onMouseDown={(e) => {
+                                // 强制阻止事件冒泡和默认干扰，防止编辑器因建议菜单的操作失焦
+                                e.preventDefault();
+                                e.stopPropagation();
+                            }}
                         >
-                            <div className="bg-background/95 backdrop-blur-md border border-border rounded-sm shadow-2xl overflow-hidden flex flex-col max-h-[450px]">
+                            <div className="bg-background border border-border rounded-sm shadow-2xl overflow-hidden flex flex-col max-h-[450px]">
                                 {isLoading || (isIndexLoading && suggestions.length === 0) ? (
                                     <div className="px-3 py-6 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight">
                                         加载中...
@@ -969,9 +1033,9 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                                 {item.label.startsWith('#') ? (
                                                     <div className="flex justify-between items-center w-full">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-xs text-foreground/80">{item.label}</span>
+                                                            <span className="text-xs text-foreground/80 font-sans">{item.label}</span>
                                                             {item.subLabel && (
-                                                                <span className="text-[10px] text-muted-foreground/60 italic font-mono">
+                                                                <span className="text-[10px] text-muted-foreground/60 italic font-mono tracking-tight">
                                                                     {item.subLabel}
                                                                 </span>
                                                             )}
@@ -1002,7 +1066,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <div className="text-xs leading-relaxed text-foreground/80 break-words pr-2">
+                                                        <div className="text-xs leading-relaxed text-foreground/80 break-words pr-2 font-sans">
                                                             {item.subLabel && renderHighlightedText(item.subLabel, mentionQuery)}
                                                         </div>
                                                     </>
@@ -1038,6 +1102,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     }}
                     style={{ willChange: "opacity, height" }}
                     className="overflow-hidden bg-transparent"
+                    // 阻止页脚区域点击时的焦点转移，防止编辑器在点击按钮时意外收缩
+                    onMouseDown={(e) => e.preventDefault()}
                 >
                     <div className="pt-5 mt-4 border-t border-border/50 flex justify-between items-center">
                         <div className="flex items-center gap-1">
@@ -1124,8 +1190,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     animateOffset={false}
                 >
                     <DialogTitle className="sr-only">全屏编辑内容</DialogTitle>
-                    <div className="flex-1 overflow-hidden flex items-start justify-center px-6 pt-10 bg-black/5">
-                        <div className="max-w-4xl w-full mx-auto flex flex-col h-[85vh]">
+                    <div className="flex-1 overflow-visible flex items-stretch justify-center px-6 py-10 bg-black/5">
+                        <div className="max-w-4xl w-full mx-auto flex flex-col h-full [min-height:0]">
                             <MemoEditor
                                 mode={mode}
                                 memo={memo}

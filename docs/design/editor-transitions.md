@@ -61,13 +61,61 @@
     *   进入多选：头部瞬间变身，编辑器瞬间消失（不留白，不占位）。
     *   **退出多选（关键）**: 头部瞬间复原，编辑器 **瞬间** 出现，且内容 **绝对静止**，无任何位置跳动或重排。
 
-## 4. 代码参考
+---
+
+## 4. 全屏编辑交互 (Fullscreen Editor Interaction)
+
+全屏模式不仅是尺寸的放大，还涉及复杂的焦点管理和内容同步逻辑。
+
+### 4.1 焦点管理与选区保护 (Focus & Selection)
+
+为了平衡“易用性”与“精准性”，我们实现了复合点击逻辑：
+
+*   **全域背景聚焦**: 点击全屏容器的非正文区域（边缘空白）时，通过 `editor.commands.focus('end')` 强制聚焦，确保用户无需寻找光标。
+*   **选区保护**: 为了防止由于释放鼠标导致的误触发，增加了选区检测。
+    ```tsx
+    const selection = window.getSelection();
+    if (selection && selection.toString().length > 0) return; // 保护已有选区
+    ```
+*   **视觉选区锁定**: 统一使用 `selection:bg-primary/30`，禁止使用带透明背景的模糊效果，以确保在任何背景下选中状态均清晰可见。
+
+### 4.3 灵敏展开捕捉 (Expansion Trigger)
+
+在收缩状态（Collapsed）下，为了确保 100% 的触发展开成功率，我们引入了“捕捉层”技术：
+
+*   **实现**: 在收缩状态下，在编辑器表面覆盖一个绝对定位的 `.editor-full-height-trigger` 透明层。
+*   **逻辑**: 任何落在捕捉层上的点击都会直接触发 `editor.commands.focus('end')`。
+*   **优势**: 解决了 Tiptap 在极小尺寸下事件捕获不灵敏的问题。
+
+### 4.4 页脚焦点锁定 (Footer Focus Lock)
+
+为了防止点击底部功能按钮（私密、置顶、全屏）时触发编辑器的失焦（Blur）并导致非预期收缩：
+
+*   **实现**: 为底部的 `motion.div` 容器添加 `onMouseDown={(e) => e.preventDefault()}`。
+*   **效果**: 在鼠标按下瞬间阻断焦点转移，使编辑器始终维持 `isFocused` 状态，确保按钮功能正常触发且不伴随跳动的收缩动画。
+
+### 4.2 结构化同步 (Structured Synchronization)
+
+为了彻底解决全屏模式切换导致的换行丢失问题，同步逻辑从 **Text 模式** 升级为 **JSON 模式**。
+
+*   **存储引擎**: `localStorage` 中存储的不再是 `editor.getText()`，而是 `editor.getJSON()`。
+*   **兼容性回退**: 同步逻辑会自动检测字符串是否为 JSON，若解析失败则回退至 Plain Text 模式，确保数据迁移顺滑。
+*   **双向同步**: 首页编辑器订阅 `isFullscreen` 状态，当全屏关闭时，自动从 `localStorage` 重载最新的结构化 JSON 内容。
+
+## 5. 组件规范清单 (Component Standards)
+
+*   [x] **背景实色化**: 弹窗（@/#）必须使用 `bg-background`（100% 实色），禁止使用 `bg-popover`（带 5% 透明），以防止在全屏背景下产生视觉干扰。
+*   [x] **高度穿透**: 全屏模式下 `max-height` 设为 `none`，`height` 设为 `100%`。
+*   [x] **选区对比度**: 选区背景不透明度统一为 `30%`。
+
+---
+
+## 6. 代码参考
 
 ```typescript
-// transition configuration in MemoEditor.tsx
-transition={{
-    height: isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out },
-    minHeight: isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out },
-    opacity: { duration: duration.fast }
-}}
+// Content Reload Logic in MemoEditor.tsx
+if (!hideFullscreen && !isFullscreen && mode === 'create' && editor) {
+    const draftContent = localStorage.getItem(DRAFT_CONTENT_KEY);
+    // ... JSON parse & editor.commands.setContent(json)
+}
 ```

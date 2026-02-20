@@ -121,7 +121,14 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                         #{memo.memo_number}
                     </span>
                     <time className="text-xs text-muted-foreground font-sans">
-                        {memo.is_locked ? '****年**月**日 *:*' : new Date(memo.created_at).toLocaleString('zh-CN', {
+                        {memo.is_locked ? (
+                            `${new Date(memo.created_at).toLocaleString('zh-CN', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour12: false
+                            }).replace(/\//g, '-')} **:**`
+                        ) : new Date(memo.created_at).toLocaleString('zh-CN', {
                             year: 'numeric',
                             month: '2-digit',
                             day: '2-digit',

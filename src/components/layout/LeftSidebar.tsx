@@ -23,6 +23,13 @@ export interface LeftSidebarProps {
 export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const pathname = usePathname();
+    // Optimistic UI: 立即响应点击，不等待路由跳转
+    const [optimisticPath, setOptimisticPath] = useState(pathname);
+
+    useEffect(() => {
+        setOptimisticPath(pathname);
+    }, [pathname]);
+
     const { isAdmin, isMounted } = useUser();
 
     const isMobile = !!onClose;
@@ -49,8 +56,10 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
     };
 
     // 同步计算初始位移，避免首屏位移闪变
+    // Use optimisticPath for calculation
+    const currentPath = optimisticPath;
     const initialIndex = navItems.findIndex(item =>
-        item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
+        item.href === '/' ? currentPath === '/' : currentPath.startsWith(item.href)
     );
     const initialY = initialIndex !== -1 ? initialIndex * 40 + 8 : 0;
 
@@ -67,14 +76,15 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
     // 同步外部路由变化到物理引擎
     useEffect(() => {
         const index = navItems.findIndex(item =>
-            item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
+            item.href === '/' ? currentPath === '/' : currentPath.startsWith(item.href)
         );
         if (index !== -1) {
             y.set(index * 40 + 8);
         }
-    }, [pathname, navItems, y]);
+    }, [currentPath, navItems, y]);
 
     const handleItemClick = (href: string) => {
+        setOptimisticPath(href); // Immediate update
         const index = navItems.findIndex(item => item.href === href);
         if (index !== -1) {
             y.set(index * 40 + 8);
@@ -217,8 +227,8 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
 
                 {navItems.map((item) => {
                     const isActive = item.href === '/'
-                        ? pathname === '/'
-                        : pathname.startsWith(item.href);
+                        ? currentPath === '/'
+                        : currentPath.startsWith(item.href);
 
                     return (
                         <motion.div variants={navItemVariants} key={item.label}>

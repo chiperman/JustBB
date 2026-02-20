@@ -13,11 +13,14 @@ import { SidebarSettings } from "./SidebarSettings";
 import { motion, useMotionValue, useSpring, useTransform, useVelocity } from 'framer-motion';
 import { useUser } from '@/context/UserContext';
 
+import { Memo } from '@/types/memo';
+
 export interface LeftSidebarProps {
     onClose?: () => void;
+    initialOnThisDay?: Memo[];
 }
 
-export function LeftSidebar({ onClose }: LeftSidebarProps) {
+export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const pathname = usePathname();
     const { isAdmin, isMounted } = useUser();
@@ -274,7 +277,7 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                 variants={sectionVariants}
                 className="overflow-hidden mb-[24px] px-1 min-w-[17rem]"
             >
-                <OnThisDay />
+                <OnThisDay initialMemos={initialOnThisDay} />
             </motion.div>
 
         </motion.aside>

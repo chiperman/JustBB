@@ -7,19 +7,26 @@ import { Memo } from '@/types/memo';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from 'framer-motion';
 
-export const OnThisDay = memo(function OnThisDay() {
-    const [memos, setMemos] = useState<Memo[]>([]);
-    const [loading, setLoading] = useState(true);
+export const OnThisDay = memo(function OnThisDay({ initialMemos }: { initialMemos?: Memo[] }) {
+    const [memos, setMemos] = useState<Memo[]>(initialMemos || []);
+    const [loading, setLoading] = useState(!initialMemos?.length); // If we have intial data, not loading (unless length 0, but layout sends empty array if none)
+    // Layout fetches data, so if it's passed, we trust it.
+    // If layout passes [], it means no memos.
+    // So loading should be false if initialMemos is defined (even if empty).
+    const isInitialLoaded = Array.isArray(initialMemos);
+
     const shouldReduceMotion = useReducedMotion();
 
     useEffect(() => {
-        getOnThisDayMemos().then((data: Memo[]) => {
-            setMemos(data);
-            setLoading(false);
-        });
-    }, []);
+        if (!isInitialLoaded) {
+            getOnThisDayMemos().then((data: Memo[]) => {
+                setMemos(data);
+                setLoading(false);
+            });
+        }
+    }, [isInitialLoaded]);
 
-    if (loading || memos.length === 0) return null;
+    if ((!isInitialLoaded && loading) || memos.length === 0) return null;
 
     return (
         <section

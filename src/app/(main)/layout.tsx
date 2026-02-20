@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { ClientLayoutProviders } from "@/components/layout/ClientLayoutProviders";
 import { getAllTags } from "@/actions/tags";
 import { getTimelineStats, getMemoStats } from "@/actions/stats";
+import { getOnThisDayMemos } from "@/actions/history";
 
 import { getCurrentUser } from "@/actions/auth";
 
@@ -13,11 +14,12 @@ export default async function MainLayout({
     children: React.ReactNode;
 }) {
     // 在服务端预拉取数据
-    const [initialTags, initialTimeline, initialStats, user] = await Promise.all([
+    const [initialTags, initialTimeline, initialStats, user, onThisDayMemos] = await Promise.all([
         getAllTags(),
         getTimelineStats(),
         getMemoStats(),
-        getCurrentUser()
+        getCurrentUser(),
+        getOnThisDayMemos()
     ]);
 
     return (
@@ -27,7 +29,7 @@ export default async function MainLayout({
                     {/* 左侧导航 - 移动端隐藏 */}
                     <div className="hidden lg:block h-full overflow-y-auto scrollbar-hide border-r border-border/40">
                         <Suspense fallback={<div className="w-64" />}>
-                            <LeftSidebar />
+                            <LeftSidebar initialOnThisDay={onThisDayMemos} />
                         </Suspense>
                     </div>
 

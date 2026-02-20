@@ -33,13 +33,6 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
 
     const { activeId, setActiveId, setManualClick } = useTimeline();
 
-    useEffect(() => {
-        setIsMounted(true);
-        getTimelineStats().then((data) => {
-            setAllDays(data.days || {});
-        });
-    }, []);
-
     // 自动滚动侧边栏以确保选中项可见
     useEffect(() => {
         if (activeId) {

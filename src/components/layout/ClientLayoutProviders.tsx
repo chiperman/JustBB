@@ -9,6 +9,7 @@ import { TagsProvider } from "@/context/TagsContext";
 import { StatsProvider } from "@/context/StatsContext";
 import { SelectionProvider } from "@/context/SelectionContext";
 import { SelectionToolbar } from "@/components/ui/SelectionToolbar";
+import { NavigationProvider } from "@/context/NavigationContext";
 
 interface ClientLayoutProvidersProps {
     children: React.ReactNode;
@@ -24,22 +25,24 @@ export function ClientLayoutProviders({
 }: ClientLayoutProvidersProps & { initialUser?: UserInfo | null }) {
     return (
         <UserProvider initialUser={initialUser}>
-            <StatsProvider initialData={initialStats}>
-                <LoginModeProvider>
-                    <TagsProvider initialData={initialTags}>
-                        <SelectionProvider>
-                            <TimelineProvider>
-                                <LoginTransitionWrapper>
-                                    <MobileLayoutWrapper>
-                                        {children}
-                                        <SelectionToolbar />
-                                    </MobileLayoutWrapper>
-                                </LoginTransitionWrapper>
-                            </TimelineProvider>
-                        </SelectionProvider>
-                    </TagsProvider>
-                </LoginModeProvider>
-            </StatsProvider>
+            <NavigationProvider>
+                <StatsProvider initialData={initialStats}>
+                    <LoginModeProvider>
+                        <TagsProvider initialData={initialTags}>
+                            <SelectionProvider>
+                                <TimelineProvider>
+                                    <LoginTransitionWrapper>
+                                        <MobileLayoutWrapper>
+                                            {children}
+                                            <SelectionToolbar />
+                                        </MobileLayoutWrapper>
+                                    </LoginTransitionWrapper>
+                                </TimelineProvider>
+                            </SelectionProvider>
+                        </TagsProvider>
+                    </LoginModeProvider>
+                </StatsProvider>
+            </NavigationProvider>
         </UserProvider>
     );
 }

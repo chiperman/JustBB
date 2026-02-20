@@ -2,6 +2,7 @@ import { LeftSidebar } from "@/components/layout/LeftSidebar";
 import { RightSidebar } from "@/components/layout/RightSidebar";
 import { Suspense } from "react";
 import { ClientLayoutProviders } from "@/components/layout/ClientLayoutProviders";
+import { ContentTransition } from "@/components/layout/ContentTransition";
 import { getAllTags } from "@/actions/tags";
 import { getTimelineStats, getMemoStats } from "@/actions/stats";
 import { getOnThisDayMemos } from "@/actions/history";
@@ -35,7 +36,9 @@ export default async function MainLayout({
 
                     {/* 内容流区域 */}
                     <main className="flex-1 min-w-0 bg-background h-full flex flex-col overflow-hidden">
-                        {children}
+                        <ContentTransition>
+                            {children}
+                        </ContentTransition>
                     </main>
 
                     {/* 右侧边栏 - 移动端隐藏 */}

@@ -12,6 +12,7 @@ import { usePathname } from 'next/navigation';
 import { SidebarSettings } from "./SidebarSettings";
 import { motion, useMotionValue, useSpring, useTransform, useVelocity } from 'framer-motion';
 import { useUser } from '@/context/UserContext';
+import { useNavigation } from '@/context/NavigationContext';
 
 import { Memo } from '@/types/memo';
 
@@ -31,6 +32,7 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
     }, [pathname]);
 
     const { isAdmin, isMounted } = useUser();
+    const { startNavigation } = useNavigation();
 
     const isMobile = !!onClose;
     const effectiveIsCollapsed = isMobile ? false : isCollapsed;
@@ -85,6 +87,7 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
 
     const handleItemClick = (href: string) => {
         setOptimisticPath(href); // Immediate update
+        startNavigation(href);  // 立即切换内容区域到骨架屏
         const index = navItems.findIndex(item => item.href === href);
         if (index !== -1) {
             y.set(index * 40 + 8);

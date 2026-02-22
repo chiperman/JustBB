@@ -14,7 +14,7 @@ test.describe('Core Feature Flow', () => {
         // Backup: click send button if shortcut fails or just to be sure
         // Assuming Send button is near. But Ctrl+Enter is supported.
         // Let's find the button to be safe. ArrowUp icon button.
-        const sendBtn = page.locator('button:has(.lucide-arrow-up)');
+        const sendBtn = page.locator('button').filter({ has: page.locator('svg') }).last(); // Looking for the send button (PaperPlane/ArrowUp equivalent)
         if (await sendBtn.isVisible()) {
             await sendBtn.click();
         }
@@ -35,7 +35,7 @@ test.describe('Core Feature Flow', () => {
         const memoCard = page.locator('article', { hasText: TEST_CONTENT });
         await memoCard.hover(); // Hover to show actions
 
-        const moreBtn = memoCard.locator('button:has(.lucide-more-horizontal)');
+        const moreBtn = memoCard.locator('button[data-slot="button"]').filter({ has: page.locator('svg') }); // More horizontal icon button
         await moreBtn.click();
 
         // Setup dialog handler for Delete confirmation

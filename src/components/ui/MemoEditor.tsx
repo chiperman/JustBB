@@ -932,14 +932,14 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 }
             }}
             className={cn(
-                "border border-border rounded-sm relative focus-within:shadow-md",
+                "border border-border rounded-inner relative focus-within:shadow-md",
                 "flex flex-col items-stretch",
                 "selection:bg-primary/30", // Increased opacity for better visibility
                 isActuallyCollapsed ? "shadow-none cursor-pointer hover:bg-accent/5" : (hideFullscreen ? "h-full" : ""),
                 className
             )}>
             <motion.div
-                className="absolute inset-0 bg-card rounded-sm pointer-events-none"
+                className="absolute inset-0 bg-card rounded-inner pointer-events-none"
                 initial={false}
                 animate={{ opacity: isActuallyCollapsed ? 0 : 1 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}

@@ -72,7 +72,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="bg-card border border-border rounded-sm p-6 shadow-md ring-2 ring-primary/20"
+                className="bg-card border border-border rounded-card p-6 shadow-md ring-2 ring-primary/20"
             >
                 <MemoEditor
                     mode="edit"
@@ -90,7 +90,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
             layout
             onClick={handleCardClick}
             className={cn(
-                "relative bg-card rounded-sm p-6 transition-all border border-border focus-within:ring-2 focus-within:ring-primary/10",
+                "relative bg-card rounded-card p-6 transition-all border border-border focus-within:ring-2 focus-within:ring-primary/10",
                 memo.is_pinned && "bg-primary/5 border-primary/20",
                 isSelectionMode && "cursor-pointer hover:border-primary/40 select-none",
                 isSelectionMode && isSelected && "ring-2 ring-primary border-primary/50 shadow-sm"

@@ -106,6 +106,15 @@ interface MemoEditorProps {
     className?: string;
 }
 
+// Helper to convert plain text newline to HTML paragraphs for Tiptap
+const textToHtml = (text: string) => {
+    if (!text) return '';
+    return text
+        .split('\n')
+        .map(line => `<p>${line}</p>`)
+        .join('');
+};
+
 // Draft Persistence Keys
 const DRAFT_CONTENT_KEY = 'memo_editor_draft_content';
 const DRAFT_IS_PRIVATE_KEY = 'memo_editor_draft_is_private';
@@ -539,12 +548,10 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         ],
         content: memo?.content || '',
         onUpdate: ({ editor }) => {
-            const text = editor.getText();
-            const html = editor.getHTML(); // Use HTML if we want to preserve some structure, but getText is used for persistence in current logic? 
-            // Current login uses 'text' for setContent. 
-            // But preserving draft might be better with text if we only support text?
-            // The editor supports extension-starter-kit but with many things disabled.
-            // Let's stick to text for consistency with setContent(text).
+            // Use getHTML but strip the tags for the text content we store? 
+            // Or better, use a consistent way to get text that preserves \n
+            // Tiptap's editor.getText({ blockSeparator: '\n' }) is most reliable for plain text storage.
+            const text = editor.getText({ blockSeparator: '\n' });
 
             setContent(text);
             setError(null);
@@ -627,7 +634,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     useEffect(() => {
         if (editor) {
             if (mode === 'edit' && memo?.content) {
-                editor.commands.setContent(memo.content);
+                editor.commands.setContent(textToHtml(memo.content));
             } else if (mode === 'create') {
                 // Restore draft if exists
                 const draftContent = localStorage.getItem(DRAFT_CONTENT_KEY);
@@ -638,8 +645,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             const json = JSON.parse(draftContent);
                             editor.commands.setContent(json);
                         } catch (e) {
-                            // Fallback to plain text for legacy drafts
-                            editor.commands.setContent(draftContent);
+                            // Fallback to plain text for legacy drafts or if JSON fails
+                            editor.commands.setContent(textToHtml(draftContent));
                         }
 
                         // Trigger onUpdate logic manually for initial load
@@ -793,7 +800,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     };
 
     const performPublish = async () => {
-        const textContent = editor?.getText() || content;
+        const textContent = editor?.getText({ blockSeparator: '\n' }) || content;
         if (!textContent.trim() || isPending) return;
 
         // 终极校验：发布前再次从文本中提取标签

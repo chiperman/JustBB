@@ -69,9 +69,21 @@ export function MemoContent({ content, className }: MemoContentProps) {
                             );
                         case 'image':
                             return (
-                                <span key={`img-${index}`} className="block my-2 rounded overflow-hidden border border-border bg-muted/5 shadow-sm">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={token.value} alt="记录中的图片附件" className="max-h-80 object-contain mx-auto transition-transform hover:scale-[1.02] duration-300" loading="lazy" />
+                                <span
+                                    key={`img-${index}`}
+                                    className="block my-5 group relative max-w-full overflow-hidden"
+                                >
+                                    <div className="flex justify-center items-center">
+                                        <div className="relative rounded-sm overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-[0_2px_12px_-3px_rgba(0,0,0,0.1),0_4px_6px_-2px_rgba(0,0,0,0.05)] transition-all duration-500 group-hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] group-hover:scale-[1.01]">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={token.value}
+                                                alt="记录中的图片附件"
+                                                className="max-h-[550px] w-auto object-contain block h-auto select-none"
+                                                loading="lazy"
+                                            />
+                                        </div>
+                                    </div>
                                 </span>
                             );
                         case 'code':
@@ -90,7 +102,7 @@ export function MemoContent({ content, className }: MemoContentProps) {
     };
 
     return (
-        <div className={cn("text-base leading-relaxed break-words whitespace-pre-wrap", className)}>
+        <div className={cn("text-base leading-relaxed break-words whitespace-pre-wrap flex flex-col gap-0", className)}>
             {renderContent(content)}
         </div>
     );

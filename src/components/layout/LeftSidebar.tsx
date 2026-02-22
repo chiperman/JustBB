@@ -179,7 +179,7 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
                     variant="ghost"
                     onClick={handleToggle}
                     className={cn(
-                        "text-muted-foreground shrink-0 rounded-sm transition-colors",
+                        "text-muted-foreground shrink-0 rounded transition-colors",
                         // 使用 layout 属性处理位置变化，减少 CSS 类突变
                         effectiveIsCollapsed ? "w-full justify-center h-9 p-2" : "h-8 w-8 px-0"
                     )}
@@ -201,7 +201,7 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
                 variants={sectionVariants}
                 className="overflow-hidden mb-[24px] px-1 min-w-[17rem]"
             >
-                <Suspense fallback={<div className="h-40 w-full animate-pulse bg-muted/20 rounded-sm" />}>
+                <Suspense fallback={<div className="h-40 w-full animate-pulse bg-muted/20 rounded" />}>
                     {/* 使用 key 强制重新渲染或保持状态，视需求而定。这里直接渲染 */}
                     <div className={effectiveIsCollapsed ? "pointer-events-none" : ""}>
                         <Heatmap />
@@ -236,7 +236,7 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
                             <button
                                 onClick={() => handleItemClick(item.href)}
                                 className={cn(
-                                    "flex items-center p-2 h-9 rounded-sm transition-colors group relative hover:bg-accent hover:text-accent-foreground w-full text-left cursor-pointer",
+                                    "flex items-center p-2 h-9 rounded transition-colors group relative hover:bg-accent hover:text-accent-foreground w-full text-left cursor-pointer",
                                     effectiveIsCollapsed ? "justify-center gap-0" : "px-3 gap-3",
                                     isActive
                                         ? "text-primary font-medium"

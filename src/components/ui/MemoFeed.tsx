@@ -207,7 +207,7 @@ export function MemoFeed({ initialMemos, searchParams, adminCode, isAdmin = fals
                 animate="animate"
                 className="columns-1 gap-6 space-y-6"
             >
-                <AnimatePresence mode="popLayout">
+                <AnimatePresence mode="sync">
                     {displayedMemos.map((memo, index) => {
                         // 使用与 stats.ts 一致的本地时区逻辑 (UTC+8) 构建日期 ID
                         // 否则 00:00-08:00 的记录会被归到前一天，导致锚点 ID 不匹配

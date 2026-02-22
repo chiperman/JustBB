@@ -14,9 +14,9 @@
 
 用户希望登录页面不仅仅是一个简单的表单，而是一个具有叙事感的入口。
 
-*   目标: 创建一个平滑的过渡效果，让用户感觉是从“门口”（Home Preview）进入到了“书房内部”（Login Form）。
-*   视觉风格: 延续 "The Writer's Study" 的隐喻，沉稳、优雅、有物理质感。
-*   交互逻辑: 默认展示全屏的主页预览（Home Focus）。点击进入后，主页先收缩为卡片（Card View），随后向右位移（Split View），登录表单从左侧滑入。
+*   目标: 创建一个平滑且充满亲和力的过渡效果，让用户感觉是从“灵感画廊”（Home Preview）进入到了“个人创作空间”（Login Form）。
+*   视觉风格: 现代圆润感，强调空间的流动性与平滑的几何衔接。
+*   交互逻辑: 默认展示全屏的主页预览（Home Focus）。点击进入后，主页先平滑收缩为带有 12px 圆角的卡片（Card View），随后向右位移（Split View），登录表单从左侧滑入。
 
 ---
 
@@ -35,7 +35,7 @@ type ViewMode = 'HOME_FOCUS' | 'CARD_VIEW' | 'SPLIT_VIEW';
     *   登录表单: 隐藏在左侧屏幕外 (x: -100%)。
 
 2.  CARD_VIEW (过渡状态)
-    *   主页预览: 缩放为居中卡片 (scale: 0.9, x: 0, borderRadius: 24px)。
+    *   主页预览: 缩放为居中卡片 (scale: 0.9, x: 0, borderRadius: 12px)。
 
 3.  SPLIT_VIEW (分屏模式)
     *   主页预览: 缩小并移动到右侧 (scale: 0.9, x: 45%)，进入背景状态 (blur: 4px)。

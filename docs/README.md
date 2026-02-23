@@ -27,6 +27,8 @@
 ### ✨ 功能特性 (Features)
 *   [Selection & Batch Operations](./features/selection-batch.md)  
     专项说明：多选模式实现、批量删除及批量标签管理的交互与架构。
+*   [Link Preview](./features/link-preview.md)  
+    自动解析记录中普通链接并利用 Server Action 渲染如 Twitter 风格的富文本预览卡片。
 
 ### 🧪 质量保证 (Quality)
 *   [Testing Strategy](./quality/testing-strategy.md)  

@@ -24,10 +24,17 @@ export function MapPageContent() {
         let isMounted = true;
 
         const load = async () => {
-            // 如果缓存中已有数据，先同步到前端展示，并直接结束 isLoading 实现秒开！
+            // 如果缓存中已有数据，先同步到前端展示，并尽快结束 isLoading
             if (locationCache.getInitialized()) {
                 setMarkers(locationCache.getMarkers());
-                setIsLoading(false);
+                // 但是要确保 MapView 组件本身已经动态引入完成再结束 loading
+                mapViewPromise.then(mapModule => {
+                    if (isMounted) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        setMapView(() => mapModule.MapView as any);
+                        setIsLoading(false);
+                    }
+                });
             }
 
             // 并行请求新数据和动态组件（后台静默 SWR 拉取）
@@ -59,7 +66,7 @@ export function MapPageContent() {
                 setMarkers(allMarkers);
             }
 
-            // 无论是否之前被缓存命中中断过 isLoading，这里都确保关闭骨架屏
+            // 无论是否之前被缓存命中中断过 isLoading，这里都确实数据请求完毕了
             setIsLoading(false);
         };
 

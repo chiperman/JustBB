@@ -4,7 +4,8 @@ export type ContentToken =
     | { type: 'ref'; value: string }
     | { type: 'image'; value: string }
     | { type: 'code'; value: string; lang?: string }
-    | { type: 'location'; value: string; name: string; lat: number; lng: number };
+    | { type: 'location'; value: string; name: string; lat: number; lng: number }
+    | { type: 'link'; value: string };
 
 export function parseContentTokens(text: string): ContentToken[] {
     // 包含六种匹配模式，注意顺序，代码块优先：
@@ -19,12 +20,12 @@ export function parseContentTokens(text: string): ContentToken[] {
     // 这些可能是历史数据中混入的 React/DevTools 调试残留
     const cleanText = text.replace(/<\s*(?:a|span)\s+id=\d+\s*>/g, '').replace(/<\s*\/\s*(?:a|span)\s*>/g, '');
 
-    const regex = /```(\w*)\n?([\s\S]*?)```|📍\[([^\]]+)\]\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)|!\[.*?\]\((https?:\/\/\S+\.(?:jpg|jpeg|png|gif|webp))\)|(@\d+)|(?<=^|\s|[^a-zA-Z0-9])(#[\w\u4e00-\u9fa5]+)|(https?:\/\/\S+\.(?:jpg|jpeg|png|gif|webp))/g;
+    const regex = /```(\w*)\n?([\s\S]*?)```|📍\[([^\]]+)\]\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)|!\[.*?\]\((https?:\/\/[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+\.(?:jpg|jpeg|png|gif|webp))\)|(@\d+)|(?<=^|\s|[^a-zA-Z0-9])(#[\w\u4e00-\u9fa5]+)|(https?:\/\/[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+\.(?:jpg|jpeg|png|gif|webp))|(https?:\/\/[^\s\u4e00-\u9fa5<]+[^\s\u4e00-\u9fa5<.,;:!?'"”’。，！？）】])/g;
 
     const tokens: ContentToken[] = [];
     let lastIndex = 0;
 
-    cleanText.replace(regex, (match, lang, codeContent, locName, locLat, locLng, mdImgUrl, atRef, hashTag, rawImgUrl, index) => {
+    cleanText.replace(regex, (match, lang, codeContent, locName, locLat, locLng, mdImgUrl, atRef, hashTag, rawImgUrl, rawLink, index) => {
         // 添加匹配前的纯文本
         if (index > lastIndex) {
             tokens.push({ type: 'text', value: cleanText.slice(lastIndex, index) });
@@ -42,6 +43,8 @@ export function parseContentTokens(text: string): ContentToken[] {
             tokens.push({ type: 'tag', value: hashTag });
         } else if (rawImgUrl) {
             tokens.push({ type: 'image', value: rawImgUrl });
+        } else if (rawLink) {
+            tokens.push({ type: 'link', value: rawLink });
         }
 
         lastIndex = index + match.length;

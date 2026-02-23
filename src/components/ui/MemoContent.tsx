@@ -9,6 +9,7 @@ import { MemoHoverPreview } from './MemoHoverPreview';
 import { LocationHoverPreview } from './LocationHoverPreview';
 import { useSearchParams } from 'next/navigation';
 import { ImageZoom } from './ImageZoom';
+import { LinkPreview } from './LinkPreview';
 
 interface MemoContentProps {
     content: string;
@@ -112,6 +113,10 @@ export function MemoContent({ content, className }: MemoContentProps) {
                                         <span className="text-[13px] font-medium">{token.name}</span>
                                     </span>
                                 </LocationHoverPreview>
+                            );
+                        case 'link':
+                            return (
+                                <LinkPreview key={`link-${index}`} url={token.value} />
                             );
                         case 'text':
                         default:

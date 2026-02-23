@@ -22,6 +22,7 @@ export function MapPageContent() {
         mode: 'mini' | 'full';
         className?: string;
         onMarkerClick?: (marker: MapMarker) => void;
+        onMapClick?: () => void;
     }> | null>(null);
 
     useEffect(() => {
@@ -164,7 +165,7 @@ export function MapPageContent() {
 
                                     {/* 中间：Memo 正文截断 */}
                                     <p className="text-[13px] leading-relaxed text-foreground/80 line-clamp-3 text-pretty">
-                                        {selectedMarker.content.replace(/📍\[.*?\]\([^)]+\)/g, '') || '获取正文内容异常'}
+                                        {selectedMarker?.content?.replace(/📍\[.*?\]\([^)]+\)/g, '') || '获取正文内容异常'}
                                     </p>
 
                                     {/* 底部：来源标记 & 导航 */}

@@ -57,7 +57,7 @@ export function MapView({ markers, mode = 'mini', className, onMarkerClick, onMa
                     zoomControl: mode === 'full',
                     attributionControl: mode === 'full',
                     dragging: mode !== 'mini',
-                    scrollWheelZoom: mode === 'full',
+                    scrollWheelZoom: true,
                     doubleClickZoom: mode !== 'mini',
                     touchZoom: mode !== 'mini',
                 });
@@ -156,6 +156,8 @@ export function MapView({ markers, mode = 'mini', className, onMarkerClick, onMa
             className={cn(
                 'rounded-inner overflow-hidden',
                 sizeClasses,
+                // 应用极简主义滤镜：降低饱和度，增加对比度
+                'grayscale-[0.9] brightness-[1.05] contrast-[1.1] hover:grayscale-0 transition-all duration-500',
                 className
             )}
             style={{ zIndex: 0 }}

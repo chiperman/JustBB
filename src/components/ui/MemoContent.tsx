@@ -7,6 +7,7 @@ import { parseContentTokens } from '@/lib/contentParser';
 import { CodeBlock } from './CodeBlock';
 import { MemoHoverPreview } from './MemoHoverPreview';
 import { useSearchParams } from 'next/navigation';
+import { ImageZoom } from './ImageZoom';
 
 interface MemoContentProps {
     content: string;
@@ -76,12 +77,14 @@ export function MemoContent({ content, className }: MemoContentProps) {
                                     <div className="flex justify-center items-center">
                                         <div className="relative rounded-sm overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-[0_2px_12px_-3px_rgba(0,0,0,0.1),0_4px_6px_-2px_rgba(0,0,0,0.05)] transition-all duration-500 group-hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] group-hover:scale-[1.01]">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img
-                                                src={token.value}
-                                                alt="记录中的图片附件"
-                                                className="max-h-[550px] w-auto object-contain block h-auto select-none"
-                                                loading="lazy"
-                                            />
+                                            <ImageZoom src={token.value} alt="记录中的图片附件">
+                                                <img
+                                                    src={token.value}
+                                                    alt="记录中的图片附件"
+                                                    className="max-h-[550px] w-auto object-contain block h-auto select-none"
+                                                    loading="lazy"
+                                                />
+                                            </ImageZoom>
                                         </div>
                                     </div>
                                 </span>

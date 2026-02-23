@@ -5,6 +5,7 @@ import { format, parseISO } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { ImageZoom } from '@/components/ui/ImageZoom';
 
 interface GalleryGridProps {
     memos: Memo[];
@@ -74,12 +75,14 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
                                 >
                                     {/* Frame Effect - Inner Padding */}
                                     <div className="relative overflow-hidden aspect-auto rounded-[1px]">
-                                        <img
-                                            src={item.imageUrl || ''}
-                                            alt="Memo multimedia content"
-                                            className="w-full h-auto object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                                            loading="lazy"
-                                        />
+                                        <ImageZoom src={item.imageUrl || ''} alt="Memo multimedia content">
+                                            <img
+                                                src={item.imageUrl || ''}
+                                                alt="Memo multimedia content"
+                                                className="w-full h-auto object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                                                loading="lazy"
+                                            />
+                                        </ImageZoom>
 
                                         {/* Premium Overlay */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-4">

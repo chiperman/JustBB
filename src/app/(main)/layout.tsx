@@ -25,8 +25,8 @@ export default async function MainLayout({
 
     return (
         <ClientLayoutProviders initialTags={initialTags} initialStats={initialStats} initialUser={user}>
-            <div className="flex h-screen w-full justify-center selection:bg-primary/20 overflow-hidden">
-                <div className="flex w-full max-w-(--breakpoint-2xl) h-full">
+            <div className="flex h-screen w-full overflow-hidden">
+                <div className="flex w-full h-full">
                     {/* 左侧导航 - 移动端隐藏 */}
                     <div className="hidden lg:block h-full overflow-y-auto scrollbar-hide border-r border-border/40">
                         <Suspense fallback={<div className="w-64" />}>

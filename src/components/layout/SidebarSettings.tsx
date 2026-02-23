@@ -115,7 +115,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                     <Button
                         variant="ghost"
                         className={cn(
-                            "w-full flex items-center gap-3 h-9 p-2 hover:bg-accent hover:text-accent-foreground rounded-sm transition-all focus-visible:ring-0 group/settings",
+                            "w-full flex items-center gap-3 h-9 p-2 hover:bg-accent hover:text-accent-foreground rounded-sm transition-all focus-visible:ring-0 group/settings overflow-hidden",
                             isCollapsed ? "justify-center" : "justify-start px-3"
                         )}
                         aria-label="账号与设置"
@@ -132,7 +132,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                             {!isCollapsed && (
                                 <motion.div
                                     key="content"
-                                    exit={{ opacity: 0, width: 0, x: -10 }}
+                                    exit={{ opacity: 0, x: -10 }}
                                     transition={{ duration: 0.2 }}
                                     className="flex flex-col items-start overflow-hidden whitespace-nowrap flex-1"
                                 >

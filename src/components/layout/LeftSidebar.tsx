@@ -5,7 +5,7 @@ import { TagCloud } from '../ui/TagCloud';
 import { Heatmap } from '../ui/Heatmap';
 import { OnThisDay } from '../ui/OnThisDay';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Home01Icon, Tag01Icon, Delete02Icon, Image01Icon as GalleryIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, Location04Icon } from '@hugeicons/core-free-icons';
+import { Home01Icon, Tag01Icon, Delete02Icon, Image01Icon as GalleryIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, Location04Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { SidebarSettings } from "./SidebarSettings";
@@ -181,7 +181,6 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
                         isCollapsed={effectiveIsCollapsed}
                     />
                 </div>
-                {/* Toggle Button */}
                 <Button
                     variant="ghost"
                     onClick={handleToggle}
@@ -195,7 +194,7 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
                 >
                     <motion.button>
                         {isMobile ? (
-                            <HugeiconsIcon icon={PanelLeftCloseIcon} size={16} />
+                            <HugeiconsIcon icon={Cancel01Icon} size={16} />
                         ) : (
                             effectiveIsCollapsed ? <HugeiconsIcon icon={PanelLeftOpenIcon} size={16} /> : <HugeiconsIcon icon={PanelLeftCloseIcon} size={16} />
                         )}

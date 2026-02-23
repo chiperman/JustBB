@@ -1137,26 +1137,29 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 <span className="text-xs font-medium">置顶</span>
                             </Button>
 
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowLocationPicker(true)}
+                                className="h-8 px-2 gap-1.5 text-muted-foreground"
+                                aria-label="添加定位"
+                            >
+                                <HugeiconsIcon icon={Location04Icon} size={16} />
+                                <span className="text-xs font-medium">定位</span>
+                            </Button>
+
                             {!hideFullscreen && (
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => setIsFullscreen(true)}
-                                    className="h-8 px-2 text-muted-foreground"
+                                    className="h-8 px-2 gap-1.5 text-muted-foreground"
+                                    aria-label="放大"
                                 >
                                     <HugeiconsIcon icon={Maximize2} size={16} />
+                                    <span className="text-xs font-medium">放大</span>
                                 </Button>
                             )}
-
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowLocationPicker(true)}
-                                className="h-8 px-2 text-muted-foreground"
-                                aria-label="添加定位"
-                            >
-                                <HugeiconsIcon icon={Location04Icon} size={16} />
-                            </Button>
                         </div>
 
                         <div className="flex items-center gap-3">

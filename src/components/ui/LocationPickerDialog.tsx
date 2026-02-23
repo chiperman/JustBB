@@ -10,8 +10,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search01Icon as SearchIcon, Loading03Icon as LoadingIcon, Location04Icon } from '@hugeicons/core-free-icons';
+import { Search01Icon as SearchIcon, Loading03Icon as LoadingIcon, Location04Icon, Navigation03Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
+import { useToast } from '@/hooks/use-toast';
 
 interface NominatimResult {
     display_name: string;
@@ -27,12 +28,14 @@ interface LocationPickerDialogProps {
 }
 
 export function LocationPickerDialog({ open, onOpenChange, onConfirm }: LocationPickerDialogProps) {
+    const { toast } = useToast();
     const [name, setName] = React.useState('');
     const [lat, setLat] = React.useState('');
     const [lng, setLng] = React.useState('');
     const [isSearching, setIsSearching] = React.useState(false);
     const [suggestions, setSuggestions] = React.useState<NominatimResult[]>([]);
     const [showSuggestions, setShowSuggestions] = React.useState(false);
+    const [isGettingLocation, setIsGettingLocation] = React.useState(false);
     const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const isSelectingRef = React.useRef<boolean>(false);
 
@@ -95,6 +98,58 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
         };
     }, [name]);
 
+    const handleGetCurrentLocation = () => {
+        if (!navigator.geolocation) {
+            toast({
+                title: '当前浏览器不支持地理定位',
+                description: '请手动输入经纬度。',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        setIsGettingLocation(true);
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                setLat(latitude.toFixed(6).toString());
+                setLng(longitude.toFixed(6).toString());
+
+                // 反向地理编码获取简短地名
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                    const data = await res.json();
+
+                    if (data && data.display_name) {
+                        const shortName = data.display_name.split(',')[0];
+                        setName(shortName);
+                    } else {
+                        setName('当前位置');
+                    }
+                } catch (error) {
+                    console.error('Nominatim reverse geocoding error:', error);
+                    setName('当前位置');
+                } finally {
+                    setIsGettingLocation(false);
+                }
+            },
+            (error) => {
+                console.error('Geolocation error:', error);
+                setIsGettingLocation(false);
+                toast({
+                    title: '获取位置失败',
+                    description: error.message || '请检查浏览器定位权限',
+                    variant: 'destructive',
+                });
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0,
+            }
+        );
+    };
+
     const handleSelectSuggestion = (s: NominatimResult) => {
         isSelectingRef.current = true; // 告诉 useEffect 当前是选择操作，不要触发后续网络请求
         // 提取较短的名字作为显示名（通常是第一个逗号前的内容）
@@ -131,9 +186,26 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                 </DialogHeader>
                 <div className="space-y-4">
                     <div className="space-y-2 relative">
-                        <label htmlFor="loc-name" className="text-sm font-medium">
-                            地点名称
-                        </label>
+                        <div className="flex items-center justify-between">
+                            <label htmlFor="loc-name" className="text-sm font-medium">
+                                地点名称
+                            </label>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleGetCurrentLocation}
+                                disabled={isGettingLocation}
+                                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                            >
+                                {isGettingLocation ? (
+                                    <HugeiconsIcon icon={LoadingIcon} size={12} className="animate-spin mr-1" />
+                                ) : (
+                                    <HugeiconsIcon icon={Navigation03Icon} size={12} className="mr-1" />
+                                )}
+                                使用当前位置
+                            </Button>
+                        </div>
                         <div className="relative">
                             <Input
                                 id="loc-name"

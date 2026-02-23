@@ -2,7 +2,7 @@
 
 > 最后更新：2026-02-19 (重构：文档体系规范化与分类整理)
 
-欢迎使用 JustMemo 开发者文档。本项目是一个追求现代圆润感、基于 Next.js 15 和 Supabase 构建的高性能私密笔记系统。
+欢迎使用 JustMemo 开发者文档。本项目是一个追求现代圆润感、基于 Next.js 16 和 Supabase 构建的高性能私密笔记系统。
 
 ---
 
@@ -10,8 +10,7 @@
 
 ### 🏗️ 架构与规范 (Architecture)
 *   [Logic Architecture](./architecture/logic-architecture.md)  
-*   [Logic Architecture](./architecture/logic-architecture.md)  
-    **[NEW]** 详解 Hybird SPA 架构、PageDataCache 缓存策略及去骨架屏的无感导航设计。
+    详解 Hybrid SPA 架构、PageDataCache 缓存策略及去骨架屏的无感导航设计。
 *   [API Spec](./architecture/api-spec.md)  
     Server Actions、RPC 函数及通用响应协议。
 *   [Database Schema](./architecture/database-schema.md)  

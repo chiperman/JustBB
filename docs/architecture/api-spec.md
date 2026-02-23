@@ -78,7 +78,7 @@
 ### 4.2 `clearUnlockCode`
 *   功能: 手动锁定当前会话，清除 Cookie。
 
-## 4. 读操作 (Queries - 混合模式)
+## 5. 读操作 (Queries - 混合模式)
 
 ### 5.1 `getMemos` (Core Fetch)
 *   参数: 支持分页、标签、年份、搜索词及隐私过滤。

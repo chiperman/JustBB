@@ -1,4 +1,4 @@
-# JustMemo 安全与隐私架构
+# JustMemo 安全与隐私架构 (Security & Privacy)
 
 > 最后更新：2026-02-21 (新增：私密记录元数据脱敏与差异化可见性控制)
 
@@ -18,7 +18,7 @@
 ## 3. 操作安全 (Operations Safety)
 *   二次确认机制: 当管理员尝试将私密记录转为公开发布时，系统弹出 Dialog 进行强制确认，防止因误操作导致敏感信息泄露。
 
-## 3. 鉴权逻辑
+## 4. 鉴权逻辑 (Authentication)
 *   管理员: 使用 Supabase Auth (Email/Login) 管理发布、编辑与删除权限。前端通过 `UserContext` 维护全局 `isAdmin` 状态，实现极致的 UI 响应性能，避免重复的 Server Action 调用。
 *   写操作保护: 开启数据库 RLS (Row Level Security)，物理级限制 `UPDATE` 和 `DELETE` 操作仅限认证的管理员。
 *   访客: 基于 RPC 函数的口令匹配获取内容。在非搜索模式下仅能看到加密占位。

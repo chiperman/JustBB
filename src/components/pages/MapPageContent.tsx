@@ -24,22 +24,17 @@ export function MapPageContent() {
         let isMounted = true;
 
         const load = async () => {
-            // 如果缓存中已有数据，先同步到前端展示，但保留 isLoading 为 true 以播放优雅过渡动画
+            // 如果缓存中已有数据，先同步到前端展示，并直接结束 isLoading 实现秒开！
             if (locationCache.getInitialized()) {
                 setMarkers(locationCache.getMarkers());
+                setIsLoading(false);
             }
 
-            // 设定一个最小动画延时 (600ms)，让哪怕命中缓存，也能看到优雅的过渡效果，而不是生硬闪显
-            const minAnimTime = new Promise(resolve => setTimeout(resolve, 600));
-
-            // 并行请求新数据和动态组件
-            const fetchPromise = Promise.all([
+            // 并行请求新数据和动态组件（后台静默 SWR 拉取）
+            const [result, mapModule] = await Promise.all([
                 getMemosWithLocations(),
                 mapViewPromise,
             ]);
-
-            // 等待至少 600ms 或者 数据读取完成（取决于哪个更慢，通常缓存秒回则卡 600ms）
-            const [[result, mapModule]] = await Promise.all([fetchPromise, minAnimTime]);
 
             if (!isMounted) return;
 
@@ -59,12 +54,12 @@ export function MapPageContent() {
                     });
                 });
 
-                // 覆盖缓存对象
+                // 覆盖缓存对象并更新视图
                 locationCache.setMarkers(allMarkers);
                 setMarkers(allMarkers);
             }
 
-            // 数据准备完毕并且最小动画时间已过，结束骨架屏
+            // 无论是否之前被缓存命中中断过 isLoading，这里都确保关闭骨架屏
             setIsLoading(false);
         };
 

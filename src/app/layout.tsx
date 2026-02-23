@@ -19,6 +19,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh" suppressHydrationWarning>
+      <head>
+        {/* CartoDB 瓦片 CDN 预连接，加速地图首屏加载 */}
+        <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://c.basemaps.cartocdn.com" crossOrigin="anonymous" />
+      </head>
       <body className="antialiased font-sans">
         <ThemeProvider
           attribute="class"

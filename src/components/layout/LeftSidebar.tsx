@@ -22,6 +22,7 @@ export interface LeftSidebarProps {
 
 export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [hasMounted, setHasMounted] = useState(false);
     const { currentView, navigate } = useView();
     // Optimistic UI: 立即响应点击，不等待路由跳转
     const [optimisticPath, setOptimisticPath] = useState(currentView);
@@ -29,6 +30,11 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
     useEffect(() => {
         setOptimisticPath(currentView);
     }, [currentView]);
+
+    // SSR hydrate 完成后启用指示条
+    useEffect(() => {
+        setHasMounted(true);
+    }, []);
 
     const { isAdmin, isMounted } = useUser();
 
@@ -215,22 +221,23 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
                 variants={navVariants}
                 className="flex-1 px-1 space-y-1 overflow-y-auto overflow-x-hidden custom-scrollbar mb-[24px] relative"
             >
-                {/* Active Indicator - 首屏即现 */}
+                {/* Active Indicator - hydrate 后才显示，避免 SSR 阶段闪到首页位置 */}
                 <motion.div
                     style={{
                         y: springY,
                         scaleY,
                         scaleX,
-                        opacity,
+                        opacity: hasMounted ? 1 : 0,
                         originY: 0.5
                     }}
                     className="absolute left-0 w-1 h-5 bg-primary rounded-full z-10"
                 />
 
                 {navItems.map((item) => {
-                    const isActive = item.href === '/'
+                    // hasMounted 为 false 时不高亮任何项，避免 SSR 阶段首页被错误高亮
+                    const isActive = hasMounted && (item.href === '/'
                         ? currentPath === '/'
-                        : currentPath.startsWith(item.href);
+                        : currentPath.startsWith(item.href));
 
                     return (
                         <motion.div variants={navItemVariants} key={item.label}>

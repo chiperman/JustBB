@@ -33,6 +33,16 @@ export function ViewProvider({ children }: { children: ReactNode }) {
         setCurrentView(path);
     }, [currentView]);
 
+    // Hydrate 后同步：SSR 时 useState 初始化为 '/'，
+    // React 18 hydration 不会重新运行初始化函数，所以需要在 mount 后手动校正
+    useEffect(() => {
+        const actualPath = window.location.pathname;
+        if (actualPath !== currentView) {
+            setCurrentView(actualPath);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // 浏览器前进/后退按钮支持
     useEffect(() => {
         const handlePopState = () => {

@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { getMemosWithLocations } from '@/actions/locations';
 import type { Memo, Location } from '@/types/memo';
 
+// 模块级预加载：JS chunk 解析时即开始下载 MapView，不等 useEffect
+const mapViewPromise = import('@/components/ui/MapView');
+
 interface MapMarker extends Location {
     memoId: string;
     memoNumber: number;
@@ -22,10 +25,10 @@ export function MapPageContent() {
 
     useEffect(() => {
         const load = async () => {
-            // 并行加载数据和组件
+            // 并行加载数据和组件（MapView 模块已在解析时预触发）
             const [result, mapModule] = await Promise.all([
                 getMemosWithLocations(),
-                import('@/components/ui/MapView'),
+                mapViewPromise,
             ]);
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -103,7 +103,7 @@ export default function ResetPasswordPage() {
                     <div className="space-y-2">
                         <Label htmlFor="password">新密码</Label>
                         <div className="relative">
-                            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <HugeiconsIcon icon={Lock} className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
                                 id="password"
                                 type="password"
@@ -119,7 +119,7 @@ export default function ResetPasswordPage() {
                     <div className="space-y-2">
                         <Label htmlFor="confirmPassword">确认新密码</Label>
                         <div className="relative">
-                            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <HugeiconsIcon icon={Lock} className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
                                 id="confirmPassword"
                                 type="password"

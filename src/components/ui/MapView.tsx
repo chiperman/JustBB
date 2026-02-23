@@ -19,11 +19,13 @@ interface MapViewProps {
     onMarkerClick?: (marker: Location & { memoId?: string; memoNumber?: number }) => void;
     /** 地图点击回调（用于选点） */
     onMapClick?: (lat: number, lng: number) => void;
+    /** 是否允许拖拽放大等交互，覆盖 mode 的默认限制 */
+    interactive?: boolean;
     /** 标记拖拽结束回调 */
     onMarkerDragEnd?: (lat: number, lng: number) => void;
 }
 
-export function MapView({ markers, mode = 'mini', className, onMarkerClick, onMapClick, onMarkerDragEnd }: MapViewProps) {
+export function MapView({ markers, mode = 'mini', className, interactive = false, onMarkerClick, onMapClick, onMarkerDragEnd }: MapViewProps) {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
 
@@ -56,10 +58,10 @@ export function MapView({ markers, mode = 'mini', className, onMarkerClick, onMa
                     zoom,
                     zoomControl: mode === 'full',
                     attributionControl: mode === 'full',
-                    dragging: mode !== 'mini',
+                    dragging: mode !== 'mini' || interactive,
                     scrollWheelZoom: true,
-                    doubleClickZoom: mode !== 'mini',
-                    touchZoom: mode !== 'mini',
+                    doubleClickZoom: mode !== 'mini' || interactive,
+                    touchZoom: mode !== 'mini' || interactive,
                 });
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -97,8 +99,15 @@ export function MapView({ markers, mode = 'mini', className, onMarkerClick, onMa
             markers.forEach(marker => {
                 const m = L.marker([marker.lat, marker.lng], {
                     icon: markerIcon,
-                    draggable: false // 禁止拖拽标记
+                    draggable: !!onMarkerDragEnd // 开启或禁止拖拽标记
                 }).addTo(map);
+
+                if (onMarkerDragEnd) {
+                    m.on('dragend', (e: L.LeafletEvent) => {
+                        const newPos = (e.target as L.Marker).getLatLng();
+                        onMarkerDragEnd(newPos.lat, newPos.lng);
+                    });
+                }
 
                 if (mode === 'full' && marker.name) {
                     m.bindPopup(`<strong>${marker.name}</strong>`);
@@ -125,7 +134,7 @@ export function MapView({ markers, mode = 'mini', className, onMarkerClick, onMa
         return () => {
             cancelled = true;
         };
-    }, [markers, mode, onMarkerClick, onMapClick, onMarkerDragEnd]);
+    }, [markers, mode, className, interactive, onMarkerClick, onMapClick, onMarkerDragEnd]);
 
     // 独立清理 Effect
     useEffect(() => {

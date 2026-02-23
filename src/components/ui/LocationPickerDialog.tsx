@@ -37,6 +37,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
     const [MapView, setMapView] = React.useState<React.ComponentType<{
         markers: { name: string; lat: number; lng: number }[];
         mode: 'mini' | 'full';
+        interactive?: boolean;
         className?: string;
         onMarkerClick?: (marker: { name: string; lat: number; lng: number }) => void;
         onMapClick?: (lat: number, lng: number) => void;
@@ -197,8 +198,13 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                             <MapView
                                 markers={markers}
                                 mode="mini"
+                                interactive={true}
                                 className="w-full h-[220px]"
                                 onMapClick={(flat, flng) => {
+                                    setLat(flat.toFixed(6).toString());
+                                    setLng(flng.toFixed(6).toString());
+                                }}
+                                onMarkerDragEnd={(flat, flng) => {
                                     setLat(flat.toFixed(6).toString());
                                     setLng(flng.toFixed(6).toString());
                                 }}

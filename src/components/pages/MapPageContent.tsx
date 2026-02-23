@@ -5,15 +5,10 @@ import { getMemosWithLocations } from '@/actions/locations';
 import type { Memo, Location } from '@/types/memo';
 import { Location04Icon, Loading03Icon as LoadingIcon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
+import { locationCache, type MapMarker } from '@/lib/location-cache';
 
 // 模块级预加载：JS chunk 解析时即开始下载 MapView，不等 useEffect
 const mapViewPromise = import('@/components/ui/MapView');
-
-interface MapMarker extends Location {
-    memoId: string;
-    memoNumber: number;
-    content?: string;
-}
 
 export function MapPageContent() {
     const [markers, setMarkers] = useState<MapMarker[]>([]);
@@ -26,12 +21,27 @@ export function MapPageContent() {
     }> | null>(null);
 
     useEffect(() => {
+        let isMounted = true;
+
         const load = async () => {
-            // 并行加载数据和组件（MapView 模块已在解析时预触发）
-            const [result, mapModule] = await Promise.all([
+            // 如果缓存中已有数据，先同步到前端展示，但保留 isLoading 为 true 以播放优雅过渡动画
+            if (locationCache.getInitialized()) {
+                setMarkers(locationCache.getMarkers());
+            }
+
+            // 设定一个最小动画延时 (600ms)，让哪怕命中缓存，也能看到优雅的过渡效果，而不是生硬闪显
+            const minAnimTime = new Promise(resolve => setTimeout(resolve, 600));
+
+            // 并行请求新数据和动态组件
+            const fetchPromise = Promise.all([
                 getMemosWithLocations(),
                 mapViewPromise,
             ]);
+
+            // 等待至少 600ms 或者 数据读取完成（取决于哪个更慢，通常缓存秒回则卡 600ms）
+            const [[result, mapModule]] = await Promise.all([fetchPromise, minAnimTime]);
+
+            if (!isMounted) return;
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setMapView(() => mapModule.MapView as any);
@@ -48,13 +58,19 @@ export function MapPageContent() {
                         });
                     });
                 });
+
+                // 覆盖缓存对象
+                locationCache.setMarkers(allMarkers);
                 setMarkers(allMarkers);
             }
 
+            // 数据准备完毕并且最小动画时间已过，结束骨架屏
             setIsLoading(false);
         };
 
         load();
+
+        return () => { isMounted = false; };
     }, []);
 
     return (

@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search01Icon as SearchIcon, Loading03Icon as LoadingIcon } from '@hugeicons/core-free-icons';
+import { Search01Icon as SearchIcon, Loading03Icon as LoadingIcon, Location04Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
 interface NominatimResult {
@@ -247,10 +247,32 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                                 }}
                             />
                         ) : (
-                            <div className="w-full h-[220px] bg-muted/20 flex items-center justify-center">
-                                <span className="text-xs text-muted-foreground">
-                                    加载地图中…
-                                </span>
+                            <div className="w-full h-[220px] bg-muted/20 relative flex items-center justify-center overflow-hidden">
+                                {/* 底层网格与径向渐变，制造空间纵深感 */}
+                                <div className="absolute inset-0 z-0
+                                    [background-image:radial-gradient(ellipse_at_center,transparent_20%,hsl(var(--background))_70%),linear-gradient(to_right,hsl(var(--muted-foreground))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--muted-foreground))_1px,transparent_1px)]
+                                    [background-size:100%_100%,20px_20px,20px_20px]
+                                    opacity-[0.08]"
+                                />
+
+                                {/* 中心发光与脉冲涟漪 */}
+                                <div className="relative z-10 flex flex-col items-center justify-center space-y-4">
+                                    <div className="relative flex items-center justify-center">
+                                        <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping duration-[3000ms]" />
+                                        <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl" />
+                                        <div className="relative bg-background/50 border border-primary/20 backdrop-blur-sm p-3 rounded-full text-primary shadow-lg flex items-center justify-center">
+                                            <HugeiconsIcon icon={Location04Icon} size={24} className="animate-pulse" />
+                                        </div>
+                                    </div>
+
+                                    {/* 毛玻璃徽章文本 */}
+                                    <div className="px-3 py-1.5 bg-background/40 backdrop-blur-md border border-border/50 rounded-full shadow-sm">
+                                        <span className="text-[11px] font-medium text-foreground/70 tracking-wide flex items-center gap-1.5">
+                                            <HugeiconsIcon icon={LoadingIcon} size={12} className="animate-spin text-muted-foreground" />
+                                            正在连接空间信标...
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>

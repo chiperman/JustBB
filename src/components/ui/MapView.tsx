@@ -95,19 +95,10 @@ export function MapView({ markers, mode = 'mini', className, onMarkerClick, onMa
 
             // 添加新标记
             markers.forEach(marker => {
-                const isDraggable = !!onMarkerDragEnd;
                 const m = L.marker([marker.lat, marker.lng], {
                     icon: markerIcon,
-                    draggable: isDraggable
+                    draggable: false // 禁止拖拽标记
                 }).addTo(map);
-
-                if (isDraggable && onMarkerDragEnd) {
-                    m.on('dragend', (e: L.DragEndEvent) => {
-                        const markerInstance = e.target as L.Marker;
-                        const position = markerInstance.getLatLng();
-                        onMarkerDragEnd(position.lat, position.lng);
-                    });
-                }
 
                 if (mode === 'full' && marker.name) {
                     m.bindPopup(`<strong>${marker.name}</strong>`);

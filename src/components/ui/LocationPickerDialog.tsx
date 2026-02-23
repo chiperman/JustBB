@@ -191,7 +191,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                     {/* 地图预览 */}
                     <div className="rounded-inner overflow-hidden ring-1 ring-black/5 dark:ring-white/10 relative group">
                         <div className="absolute top-2 left-2 z-[10] bg-background/90 backdrop-blur-md px-2 py-1 rounded text-[10px] text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-border/50">
-                            滚轮缩放 • 点击选点 • 拖拽标记
+                            滚轮缩放 • 点击选点
                         </div>
                         {MapView ? (
                             <MapView
@@ -199,10 +199,6 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                                 mode="mini"
                                 className="w-full h-[220px]"
                                 onMapClick={(flat, flng) => {
-                                    setLat(flat.toFixed(6).toString());
-                                    setLng(flng.toFixed(6).toString());
-                                }}
-                                onMarkerDragEnd={(flat, flng) => {
                                     setLat(flat.toFixed(6).toString());
                                     setLng(flng.toFixed(6).toString());
                                 }}

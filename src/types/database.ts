@@ -20,6 +20,7 @@ export type Memo = {
     updated_at: string;
     deleted_at: string | null;
     word_count: number;
+    locations: Json | null;
 };
 
 export type Database = {
@@ -41,6 +42,7 @@ export type Database = {
                     updated_at?: string;
                     deleted_at?: string | null;
                     word_count?: number;
+                    locations?: Json | null;
                 };
                 Update: {
                     id?: string;
@@ -56,6 +58,7 @@ export type Database = {
                     updated_at?: string;
                     deleted_at?: string | null;
                     word_count?: number;
+                    locations?: Json | null;
                 };
                 Relationships: [];
             };

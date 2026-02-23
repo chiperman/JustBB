@@ -13,7 +13,8 @@ import {
     ViewIcon as Eye,
     ViewOffSlashIcon as EyeOff,
     Maximize01Icon as Maximize2,
-    Minimize01Icon as Minimize2
+    Minimize01Icon as Minimize2,
+    Location04Icon,
 } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
@@ -25,6 +26,7 @@ import { getAllTags } from '@/actions/tags';
 import { useTags } from '@/context/TagsContext';
 import { useStats } from '@/context/StatsContext';
 import { memoCache, CacheItem } from '@/lib/memo-cache'; // Import local cache
+import { LocationPickerDialog } from './LocationPickerDialog';
 
 // Tiptap imports
 import { useEditor, EditorContent, Extension } from '@tiptap/react';
@@ -134,6 +136,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const [showAccessCode, setShowAccessCode] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
+    const [showLocationPicker, setShowLocationPicker] = useState(false);
 
     // Draft Loading Effect
     useEffect(() => {
@@ -1144,6 +1147,16 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                     <HugeiconsIcon icon={Maximize2} size={16} />
                                 </Button>
                             )}
+
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowLocationPicker(true)}
+                                className="h-8 px-2 text-muted-foreground"
+                                aria-label="添加定位"
+                            >
+                                <HugeiconsIcon icon={Location04Icon} size={16} />
+                            </Button>
                         </div>
 
                         <div className="flex items-center gap-3">
@@ -1272,6 +1285,15 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <LocationPickerDialog
+                open={showLocationPicker}
+                onOpenChange={setShowLocationPicker}
+                onConfirm={(locationText) => {
+                    if (!editor) return;
+                    editor.chain().focus().insertContent(locationText + ' ').run();
+                }}
+            />
         </motion.section>
     );
 }

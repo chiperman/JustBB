@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { parseContentTokens } from '@/lib/contentParser';
 import { CodeBlock } from './CodeBlock';
 import { MemoHoverPreview } from './MemoHoverPreview';
+import { LocationHoverPreview } from './LocationHoverPreview';
 import { useSearchParams } from 'next/navigation';
 import { ImageZoom } from './ImageZoom';
 
@@ -94,6 +95,23 @@ export function MemoContent({ content, className }: MemoContentProps) {
                                 <div key={`code-${index}`}>
                                     <CodeBlock language={token.lang || "typescript"} value={token.value} />
                                 </div>
+                            );
+                        case 'location':
+                            return (
+                                <LocationHoverPreview
+                                    key={`loc-${index}`}
+                                    name={token.name}
+                                    lat={token.lat}
+                                    lng={token.lng}
+                                >
+                                    <span
+                                        className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer bg-primary/10 px-1.5 py-0.5 rounded mx-0.5 hover:bg-primary/20 transition-colors"
+                                        aria-label={`查看定位: ${token.name}`}
+                                    >
+                                        <span className="text-sm">📍</span>
+                                        <span className="text-[13px] font-medium">{token.name}</span>
+                                    </span>
+                                </LocationHoverPreview>
                             );
                         case 'text':
                         default:

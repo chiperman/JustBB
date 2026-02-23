@@ -94,6 +94,18 @@ export async function updateMemoContent(formData: FormData) {
 
     const { id, content, tags, is_private, is_pinned } = validated.data;
 
+    // 从内容中提取定位信息
+    const locationRegex = /📍\[([^\]]+)\]\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)/g;
+    const locations: { name: string; lat: number; lng: number }[] = [];
+    let locMatch;
+    while ((locMatch = locationRegex.exec(content)) !== null) {
+        locations.push({
+            name: locMatch[1],
+            lat: parseFloat(locMatch[2]),
+            lng: parseFloat(locMatch[3]),
+        });
+    }
+
     const supabase = await createClient();
     const { data: updatedData, error } = await supabase
         .from('memos')
@@ -104,7 +116,8 @@ export async function updateMemoContent(formData: FormData) {
             is_pinned,
             pinned_at: is_pinned ? new Date().toISOString() : null,
             updated_at: new Date().toISOString(),
-            word_count: content.trim().length
+            word_count: content.trim().length,
+            locations: locations.length > 0 ? JSON.parse(JSON.stringify(locations)) : [],
         })
         .eq('id', id)
         .select()
@@ -118,7 +131,7 @@ export async function updateMemoContent(formData: FormData) {
     revalidatePath('/');
     // Explicitly cast the returned data to Memo if needed, or rely on inference if mapped correctly.
     // However, to satisfy strictly typed return:
-    return { success: true, data: updatedData as Memo };
+    return { success: true, data: updatedData as unknown as Memo };
 }
 export async function batchAddTagsToMemos(ids: string[], tags: string[]) {
     if (!await isAdmin()) return { success: false, error: '权限不足' };

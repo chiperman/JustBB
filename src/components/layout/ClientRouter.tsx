@@ -5,6 +5,7 @@ import { useView } from '@/context/ViewContext';
 import { MainLayoutClient } from '@/components/layout/MainLayoutClient';
 import { GalleryPageContent } from '@/components/pages/GalleryPageContent';
 import { TagsPageContent } from '@/components/pages/TagsPageContent';
+import { MapPageContent } from '@/components/pages/MapPageContent';
 import TrashClient from '@/app/(main)/trash/TrashClient';
 import AdminPage from '@/app/(main)/admin/page';
 
@@ -49,6 +50,9 @@ function renderView(view: string) {
     }
     if (view === '/tags') {
         return <TagsPageContent />;
+    }
+    if (view === '/map') {
+        return <MapPageContent />;
     }
     if (view === '/trash') {
         return <TrashClient />;

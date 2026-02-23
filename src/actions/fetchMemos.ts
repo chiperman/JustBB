@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { Json } from '@/types/database';
+import { Memo } from '@/types/memo';
 
 export async function getMemos(params: {
     query?: string;
@@ -48,7 +49,7 @@ export async function getMemos(params: {
         return [];
     }
 
-    return data;
+    return data as unknown as Memo[];
 }
 
 export async function getArchivedMemos(year: number, month: number) {
@@ -70,7 +71,7 @@ export async function getArchivedMemos(year: number, month: number) {
         return [];
     }
 
-    return data;
+    return data as unknown as Memo[];
 }
 
 export async function getGalleryMemos() {
@@ -88,5 +89,5 @@ export async function getGalleryMemos() {
         return [];
     }
 
-    return data;
+    return data as unknown as Memo[];
 }

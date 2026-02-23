@@ -100,5 +100,9 @@
 ### 5.6 `getAllTags` (Tags)
 *   功能: 获取全量标签及其计数，驱动侧边栏与建议项。
 
-### 5.7 `getAllMemos` (Search Action)
+### 5.7 `getMemosWithLocations` (Locations)
+*   功能: 获取所有包含地理位置信息的笔记，驱动地图全视图。
+*   返回: `(Memo & { locations: Location[] })[]`
+
+### 5.8 `getAllMemos` (Search Action)
 *   功能: 获取全量数据以构建前端 `MemoCache`，支持极速本地搜索。

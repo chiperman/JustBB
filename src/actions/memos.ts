@@ -50,6 +50,21 @@ export async function createMemo(formData: FormData): Promise<{ success: boolean
     // 计算字数
     insertData.word_count = validated.data.content.trim().length;
 
+    // 从内容中提取定位信息
+    const locationRegex = /📍\[([^\]]+)\]\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)/g;
+    const locations: { name: string; lat: number; lng: number }[] = [];
+    let locMatch;
+    while ((locMatch = locationRegex.exec(validated.data.content)) !== null) {
+        locations.push({
+            name: locMatch[1],
+            lat: parseFloat(locMatch[2]),
+            lng: parseFloat(locMatch[3]),
+        });
+    }
+    if (locations.length > 0) {
+        insertData.locations = JSON.parse(JSON.stringify(locations));
+    }
+
     // 如果设置了置顶，记录置顶时间
     if (insertData.is_pinned) {
         insertData.pinned_at = new Date().toISOString();
@@ -68,5 +83,5 @@ export async function createMemo(formData: FormData): Promise<{ success: boolean
     }
 
     revalidatePath('/');
-    return { success: true, error: null, data: data as Memo }; // Ensured data is returned as Memo type
+    return { success: true, error: null, data: data as unknown as Memo }; // Ensured data is returned as Memo type
 }

@@ -25,7 +25,7 @@ export async function searchMemosForMention(query: string, offset: number = 0, l
         return [];
     }
 
-    return (data || []) as Memo[];
+    return (data || []) as unknown as Memo[];
 }
 
 export async function getAllMemos(): Promise<Memo[]> {
@@ -49,7 +49,7 @@ export async function getAllMemos(): Promise<Memo[]> {
         return [];
     }
 
-    const memos = (data || []) as Memo[];
+    const memos = (data || []) as unknown as Memo[];
 
     // 如果是管理员，返回全量原始记录
     if (isAdmin) {

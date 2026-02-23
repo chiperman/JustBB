@@ -7,6 +7,7 @@
 *   `memo_number`: serial/identity (自增编号：1, 2, 3...，用于展示与引用)
 *   `content`: text (明文)
 *   `tags`: text[] (索引标签)
+*   `locations`: jsonb (定位信息数组 [{name, lat, lng}, ...])
 *   `access_code`: text (Hash 处理后的口令)
 *   `access_code_hint`: text (口令提示词)
 *   `is_private`: boolean

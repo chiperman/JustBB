@@ -5,7 +5,7 @@ import { TagCloud } from '../ui/TagCloud';
 import { Heatmap } from '../ui/Heatmap';
 import { OnThisDay } from '../ui/OnThisDay';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Home01Icon, Tag01Icon, Delete02Icon, Image01Icon as GalleryIcon, PanelLeftCloseIcon, PanelLeftOpenIcon } from '@hugeicons/core-free-icons';
+import { Home01Icon, Tag01Icon, Delete02Icon, Image01Icon as GalleryIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, Location04Icon } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { SidebarSettings } from "./SidebarSettings";
@@ -40,6 +40,7 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
             { icon: <HugeiconsIcon icon={Home01Icon} size={14} />, label: '首页', href: '/' },
             { icon: <HugeiconsIcon icon={GalleryIcon} size={14} />, label: '画廊', href: '/gallery' },
             { icon: <HugeiconsIcon icon={Tag01Icon} size={14} />, label: '标签', href: '/tags' },
+            { icon: <HugeiconsIcon icon={Location04Icon} size={14} />, label: '地图', href: '/map' },
         ];
 
         if (isAdmin) {

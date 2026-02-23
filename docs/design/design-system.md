@@ -61,3 +61,34 @@
 *   **图标库**: 全面选用 **Hugeicons** (`@hugeicons/react`)，风格倾向于 Soft 或 Rounded 系列。
 
 > 详细的编辑器动画策略与实现细节，请参阅: [编辑器动画策略](./editor-transitions.md)
+
+## 7. 地图组件视觉规范 (Map Component Visuals)
+
+### 7.1 底图服务
+*   **瓦片提供商**: [CartoDB Basemaps](https://github.com/CartoDB/basemap-styles)，零成本、无 API Key。
+*   **可选主题**:
+    | 主题 | CartoDB 变体 | 视觉风格 |
+    |:---|:---|:---|
+    | **浅色 (Light)** | Positron | 极简灰白底，适合日间使用 |
+    | **深色 (Dark)** | Dark Matter | 深黑底配亮色路网，适合暗色模式 |
+    | **彩色 (Voyager)** | Voyager | 柔和彩色，带微妙地形渲染 |
+*   **标签控制**: 每个主题均支持 `_all`（含地名标注）与 `_nolabels`（纯底图）两种变体。
+
+### 7.2 标记点 (Marker)
+*   **样式**: 圆形 24×24px，主强调色填充（`var(--color-primary, #d97757)`），2px 白色边框。
+*   **内部点**: 8×8px 白色圆点，居中显示。
+*   **阴影**: `box-shadow: 0 2px 8px rgba(0,0,0,0.3)`。
+*   **交互**: 可拖拽（编辑模式下），拖拽结束触发坐标更新。
+
+### 7.3 悬浮预览 (Hover Preview)
+*   **容器**: `rounded-2xl`，`backdrop-blur-md`，`shadow-2xl`。
+*   **尺寸**: 220×150px（内嵌 MapView mini 模式）。
+*   **默认风格**: `mapTheme='light'`, `showLabels=false`。
+
+### 7.4 设置面板 (Settings Popover)
+*   **触发器**: 齿轮图标（`Settings03Icon`），绝对定位于地图右上角。
+*   **面板宽度**: `w-56`（224px）。
+*   **开关样式**: 自定义 Toggle（`w-8 h-4` 圆角胶囊），激活态使用 `bg-primary`。
+
+> 详细的地图功能设计，请参阅: [定位与地图功能](../features/location-map.md)
+

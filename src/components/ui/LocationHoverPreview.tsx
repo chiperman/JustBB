@@ -63,7 +63,7 @@ export function LocationHoverPreview({ name, lat, lng, children }: LocationHover
                     <div className="rounded-inner overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
                         {MapView ? (
                             <MapView
-                                markers={[{ name, lat, lng }]}
+                                markers={[{ name: '', lat, lng }]}
                                 mode="mini"
                             />
                         ) : (

@@ -2,6 +2,7 @@
 
 > 最后更新：2026-02-23
 > 关联设计文档：[location-map.md](./location-map.md)
+> 状态：已实现，持续迭代中
 
 ---
 
@@ -33,29 +34,34 @@
 ## 阶段三：地图组件
 
 ### Step 5: 安装依赖
-- [ ] `npm install leaflet react-leaflet`
-- [ ] `npm install -D @types/leaflet`
+- [x] `npm install leaflet`
+- [x] `npm install -D @types/leaflet`
+
+> ℹ️ 不再需要 react-leaflet，改为原生 Leaflet + dynamic import 方案。
 
 ### Step 6: MapView 封装组件
-- [ ] 新建 `src/components/ui/MapView.tsx`
-- [ ] 实现 mini 模式（200×150px，用于悬浮预览）
-- [ ] 实现 full 模式（用于地图全页视图）
-- [ ] 处理 Leaflet CSS 引入与 SSR 兼容（dynamic import）
+- [x] 新建 `src/components/ui/MapView.tsx`
+- [x] 实现 mini 模式（220×150px，用于悬浮预览）
+- [x] 实现 full 模式（用于地图全页视图）
+- [x] 处理 Leaflet CSS 引入与 SSR 兼容（dynamic import）
+- [x] 底图升级为 CartoDB Basemaps，自动跟随应用主题切换（浅色 Voyager / 深色 Dark Matter）
+- [x] 实现标记点拖拽交互（`onMarkerDragEnd`）
 
 ### Step 7: LocationHoverPreview 悬浮预览
-- [ ] 新建 `src/components/ui/LocationHoverPreview.tsx`
-- [ ] 基于 Radix HoverCard，嵌入 MapView mini 模式
-- [ ] 集成到 Step 4 的 MemoContent 渲染分支
-
+- [x] 新建 `src/components/ui/LocationHoverPreview.tsx`
+- [x] 基于 Radix HoverCard，嵌入 MapView mini 模式
+- [x] 集成到 Step 4 的 MemoContent 渲染分支
+- [x] 默认使用带地名标签的彩色底图
+- [x] 预览地图允许居中滚轮缩放，但禁止拖拽
 ---
 
 ## 阶段四：编辑器集成
 
 ### Step 8: LocationPickerDialog 选点对话框
-- [ ] 新建 `src/components/ui/LocationPickerDialog.tsx`
-- [ ] 实现全尺寸地图选点界面
-- [ ] 实现地名搜索功能（Nominatim 免费 Geocoding API）
-- [ ] 确认选点后返回 `{ name, lat, lng }` 数据
+- [x] 新建 `src/components/ui/LocationPickerDialog.tsx`
+- [x] 实现全尺寸地图选点界面
+- [x] 实现地名搜索功能（Nominatim 免费 Geocoding API）
+- [x] 确认选点后返回 `{ name, lat, lng }` 数据
 
 ### Step 9: 编辑器工具栏集成
 - [ ] `src/components/ui/MemoEditor.tsx` — 新增「📍定位」按钮
@@ -106,7 +112,7 @@
 |:---|:---|:---|
 | 数据层基础 | Step 1-2 | 待开始 |
 | 内容解析与渲染 | Step 3-4 | 待开始 |
-| 地图组件 | Step 5-7 | 待开始 |
-| 编辑器集成 | Step 8-10 | 待开始 |
+| 地图组件 | Step 5-7 | ✅ 已完成 |
+| 编辑器集成 | Step 8-10 | 部分完成（Step 8 ✅，Step 9-10 待开始） |
 | 地图全页视图 | Step 11-13 | 待开始 |
-| 文档与收尾 | Step 14-15 | 待开始 |
+| 文档与收尾 | Step 14-15 | 进行中 |

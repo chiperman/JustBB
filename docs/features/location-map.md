@@ -1,7 +1,7 @@
 # 定位与地图功能设计文档 (Location & Map Feature)
 
 > 最后更新：2026-02-23
-> 状态：设计完成，待实现
+> 状态：已实现，持续迭代中
 
 ---
 
@@ -17,17 +17,19 @@
 
 ## 2. 技术选型
 
-### 2.1 地图服务：Leaflet + OpenStreetMap
+### 2.1 地图服务：Leaflet + CartoDB Basemaps
 
 | 维度 | 选择 | 理由 |
 |:---|:---|:---|
 | **地图 SDK** | [Leaflet](https://leafletjs.com/) v1.9+ | 轻量、开源、成熟生态 |
-| **瓦片服务** | OpenStreetMap | 零成本、无 API Key、全球覆盖 |
-| **React 封装** | [react-leaflet](https://react-leaflet.js.org/) v4+ | 声明式 API、与 React 18+ 兼容 |
+| **瓦片服务** | [CartoDB Basemaps](https://github.com/CartoDB/basemap-styles) | 零成本、无 API Key、自动跟随应用主题切换（浅色 Voyager / 深色 Dark Matter） |
+| **React 封装** | 原生 Leaflet + dynamic import | 避免 SSR 问题，懒加载优化 |
+
+> ℹ️ 原始方案使用 OpenStreetMap 默认瓦片，后升级为 CartoDB 以获得更现代的视觉风格。底图通过 `next-themes` 的 `useTheme()` 自动跟随明暗主题切换。
 
 **安装依赖**:
 ```bash
-npm install leaflet react-leaflet
+npm install leaflet
 npm install -D @types/leaflet
 ```
 
@@ -122,7 +124,7 @@ graph LR
 
 | 组件 | 类型 | 职责 |
 |:---|:---|:---|
-| `MapView` | 新增 | Leaflet 地图封装，支持 mini/full 两种模式 |
+| `MapView` | 新增 | Leaflet 地图封装，支持 mini/full 模式、自动跟随应用主题切换底图（Voyager / Dark Matter） |
 | `LocationHoverPreview` | 新增 | 悬浮地图预览（Radix HoverCard） |
 | `LocationPickerDialog` | 新增 | 编辑器地图选点对话框 |
 | `MapPageContent` | 新增 | `/map` 全页地图视图 |
@@ -130,6 +132,16 @@ graph LR
 | `LeftSidebar` | 修改 | navItems 新增「地图」菜单 |
 | `ClientRouter` | 修改 | 新增 `/map` 路由 |
 | `contentParser` | 修改 | 新增 location 正则解析 |
+
+### 5.1 MapView 可配置属性
+
+| 属性 | 类型 | 默认值 | 说明 |
+|:---|:---|:---|:---|
+| `markers` | `Location[]` | — | 标记点列表 |
+| `mode` | `'mini' \| 'full'` | `'mini'` | 地图尺寸模式 |
+| `interactive` | `boolean` | `false` | 是否允许拖拽交互 |
+| `onMapClick` | `(lat, lng) => void` | — | 地图点击回调 |
+| `onMarkerDragEnd` | `(lat, lng) => void` | — | 标记拖拽结束回调 |
 
 ---
 

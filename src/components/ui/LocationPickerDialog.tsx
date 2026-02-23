@@ -33,6 +33,10 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
     const [isSearching, setIsSearching] = React.useState(false);
     const [suggestions, setSuggestions] = React.useState<NominatimResult[]>([]);
     const [showSuggestions, setShowSuggestions] = React.useState(false);
+    const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isSelectingRef = React.useRef<boolean>(false);
+
+
 
     const [MapView, setMapView] = React.useState<React.ComponentType<{
         markers: { name: string; lat: number; lng: number }[];
@@ -54,11 +58,11 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
     const isValid = name.trim() && lat.trim() && lng.trim() &&
         !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng));
 
-    const handleSearch = async () => {
-        if (!name.trim()) return;
+    const handleSearch = async (searchQuery: string) => {
+        if (!searchQuery.trim()) return;
         setIsSearching(true);
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name.trim())}&limit=5`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery.trim())}&limit=5`);
             const data = await res.json();
             setSuggestions(data);
             setShowSuggestions(true);
@@ -69,7 +73,30 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
         }
     };
 
+    // 自动防抖搜索 useEffect
+    React.useEffect(() => {
+        // 如果正在执行选中操作，或者名字过短，或者之前已经关闭了建议面板（意味着用户已经选定），就不自动搜索
+        if (isSelectingRef.current || name.trim().length < 2) {
+            isSelectingRef.current = false; // 重置标识
+            return;
+        }
+
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+        }
+
+        searchTimeoutRef.current = setTimeout(() => {
+            // 仅在建议面板原本应该是收起，或者正处于输入状态时触发
+            handleSearch(name);
+        }, 600);
+
+        return () => {
+            if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+        };
+    }, [name]);
+
     const handleSelectSuggestion = (s: NominatimResult) => {
+        isSelectingRef.current = true; // 告诉 useEffect 当前是选择操作，不要触发后续网络请求
         // 提取较短的名字作为显示名（通常是第一个逗号前的内容）
         const shortName = s.display_name.split(',')[0];
         setName(shortName);
@@ -107,42 +134,48 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                         <label htmlFor="loc-name" className="text-sm font-medium">
                             地点名称
                         </label>
-                        <div className="flex gap-2">
+                        <div className="relative">
                             <Input
                                 id="loc-name"
                                 value={name}
                                 onChange={e => {
+                                    // 每次输入时确保重置选择状态并激活搜索条件
+                                    isSelectingRef.current = false;
                                     setName(e.target.value);
                                     if (showSuggestions) setShowSuggestions(false);
                                 }}
                                 onKeyDown={e => {
                                     if (e.key === 'Enter') {
                                         e.preventDefault();
-                                        handleSearch();
+                                        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+                                        handleSearch(name);
                                     }
                                 }}
                                 placeholder="输入地名搜索或直接输入"
-                                className="flex-1"
+                                className="w-full pr-10"
                                 autoFocus
                             />
                             <Button
-                                variant="outline"
+                                variant="ghost"
                                 size="icon"
-                                onClick={handleSearch}
+                                onClick={() => {
+                                    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+                                    handleSearch(name);
+                                }}
                                 disabled={isSearching || !name.trim()}
-                                className="shrink-0"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:bg-transparent hover:text-foreground"
                             >
                                 {isSearching ? (
-                                    <HugeiconsIcon icon={LoadingIcon} size={16} className="animate-spin" />
+                                    <HugeiconsIcon icon={LoadingIcon} size={14} className="animate-spin" />
                                 ) : (
-                                    <HugeiconsIcon icon={SearchIcon} size={16} />
+                                    <HugeiconsIcon icon={SearchIcon} size={14} />
                                 )}
                             </Button>
                         </div>
 
                         {/* 搜索建议下拉框 */}
                         {showSuggestions && suggestions.length > 0 && (
-                            <div className="absolute top-[calc(100%+4px)] left-0 right-10 z-50 bg-popover border rounded-md shadow-md py-1">
+                            <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 bg-popover border rounded-md shadow-md py-1">
                                 {suggestions.map((s, i) => (
                                     <button
                                         key={i}
@@ -190,10 +223,14 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                         </div>
                     </div>
                     {/* 地图预览 */}
-                    <div className="rounded-inner overflow-hidden ring-1 ring-black/5 dark:ring-white/10 relative group">
+                    <div className="rounded-inner overflow-hidden ring-1 ring-black/5 dark:ring-white/10 relative group bg-muted/10">
+                        {/* 左上角操作提示 */}
                         <div className="absolute top-2 left-2 z-[10] bg-background/90 backdrop-blur-md px-2 py-1 rounded text-[10px] text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-border/50">
-                            滚轮缩放 • 点击选点
+                            滚轮缩放 • 可拖移点
                         </div>
+
+
+
                         {MapView ? (
                             <MapView
                                 markers={markers}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import type { Location } from '@/types/memo';
 
@@ -25,9 +26,20 @@ interface MapViewProps {
     onMarkerDragEnd?: (lat: number, lng: number) => void;
 }
 
-export function MapView({ markers, mode = 'mini', className, interactive = false, onMarkerClick, onMapClick, onMarkerDragEnd }: MapViewProps) {
+export function MapView({
+    markers,
+    mode = 'mini',
+    className,
+    interactive = false,
+    onMarkerClick,
+    onMapClick,
+    onMarkerDragEnd
+}: MapViewProps) {
+    const { resolvedTheme } = useTheme();
+    const isDark = resolvedTheme === 'dark';
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
+    const tileLayerRef = useRef<L.TileLayer | null>(null);
 
     useEffect(() => {
         if (!mapRef.current) return;
@@ -56,18 +68,13 @@ export function MapView({ markers, mode = 'mini', className, interactive = false
                 const map = L.map(mapRef.current, {
                     center,
                     zoom,
-                    zoomControl: mode === 'full',
+                    zoomControl: false,
                     attributionControl: mode === 'full',
                     dragging: mode !== 'mini' || interactive,
-                    scrollWheelZoom: true,
+                    scrollWheelZoom: mode === 'mini' ? 'center' : true,
                     doubleClickZoom: mode !== 'mini' || interactive,
                     touchZoom: mode !== 'mini' || interactive,
                 });
-
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: mode === 'full' ? '&copy; OpenStreetMap' : '',
-                    maxZoom: 19,
-                }).addTo(map);
 
                 if (onMapClick) {
                     map.on('click', (e: L.LeafletMouseEvent) => {
@@ -79,6 +86,27 @@ export function MapView({ markers, mode = 'mini', className, interactive = false
             }
 
             const map = mapInstanceRef.current;
+            if (!map) return;
+
+            // 动态生成 CartoDB URL — 跟随应用主题自动切换
+            // 浅色 → Voyager 彩色底图，深色 → Dark Matter 暗色底图
+            const getCartoDbUrl = () => {
+                const style = isDark ? 'dark_all' : 'rastertiles/voyager';
+                return `https://{s}.basemaps.cartocdn.com/${style}/{z}/{x}/{y}@2x.png`;
+            };
+
+            // 添加或更新瓦片层
+            const newTileUrl = getCartoDbUrl();
+            if (!tileLayerRef.current) {
+                // 初次创建瓦片层
+                tileLayerRef.current = L.tileLayer(newTileUrl, {
+                    attribution: mode === 'full' ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>' : '',
+                    maxZoom: 20,
+                }).addTo(map);
+            } else {
+                // 如果只改变了 URL，复用 layer 并刷新
+                tileLayerRef.current.setUrl(newTileUrl);
+            }
 
             // 清除旧标记
             map.eachLayer((layer) => {
@@ -109,12 +137,6 @@ export function MapView({ markers, mode = 'mini', className, interactive = false
                     });
                 }
 
-                if (mode === 'full' && marker.name) {
-                    m.bindPopup(`<strong>${marker.name}</strong>`);
-                } else if (mode === 'mini' && marker.name) {
-                    m.bindTooltip(marker.name, { permanent: true, direction: 'top', offset: [0, -14], className: 'map-tooltip-mini' });
-                }
-
                 if (onMarkerClick) {
                     m.on('click', () => onMarkerClick(marker));
                 }
@@ -134,7 +156,7 @@ export function MapView({ markers, mode = 'mini', className, interactive = false
         return () => {
             cancelled = true;
         };
-    }, [markers, mode, className, interactive, onMarkerClick, onMapClick, onMarkerDragEnd]);
+    }, [markers, mode, className, interactive, onMarkerClick, onMapClick, onMarkerDragEnd, isDark]);
 
     // 独立清理 Effect
     useEffect(() => {
@@ -154,10 +176,9 @@ export function MapView({ markers, mode = 'mini', className, interactive = false
         <div
             ref={mapRef}
             className={cn(
-                'rounded-inner overflow-hidden',
+                'rounded-inner overflow-hidden relative',
                 sizeClasses,
-                // 应用极简主义滤镜：降低饱和度，增加对比度
-                'grayscale-[0.9] brightness-[1.05] contrast-[1.1] hover:grayscale-0 transition-all duration-500',
+                // 我们不再需要极简滤镜，CartoDB 原生配色足够完美
                 className
             )}
             style={{ zIndex: 0 }}

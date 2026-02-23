@@ -259,3 +259,20 @@ body.font-sans {
 .tiptap:focus {
   outline: none;
 }
+
+/* Leaflet 归属标注弱化（合规保留，视觉低调） */
+.leaflet-control-attribution {
+  font-size: 9px !important;
+  opacity: 0.35;
+  transition: opacity 0.2s ease;
+  background: transparent !important;
+  color: inherit;
+}
+
+.leaflet-control-attribution:hover {
+  opacity: 0.8;
+}
+
+.leaflet-control-attribution a {
+  color: inherit !important;
+}

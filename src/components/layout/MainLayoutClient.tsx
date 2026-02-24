@@ -44,7 +44,18 @@ export function MainLayoutClient({
     const [memos, setMemos] = useState<Memo[]>(initialMemos ?? cached?.memos ?? []);
     const [isLoading, setIsLoading] = useState(!initialMemos && !cached);
 
-    // 监听初始数据变化（如编辑完成后服务器触发刷新）
+    // 监听 URL 筛选参数变化，立即开启 Loading 反馈
+    const searchParamsStr = JSON.stringify(searchParams);
+    const prevSearchParamsRef = useRef(searchParamsStr);
+
+    useEffect(() => {
+        if (prevSearchParamsRef.current !== searchParamsStr) {
+            setIsLoading(true);
+            prevSearchParamsRef.current = searchParamsStr;
+        }
+    }, [searchParamsStr]);
+
+    // 监听初始数据变化（如编辑完成后服务器触发刷新，或路由跳转后数据到达）
     useEffect(() => {
         if (initialMemos) {
             setMemos(initialMemos);
@@ -52,14 +63,6 @@ export function MainLayoutClient({
             setIsLoading(false);
         }
     }, [initialMemos, searchParams, adminCode, initialIsAdmin, setCache]);
-
-    // 监听 URL 参数变化以触发 Loading 视觉反馈
-    useEffect(() => {
-        // 当 initialMemos 为空时（SPA 模式），或者在某些特定交互下手动触发加载
-        if (!initialMemos && !cached) {
-            setIsLoading(true);
-        }
-    }, [searchParams, initialMemos, cached]);
 
     const handleScroll = () => {
         if (scrollContainerRef.current) {

@@ -130,6 +130,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     };
 
     const handleYearClick = (e: React.MouseEvent, year: number) => {
+        e.preventDefault();
         const id = `year-${year}`;
         setManualClick(true);
         setActiveId(id);
@@ -137,9 +138,11 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
         if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+        router.push(`/?year=${year}`);
     };
 
     const handleMonthClick = (e: React.MouseEvent, year: number, month: number) => {
+        e.preventDefault();
         const id = `month-${year}-${month}`;
         setManualClick(true);
         setActiveId(id);
@@ -147,9 +150,11 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
         if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+        router.push(`/?year=${year}&month=${month}`);
     };
 
     const handleDayClick = (e: React.MouseEvent, dateStr: string) => {
+        e.preventDefault();
         const id = `date-${dateStr}`;
         setManualClick(true);
         setActiveId(id);
@@ -157,6 +162,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
         if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+        router.push(`/?date=${dateStr}`);
     };
 
     if (!isHomePage) return null;

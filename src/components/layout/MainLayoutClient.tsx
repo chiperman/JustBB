@@ -44,27 +44,22 @@ export function MainLayoutClient({
     const [memos, setMemos] = useState<Memo[]>(initialMemos ?? cached?.memos ?? []);
     const [isLoading, setIsLoading] = useState(!initialMemos && !cached);
 
+    // 监听初始数据变化（如编辑完成后服务器触发刷新）
     useEffect(() => {
         if (initialMemos) {
-            setMemos(initialMemos); // 关键：SSR 数据变化时更新本地状态
+            setMemos(initialMemos);
             setCache('/', { memos: initialMemos, searchParams, adminCode, initialIsAdmin });
             setIsLoading(false);
-            return;
         }
-        // stale-while-revalidate：缓存命中也后台刷新
-        let cancelled = false;
-        (async () => {
-            const result = await getMemos({ limit: 20, sort: 'newest' });
-            if (!cancelled) {
-                const data = result || [];
-                setMemos(data);
-                setCache('/', { memos: data, searchParams: {}, adminCode: undefined, initialIsAdmin: false });
-                setIsLoading(false);
-            }
-        })();
-        return () => { cancelled = true; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [initialMemos, searchParams, adminCode, initialIsAdmin, setCache]);
+
+    // 监听 URL 参数变化以触发 Loading 视觉反馈
+    useEffect(() => {
+        // 当 initialMemos 为空时（SPA 模式），或者在某些特定交互下手动触发加载
+        if (!initialMemos && !cached) {
+            setIsLoading(true);
+        }
+    }, [searchParams, initialMemos, cached]);
 
     const handleScroll = () => {
         if (scrollContainerRef.current) {
@@ -74,7 +69,20 @@ export function MainLayoutClient({
     };
 
     return (
-        <div className="flex flex-col h-screen overflow-hidden bg-accent/20 font-sans">
+        <div className="flex flex-col h-screen overflow-hidden bg-accent/20 font-sans relative">
+            {/* 全局加载进度条 */}
+            {isLoading && (
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary/20 z-[100] overflow-hidden">
+                    <div className="h-full bg-primary animate-[loading_1.5s_ease-in-out_infinite] origin-left w-1/3" />
+                </div>
+            )}
+            <style jsx global>{`
+                @keyframes loading {
+                    0% { transform: translateX(-100%) scaleX(0.5); }
+                    50% { transform: translateX(50%) scaleX(1.5); }
+                    100% { transform: translateX(200%) scaleX(0.5); }
+                }
+            `}</style>
             {/* 固定顶部区域 - 品牌、搜索 & 编辑器 */}
             <div
                 className={cn(

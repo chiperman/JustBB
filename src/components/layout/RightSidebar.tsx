@@ -128,7 +128,6 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     };
 
     const handleYearClick = (e: React.MouseEvent, year: number) => {
-        e.preventDefault();
         const id = `year-${year}`;
         setManualClick(true);
         setActiveId(id);
@@ -139,7 +138,6 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     };
 
     const handleMonthClick = (e: React.MouseEvent, year: number, month: number) => {
-        e.preventDefault();
         const id = `month-${year}-${month}`;
         setManualClick(true);
         setActiveId(id);
@@ -150,7 +148,6 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     };
 
     const handleDayClick = (e: React.MouseEvent, dateStr: string) => {
-        e.preventDefault();
         const id = `date-${dateStr}`;
         setManualClick(true);
         setActiveId(id);

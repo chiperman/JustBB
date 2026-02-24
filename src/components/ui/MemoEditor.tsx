@@ -989,9 +989,14 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             }}
                         >
                             <div className="bg-background border border-border rounded-sm shadow-2xl overflow-hidden flex flex-col max-h-[450px]">
-                                {isLoading || suggestions.length === 0 && !mentionQuery ? (
-                                    <div className="px-3 py-6 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight">
+                                {isLoading && suggestions.length === 0 ? (
+                                    <div className="px-3 py-10 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight flex flex-col items-center gap-2">
+                                        <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                                         正在拉取建议...
+                                    </div>
+                                ) : suggestions.length === 0 && !isLoading && mentionQuery ? (
+                                    <div className="px-3 py-10 text-xs text-muted-foreground/40 text-center font-mono">
+                                        未找到匹配项
                                     </div>
                                 ) : null}
                                 {suggestions.length > 0 ? (
@@ -1054,6 +1059,24 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                                 )}
                                             </li>
                                         ))}
+
+                                        {/* Pagination Feedback */}
+                                        <div className="px-3 py-4 border-t border-border/10">
+                                            {isLoading ? (
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <div className="w-3 h-3 border border-primary/30 border-t-primary rounded-full animate-spin" />
+                                                    <span className="text-[10px] text-muted-foreground/50 font-mono uppercase tracking-widest">
+                                                        Loading...
+                                                    </span>
+                                                </div>
+                                            ) : !hasMoreMentions && suggestions.length >= 10 ? (
+                                                <div className="text-center">
+                                                    <span className="text-[10px] text-muted-foreground/30 font-mono uppercase tracking-widest">
+                                                        --- End of Results ---
+                                                    </span>
+                                                </div>
+                                            ) : null}
+                                        </div>
                                     </ul>
                                 ) : null}
                             </div>

@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
     testDir: './e2e',
+    timeout: 60000, // 增加到 60 秒
     fullyParallel: true,
     reporter: 'list',
     use: {

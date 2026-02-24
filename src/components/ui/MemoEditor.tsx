@@ -20,12 +20,11 @@ import { cn } from '@/lib/utils';
 import { Button } from './button';
 import { Input } from './input';
 import { updateMemoContent } from '@/actions/update';
-import { getMemoIndex, searchMemosForMention } from '@/actions/search';
-import { Command, CommandList, CommandItem, CommandEmpty, CommandGroup } from './command';
+import { searchMemosForMention } from '@/actions/search';
 import { getAllTags } from '@/actions/tags';
 import { useTags } from '@/context/TagsContext';
 import { useStats } from '@/context/StatsContext';
-import { memoCache, CacheItem } from '@/lib/memo-cache'; // Import local cache
+import { memoCache } from '@/lib/memo-cache';
 import { LocationPickerDialog } from './LocationPickerDialog';
 
 // Tiptap imports
@@ -198,13 +197,9 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
 
 
-    // Local pagination state
-    const [filteredMentions, setFilteredMentions] = useState<SuggestionItem[]>([]);
-    const [displayLimit, setDisplayLimit] = useState(20); // Initial limit changed to 20 per plan
+    const [displayLimit, setDisplayLimit] = useState(20);
     const [suggestionTrigger, setSuggestionTrigger] = useState<string | null>(null);
-    const [isIndexLoading, setIsIndexLoading] = useState(true);
     const [suggestionPosition, setSuggestionPosition] = useState<{ top: number; left: number } | null>(null);
-    const filteredMentionsRef = useRef<SuggestionItem[]>([]);
     const suggestionTriggerRef = useRef<string | null>(null);
     const editorContainerRef = useRef<HTMLDivElement>(null);
     const relativeGroupRef = useRef<HTMLDivElement>(null);
@@ -213,84 +208,34 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         suggestionTriggerRef.current = suggestionTrigger;
     }, [suggestionTrigger]);
 
-    useEffect(() => {
-        filteredMentionsRef.current = filteredMentions;
-        // Only update suggestions from pagination state if the active trigger is '@'
-        if (showSuggestions && suggestionTrigger === '@') {
-            setSuggestions(filteredMentions.slice(0, displayLimit));
-            setHasMoreMentions(displayLimit < filteredMentions.length);
-        }
-    }, [filteredMentions, displayLimit, showSuggestions, suggestionTrigger]);
-
-    useEffect(() => {
-        // Initialize Cache Strategy
-        const initCache = async () => {
-            setIsIndexLoading(true);
-
-            // 1. Immediate Seed from props (if any and cache empty)
-            if (!memoCache.getInitialized() && contextMemos.length > 0) {
-                const seedItems: CacheItem[] = contextMemos.map(m => ({
-                    id: m.id,
-                    memo_number: m.memo_number || 0,
-                    content: m.content,
-                    created_at: m.created_at
-                }));
-                memoCache.mergeItems(seedItems);
-            }
-
-            // 2. Background Fetch Full Index
-            if (!memoCache.getFullyLoaded()) {
-                try {
-                    const indexItems = await getMemoIndex();
-                    memoCache.mergeItems(indexItems);
-                    memoCache.setFullyLoaded(true);
-
-                    if (suggestionTriggerRef.current === '@') {
-                        fetchMentionSuggestions(mentionQueryRef.current);
-                    }
-                } catch (e) {
-                    console.error("Failed to fetch background index", e);
-                }
-            }
-
-            setIsIndexLoading(false);
-        };
-
-        initCache();
-    }, []);
-
     /**
      * 实现双路径并行搜索：
      * 1. 瞬间从本地索引匹配 memo_number
      * 2. 防抖后发起远程 API 搜索内容
      */
-    const fetchMentionSuggestions = async (query: string) => {
+    /**
+     * 实现纯远端分页搜索：
+     * 1. 如果 query 为空，拉取最新记录。
+     * 2. 如果有 query，防抖后拉取匹配记录。
+     */
+    const fetchMentionSuggestions = async (query: string, offset: number = 0) => {
         setMentionQuery(query);
-        setSelectedIndex(0);
+        const isInitial = offset === 0;
+        if (isInitial) {
+            setSelectedIndex(0);
+            setHasMoreMentions(true); // 重置状态
+        }
 
-        // A. 本地路径：匹配编号 (瞬间)
-        const localMatches = memoCache.search(query);
-        const localResults: SuggestionItem[] = localMatches.map(item => ({
-            id: item.id,
-            label: `@${item.memo_number}`,
-            subLabel: '编号匹配',
-            memo_number: item.memo_number,
-            created_at: item.created_at
-        }));
-
-        setSuggestions(localResults);
-        setHasMoreMentions(false);
-
-        // B. 远程路径：防抖内容搜索
         if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
 
-        if (!query.trim()) return;
+        // 如果是初始加载且 query 不为空，我们希望防抖以避免过多无效请求
+        const shouldDebounce = isInitial && query.trim().length > 0;
 
-        debounceTimerRef.current = setTimeout(async () => {
+        const performFetch = async () => {
             setIsLoading(true);
             try {
-                const remoteMemos = await searchMemosForMention(query, 0, 10);
-                const remoteResults: SuggestionItem[] = remoteMemos.map(m => ({
+                const results = await searchMemosForMention(query, offset, 20);
+                const items: SuggestionItem[] = results.map((m: any) => ({
                     id: m.id!,
                     label: `@${m.memo_number}`,
                     subLabel: generateSnippet(m.content, query),
@@ -298,20 +243,27 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     created_at: m.created_at
                 }));
 
-                // 合并去重
-                const localIds = new Set(localResults.map(r => r.id));
-                const merged = [
-                    ...localResults,
-                    ...remoteResults.filter(r => !localIds.has(r.id))
-                ];
+                setSuggestions(prev => {
+                    if (isInitial) return items;
+                    // 分页追加时去重
+                    const existingIds = new Set(prev.map(p => p.id));
+                    return [...prev, ...items.filter(it => !existingIds.has(it.id))];
+                });
 
-                setSuggestions(merged);
+                setHasMoreMentions(items.length === 20); // 如果返回了满额，说明可能还有更多
             } catch (e) {
                 console.error("Remote mention search failed", e);
             } finally {
                 setIsLoading(false);
+                isFetchingMoreRef.current = false;
             }
-        }, 300);
+        };
+
+        if (shouldDebounce) {
+            debounceTimerRef.current = setTimeout(performFetch, 300);
+        } else {
+            performFetch();
+        }
     };
 
     const fetchHashtagSuggestions = (query: string) => {
@@ -393,12 +345,12 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 suggestionPropsRef.current = props;
                                 setShowSuggestions(true);
                                 setSuggestionTrigger('@');
-                                fetchMentionSuggestions(props.query, false);
+                                fetchMentionSuggestions(props.query, 0);
                                 updatePosition(props);
                             },
                             onUpdate: (props) => {
                                 suggestionPropsRef.current = props;
-                                fetchMentionSuggestions(props.query, true);
+                                fetchMentionSuggestions(props.query, 0);
                                 updatePosition(props);
                             },
                             onExit: () => {
@@ -628,7 +580,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     setShowSuggestions(true);
                     setSuggestionTrigger(char);
                     if (char === '@') {
-                        fetchMentionSuggestions(query, false);
+                        fetchMentionSuggestions(query, 0);
                     } else {
                         fetchHashtagSuggestions(query);
                     }
@@ -733,6 +685,16 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
     const suggestionListRef = useRef<HTMLUListElement>(null);
 
+    const handleSuggestionScroll = async (e: React.UIEvent<HTMLUListElement>) => {
+        const target = e.currentTarget;
+        const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 150;
+
+        if (isNearBottom && !isLoading && hasMoreMentions && !isFetchingMoreRef.current) {
+            isFetchingMoreRef.current = true;
+            fetchMentionSuggestions(mentionQueryRef.current, suggestions.length);
+        }
+    };
+
     useLayoutEffect(() => {
         if (showSuggestions && suggestionListRef.current) {
             const selectedItem = suggestionListRef.current.children[selectedIndex] as HTMLElement;
@@ -745,24 +707,14 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         }
     }, [selectedIndex, showSuggestions]);
 
-    const handleSuggestionScroll = async (e: React.UIEvent<HTMLUListElement>) => {
-        const target = e.currentTarget;
-        const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 150;
 
-        // Local infinite scroll: increase limit when scrolling down
-        if (isNearBottom && hasMoreMentions && !isLoading) {
-            setDisplayLimit(prev => Math.min(prev + 20, filteredMentionsRef.current.length));
-        }
-    };
 
     const handleSelectSuggestion = (item: SuggestionItem) => {
         if (!editor) return;
 
-
         if (suggestionPropsRef.current) {
             const rawLabel = item.label;
-            // 根据当前的触发字符判断应该移除哪个前缀
-            // 这里我们无法直接知道当前是 @ 还是 #，但可以通过 label 判断
+            // 保持原有逻辑：移除 @ 或 # 前缀再插入，交给 Node 渲染处理
             let label = rawLabel;
             if (rawLabel.startsWith('@') || rawLabel.startsWith('#')) {
                 label = rawLabel.slice(1);
@@ -776,6 +728,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
         setShowSuggestions(false);
         setSelectedIndex(0);
+        setMentionQuery('');
     };
 
 
@@ -1036,9 +989,9 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             }}
                         >
                             <div className="bg-background border border-border rounded-sm shadow-2xl overflow-hidden flex flex-col max-h-[450px]">
-                                {isLoading || (isIndexLoading && suggestions.length === 0) ? (
+                                {isLoading || suggestions.length === 0 && !mentionQuery ? (
                                     <div className="px-3 py-6 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight">
-                                        加载中...
+                                        正在拉取建议...
                                     </div>
                                 ) : null}
                                 {suggestions.length > 0 ? (

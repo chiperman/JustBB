@@ -4,6 +4,7 @@ export interface CacheItem {
     id: string;
     memo_number: number;
     created_at: string;
+    content: string;
 }
 
 class MemoCache {
@@ -110,7 +111,8 @@ class MemoCache {
 
         const lowerQuery = query.toLowerCase();
         return this.items.filter(item =>
-            item.memo_number.toString().includes(lowerQuery)
+            item.memo_number.toString().includes(lowerQuery) ||
+            item.content.toLowerCase().includes(lowerQuery)
         );
     }
 

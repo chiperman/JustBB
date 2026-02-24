@@ -1,6 +1,6 @@
 # JustMemo 设计系统 (Design System)
 
-> 最后更新：2026-02-24 (新增滚动容器对齐规范)
+> 最后更新：2026-02-24 (全站 UI 规范化：字体/垂直对齐/圆角/阴影)
 
 ## 1. 视觉风格 (Visual Philosophy)
 **现代圆润感 (Modern Roundness)**：从早期的“纸质书写感”转向“极简效率主义”。强调视觉的连续性、高亲和度以及在 12px/8px 嵌套系统下的几何美感。
@@ -20,9 +20,9 @@
 *   状态色: 软化后的成功色 `#40c463` / 错误色 `#ff6b6b`
 
 ## 3. 排版系统 (Typography)
-*   **默认正文 (Sans)**: **`Inter`, system-ui, sans-serif** —— 全局默认，提升现代感。
-*   **标题 (Serif)**: 可选模式下使用 'Times New Roman', 'Georgia', serif。
-*   **代码 (Mono)**: 'ui-monospace', 'SFMono-Regular', monospace。
+*   **默认正文 (Sans)**: **`Inter`, system-ui, sans-serif** —— **全局唯一默认字体**。
+*   **标题 (Headings)**: 同样使用无衬线体，移除所有衬线体 (Serif) 覆盖，确保现代感。
+*   **技术数据 (Mono)**: 'ui-monospace', 'SFMono-Regular', monospace —— 仅保留在统计数字、标签、代码块等需要对齐的场景。
 
 ## 4. 形状与边限 (Shapes & Borders)
 这是视觉现代化的核心逻辑。
@@ -32,20 +32,21 @@
 
 | 阶层 (Level) | 物理尺寸 | Tailwind 类名 | 应用场景 (Usage) |
 | :--- | :--- | :--- | :--- |
-| **一级容器** | **12px** (0.75rem) | `rounded-card` | `MemoCard` (首页卡片)、侧边栏容器 |
-| **二级容器** | **8px** (0.5rem) | `rounded-inner` | 编辑器嵌套、对话框、下拉菜单背景 |
-| **原子组件** | **4px** (0.25rem) | **`rounded`** | 按钮、输入框、菜单悬停高亮、导航项背景 |
-| **极微元素** | **2px** (0.125rem) | **`rounded-sm`** | 标签 (`Badge`)、极小图标容器 |
+| **一级容器** | **12px** (0.75rem) | `rounded-card` | `MemoCard` (首页卡片)、侧边栏容器、对话框底座 |
+| **二级容器** | **8px** (0.5rem) | `rounded-inner` | 编辑器嵌套、下拉菜单背景 (Popovers) |
+| **原子组件** | **6px** (0.375rem) | **`rounded-md`** | **核心规范**：按钮、输入框、搜索框、菜单项、徽章 (Badge) |
+| **极微元素** | **2px/4px** | `rounded-sm/null` | 仅保留在图片缩略图等特定视觉场景 |
 
 ### 4.2 比例与一致性 (Ratio & Consistency)
-*   **语义优先**：开发者应优先使用 `rounded` (4px) 处理交互元素，仅在大尺寸卡片封装时使用自定义的 `rounded-card`。
+*   **规范优先**：全站交互元素必须使用 `rounded-md` (6px)，不再混合使用 `rounded-sm` 或基础 `rounded`。
 *   **留白基准**: 主体留白保持在 **24px** (`p-6`)，确保与 12px 外圆角形成稳健的学术骨架感。
 
 ## 5. 交互反馈与动效 (Interactions & Motion)
 
 ### 5.1 阴影与海拔 (Elevation)
-*   **Level 1 (Card)**: `shadow-md` (扩散范围比旧版更广，模拟自然环境光)。
-*   **Level 2 (Active)**: `shadow-xl`。
+*   **Layer (Standard)**: `shadow-sm` (极简外观)。
+*   **Hover (Standard)**: `shadow-md` (统一全站悬浮阴影，扩散范围自然)。
+*   **Floating (Menu/Pop)**: `shadow-xl` (包含 backdrop-blur 增强层级)。
 *   **玻璃态**: 所有浮层统一使用 `backdrop-blur-xl bg-popover/80`。
 
 ### 5.4 动画参数 (Motion Specs)

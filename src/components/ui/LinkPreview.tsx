@@ -12,9 +12,12 @@ interface LinkPreviewProps {
     className?: string;
 }
 
+// Client-side cache for link metadata to prevent redundant fetches during a session
+const metadataCache = new Map<string, LinkMetadata>();
+
 export function LinkPreview({ url, className }: LinkPreviewProps) {
-    const [metadata, setMetadata] = useState<LinkMetadata | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [metadata, setMetadata] = useState<LinkMetadata | null>(() => metadataCache.get(url) || null);
+    const [loading, setLoading] = useState(!metadataCache.has(url));
     const [error, setError] = useState(false);
 
     // Uses an IntersectionObserver to only load preview when in view
@@ -39,6 +42,13 @@ export function LinkPreview({ url, className }: LinkPreviewProps) {
     useEffect(() => {
         if (!shouldLoad) return;
 
+        // If we already have metadata in cache, don't fetch again
+        if (metadataCache.has(url)) {
+            setMetadata(metadataCache.get(url)!);
+            setLoading(false);
+            return;
+        }
+
         let isMounted = true;
         setLoading(true);
         setError(false);
@@ -49,6 +59,8 @@ export function LinkPreview({ url, className }: LinkPreviewProps) {
                 if (isMounted) {
                     if (data) {
                         setMetadata(data);
+                        // Save to cache
+                        metadataCache.set(url, data);
                     } else {
                         setError(true);
                     }

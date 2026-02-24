@@ -26,6 +26,7 @@ import { useTags } from '@/context/TagsContext';
 import { useStats } from '@/context/StatsContext';
 import { memoCache } from '@/lib/memo-cache';
 import { LocationPickerDialog } from './LocationPickerDialog';
+import { parseContentTokens } from '@/lib/contentParser';
 
 // Tiptap imports
 import { useEditor, EditorContent, Extension } from '@tiptap/react';
@@ -104,13 +105,31 @@ interface MemoEditorProps {
     className?: string;
 }
 
-// Helper to convert plain text newline to HTML paragraphs for Tiptap
-const textToHtml = (text: string) => {
+// Helper to convert plain text to Tiptap-compatible HTML
+const textToTiptapHtml = (text: string) => {
     if (!text) return '';
-    return text
-        .split('\n')
-        .map(line => `<p>${line}</p>`)
-        .join('');
+
+    return text.split('\n').map(line => {
+        if (!line.trim()) return '<p></p>';
+
+        const tokens = parseContentTokens(line);
+        const html = tokens.map(token => {
+            switch (token.type) {
+                case 'tag':
+                    const tagName = token.value.slice(1);
+                    return `<span data-type="hashtag" data-id="${tagName}" data-label="${tagName}">#${tagName}</span>`;
+                case 'ref':
+                    const memoNum = token.value.slice(1);
+                    return `<span data-type="mention" data-id="${memoNum}" data-label="${memoNum}">@${memoNum}</span>`;
+                case 'text':
+                    return token.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                default:
+                    return token.value;
+            }
+        }).join('');
+
+        return `<p>${html}</p>`;
+    }).join('');
 };
 
 // Draft Persistence Keys
@@ -607,7 +626,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     useEffect(() => {
         if (editor) {
             if (mode === 'edit' && memo?.content) {
-                editor.commands.setContent(textToHtml(memo.content));
+                editor.commands.setContent(textToTiptapHtml(memo.content));
             } else if (mode === 'create') {
                 // Restore draft if exists
                 const draftContent = localStorage.getItem(DRAFT_CONTENT_KEY);
@@ -619,7 +638,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             editor.commands.setContent(json);
                         } catch (e) {
                             // Fallback to plain text for legacy drafts or if JSON fails
-                            editor.commands.setContent(textToHtml(draftContent));
+                            editor.commands.setContent(textToTiptapHtml(draftContent));
                         }
 
                         // Trigger onUpdate logic manually for initial load

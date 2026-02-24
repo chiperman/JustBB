@@ -171,15 +171,15 @@ export const Heatmap = memo(function Heatmap() {
             loading ? "cursor-default" : "cursor-pointer group/stats hover:opacity-80"
         )}>
             <div className="flex flex-col items-center">
-                <span className="text-3xl tracking-tight leading-none font-bold">{displayStats.totalMemos}</span>
+                <span className="text-3xl tracking-tight leading-none font-bold font-mono tabular-nums">{displayStats.totalMemos}</span>
                 <span className="text-[12px] font-normal text-stone-400 mt-1">笔记</span>
             </div>
             <div className="flex flex-col items-center">
-                <span className="text-3xl tracking-tight leading-none font-bold">{displayStats.totalTags}</span>
+                <span className="text-3xl tracking-tight leading-none font-bold font-mono tabular-nums">{displayStats.totalTags}</span>
                 <span className="text-[12px] font-normal text-stone-400 mt-1">标签</span>
             </div>
             <div className="flex flex-col items-center">
-                <span className="text-3xl tracking-tight leading-none font-bold">{displayTotalActiveDays}</span>
+                <span className="text-3xl tracking-tight leading-none font-bold font-mono tabular-nums">{displayTotalActiveDays}</span>
                 <span className="text-[12px] font-normal text-stone-400 mt-1">天</span>
             </div>
         </div>
@@ -223,16 +223,16 @@ export const Heatmap = memo(function Heatmap() {
                     {hoveredDate && (
                         <div
                             className={cn(
-                                "absolute z-[999] px-2.5 py-1.5 text-[10px] font-normal text-white bg-black/95 backdrop-blur-md rounded pointer-events-none mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-2xl border border-white/20 whitespace-nowrap",
+                                "absolute z-[999] px-2.5 py-1.5 text-[10px] font-mono text-white bg-black/95 backdrop-blur-md rounded pointer-events-none mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-2xl border border-white/20 whitespace-nowrap",
                                 hoveredDate.align === 'center' && "-translate-x-1/2 -translate-y-full",
                                 hoveredDate.align === 'left' && "-translate-y-full ml-[-7px]",
                                 hoveredDate.align === 'right' && "-translate-x-full -translate-y-full mr-[-7px]"
                             )}
                             style={{ left: hoveredDate.left, top: hoveredDate.top }}
                         >
-                            <span className="text-[#9be9a8] font-normal">{hoveredDate.count} 笔记</span>
+                            <span className="text-[#9be9a8] font-bold tabular-nums">{hoveredDate.count} 笔记</span>
                             <span className="mx-1.5 opacity-40">/</span>
-                            <span>{hoveredDate.date}</span>
+                            <span className="tabular-nums">{hoveredDate.date}</span>
                         </div>
                     )}
                 </div>

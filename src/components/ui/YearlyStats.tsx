@@ -109,7 +109,7 @@ function YearlyStatsItem({ year, stats }: { year: number; stats: Record<string, 
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-bold tracking-tight font-serif">{year}</h2>
+                    <h2 className="text-2xl font-bold tracking-tight">{year}</h2>
                 </div>
                 <button className="p-2 hover:bg-black/5 rounded-full transition-colors">
                     <HugeiconsIcon icon={Share} size={16} className="text-muted-foreground" />
@@ -208,9 +208,9 @@ function StatCard({
 
     return (
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-black/5 flex flex-col gap-6 h-[280px] relative">
-            <div className="flex items-baseline gap-1">
+            <div className="flex items-baseline gap-1 font-mono">
                 <span className="text-3xl font-bold tracking-tight">{total}</span>
-                <span className="text-sm font-bold text-foreground/80">{title}</span>
+                <span className="text-sm font-bold text-foreground/80 font-sans tracking-normal">{title}</span>
             </div>
 
             <div
@@ -224,7 +224,7 @@ function StatCard({
                         {ticks.map((tick, i) => (
                             <div key={tick} className="flex items-center w-full h-[1px] relative">
                                 <div className="flex-1" />
-                                <span className="text-[10px] text-muted-foreground/40 font-medium absolute right-[-32px] w-[28px] text-left">
+                                <span className="text-[10px] text-muted-foreground/40 font-mono font-medium absolute right-[-32px] w-[28px] text-left tabular-nums">
                                     {tick}
                                 </span>
                             </div>
@@ -271,10 +271,10 @@ function StatCard({
                             left: hoveredIdx !== null ? `${((hoveredIdx + 0.5) / data.length) * 100}%` : '50%'
                         }}
                     >
-                        <div className="text-[11px] text-muted-foreground mb-1 leading-none whitespace-nowrap">
+                        <div className="text-[11px] text-muted-foreground mb-1 leading-none whitespace-nowrap font-mono">
                             {hoveredIdx !== null ? labels[hoveredIdx] : ''}月
                         </div>
-                        <div className="text-sm font-bold leading-none whitespace-nowrap">
+                        <div className="text-sm font-bold leading-none whitespace-nowrap font-mono">
                             {hoveredIdx !== null ? data[hoveredIdx] : 0}{title.includes('条') ? '条笔记' : title}
                         </div>
                     </div>
@@ -285,7 +285,7 @@ function StatCard({
                     {labels.map((label, i) => (
                         <div key={i} className="flex-1 text-center">
                             <span className={cn(
-                                "text-[10px] font-medium transition-colors",
+                                "text-[10px] font-mono font-medium transition-colors tabular-nums",
                                 hoveredIdx === i ? "text-foreground/70" : "text-muted-foreground/40"
                             )}>
                                 {label}

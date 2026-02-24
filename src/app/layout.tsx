@@ -25,7 +25,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://c.basemaps.cartocdn.com" crossOrigin="anonymous" />
       </head>
-      <body className="antialiased font-sans">
+      <body className="antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

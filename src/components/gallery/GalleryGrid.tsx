@@ -15,7 +15,7 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
     if (!memos || memos.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center p-20 text-muted-foreground bg-muted/5 rounded-sm border border-dashed border-border/50">
-                <p className="font-serif italic text-lg opacity-60">暂无图片内容</p>
+                <p className="italic text-lg opacity-60">暂无图片内容</p>
                 <p className="text-xs opacity-40 mt-2">发布包含图片的 Memo 即可在此展示</p>
             </div>
         );
@@ -47,7 +47,7 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
             {months.map((month) => (
                 <div key={month} className="space-y-8">
                     <div className="flex items-center gap-4">
-                        <h3 className="text-xl font-serif font-bold italic tracking-tight text-primary/80">
+                        <h3 className="text-xl font-bold italic tracking-tight text-primary/80">
                             {month}
                         </h3>
                         <div className="h-px flex-1 bg-border/20" />
@@ -86,7 +86,7 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
 
                                         {/* Premium Overlay */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-4">
-                                            <p className="text-white text-[11px] line-clamp-2 mb-2 font-sans leading-relaxed tracking-wide opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
+                                            <p className="text-white text-[11px] line-clamp-2 mb-2 leading-relaxed tracking-wide opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
                                                 {item.content.replace(/!\[.*?\]\((.*?)\)/g, '').trim() || '图片分享'}
                                             </p>
                                             <div className="flex justify-between items-center text-[9px] text-white/50 font-mono tracking-tighter uppercase">

@@ -171,7 +171,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                 [&>button]:hidden text-foreground">
 
                 <div className="flex-none sticky top-0 z-50 bg-[#F9F9F9]/80 backdrop-blur-xl px-10 py-6 flex items-center justify-between border-b border-black/5">
-                    <DialogTitle className="text-lg font-bold tracking-tight z-10">记录统计</DialogTitle>
+                    <DialogTitle className="text-lg font-bold tracking-widest font-mono z-10 uppercase">记录统计</DialogTitle>
 
                     {/* Centered Toggle Switch */}
                     <div className="absolute left-0 right-0 top-0 bottom-0 flex items-center justify-center pointer-events-none">
@@ -283,7 +283,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                                 {hoveredDay && (
                                     <div
                                         className={cn(
-                                            "absolute z-[999] px-2.5 py-1.5 text-[10px] font-medium text-white bg-black/95 backdrop-blur-md rounded-[6px] pointer-events-none mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-2xl border border-white/20 whitespace-nowrap transition-all duration-200 ease-out",
+                                            "absolute z-[999] px-2.5 py-1.5 text-[10px] font-mono text-white bg-black/95 backdrop-blur-md rounded-[6px] pointer-events-none mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-2xl border border-white/20 whitespace-nowrap transition-all duration-200 ease-out",
                                             hoveredDay.align === 'center' && "-translate-x-1/2 -translate-y-full",
                                             hoveredDay.align === 'left' && "-translate-y-full ml-[-7px]",
                                             hoveredDay.align === 'right' && "-translate-x-full -translate-y-full mr-[-7px]"
@@ -291,12 +291,12 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                                         style={{ left: hoveredDay.left, top: hoveredDay.top }}
                                     >
                                         <div className="flex flex-col items-center">
-                                            <div className="flex items-center gap-1.5">
+                                            <div className="flex items-center gap-1.5 tabular-nums">
                                                 <span className="text-[#9be9a8] font-bold">{hoveredDay.count} 笔记</span>
                                                 <span className="opacity-40">/</span>
                                                 <span>{hoveredDay.wordCount} 字</span>
                                             </div>
-                                            <div className="text-[9px] opacity-40 mt-0.5">{hoveredDay.date}</div>
+                                            <div className="text-[9px] opacity-40 mt-0.5 tabular-nums">{hoveredDay.date}</div>
                                         </div>
                                     </div>
                                 )}
@@ -353,7 +353,7 @@ function MonthCalendar({
         <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
                 <h3 className="font-bold text-base">{getYear(date) !== new Date().getFullYear() ? format(date, 'yyyy年 M月') : format(date, 'M月')}</h3>
-                <div className="flex gap-3 text-xs text-muted-foreground/60 font-medium">
+                <div className="flex gap-3 text-[10px] text-muted-foreground/60 font-mono font-bold uppercase tracking-tight">
                     <span>{monthStats.count} 笔记</span>
                     <span>{monthStats.daysWithMemos} 记录天数</span>
                 </div>
@@ -361,7 +361,7 @@ function MonthCalendar({
 
             <div className="grid grid-cols-7 gap-1.5 text-center">
                 {['一', '二', '三', '四', '五', '六', '日'].map(d => (
-                    <span key={d} className="text-[10px] pb-1 font-bold text-muted-foreground/70">{d}</span>
+                    <span key={d} className="text-[10px] pb-1 font-bold text-muted-foreground/40 font-sans">{d}</span>
                 ))}
                 {days.map((day) => {
                     const dateStr = format(day, 'yyyy-MM-dd');
@@ -385,7 +385,7 @@ function MonthCalendar({
                             />
                             {isCurrentMonth && (
                                 <span className={cn(
-                                    "absolute text-[10px] font-bold pointer-events-none",
+                                    "absolute text-[10px] font-bold font-mono pointer-events-none tabular-nums",
                                     count > 5 ? "text-white" : "text-foreground/40"
                                 )}>
                                     {format(day, 'd')}

@@ -156,8 +156,7 @@ button:focus:not(:focus-visible) {
 }
 
 body {
-  font-family: 'Times New Roman', 'Georgia', serif;
-  /* 默认：人文衬线体 */
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -167,12 +166,7 @@ body {
   overflow: hidden;
 }
 
-body.font-sans {
-  font-family: 'Inter', system-ui, sans-serif;
-  /* 无衬线体 */
-}
-
-/* Modern Global Scrollbar Styles */
+/* 全局滚动条 */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
@@ -208,7 +202,6 @@ body.font-sans {
 .dark ::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.05);
   border: 1px solid transparent;
-  /* 通过透明边框让滑块重心更细 */
   background-clip: padding-box;
   border-radius: 12px;
   transition: background-color 0.3s ease;
@@ -224,11 +217,9 @@ body.font-sans {
 
 @utility scrollbar-overlay {
   overflow-y: overlay !important;
-  /* 确保在支持的浏览器中不占据内容宽度 */
   scrollbar-gutter: stable;
 }
 
-/* Specific utilities */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
@@ -265,7 +256,7 @@ html body .cursor-pointer:not(:disabled) {
   opacity: 0.5;
 }
 
-/* Also support root level empty class if needed */
+/* 兼容 Tiptap 根节点直接挂 is-editor-empty 的场景 */
 .tiptap.is-editor-empty::before {
   content: attr(data-placeholder);
   float: left;

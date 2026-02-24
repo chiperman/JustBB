@@ -628,7 +628,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         editorProps: {
             attributes: {
                 class: cn(
-                    "tiptap prose prose-sm max-w-none focus:outline-none text-foreground/80 leading-relaxed font-sans tracking-normal",
+                    "tiptap prose prose-sm max-w-none focus:outline-none text-foreground/80 leading-relaxed tracking-normal",
                     hideFullscreen ? "flex-1 min-h-full px-1 focus:outline-none" : "min-h-[120px]",
                     "text-base"
                     // Removed instant margin jump: isActuallyCollapsed && "[&_p]:m-0"
@@ -997,7 +997,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     >
 
                         {!editor && (
-                            <div className="tiptap prose prose-sm max-w-none text-muted-foreground/50 leading-relaxed font-sans tracking-normal text-base absolute inset-0 pointer-events-none">
+                            <div className="tiptap prose prose-sm max-w-none text-muted-foreground/50 leading-relaxed tracking-normal text-base absolute inset-0 pointer-events-none">
                                 <p>Wanna memo something? JustMemo it!</p>
                             </div>
                         )}
@@ -1049,7 +1049,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                                 {item.label.startsWith('#') ? (
                                                     <div className="flex justify-between items-center w-full">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-xs text-foreground/80 font-sans">{item.label}</span>
+                                                            <span className="text-xs text-foreground/80">{item.label}</span>
                                                             {item.subLabel && (
                                                                 <span className="text-[10px] text-muted-foreground/60 italic font-mono tracking-tight">
                                                                     {item.subLabel}
@@ -1082,7 +1082,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <div className="text-xs leading-relaxed text-foreground/80 break-words pr-2 font-sans">
+                                                        <div className="text-xs leading-relaxed text-foreground/80 break-words pr-2">
                                                             {item.subLabel && renderHighlightedText(item.subLabel, mentionQuery)}
                                                         </div>
                                                     </>

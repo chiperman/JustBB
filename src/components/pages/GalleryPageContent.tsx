@@ -68,8 +68,8 @@ export function GalleryPageContent({ memos: initialMemos = [] }: GalleryPageCont
                 <div className="max-w-screen-xl mx-auto space-y-12">
                     <section>
                         <header className="mb-10">
-                            <h2 className="text-3xl font-serif font-bold tracking-tight mb-2 italic">画廊</h2>
-                            <p className="text-muted-foreground text-sm font-sans tracking-wide opacity-70 italic whitespace-pre-line">
+                            <h2 className="text-3xl font-bold tracking-tight mb-2 italic text-foreground/80">画廊</h2>
+                            <p className="text-muted-foreground text-sm tracking-wide opacity-70 italic whitespace-pre-line">
                                 Visual fragments of memory. {"\n"}
                                 每一张图片都是凝固的时间锚点。
                             </p>

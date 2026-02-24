@@ -56,17 +56,6 @@ interface SidebarSettingsProps {
 export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     const { user, loading, refreshUser, isMounted } = useUser();
     const [loggingOut, setLoggingOut] = React.useState(false);
-    const [isSans, setIsSans] = React.useState(false);
-    const { setTheme } = useTheme();
-    const router = useRouter();
-    const { setViewMode } = useLoginMode();
-
-    React.useEffect(() => {
-        const savedFont = localStorage.getItem('font-preference');
-        if (savedFont === 'sans') {
-            setIsSans(true);
-        }
-    }, []);
 
     const handleLogout = async () => {
         setLoggingOut(true);
@@ -76,17 +65,6 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
         router.refresh();
     };
 
-    const toggleFont = () => {
-        const newVal = !isSans;
-        setIsSans(newVal);
-        if (newVal) {
-            document.body.classList.add('font-sans');
-            localStorage.setItem('font-preference', 'sans');
-        } else {
-            document.body.classList.remove('font-sans');
-            localStorage.setItem('font-preference', 'serif');
-        }
-    };
 
     const handleExport = async () => {
         const { exportMemos } = await import('@/actions/export');
@@ -198,10 +176,6 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                             </DropdownMenuPortal>
                         </DropdownMenuSub>
 
-                        <DropdownMenuItem className="rounded-sm" onClick={toggleFont}>
-                            <HugeiconsIcon icon={Type} size={16} className="mr-2" />
-                            <span>字体风格: {isSans ? '无衬线' : '经典衬线'}</span>
-                        </DropdownMenuItem>
                     </div>
 
 

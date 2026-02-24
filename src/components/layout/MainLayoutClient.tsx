@@ -109,7 +109,7 @@ export function MainLayoutClient({
     };
 
     return (
-        <div className="flex flex-col h-screen overflow-hidden bg-accent/20 font-sans relative">
+        <div className="flex flex-col h-screen overflow-hidden bg-accent/20 relative">
             {/* 全局加载进度条 */}
             {isLoading && (
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary/20 z-[100] overflow-hidden">

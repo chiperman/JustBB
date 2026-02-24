@@ -69,10 +69,10 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
                 <div className="max-w-screen-xl mx-auto space-y-12">
                     <section>
                         <header className="mb-12 border-b border-border/20 pb-8">
-                            <h2 className="text-3xl font-serif font-bold tracking-tight mb-3 italic flex items-center gap-3">
+                            <h2 className="text-3xl font-bold tracking-tight mb-3 italic flex items-center gap-3">
                                 <HugeiconsIcon icon={TagIcon} size={32} className="text-primary/60" /> 标签墙
                             </h2>
-                            <p className="text-muted-foreground text-sm font-sans tracking-wide opacity-70 italic">
+                            <p className="text-muted-foreground text-sm tracking-wide opacity-70 italic">
                                 Organize your thoughts through structural indices. {"\n"}
                                 思想的索引，灵感的卡片。
                             </p>
@@ -95,14 +95,14 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
                             </div>
                         ) : tags.length === 0 ? (
                             <div className="text-center py-20 bg-muted/5 rounded-sm border border-dashed border-border/30">
-                                <p className="font-serif italic text-muted-foreground opacity-60">暂无标签记录</p>
+                                <p className="italic text-muted-foreground opacity-60">暂无标签记录</p>
                             </div>
                         ) : (
                             <div className="space-y-16">
                                 {groups.map(group => (
                                     <div key={group} className="grid grid-cols-1 md:grid-cols-[80px_1fr] gap-8">
                                         <div className="flex md:flex-col items-center md:items-start">
-                                            <span className="text-4xl font-serif font-bold text-primary/20 select-none">
+                                            <span className="text-4xl font-bold text-primary/20 select-none">
                                                 {group}
                                             </span>
                                             <div className="h-px md:w-full flex-1 md:flex-none bg-border/20 ml-4 md:ml-0 md:mt-2" />
@@ -119,7 +119,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
                                                     )}
                                                 >
                                                     <div className="flex items-start justify-between mb-2">
-                                                        <span className="text-lg font-serif font-bold text-foreground group-hover:text-primary transition-colors leading-tight">
+                                                        <span className="text-lg font-bold text-foreground group-hover:text-primary transition-colors leading-tight">
                                                             {tag.tag_name}
                                                         </span>
                                                         <HugeiconsIcon icon={TagIcon} size={12} className="text-muted-foreground/30 group-hover:text-primary/40 transition-colors" />

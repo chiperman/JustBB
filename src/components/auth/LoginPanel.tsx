@@ -435,7 +435,7 @@ export function LoginPanel() {
                 {/* Hero / Brand */}
                 <motion.div variants={itemVariants} className="space-y-4 text-left">
                     <h1 className="text-7xl font-bold tracking-tighter text-primary font-editorial italic underline underline-offset-[12px] decoration-1 decoration-primary/20">JustMemo</h1>
-                    <p className="text-[10px] text-muted-foreground font-sans tracking-[0.5em] uppercase opacity-40 ml-1">极简笔记与创作空间</p>
+                    <p className="text-[10px] text-muted-foreground tracking-[0.5em] uppercase opacity-40 ml-1">极简笔记与创作空间</p>
                 </motion.div>
 
                 {/* Login Form Container */}
@@ -455,7 +455,7 @@ export function LoginPanel() {
                                 ) : (
                                     <HugeiconsIcon icon={Github} size={20} className="mr-3 text-muted-foreground group-hover:text-primary transition-colors" />
                                 )}
-                                <span className="font-sans font-bold tracking-widest text-[11px] uppercase">GitHub</span>
+                                <span className="font-bold tracking-widest text-[11px] uppercase">GitHub</span>
                             </Button>
                         </motion.div>
                         <motion.div whileTap={{ scale: 0.96 }}>
@@ -471,7 +471,7 @@ export function LoginPanel() {
                                 ) : (
                                     <span className="mr-3 font-bold text-lg leading-none text-muted-foreground group-hover:text-primary transition-colors">G</span>
                                 )}
-                                <span className="font-sans font-bold tracking-widest text-[11px] uppercase">Google</span>
+                                <span className="font-bold tracking-widest text-[11px] uppercase">Google</span>
                             </Button>
                         </motion.div>
                     </motion.div>
@@ -481,7 +481,7 @@ export function LoginPanel() {
                             <Separator className="w-full bg-black/5" />
                         </div>
                         <div className="relative flex justify-center text-[9px] uppercase font-bold tracking-[0.3em]">
-                            <span className="px-6 text-muted-foreground/30 font-sans bg-[#fdfcf9]">其他登录方式</span>
+                            <span className="px-6 text-muted-foreground/30 bg-[#fdfcf9]">其他登录方式</span>
                         </div>
                     </motion.div>
 
@@ -490,7 +490,7 @@ export function LoginPanel() {
                         <motion.div variants={itemVariants} className="space-y-4">
                             <label
                                 htmlFor="email"
-                                className="block text-[12px] font-serif font-medium text-foreground/40 ml-1 italic"
+                                className="block text-[12px] font-medium text-foreground/40 ml-1 italic"
                             >
                                 电子邮箱
                             </label>
@@ -510,7 +510,7 @@ export function LoginPanel() {
                                     style={{
                                         backgroundColor: 'transparent'
                                     }}
-                                    className={`h-12 border-0 focus-visible:ring-0 transition-all duration-500 font-sans pl-8 rounded-none bg-transparent shadow-[0_1px_0_0_rgba(0,0,0,0.05)] focus:shadow-[0_2px_0_0_rgba(var(--primary-rgb),0.3)] ${step === 'AUTH' ? 'text-foreground/50 cursor-not-allowed opacity-60' : ''} ${!isEmailValid ? 'text-destructive focus:shadow-[0_2px_0_0_rgba(var(--destructive-rgb),0.5)]' : ''}`}
+                                    className={`h-12 border-0 focus-visible:ring-0 transition-all duration-500 pl-8 rounded-none bg-transparent shadow-[0_1px_0_0_rgba(0,0,0,0.05)] focus:shadow-[0_2px_0_0_rgba(var(--primary-rgb),0.3)] ${step === 'AUTH' ? 'text-foreground/50 cursor-not-allowed opacity-60' : ''} ${!isEmailValid ? 'text-destructive focus:shadow-[0_2px_0_0_rgba(var(--destructive-rgb),0.5)]' : ''}`}
                                 />
                                 {step === 'AUTH' && (
                                     <button
@@ -550,14 +550,14 @@ export function LoginPanel() {
                                         <div className="flex items-center justify-between ml-1">
                                             <label
                                                 htmlFor="password"
-                                                className="block text-[12px] font-serif font-medium text-foreground/40 italic"
+                                                className="block text-[12px] font-medium text-foreground/40 italic"
                                             >
                                                 {authMode === 'REGISTER' ? '设置密码' : '登录密码'}
                                             </label>
                                             {authMode === 'LOGIN' && (
                                                 <Link
                                                     href="/forgot-password"
-                                                    className="text-[10px] font-bold text-muted-foreground/20 hover:text-primary transition-colors font-sans uppercase tracking-widest border-b border-muted-foreground/10 pb-0.5"
+                                                    className="text-[10px] font-bold text-muted-foreground/20 hover:text-primary transition-colors uppercase tracking-widest border-b border-muted-foreground/10 pb-0.5"
                                                 >
                                                     忘记密码？
                                                 </Link>
@@ -576,7 +576,7 @@ export function LoginPanel() {
                                                 style={{
                                                     backgroundColor: 'transparent'
                                                 }}
-                                                className="h-12 border-0 focus-visible:ring-0 transition-all duration-500 font-sans pl-8 pr-12 rounded-none bg-transparent placeholder:text-foreground/20 shadow-[0_1px_0_0_rgba(0,0,0,0.05)] focus:shadow-[0_2px_0_0_rgba(var(--primary-rgb),0.3)]"
+                                                className="h-12 border-0 focus-visible:ring-0 transition-all duration-500 pl-8 pr-12 rounded-none bg-transparent placeholder:text-foreground/20 shadow-[0_1px_0_0_rgba(0,0,0,0.05)] focus:shadow-[0_2px_0_0_rgba(var(--primary-rgb),0.3)]"
                                             />
                                             <motion.div
                                                 className="absolute bottom-0 left-0 h-[1px] bg-primary"
@@ -622,7 +622,7 @@ export function LoginPanel() {
                                             <div className="flex items-center justify-between ml-1">
                                                 <label
                                                     htmlFor="otp-0"
-                                                    className="block text-[12px] font-serif font-medium text-foreground/40 italic"
+                                                    className="block text-[12px] font-medium text-foreground/40 italic"
                                                 >
                                                     验证码 (8位)
                                                 </label>
@@ -632,7 +632,7 @@ export function LoginPanel() {
                                                             type="button"
                                                             onClick={handlePasteOtp}
                                                             variant="ghost"
-                                                            className="h-6 px-0 text-muted-foreground/40 font-sans text-[10px] hover:bg-transparent hover:text-primary transition-all uppercase tracking-widest"
+                                                            className="h-6 px-0 text-muted-foreground/40 text-[10px] hover:bg-transparent hover:text-primary transition-all uppercase tracking-widest"
                                                         >
                                                             粘贴验证码
                                                         </Button>
@@ -650,7 +650,7 @@ export function LoginPanel() {
                                                                 }
                                                             }}
                                                             variant="ghost"
-                                                            className="h-6 px-0 text-primary font-serif italic text-[11px] hover:bg-transparent hover:text-primary/70 transition-all min-w-[60px] border-b border-primary/10 rounded-none"
+                                                            className="h-6 px-0 text-primary italic text-[11px] hover:bg-transparent hover:text-primary/70 transition-all min-w-[60px] border-b border-primary/10 rounded-none"
                                                         >
                                                             {countdown > 0 ? `${countdown}s` : (otpSent ? '重新获取' : '获取验证码')}
                                                         </Button>
@@ -690,7 +690,7 @@ export function LoginPanel() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 role="alert"
-                                className="text-[11px] p-4 rounded-none font-sans flex items-center gap-4 bg-destructive/[0.03] border-l-2 border-destructive text-destructive/80"
+                                className="text-[11px] p-4 rounded-none flex items-center gap-4 bg-destructive/[0.03] border-l-2 border-destructive text-destructive/80"
                             >
                                 <div className="w-1.5 h-1.5 rounded-full bg-destructive" />
                                 {error}
@@ -744,7 +744,7 @@ function RequirementItem({ met, label }: { met: boolean; label: string }) {
             <div className={`flex-shrink-0 w-3.5 h-3.5 rounded-full flex items-center justify-center transition-all duration-300 ${met ? 'bg-green-500/10 text-green-600 scale-110 shadow-[0_0_8px_rgba(34,197,94,0.15)]' : 'bg-foreground/[0.03] text-muted-foreground/20'}`}>
                 {met ? <HugeiconsIcon icon={Check} size={8} className="stroke-[3.5]" /> : <div className="w-0.5 h-0.5 rounded-full bg-current opacity-40" />}
             </div>
-            <span className={`text-[9px] font-sans font-bold uppercase tracking-wider transition-colors duration-300 ${met ? 'text-green-600/80' : 'text-muted-foreground/30'}`}>{label}</span>
+            <span className={`text-[9px] font-bold uppercase tracking-wider transition-colors duration-300 ${met ? 'text-green-600/80' : 'text-muted-foreground/30'}`}>{label}</span>
         </div>
     );
 }

@@ -28,26 +28,34 @@
 这是视觉现代化的核心逻辑。
 
 ### 4.1 核心圆角体系 (Corner Radius System)
-为了彻底消除实现偏差，建立可预测的样式尺度，我们采用标准的 **Tailwind 语义映射** 方案来实现 **12 - 8 - 4 - 2** 的阶梯：
+为了彻底消除实现偏差，建立极具工业美感的比例尺，采用标准的 **Tailwind 语义映射**：
 
 | 阶层 (Level) | 物理尺寸 | Tailwind 类名 | 应用场景 (Usage) |
 | :--- | :--- | :--- | :--- |
-| **一级容器** | **12px** (0.75rem) | `rounded-card` | `MemoCard` (首页卡片)、侧边栏容器、对话框底座 |
+| **一级容器** | **12px** (0.75rem) | `rounded-card` | `MemoCard` (首页卡片)、侧边栏、对话框底座 |
 | **二级容器** | **8px** (0.5rem) | `rounded-inner` | 编辑器嵌套、下拉菜单背景 (Popovers) |
-| **原子组件** | **6px** (0.375rem) | **`rounded-md`** | **核心规范**：按钮、输入框、搜索框、菜单项、徽章 (Badge) |
-| **极微元素** | **2px/4px** | `rounded-sm/null` | 仅保留在图片缩略图等特定视觉场景 |
+| **原子组件** | **6px** (0.375rem) | **`rounded-md`** | **全局默认**：按钮、输入框、搜索框、菜单项、徽章 |
+| **极细元素** | **2px/4px** | `rounded-sm/null` | 仅用于地图路网等底层视觉元素 |
 
 ### 4.2 比例与一致性 (Ratio & Consistency)
-*   **规范优先**：全站交互元素必须使用 `rounded-md` (6px)，不再混合使用 `rounded-sm` 或基础 `rounded`。
-*   **留白基准**: 主体留白保持在 **24px** (`p-6`)，确保与 12px 外圆角形成稳健的学术骨架感。
+*   **规范优先**：全站交互元素必须使用 `rounded-md` (6px)，不再允许混合 `rounded-sm`。
 
-## 5. 交互反馈与动效 (Interactions & Motion)
+## 5. 交互反馈与阴影规范 (Interactions & Elevation)
 
-### 5.1 阴影与海拔 (Elevation)
-*   **Layer (Standard)**: `shadow-sm` (极简外观)。
-*   **Hover (Standard)**: `shadow-md` (统一全站悬浮阴影，扩散范围自然)。
-*   **Floating (Menu/Pop)**: `shadow-xl` (包含 backdrop-blur 增强层级)。
-*   **玻璃态**: 所有浮层统一使用 `backdrop-blur-xl bg-popover/80`。
+这是项目中定义“海拔高度”的核心。为了保持视觉的平面高级感，我们严格限制 3D 偏移。
+
+### 5.1 阴影分级体系 (Shadow Elevations)
+
+| 分级 | Tailwind 类名 | 特性说明 | 应用场景 |
+| :--- | :--- | :--- | :--- |
+| **Level 0 (Flat)** | `shadow-none` | 无阴影 | 列表中的基础标签、静态背景元素 |
+| **Level 1 (Subtle)** | `shadow-sm` | 极细阴影 (1px 垂直) | Logo Brand、小尺寸独立按钮、徽章悬停 |
+| **Level 2 (Raised)** | `shadow-md` | 明显海拔 (4px 垂直) | **标准反馈**：首页卡片、主操作按钮悬停、图片缩略图悬停 |
+| **Level 3 (Pop)** | `shadow-xl` | 浮空海拔 (20px 扩散) | 气泡框、对话框、下拉选择器背景 |
+
+### 5.2 颜色与基调
+*   **中性化原则**：所有阴影原则上使用中性灰色 (`rgba(0,0,0,0.1)`) 或对应的灰色 Token。禁止在阴影中使用品牌色（如橙色），以免破坏整体“人文”质感。
+*   **深色模式**：阴影应转化为更深、更柔和的半透明黑色或调整 border 替代效果。
 
 ### 5.4 动画参数 (Motion Specs)
 详见核心动效定义：

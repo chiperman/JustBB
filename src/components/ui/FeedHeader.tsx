@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { cn } from "@/lib/utils";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -90,8 +91,13 @@ export function FeedHeader() {
         router.push(`?${params.toString()}`);
     };
 
+    const hasContext = !!(activeDate || searchParams.get('tag') || (searchParams.get('year') && searchParams.get('month')));
+
     return (
-        <div className="flex items-center justify-between gap-4 py-2 h-10">
+        <div className={cn(
+            "flex items-center justify-between gap-4 py-2 h-10 transition-all duration-300",
+            hasContext && "mb-5" // 为 SearchInput 的绝对定位提示预留空间
+        )}>
             {isSelectionMode ? (
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">

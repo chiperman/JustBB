@@ -48,7 +48,7 @@ export function SearchInput() {
     };
 
     return (
-        <div className="relative flex flex-col gap-1.5 w-full group">
+        <div className="relative w-full group">
             <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 transition-colors">
                     <HugeiconsIcon
@@ -86,14 +86,14 @@ export function SearchInput() {
             </div>
 
             {hasContext && (
-                <div className="flex items-center justify-between px-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="absolute top-full left-0 right-0 pt-1 flex items-center justify-between px-0.5 animate-in fade-in slide-in-from-top-1 duration-200 pointer-events-auto">
                     <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground/70">
                         <HugeiconsIcon
                             icon={activeDate || activeYear ? Calendar03Icon : Tag01Icon}
                             size={12}
                             className="text-primary/40"
                         />
-                        <span>
+                        <span className="truncate max-w-[150px] md:max-w-none">
                             正在
                             <span className="text-primary/80 mx-0.5">
                                 {activeDate || (activeYear && activeMonth ? `${activeYear}-${activeMonth}` : activeTag)}
@@ -105,7 +105,7 @@ export function SearchInput() {
                     {(value.trim() || searchParams.get('q')) && (
                         <button
                             onClick={handleGlobalSearch}
-                            className="group flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-primary/[0.03] hover:bg-primary/10 text-[10px] text-primary/60 hover:text-primary transition-all border border-primary/10"
+                            className="group flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-primary/[0.03] hover:bg-primary/10 text-[10px] text-primary/60 hover:text-primary transition-all border border-primary/10 whitespace-nowrap"
                         >
                             <HugeiconsIcon icon={Globe02Icon} size={10} className="group-hover:rotate-12 transition-transform" />
                             <span>全量搜索</span>

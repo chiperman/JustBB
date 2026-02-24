@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { MemoCard } from './MemoCard';
-import { getMemos } from '@/actions/fetchMemos';
+import { getMemos, getArchivedMemos } from '@/actions/fetchMemos';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Loading01Icon as Loader2 } from '@hugeicons/core-free-icons';
 import { Memo } from '@/types/memo';
@@ -54,12 +54,24 @@ export function MemoFeed({ initialMemos = [], searchParams, adminCode, isAdmin =
 
         setIsLoading(true);
         try {
-            const nextMemos = await getMemos({
-                ...searchParams,
-                adminCode,
-                offset,
-                limit: 20
-            });
+            let nextMemos: Memo[] = [];
+
+            // 如果是归档模式（年月过滤）
+            if (searchParams.year && searchParams.month) {
+                const year = parseInt(searchParams.year);
+                const month = parseInt(searchParams.month);
+                if (!isNaN(year) && !isNaN(month)) {
+                    nextMemos = await getArchivedMemos(year, month, 20, offset);
+                }
+            } else {
+                // 普通模式
+                nextMemos = await getMemos({
+                    ...searchParams,
+                    adminCode,
+                    offset,
+                    limit: 20
+                });
+            }
 
             if (nextMemos.length < 20) {
                 setHasMore(false);

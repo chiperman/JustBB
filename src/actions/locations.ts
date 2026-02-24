@@ -16,7 +16,7 @@ export async function getMemosWithLocations(): Promise<{
 
     const { data, error } = await supabase
         .from('memos')
-        .select('*')
+        .select('id, memo_number, locations, content, created_at')
         .is('deleted_at', null)
         .not('locations', 'eq', '[]')
         .not('locations', 'is', null)

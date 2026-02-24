@@ -1,47 +1,66 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { GalleryGrid } from '@/components/gallery/GalleryGrid';
 import { Memo } from '@/types/memo';
-import { usePageDataCache } from '@/context/PageDataCache';
 import { getGalleryMemos } from '@/actions/fetchMemos';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Loading01Icon as Loader2 } from '@hugeicons/core-free-icons';
 
 interface GalleryPageContentProps {
     memos?: Memo[];
 }
 
-/**
- * 画廊页客户端内容组件
- * 支持两种模式：
- * 1. SSR：从 Server Component 接收 memos
- * 2. SPA：无 memos 时客户端自行获取
- */
-export function GalleryPageContent({ memos: initialMemos }: GalleryPageContentProps) {
-    const { getCache, setCache } = usePageDataCache();
-    const cached = getCache('/gallery');
-    const [memos, setMemos] = useState<Memo[]>(initialMemos ?? cached?.memos ?? []);
-    const [isLoading, setIsLoading] = useState(!initialMemos && !cached);
+export function GalleryPageContent({ memos: initialMemos = [] }: GalleryPageContentProps) {
+    const [memos, setMemos] = useState<Memo[]>(initialMemos);
+    const [isLoading, setIsLoading] = useState(false);
+    const [hasMore, setHasMore] = useState(initialMemos.length >= 20);
+    const [offset, setOffset] = useState(initialMemos.length);
+    const observerTarget = useRef<HTMLDivElement>(null);
+
+    const loadMore = useCallback(async () => {
+        if (isLoading || !hasMore) return;
+
+        setIsLoading(true);
+        try {
+            const nextMemos = await getGalleryMemos(20, offset);
+
+            if (nextMemos.length < 20) {
+                setHasMore(false);
+            }
+
+            if (nextMemos.length > 0) {
+                setMemos(prev => {
+                    const existingIds = new Set(prev.map(m => m.id));
+                    const uniqueNew = nextMemos.filter(m => !existingIds.has(m.id));
+                    return [...prev, ...uniqueNew];
+                });
+                setOffset(prev => prev + nextMemos.length);
+            }
+        } catch (err) {
+            console.error("Failed to load more gallery memos:", err);
+            setHasMore(false);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [isLoading, hasMore, offset]);
 
     useEffect(() => {
-        // 如果有初始数据（SSR），直接写入缓存
-        if (initialMemos) {
-            setCache('/gallery', { memos: initialMemos });
-            return;
-        }
-        // stale-while-revalidate：缓存命中也后台刷新
-        let cancelled = false;
-        (async () => {
-            const result = await getGalleryMemos();
-            if (!cancelled) {
-                const data = result || [];
-                setMemos(data);
-                setCache('/gallery', { memos: data });
-                setIsLoading(false);
-            }
-        })();
-        return () => { cancelled = true; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        const target = observerTarget.current;
+        if (!target) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && !isLoading && hasMore) {
+                    loadMore();
+                }
+            },
+            { threshold: 0.1, rootMargin: '200px' }
+        );
+
+        observer.observe(target);
+        return () => observer.unobserve(target);
+    }, [loadMore, isLoading, hasMore]);
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -56,19 +75,25 @@ export function GalleryPageContent({ memos: initialMemos }: GalleryPageContentPr
                             </p>
                         </header>
 
-                        {isLoading ? (
-                            <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-                                {[180, 240, 160, 200].map((h, i) => (
-                                    <div key={i} className="break-inside-avoid">
-                                        <div className="p-2 bg-white dark:bg-black shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] rounded-sm border border-border/50">
-                                            <div className="bg-muted/20 rounded-[1px] animate-pulse" style={{ height: `${h}px` }} />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <GalleryGrid memos={memos} />
-                        )}
+                        <GalleryGrid memos={memos} />
+
+                        {/* Bottom Sentry/Loader */}
+                        <div ref={observerTarget} className="py-12 flex flex-col items-center justify-center min-h-[100px]">
+                            {isLoading ? (
+                                <div className="flex items-center">
+                                    <HugeiconsIcon icon={Loader2} size={24} className="animate-spin text-muted-foreground/50" />
+                                    <span className="ml-2 text-xs text-muted-foreground/60 tracking-widest uppercase">Fetching...</span>
+                                </div>
+                            ) : !hasMore && memos.length > 0 ? (
+                                <div className="text-center text-xs text-muted-foreground/30 font-mono tracking-[0.2em] uppercase">
+                                    --- End of Collection ---
+                                </div>
+                            ) : memos.length === 0 && !isLoading ? (
+                                <div className="text-center text-muted-foreground/60 py-12">
+                                    暂无影像记录
+                                </div>
+                            ) : null}
+                        </div>
                     </section>
                 </div>
             </div>

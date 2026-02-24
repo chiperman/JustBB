@@ -52,7 +52,7 @@ export async function getMemos(params: {
     return data as unknown as Memo[];
 }
 
-export async function getArchivedMemos(year: number, month: number) {
+export async function getArchivedMemos(year: number, month: number, limit: number = 20, offset: number = 0) {
     const supabase = await createClient();
     const startDate = new Date(year, month - 1, 1).toISOString();
     const endDate = new Date(year, month, 0, 23, 59, 59, 999).toISOString();
@@ -64,7 +64,8 @@ export async function getArchivedMemos(year: number, month: number) {
         .is('deleted_at', null)
         .gte('created_at', startDate)
         .lte('created_at', endDate)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
 
     if (error) {
         console.error('Error fetching archived memos:', error);
@@ -74,7 +75,7 @@ export async function getArchivedMemos(year: number, month: number) {
     return data as unknown as Memo[];
 }
 
-export async function getGalleryMemos() {
+export async function getGalleryMemos(limit: number = 20, offset: number = 0) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('memos')
@@ -82,7 +83,8 @@ export async function getGalleryMemos() {
         .eq('is_private', false)
         .is('deleted_at', null)
         .ilike('content', '%![%](%)%')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
 
     if (error) {
         console.error('Error fetching gallery memos:', error);

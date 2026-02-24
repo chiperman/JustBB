@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, memo, useCallback } from 'react';
 import { getMemoStats } from '@/actions/stats';
-import { startOfDay, subDays, format, eachDayOfInterval, differenceInDays } from 'date-fns';
+import { startOfDay, subDays, format, eachDayOfInterval, differenceInDays, startOfWeek } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { HeatmapModal } from './HeatmapModal';
 import { useReducedMotion } from 'framer-motion';
@@ -86,12 +86,42 @@ export const Heatmap = memo(function Heatmap() {
         return differenceInDays(new Date(), firstDate) + 1;
     }, [stats?.firstMemoDate]);
 
-    // 生成最近 12 周 (84 天) 的日期数据
+    // 生成对齐到周日的日期数据 (约 12-13 周)
     const heatmapDays = useMemo(() => {
-        const today = startOfDay(new Date());
-        const start = subDays(today, 83); // 12 weeks = 84 days
-        return eachDayOfInterval({ start, end: today }).map(d => format(d, 'yyyy-MM-dd'));
+        // 使用上海时区获取“今天”的起始时间
+        const now = new Date();
+        const today = startOfDay(now);
+
+        // 计算约 12 周前的参考起点 (83天前)
+        const candidateStart = subDays(today, 83);
+        // 强制回退到该周的周日 (weekStartsOn: 0)，确保 grid 第一行始终是周日
+        // 这样可以消除因一周起始日不固定导致的视觉错位
+        const startDate = startOfWeek(candidateStart, { weekStartsOn: 0 });
+
+        return eachDayOfInterval({ start: startDate, end: today }).map(d => format(d, 'yyyy-MM-dd'));
     }, []);
+
+    // 动态计算月份标签及其所在列的索引
+    const monthLabels = useMemo(() => {
+        const labels: { name: string; colIndex: number }[] = [];
+        let lastMonth = -1;
+
+        heatmapDays.forEach((dateStr, index) => {
+            const parts = dateStr.split('-');
+            const month = parseInt(parts[1]);
+            const day = parseInt(parts[2]);
+            const colIndex = Math.floor(index / 7);
+
+            // 当发生跨月，且该日期位于该列的起始附近（为了标签靠左对齐）
+            if (month !== lastMonth && day <= 7) {
+                const dateObj = new Date(parseInt(parts[0]), month - 1, 1);
+                const monthName = dateObj.toLocaleString('zh-CN', { month: 'short' });
+                labels.push({ name: monthName, colIndex });
+                lastMonth = month;
+            }
+        });
+        return labels;
+    }, [heatmapDays]);
 
     const handleCellHover = useCallback((e: React.MouseEvent | React.FocusEvent, date: string, count: number) => {
         const target = e.currentTarget as HTMLElement;
@@ -206,12 +236,25 @@ export const Heatmap = memo(function Heatmap() {
                     )}
                 </div>
 
-                {/* Month labels at bottom */}
-                <div className="flex justify-between mt-2 px-1 text-[12px] text-stone-400 font-normal opacity-60">
-                    <span className="flex-1 text-center">十一月</span>
-                    <span className="flex-1 text-center">十二月</span>
-                    <span className="flex-1 text-center">一月</span>
-                    <span className="flex-1 text-center">二月</span>
+                {/* 月份标签 - 动态对齐 */}
+                <div className="relative h-4 mt-2 text-[10px] text-stone-400 font-normal opacity-60 max-w-fit mx-auto">
+                    {/* 这个容器需要与上面的 grid 宽度和居中逻辑保持一致 */}
+                    <div
+                        className="relative"
+                        style={{
+                            width: `${Math.ceil(heatmapDays.length / 7) * 18 - 4}px`
+                        }}
+                    >
+                        {monthLabels.map(({ name, colIndex }, i) => (
+                            <span
+                                key={`${name}-${i}`}
+                                className="absolute"
+                                style={{ left: `${colIndex * 18}px` }}
+                            >
+                                {name}
+                            </span>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>

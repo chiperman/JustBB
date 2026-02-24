@@ -112,7 +112,8 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
     const availableYears = useMemo(() => {
         const currentYear = new Date().getFullYear();
         if (!stats.firstMemoDate) return [currentYear];
-        const startYear = getYear(new Date(stats.firstMemoDate));
+        const parts = stats.firstMemoDate.split('-');
+        const startYear = parseInt(parts[0]);
         const years = [];
         for (let y = currentYear; y >= startYear; y--) {
             years.push(y);
@@ -257,10 +258,11 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                                 >
                                     {(() => {
                                         const targetYear = Number(selectedYear);
-                                        const isCurrentYear = targetYear === new Date().getFullYear();
+                                        const now = new Date();
+                                        const isCurrentYear = targetYear === now.getFullYear();
                                         const months: Date[] = eachMonthOfInterval({
-                                            start: startOfYear(new Date(targetYear, 0, 1)),
-                                            end: isCurrentYear ? new Date() : endOfYear(new Date(targetYear, 0, 1))
+                                            start: startOfMonth(new Date(targetYear, 0, 1)),
+                                            end: isCurrentYear ? startOfMonth(now) : endOfMonth(new Date(targetYear, 11, 1))
                                         }).reverse();
                                         return months;
                                     })().map((month) => {

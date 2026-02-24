@@ -47,8 +47,8 @@ export async function updateMemoState(formData: FormData) {
 
     // 如果设置了新的 access_code，需要加密存储
     if (access_code) {
-        const salt = bcrypt.genSaltSync(10);
-        updateData.access_code = bcrypt.hashSync(access_code, salt);
+        const salt = await bcrypt.genSalt(10);
+        updateData.access_code = await bcrypt.hash(access_code, salt);
     }
 
     const supabase = await createClient();

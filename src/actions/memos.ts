@@ -43,8 +43,8 @@ export async function createMemo(formData: FormData): Promise<{ success: boolean
     const insertData: Database['public']['Tables']['memos']['Insert'] = { ...rest };
 
     if (access_code) {
-        const salt = bcrypt.genSaltSync(10);
-        insertData.access_code = bcrypt.hashSync(access_code, salt);
+        const salt = await bcrypt.genSalt(10);
+        insertData.access_code = await bcrypt.hash(access_code, salt);
     }
 
     // 计算字数

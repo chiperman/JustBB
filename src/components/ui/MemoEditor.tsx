@@ -856,10 +856,11 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         // No need to update local state since we use memoCache now, 
                         // but if we are in 'edit', we might need to refresh something? 
                         // Actually logic below was dealing with 'suggestionItems' state directly.
-                        // Now we rely on fetchMentionSuggestions re-running if needed, 
-                        // or next time user opens suggestions.
-                        refreshTags();
-                        refreshStats();
+                        // 并行刷新统计数据，不阻塞
+                        Promise.all([
+                            refreshTags?.(),
+                            refreshStats?.()
+                        ]).catch(err => console.error('[Sync] Stats refresh failed:', err));
                     }
                 }
 
@@ -875,10 +876,10 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     setAccessCode('');
                     setAccessHint('');
                     setIsPinned(false);
-                    router.refresh();
+                    // 移除冗余的 router.refresh()，因为我们已经手动同步了 state
                 } else {
                     onSuccess?.(newMemo);
-                    router.refresh();
+                    // 移除冗余的 router.refresh()
                 }
             } else {
                 setError(typeof result.error === 'string' ? result.error : '操作失败，请稍后重试');

@@ -14,9 +14,10 @@ import { LinkPreview } from './LinkPreview';
 interface MemoContentProps {
     content: string;
     className?: string;
+    disablePreview?: boolean;
 }
 
-export function MemoContent({ content, className }: MemoContentProps) {
+export function MemoContent({ content, className, disablePreview = false }: MemoContentProps) {
     const searchParams = useSearchParams();
     const searchQuery = searchParams?.get('q') || '';
 
@@ -47,15 +48,21 @@ export function MemoContent({ content, className }: MemoContentProps) {
                     switch (token.type) {
                         case 'ref':
                             const memoNum = token.value.slice(1);
-                            return (
+                            const linkElement = (
+                                <Link
+                                    href={`/?q=${memoNum}`}
+                                    className="text-primary hover:underline cursor-pointer font-mono bg-primary/10 px-1 rounded-sm mx-0.5 inline-block focus-visible:ring-1 focus-visible:ring-primary/30 outline-none hover:bg-primary/20 transition-colors"
+                                    aria-label={`查看引用记录 #${memoNum}`}
+                                >
+                                    {token.value}
+                                </Link>
+                            );
+
+                            return disablePreview ? (
+                                <React.Fragment key={`ref-${index}`}>{linkElement}</React.Fragment>
+                            ) : (
                                 <MemoHoverPreview key={`ref-${index}`} memoNumber={memoNum} memoId={memoNum}>
-                                    <Link
-                                        href={`/?q=${memoNum}`}
-                                        className="text-primary hover:underline cursor-pointer font-mono bg-primary/10 px-1 rounded-sm mx-0.5 inline-block focus-visible:ring-1 focus-visible:ring-primary/30 outline-none hover:bg-primary/20 transition-colors"
-                                        aria-label={`查看引用记录 #${memoNum}`}
-                                    >
-                                        {token.value}
-                                    </Link>
+                                    {linkElement}
                                 </MemoHoverPreview>
                             );
                         case 'tag':
@@ -63,8 +70,7 @@ export function MemoContent({ content, className }: MemoContentProps) {
                                 <Link
                                     key={`tag-${index}`}
                                     href={`/?tag=${encodeURIComponent(token.value.slice(1))}`}
-                                    className="hover:underline mx-0.5 focus-visible:ring-1 focus-visible:ring-primary/30 outline-none rounded-sm transition-colors font-mono font-medium"
-                                    style={{ color: '#5783f7' }}
+                                    className="text-primary hover:underline mx-0.5 focus-visible:ring-1 focus-visible:ring-primary/30 outline-none rounded-sm transition-colors font-mono font-medium"
                                     aria-label={`查看包含 #${token.value.slice(1)} 标签的记录`}
                                 >
                                     {token.value}
@@ -98,20 +104,26 @@ export function MemoContent({ content, className }: MemoContentProps) {
                                 </div>
                             );
                         case 'location':
-                            return (
+                            const locElement = (
+                                <span
+                                    className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer bg-primary/10 px-1.5 py-0.5 rounded mx-0.5 hover:bg-primary/20 transition-colors"
+                                    aria-label={`查看定位: ${token.name}`}
+                                >
+                                    <span className="text-sm">📍</span>
+                                    <span className="text-[13px] font-medium">{token.name}</span>
+                                </span>
+                            );
+
+                            return disablePreview ? (
+                                <React.Fragment key={`loc-${index}`}>{locElement}</React.Fragment>
+                            ) : (
                                 <LocationHoverPreview
                                     key={`loc-${index}`}
                                     name={token.name}
                                     lat={token.lat}
                                     lng={token.lng}
                                 >
-                                    <span
-                                        className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer bg-primary/10 px-1.5 py-0.5 rounded mx-0.5 hover:bg-primary/20 transition-colors"
-                                        aria-label={`查看定位: ${token.name}`}
-                                    >
-                                        <span className="text-sm">📍</span>
-                                        <span className="text-[13px] font-medium">{token.name}</span>
-                                    </span>
+                                    {locElement}
                                 </LocationHoverPreview>
                             );
                         case 'link':

@@ -276,3 +276,52 @@ body.font-sans {
 .leaflet-control-attribution a {
   color: inherit !important;
 }
+
+/* Leaflet Popup 现代极简样式 */
+.modern-map-popup .leaflet-popup-content-wrapper {
+  background: var(--popover) !important;
+  color: var(--popover-foreground) !important;
+  border-radius: var(--radius-card) !important;
+  padding: 0 !important;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--border) !important;
+  overflow: hidden;
+}
+
+.modern-map-popup .leaflet-popup-content {
+  margin: 0 !important;
+  width: 550px !important;
+}
+
+.modern-map-popup .leaflet-popup-tip {
+  background: var(--popover) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.modern-map-popup a.leaflet-popup-close-button {
+  color: var(--muted-foreground) !important;
+  padding: 8px 8px 0 0 !important;
+  width: 32px !important;
+  height: 32px !important;
+  font: 20px/24px Tahoma, Verdana, sans-serif !important;
+  z-index: 20;
+}
+
+.modern-map-popup a.leaflet-popup-close-button:hover {
+  color: var(--foreground) !important;
+}
+
+/* Popup 内部自定义滚动条 */
+.modern-map-popup .custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modern-map-popup .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(var(--color-primary), 0.2);
+  border-radius: 10px;
+}
+
+.modern-map-popup .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--color-primary), 0.4);
+}

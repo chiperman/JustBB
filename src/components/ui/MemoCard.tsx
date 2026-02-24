@@ -3,6 +3,7 @@
 import { MemoContent } from './MemoContent';
 import { MemoActions } from './MemoActions';
 import { MemoEditor } from './MemoEditor';
+import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { PinIcon, ChatLock01Icon as LockIcon, Link02Icon } from '@hugeicons/core-free-icons';
 import { memo, useState, useEffect } from 'react';
@@ -21,9 +22,10 @@ interface MemoCardProps {
     isAdmin?: boolean;
     isEditing?: boolean;
     onEditChange?: (editing: boolean) => void;
+    showOriginalOnly?: boolean;
 }
 
-export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditing, onEditChange }: MemoCardProps) {
+export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditing, onEditChange, showOriginalOnly = false }: MemoCardProps) {
     const router = useRouter();
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -96,7 +98,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                     layout
                     onClick={handleCardClick}
                     className={cn(
-                        "relative bg-card rounded-card p-6 transition-all border border-border focus-within:ring-2 focus-within:ring-primary/10",
+                        "relative bg-card rounded-card p-6 transition-all border border-border focus-within:ring-2 focus-within:ring-primary/10 group",
                         memo.is_pinned && "bg-primary/5 border-primary/20",
                         isSelectionMode && "cursor-pointer hover:border-primary/40 select-none",
                         isSelectionMode && isSelected && "ring-2 ring-primary border-primary/50 shadow-sm"
@@ -151,34 +153,52 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                             )}
                         </div>
                         {!memo.is_locked && !isSelectionMode && (
-                            <div className="flex items-center gap-2 group">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={toggleBacklinks}
-                                    className={cn(
-                                        "h-8 w-8 rounded-sm transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
-                                        showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground",
-                                        (showBacklinks || isMenuOpen) && "opacity-100",
-                                    )}
-                                    aria-expanded={showBacklinks}
-                                    aria-label="查看引用"
-                                    title="查看引用"
-                                >
-                                    <HugeiconsIcon icon={Link02Icon} size={16} />
-                                </Button>
-                                <MemoActions
-                                    id={memo.id}
-                                    isDeleted={!!memo.deleted_at}
-                                    isPinned={memo.is_pinned}
-                                    isPrivate={memo.is_private}
-                                    content={memo.content}
-                                    createdAt={memo.created_at}
-                                    tags={memo.tags ?? []}
-                                    onEdit={() => onEditChange?.(true)}
-                                    onOpenChange={setIsMenuOpen}
-                                    isAdmin={isAdmin}
-                                />
+                            <div className="flex items-center gap-2">
+                                {showOriginalOnly ? (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            // 使用基础导航确保在 Leaflet Popup 中也能成功跳转
+                                            window.location.assign(`/?q=${memo.memo_number}`);
+                                        }}
+                                        className="h-7 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 z-10 pointer-events-auto"
+                                    >
+                                        查看原始数据
+                                    </Button>
+                                ) : (
+                                    <>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={toggleBacklinks}
+                                            className={cn(
+                                                "h-8 w-8 rounded-sm transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
+                                                showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground",
+                                                (showBacklinks || isMenuOpen) && "opacity-100",
+                                            )}
+                                            aria-expanded={showBacklinks}
+                                            aria-label="查看引用"
+                                            title="查看引用"
+                                        >
+                                            <HugeiconsIcon icon={Link02Icon} size={16} />
+                                        </Button>
+                                        <MemoActions
+                                            id={memo.id}
+                                            isDeleted={!!memo.deleted_at}
+                                            isPinned={memo.is_pinned}
+                                            isPrivate={memo.is_private}
+                                            content={memo.content}
+                                            createdAt={memo.created_at}
+                                            tags={memo.tags ?? []}
+                                            onEdit={() => onEditChange?.(true)}
+                                            onOpenChange={setIsMenuOpen}
+                                            isAdmin={isAdmin}
+                                        />
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
@@ -191,13 +211,16 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                         {memo.is_locked ? (
                             <div className="text-base leading-relaxed text-muted-foreground italic opacity-60">这一条私密记录已被锁定，输入口令后即可解锁阅读。</div>
                         ) : (
-                            <MemoContent content={memo.content} />
+                            <MemoContent
+                                content={memo.content}
+                                disablePreview={showOriginalOnly}
+                            />
                         )}
                     </div>
 
                     {/* 引用展示区 */}
                     <AnimatePresence>
-                        {showBacklinks && (
+                        {!showOriginalOnly && showBacklinks && (
                             <motion.div
                                 layout
                                 initial={{ opacity: 0, height: 0 }}

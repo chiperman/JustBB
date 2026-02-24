@@ -1,8 +1,11 @@
 import { Location } from '@/types/memo';
+import type { Memo } from '@/types/memo';
 
 export interface MapMarker extends Location {
-    memoId: string;
-    memoNumber: number;
+    items: Memo[];
+    // 以下字段保持可选以兼容旧逻辑，但逻辑上应该优先使用 items
+    memoId?: string;
+    memoNumber?: number;
     content?: string;
 }
 

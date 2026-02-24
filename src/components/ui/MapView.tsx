@@ -1,23 +1,24 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
-import type { Location } from '@/types/memo';
+import type { MapMarker } from '@/lib/location-cache';
+import { MemoCard } from './MemoCard';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Location04Icon } from '@hugeicons/core-free-icons';
 
 // Leaflet CSS 需要在客户端动态导入
-// 使用 dynamic import 避免 SSR 问题
 let leafletLoaded = false;
 
 interface MapViewProps {
     /** 标记点列表 */
-    markers: (Location & { memoId?: string; memoNumber?: number })[];
+    markers: MapMarker[];
     /** mini: 悬浮预览小地图 (200x150), full: 全页地图 */
     mode?: 'mini' | 'full';
     /** 自定义 className */
     className?: string;
-    /** 点击标记点回调 */
-    onMarkerClick?: (marker: Location & { memoId?: string; memoNumber?: number }) => void;
     /** 地图点击回调（用于选点） */
     onMapClick?: (lat: number, lng: number) => void;
     /** 是否允许拖拽放大等交互，覆盖 mode 的默认限制 */
@@ -31,7 +32,6 @@ export function MapView({
     mode = 'mini',
     className,
     interactive = false,
-    onMarkerClick,
     onMapClick,
     onMarkerDragEnd
 }: MapViewProps) {
@@ -40,6 +40,9 @@ export function MapView({
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
     const tileLayerRef = useRef<L.TileLayer | null>(null);
+
+    // 用存储 Portal 渲染的目标节点
+    const [popupTarget, setPopupTarget] = useState<{ container: HTMLElement, marker: MapMarker } | null>(null);
 
     useEffect(() => {
         if (!mapRef.current) return;
@@ -57,7 +60,6 @@ export function MapView({
 
             if (cancelled || !mapRef.current) return;
 
-            // 如果地图尚未初始化，执行初始化
             if (!mapInstanceRef.current) {
                 const center = markers.length > 0
                     ? [markers[0].lat, markers[0].lng] as [number, number]
@@ -82,40 +84,48 @@ export function MapView({
                     });
                 }
 
+                // 监听 Popup 打开事件，用于 React Portal 注入
+                map.on('popupopen', (e) => {
+                    const container = e.popup.getElement()?.querySelector('.leaflet-popup-content') as HTMLElement;
+                    if (container) {
+                        // 从 marker 的自定义数据中获取 marker 对象
+                        // @ts-ignore
+                        const markerData = e.popup._source._markerData;
+                        setPopupTarget({ container, marker: markerData });
+                    }
+                });
+
+                map.on('popupclose', () => {
+                    setPopupTarget(null);
+                });
+
                 mapInstanceRef.current = map;
             }
 
             const map = mapInstanceRef.current;
             if (!map) return;
 
-            // 动态生成 CartoDB URL — 跟随应用主题自动切换
-            // 浅色 → Voyager 彩色底图，深色 → Dark Matter 暗色底图
             const getCartoDbUrl = () => {
                 const style = isDark ? 'dark_all' : 'rastertiles/voyager';
                 return `https://{s}.basemaps.cartocdn.com/${style}/{z}/{x}/{y}@2x.png`;
             };
 
-            // 添加或更新瓦片层
             const newTileUrl = getCartoDbUrl();
             if (!tileLayerRef.current) {
-                // 初次创建瓦片层
                 tileLayerRef.current = L.tileLayer(newTileUrl, {
                     attribution: mode === 'full' ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>' : '',
                     maxZoom: 20,
                 }).addTo(map);
             } else {
-                // 如果只改变了 URL，复用 layer 并刷新
                 tileLayerRef.current.setUrl(newTileUrl);
             }
 
-            // 清除旧标记
             map.eachLayer((layer) => {
                 if (layer instanceof L.Marker) {
                     map.removeLayer(layer);
                 }
             });
 
-            // 自定义标记图标
             const markerIcon = L.divIcon({
                 className: 'custom-map-marker',
                 html: `<div style="width: 24px; height: 24px; background: var(--color-primary, #d97757); border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><div style="width: 8px; height: 8px; background: white; border-radius: 50%;"></div></div>`,
@@ -123,12 +133,22 @@ export function MapView({
                 iconAnchor: [12, 12],
             });
 
-            // 添加新标记
             markers.forEach(marker => {
                 const m = L.marker([marker.lat, marker.lng], {
                     icon: markerIcon,
-                    draggable: !!onMarkerDragEnd // 开启或禁止拖拽标记
+                    draggable: !!onMarkerDragEnd
                 }).addTo(map);
+
+                // 将数据挂载到 marker 实例上以便 popup 获取
+                // @ts-ignore
+                m._markerData = marker;
+
+                // 绑定一个空的 Popup，React Portal 会接管它
+                m.bindPopup('<div class="react-popup-root"></div>', {
+                    maxWidth: 550,
+                    minWidth: 400,
+                    className: 'modern-map-popup'
+                });
 
                 if (onMarkerDragEnd) {
                     m.on('dragend', (e: L.LeafletEvent) => {
@@ -136,13 +156,8 @@ export function MapView({
                         onMarkerDragEnd(newPos.lat, newPos.lng);
                     });
                 }
-
-                if (onMarkerClick) {
-                    m.on('click', () => onMarkerClick(marker));
-                }
             });
 
-            // 如果只有一个标记且地图不在中心，则移动到中心（例如搜索结果）
             if (markers.length === 1 && !cancelled) {
                 map.setView([markers[0].lat, markers[0].lng], map.getZoom(), { animate: true });
             } else if (mode === 'full' && markers.length > 1) {
@@ -156,9 +171,8 @@ export function MapView({
         return () => {
             cancelled = true;
         };
-    }, [markers, mode, className, interactive, onMarkerClick, onMapClick, onMarkerDragEnd, isDark]);
+    }, [markers, mode, interactive, onMapClick, onMarkerDragEnd, isDark]);
 
-    // 独立清理 Effect
     useEffect(() => {
         return () => {
             if (mapInstanceRef.current) {
@@ -178,10 +192,35 @@ export function MapView({
             className={cn(
                 'rounded-inner overflow-hidden relative',
                 sizeClasses,
-                // 我们不再需要极简滤镜，CartoDB 原生配色足够完美
                 className
             )}
             style={{ zIndex: 0 }}
-        />
+        >
+            {popupTarget && createPortal(
+                <div className="flex flex-col max-h-[600px] w-full">
+                    <div className="p-4 border-b border-border/50 bg-background/50 backdrop-blur-sm sticky top-0 z-10 rounded-t-card">
+                        <div className="flex items-center gap-2 text-primary font-semibold text-sm mb-1">
+                            <HugeiconsIcon icon={Location04Icon} size={16} />
+                            <span className="truncate">{popupTarget.marker.name}</span>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground font-mono tabular-nums opacity-60">
+                            {popupTarget.marker.lat.toFixed(6)}, {popupTarget.marker.lng.toFixed(6)}
+                        </div>
+                    </div>
+                    <div className="overflow-y-auto px-4 pb-4 pt-4 custom-scrollbar flex-1 bg-muted/20">
+                        <div className="flex flex-col gap-4">
+                            {popupTarget.marker.items.map((memo) => (
+                                <MemoCard
+                                    key={memo.id}
+                                    memo={memo}
+                                    showOriginalOnly={true}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </div>,
+                popupTarget.container
+            )}
+        </div>
     );
 }

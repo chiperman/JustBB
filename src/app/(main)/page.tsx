@@ -18,7 +18,10 @@ export default async function MemoPage(props: {
   const yearStr = Array.isArray(searchParams?.year) ? searchParams.year[0] : (typeof searchParams?.year === 'string' ? searchParams.year : undefined);
   const monthStr = Array.isArray(searchParams?.month) ? searchParams.month[0] : (typeof searchParams?.month === 'string' ? searchParams.month : undefined);
   const tagStr = Array.isArray(searchParams?.tag) ? searchParams.tag[0] : (typeof searchParams?.tag === 'string' ? searchParams.tag : undefined);
-  const dateStr = Array.isArray(searchParams?.date) ? searchParams.date[0] : (typeof searchParams?.date === 'string' ? searchParams.date : undefined);
+  // 额外确保 dateStr 至少是一个非空字符串，否则不触发过滤
+  let dateStr = Array.isArray(searchParams?.date) ? searchParams.date[0] : (typeof searchParams?.date === 'string' ? searchParams.date : undefined);
+  if (dateStr === '') dateStr = undefined;
+
   const sortStr = Array.isArray(searchParams?.sort) ? searchParams.sort[0] : (typeof searchParams?.sort === 'string' ? searchParams.sort : 'newest');
 
   // 同时获取 Memos 和管理权限（并行执行）

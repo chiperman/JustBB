@@ -39,9 +39,22 @@ export function MainLayoutClient({
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const { getCache, setCache } = usePageDataCache();
 
-    // 数据逻辑：初始 > 缓存 > 客户端获取
-    const cached = getCache('/');
+    // 构建动态缓存键：基于路径和筛选项，确保不同日期的过滤不互相干扰
+    const cacheKey = useMemo(() => {
+        const params = new URLSearchParams();
+        if (searchParams.query) params.set('q', searchParams.query);
+        if (searchParams.tag) params.set('tag', searchParams.tag);
+        if (searchParams.date) params.set('date', searchParams.date);
+        if (searchParams.year) params.set('year', searchParams.year);
+        if (searchParams.month) params.set('month', searchParams.month);
+        const qs = params.toString();
+        return qs ? `/?${qs}` : '/';
+    }, [searchParams]);
+
+    // 数据逻辑：优先初始数据 (SSR)，无初始数据时尝试读缓存 (SPA/回退)
+    const cached = getCache(cacheKey);
     const [memos, setMemos] = useState<Memo[]>(initialMemos ?? cached?.memos ?? []);
+    // 如果有初始数据，就不需要 Loading；否则尝试等待客户端获取
     const [isLoading, setIsLoading] = useState(!initialMemos && !cached);
 
     // 监听 URL 筛选参数变化，立即开启 Loading 反馈
@@ -55,14 +68,20 @@ export function MainLayoutClient({
         }
     }, [searchParamsStr]);
 
-    // 监听初始数据变化（如编辑完成后服务器触发刷新，或路由跳转后数据到达）
+    // 监听初始数据变化（SSR 到达或路由改变）
     useEffect(() => {
+        // 关键：每当 initialMemos 更新或 cacheKey 改变，均需同步状态
         if (initialMemos) {
             setMemos(initialMemos);
-            setCache('/', { memos: initialMemos, searchParams, adminCode, initialIsAdmin });
+            setCache(cacheKey, { memos: initialMemos, searchParams, adminCode, initialIsAdmin });
             setIsLoading(false);
         }
-    }, [initialMemos, searchParams, adminCode, initialIsAdmin, setCache]);
+        // 如果是从 cache 加载且无 initialMemos (即本地回退导航)，也更新一次
+        else if (cached) {
+            setMemos(cached.memos);
+            setIsLoading(false);
+        }
+    }, [initialMemos, cacheKey, searchParams, adminCode, initialIsAdmin, setCache, cached]);
 
     const handleScroll = () => {
         if (scrollContainerRef.current) {

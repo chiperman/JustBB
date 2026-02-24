@@ -19,33 +19,60 @@ interface ImageZoomProps {
  * 每次通过 key 重新挂载，确保 useMotionValue/useSpring 彻底重置
  */
 function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onClose: () => void }) {
-    const [isZoomed, setIsZoomed] = React.useState(false);
-    const [isDragging, setIsDragging] = React.useState(false);
-
-    // 每次挂载都是全新的 motion values，无残留
+    // 基础运动值：x, y 平移
     const x = useMotionValue(0);
     const y = useMotionValue(0);
     const springX = useSpring(x, { stiffness: 400, damping: 40 });
     const springY = useSpring(y, { stiffness: 400, damping: 40 });
 
-    const toggleZoom = (e: React.MouseEvent) => {
-        if (isDragging) return;
+    // 缩放运动值：无级调节
+    const rawScale = useMotionValue(1);
+    const scale = useSpring(rawScale, { stiffness: 350, damping: 35 });
+
+    const [isDragging, setIsDragging] = React.useState(false);
+    const [currentScale, setCurrentScale] = React.useState(1);
+
+    // 监听 scale 变化，用于逻辑判断
+    React.useEffect(() => {
+        return scale.on('change', (v) => {
+            setCurrentScale(v);
+            // 当缩放回到 1.0 时，平滑重置平移位置，解决“缩小不居中”的 bug
+            if (v <= 1.01) {
+                x.set(0);
+                y.set(0);
+            }
+        });
+    }, [scale, x, y]);
+
+    // 滚轮缩放处理
+    const handleWheel = (e: React.WheelEvent) => {
         e.stopPropagation();
-        if (isZoomed) {
-            x.set(0);
-            y.set(0);
-        }
-        setIsZoomed(!isZoomed);
+        const delta = -e.deltaY;
+        const factor = 0.002; // 缩放灵敏度
+        let nextScale = rawScale.get() + delta * factor;
+
+        // 限制缩放范围 [1.0, 5.0]
+        nextScale = Math.min(Math.max(nextScale, 1), 5);
+        rawScale.set(nextScale);
+    };
+
+    // 统一点击处理：无论缩放与否，点击均关闭（最快交互路径）
+    const handleBackgroundClick = () => {
+        if (isDragging) return;
+        onClose();
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden">
-            {/* 背景遮罩 - 直接显示，关闭时淡出 */}
+        <div
+            className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden"
+            onWheel={handleWheel}
+        >
+            {/* 背景遮罩 */}
             <motion.div
                 initial={false}
                 exit={{ opacity: 0 }}
                 className="absolute inset-0 bg-black/70 backdrop-blur-xl"
-                onClick={onClose}
+                onClick={handleBackgroundClick}
             />
 
             {/* 稳定布局容器 */}
@@ -56,33 +83,30 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
                 <motion.div
                     className={cn(
                         "relative flex items-center justify-center pointer-events-auto",
-                        isZoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"
+                        currentScale > 1.05 ? "cursor-grab active:cursor-grabbing" : "cursor-default"
                     )}
-                    style={{ x: springX, y: springY }}
-                    drag={isZoomed}
-                    dragConstraints={{ top: -800, bottom: 800, left: -800, right: 800 }}
+                    style={{ x: springX, y: springY, scale }}
+                    drag={currentScale > 1.05}
+                    // 根据缩放倍数动态增加约束范围
+                    dragConstraints={{
+                        top: -500 * currentScale,
+                        bottom: 500 * currentScale,
+                        left: -500 * currentScale,
+                        right: 500 * currentScale
+                    }}
                     dragElastic={0.1}
                     onDragStart={() => setIsDragging(true)}
                     onDragEnd={() => {
                         setTimeout(() => setIsDragging(false), 100);
                     }}
-                    onClick={toggleZoom}
+                    onClick={handleBackgroundClick}
                 >
                     <motion.img
                         src={src}
                         alt={alt || "大图"}
                         initial={false}
-                        animate={{
-                            scale: isZoomed ? 1.6 : 1,
-                        }}
                         style={{
                             boxShadow: "0 20px 40px -10px rgba(0,0,0,0.4)"
-                        }}
-                        transition={{
-                            scale: {
-                                duration: 0.4,
-                                ease: [0.16, 1, 0.3, 1]
-                            }
                         }}
                         className={cn(
                             "block w-full h-full max-w-[95vw] max-h-[90vh] object-contain rounded-[2px]",
@@ -100,7 +124,7 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
                 transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 className="absolute bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-white/10 backdrop-blur-2xl rounded-full border border-white/10 text-white/80 text-[10px] uppercase tracking-[0.25em] font-bold pointer-events-none whitespace-nowrap shadow-2xl z-20"
             >
-                {isZoomed ? '点击缩小 • 拖拽平移' : '点击放大 • 点击背景关闭'}
+                滚轮缩放 • {currentScale > 1.05 ? '拖拽平移 • ' : ''}点击关闭
             </motion.div>
 
             {/* 关闭按钮 */}

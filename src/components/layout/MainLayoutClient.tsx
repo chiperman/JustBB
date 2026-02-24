@@ -74,6 +74,10 @@ export function MainLayoutClient({
         } else if (cached) {
             setMemos(cached.memos);
         }
+    } else if (initialMemos && initialMemos !== memos) {
+        // 关键：即使 cacheKey 没变，如果 props 中的 initialMemos 变了（router.refresh() 触发）
+        // 也需要同步到本地 state
+        setMemos(initialMemos);
     }
 
     const [isLoading, setIsLoading] = useState(!initialMemos && !cached);

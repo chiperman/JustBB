@@ -1,16 +1,28 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Search01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
+import { Search01Icon, Cancel01Icon, Calendar03Icon, Tag01Icon, Globe02Icon } from '@hugeicons/core-free-icons';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from './input';
-import { Button } from './button';
+import { cn } from "@/lib/utils";
 
 export function SearchInput() {
     const searchParams = useSearchParams();
     const { replace } = useRouter();
     const [value, setValue] = useState(searchParams.get('q') || '');
+
+    // 同步 URL 参数到本地状态
+    useEffect(() => {
+        setValue(searchParams.get('q') || '');
+    }, [searchParams]);
+
+    const activeDate = searchParams.get('date');
+    const activeTag = searchParams.get('tag');
+    const activeYear = searchParams.get('year');
+    const activeMonth = searchParams.get('month');
+
+    const hasContext = !!(activeDate || activeTag || (activeYear && activeMonth));
 
     const performSearch = (term: string) => {
         const params = new URLSearchParams(searchParams);
@@ -27,35 +39,79 @@ export function SearchInput() {
         performSearch('');
     };
 
+    const handleGlobalSearch = () => {
+        const params = new URLSearchParams();
+        if (value.trim()) {
+            params.set('q', value.trim());
+        }
+        replace(`/?${params.toString()}`);
+    };
+
     return (
-        <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 transition-colors">
-                <HugeiconsIcon
-                    icon={Search01Icon}
-                    size={16}
-                    className={value ? "text-primary/70" : "text-muted-foreground/50"}
+        <div className="relative flex flex-col gap-1.5 w-full group">
+            <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 transition-colors">
+                    <HugeiconsIcon
+                        icon={Search01Icon}
+                        size={16}
+                        className={value ? "text-primary/70" : "text-muted-foreground/50"}
+                    />
+                </div>
+                <Input
+                    type="text"
+                    placeholder={hasContext ? "在当前结果中搜索..." : "键入关键字搜索..."}
+                    className={cn(
+                        "pl-9 pr-10 rounded-sm border-border bg-background/50 focus:bg-background transition-all outline-none ring-0 h-9",
+                        hasContext && "border-primary/20 bg-primary/[0.02]"
+                    )}
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            performSearch(value);
+                        }
+                    }}
                 />
+                <div className="absolute inset-y-0 right-0 pr-1.5 flex items-center gap-1 z-20">
+                    {value && (
+                        <button
+                            onClick={handleClear}
+                            className="p-1 text-muted-foreground/30 hover:text-muted-foreground transition-colors"
+                            title="清空搜索"
+                        >
+                            <HugeiconsIcon icon={Cancel01Icon} size={14} />
+                        </button>
+                    )}
+                </div>
             </div>
-            <Input
-                type="text"
-                placeholder="键入关键字并按下回车搜索..."
-                className="pl-9 pr-10 rounded-sm border-border bg-background focus:bg-accent/5 transition-all outline-none ring-0"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                        performSearch(value);
-                    }
-                }}
-            />
-            {value && (
-                <button
-                    onClick={handleClear}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground/30 hover:text-muted-foreground transition-colors z-20"
-                    title="清空搜索"
-                >
-                    <HugeiconsIcon icon={Cancel01Icon} size={14} />
-                </button>
+
+            {hasContext && (
+                <div className="flex items-center justify-between px-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground/70">
+                        <HugeiconsIcon
+                            icon={activeDate || activeYear ? Calendar03Icon : Tag01Icon}
+                            size={12}
+                            className="text-primary/40"
+                        />
+                        <span>
+                            正在
+                            <span className="text-primary/80 mx-0.5">
+                                {activeDate || (activeYear && activeMonth ? `${activeYear}-${activeMonth}` : activeTag)}
+                            </span>
+                            中搜索
+                        </span>
+                    </div>
+
+                    {(value.trim() || searchParams.get('q')) && (
+                        <button
+                            onClick={handleGlobalSearch}
+                            className="group flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-primary/[0.03] hover:bg-primary/10 text-[10px] text-primary/60 hover:text-primary transition-all border border-primary/10"
+                        >
+                            <HugeiconsIcon icon={Globe02Icon} size={10} className="group-hover:rotate-12 transition-transform" />
+                            <span>全量搜索</span>
+                        </button>
+                    )}
+                </div>
             )}
         </div>
     );

@@ -18,7 +18,7 @@ export function MobileMenuButton({ isOpen, onClick }: MobileMenuButtonProps) {
             variant="outline"
             size="icon"
             onClick={onClick}
-            className="lg:hidden fixed top-4 left-4 z-50 rounded-xl shadow-lg h-10 w-10 p-0"
+            className="lg:hidden fixed top-4 left-4 z-50 rounded-xl shadow-sm h-10 w-10 p-0"
             aria-label={isOpen ? '关闭菜单' : '打开菜单'}
         >
             {isOpen ? (

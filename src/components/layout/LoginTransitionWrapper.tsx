@@ -126,7 +126,7 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
                     style={{ borderRadius: viewMode === 'HOME_FOCUS' ? 0 : 24 }}
                     onClick={() => viewMode === 'SPLIT_VIEW' && setViewMode('CARD_VIEW')}
                 >
-                    <div className="w-full h-full shadow-2xl overflow-hidden border border-black/5 dark:border-white/5" style={{ borderRadius: 'inherit' }}>
+                    <div className="w-full h-full shadow-xl overflow-hidden border border-black/5 dark:border-white/5" style={{ borderRadius: 'inherit' }}>
                         {/* Actual Home Page Content */}
                         <div className={viewMode === 'SPLIT_VIEW' ? "pointer-events-none select-none h-full" : "h-full"}>
                             {children}

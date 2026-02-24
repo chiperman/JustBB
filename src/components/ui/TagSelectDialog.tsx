@@ -69,7 +69,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-md border-border/40 shadow-2xl rounded-md">
+            <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-md border-border/40 shadow-xl rounded-md">
                 <DialogHeader>
                     <DialogTitle className="text-lg font-bold flex items-center gap-2">
                         <HugeiconsIcon icon={Tag} size={20} className="text-primary" />

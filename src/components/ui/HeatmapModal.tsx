@@ -283,7 +283,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                                 {hoveredDay && (
                                     <div
                                         className={cn(
-                                            "absolute z-[999] px-2.5 py-1.5 text-[10px] font-mono text-white bg-black/95 backdrop-blur-md rounded-[6px] pointer-events-none mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-2xl border border-white/20 whitespace-nowrap transition-all duration-200 ease-out",
+                                            "absolute z-[999] px-2.5 py-1.5 text-[10px] font-mono text-white bg-black/95 backdrop-blur-md rounded-[6px] pointer-events-none mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-xl border border-white/20 whitespace-nowrap transition-all duration-200 ease-out",
                                             hoveredDay.align === 'center' && "-translate-x-1/2 -translate-y-full",
                                             hoveredDay.align === 'left' && "-translate-y-full ml-[-7px]",
                                             hoveredDay.align === 'right' && "-translate-x-full -translate-y-full mr-[-7px]"

@@ -125,7 +125,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         </AnimatePresence>
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent side="top" align="start" className="w-64 rounded-md border-border/40 backdrop-blur-md bg-popover/90 p-1 shadow-2xl">
+                <DropdownMenuContent side="top" align="start" className="w-64 rounded-md border-border/40 backdrop-blur-md bg-popover/90 p-1 shadow-xl">
                     <DropdownMenuLabel className="font-normal px-3 py-3">
                         <div className="flex flex-col space-y-2">
                             <p className="text-[12px] font-normal text-stone-400 uppercase tracking-wider font-sans opacity-60">Identity / 身份</p>

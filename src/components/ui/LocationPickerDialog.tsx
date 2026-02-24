@@ -332,7 +332,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                                     <div className="relative flex items-center justify-center">
                                         <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping duration-[3000ms]" />
                                         <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl" />
-                                        <div className="relative bg-background/50 border border-primary/20 backdrop-blur-sm p-3 rounded-full text-primary shadow-lg flex items-center justify-center">
+                                        <div className="relative bg-background/50 border border-primary/20 backdrop-blur-sm p-3 rounded-full text-primary shadow-md flex items-center justify-center">
                                             <HugeiconsIcon icon={Location04Icon} size={24} className="animate-pulse" />
                                         </div>
                                     </div>

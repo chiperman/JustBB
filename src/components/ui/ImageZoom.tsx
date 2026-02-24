@@ -147,7 +147,7 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-white/10 backdrop-blur-2xl rounded-full border border-white/10 text-white/80 text-[10px] uppercase tracking-[0.25em] font-bold pointer-events-none whitespace-nowrap shadow-2xl z-20 flex items-center gap-3"
+                className="absolute bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-white/10 backdrop-blur-2xl rounded-full border border-white/10 text-white/80 text-[10px] uppercase tracking-[0.25em] font-bold pointer-events-none whitespace-nowrap shadow-xl z-20 flex items-center gap-3"
             >
                 <span className="text-primary font-mono text-xs bg-primary/20 px-2 py-0.5 rounded-full ring-1 ring-primary/30">
                     {Math.round(currentScale * 100)}%
@@ -169,7 +169,7 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
                     e.stopPropagation();
                     onClose();
                 }}
-                className="absolute top-8 right-8 p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 text-white transition-all active:scale-95 shadow-2xl backdrop-blur-md group/close z-20 cursor-pointer"
+                className="absolute top-8 right-8 p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 text-white transition-all active:scale-95 shadow-xl backdrop-blur-md group/close z-20 cursor-pointer"
                 aria-label="关闭预览"
             >
                 <HugeiconsIcon

@@ -45,12 +45,12 @@ export const TagCloud = memo(function TagCloud() {
                     transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
                     className="flex flex-wrap gap-2"
                 >
-                    <Skeleton className="h-6 w-12 rounded-sm" />
-                    <Skeleton className="h-6 w-16 rounded-sm" />
-                    <Skeleton className="h-6 w-10 rounded-sm" />
-                    <Skeleton className="h-6 w-14 rounded-sm" />
-                    <Skeleton className="h-6 w-12 rounded-sm" />
-                    <Skeleton className="h-6 w-8 rounded-sm" />
+                    <Skeleton className="h-6 w-12 rounded-md" />
+                    <Skeleton className="h-6 w-16 rounded-md" />
+                    <Skeleton className="h-6 w-10 rounded-md" />
+                    <Skeleton className="h-6 w-14 rounded-md" />
+                    <Skeleton className="h-6 w-12 rounded-md" />
+                    <Skeleton className="h-6 w-8 rounded-md" />
                 </motion.div>
             ) : topTags.length === 0 ? (
                 <motion.div
@@ -76,7 +76,7 @@ export const TagCloud = memo(function TagCloud() {
                                 variant={isActive ? "default" : "secondary"}
                                 onClick={() => handleTagClick(tag_name)}
                                 className={cn(
-                                    "cursor-pointer px-2 py-1 text-[12px] font-normal gap-1.5 transition-all hover:opacity-80 rounded-sm border-none shadow-none",
+                                    "cursor-pointer px-2 py-1 text-[12px] font-normal gap-1.5 transition-all hover:opacity-80 rounded-md border-none shadow-none",
                                     isActive
                                         ? "bg-primary text-primary-foreground"
                                         : "bg-stone-100 dark:bg-stone-900 text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"

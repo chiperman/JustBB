@@ -14,7 +14,7 @@ interface GalleryGridProps {
 export function GalleryGrid({ memos }: GalleryGridProps) {
     if (!memos || memos.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center p-20 text-muted-foreground bg-muted/5 rounded-sm border border-dashed border-border/50">
+            <div className="flex flex-col items-center justify-center p-20 text-muted-foreground bg-muted/5 rounded-md border border-dashed border-border/50">
                 <p className="italic text-lg opacity-60">暂无图片内容</p>
                 <p className="text-xs opacity-40 mt-2">发布包含图片的 Memo 即可在此展示</p>
             </div>
@@ -68,7 +68,7 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
                                 <div
                                     tabIndex={0}
                                     className={cn(
-                                        "group relative overflow-hidden bg-muted/5 border border-border/50 hover:border-primary/40 transition-all duration-500 rounded-sm focus:outline-none focus:ring-1 focus:ring-primary/30",
+                                        "group relative overflow-hidden bg-muted/5 border border-border/50 hover:border-primary/40 transition-all duration-500 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/30",
                                         "p-2 bg-white dark:bg-black shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] hover:shadow-2xl"
                                     )}
                                     aria-label={`查看由 ${format(item.dateObj, 'yyyy-MM-dd')} 发布的图片 Memo`}
@@ -91,7 +91,7 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
                                             </p>
                                             <div className="flex justify-between items-center text-[9px] text-white/50 font-mono tracking-tighter uppercase">
                                                 <span>{format(item.dateObj, 'yyyy.MM.dd')}</span>
-                                                <span className="px-2 py-0.5 bg-white/10 border border-white/10 rounded-sm" aria-hidden="true">Detail</span>
+                                                <span className="px-2 py-0.5 bg-white/10 border border-white/10 rounded-md" aria-hidden="true">Detail</span>
                                             </div>
                                         </div>
                                     </div>

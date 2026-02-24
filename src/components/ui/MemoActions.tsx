@@ -160,7 +160,7 @@ export function MemoActions({
                             size="icon"
                             onClick={handleRestore}
                             disabled={isPending}
-                            className="rounded-sm text-green-600 hover:text-green-700 hover:bg-green-50"
+                            className="rounded-md text-green-600 hover:text-green-700 hover:bg-green-50"
                             title="恢复"
                         >
                             <HugeiconsIcon icon={RotateLeft01Icon} size={16} />
@@ -170,7 +170,7 @@ export function MemoActions({
                             size="icon"
                             onClick={() => setShowPermanentDeleteAlert(true)}
                             disabled={isPending}
-                            className="rounded-sm text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="rounded-md text-red-600 hover:text-red-700 hover:bg-red-50"
                             title="彻底删除"
                         >
                             <HugeiconsIcon icon={Delete02Icon} size={16} />

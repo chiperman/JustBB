@@ -243,12 +243,12 @@ function StatCard({
                                     onMouseEnter={() => setHoveredIdx(i)}
                                 >
                                     {/* Track (Background) - Hidden by default, visible on hover */}
-                                    <div className="absolute inset-x-0 bottom-0 top-0 w-[90%] mx-auto bg-black/[0.03] rounded-sm pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                                    <div className="absolute inset-x-0 bottom-0 top-0 w-[90%] mx-auto bg-black/[0.03] rounded-md pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
 
                                     {/* Bar */}
                                     <motion.div
                                         className={cn(
-                                            "w-[90%] rounded-sm relative z-10",
+                                            "w-[90%] rounded-md relative z-10",
                                             color,
                                             val === 0 ? "opacity-0" : "opacity-80 group-hover:opacity-100"
                                         )}
@@ -264,7 +264,7 @@ function StatCard({
                     {/* Singleton Tooltip */}
                     <div
                         className={cn(
-                            "absolute top-[30%] -translate-x-1/2 -translate-y-full mb-2 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-xl p-3 border border-black/5 z-30 min-w-[90px] pointer-events-none transition-all duration-300 ease-out",
+                            "absolute top-[30%] -translate-x-1/2 -translate-y-full mb-2 bg-white shadow-md rounded-md p-3 border border-black/5 z-30 min-w-[90px] pointer-events-none transition-all duration-300 ease-out",
                             hoveredIdx !== null ? "opacity-100 scale-100" : "opacity-0 scale-95"
                         )}
                         style={{

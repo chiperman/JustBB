@@ -87,14 +87,14 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
                                         </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                             {[1, 2, 3].map(i => (
-                                                <div key={i} className="h-20 bg-muted/20 rounded-sm animate-pulse border border-border/20" />
+                                                <div key={i} className="h-20 bg-muted/20 rounded-md animate-pulse border border-border/20" />
                                             ))}
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : tags.length === 0 ? (
-                            <div className="text-center py-20 bg-muted/5 rounded-sm border border-dashed border-border/30">
+                            <div className="text-center py-20 bg-muted/5 rounded-md border border-dashed border-border/30">
                                 <p className="italic text-muted-foreground opacity-60">暂无标签记录</p>
                             </div>
                         ) : (
@@ -114,7 +114,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
                                                     key={tag.tag_name}
                                                     href={`/?q=${encodeURIComponent(tag.tag_name)}`}
                                                     className={cn(
-                                                        "group flex flex-col justify-between p-4 bg-white dark:bg-black/20 border border-border/40 rounded-sm hover:border-primary/40 hover:shadow-md transition-all duration-300 relative overflow-hidden",
+                                                        "group flex flex-col justify-between p-4 bg-white dark:bg-black/20 border border-border/40 rounded-md hover:border-primary/40 hover:shadow-md transition-all duration-300 relative overflow-hidden",
                                                         "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary/5 before:transition-all group-hover:before:bg-primary/40"
                                                     )}
                                                 >

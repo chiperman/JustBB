@@ -29,7 +29,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
             <>
                 {parts.map((part, i) => (
                     part.toLowerCase() === highlight.toLowerCase() ? (
-                        <span key={i} className="bg-amber-200/60 text-foreground font-medium px-0.5 rounded-sm mx-px">
+                        <span key={i} className="bg-amber-200/60 text-foreground font-medium px-0.5 rounded-md mx-px">
                             {part}
                         </span>
                     ) : part
@@ -51,7 +51,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                             const linkElement = (
                                 <Link
                                     href={`/?q=${memoNum}`}
-                                    className="text-primary hover:underline cursor-pointer font-mono bg-primary/10 px-1 rounded-sm mx-0.5 inline-block focus-visible:ring-1 focus-visible:ring-primary/30 outline-none hover:bg-primary/20 transition-colors"
+                                    className="text-primary hover:underline cursor-pointer font-mono bg-primary/10 px-1 rounded-md mx-0.5 inline-block focus-visible:ring-1 focus-visible:ring-primary/30 outline-none hover:bg-primary/20 transition-colors"
                                     aria-label={`查看引用记录 #${memoNum}`}
                                 >
                                     {token.value}
@@ -70,7 +70,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                                 <Link
                                     key={`tag-${index}`}
                                     href={`/?tag=${encodeURIComponent(token.value.slice(1))}`}
-                                    className="text-primary hover:underline mx-0.5 focus-visible:ring-1 focus-visible:ring-primary/30 outline-none rounded-sm transition-colors font-mono font-medium"
+                                    className="text-primary hover:underline mx-0.5 focus-visible:ring-1 focus-visible:ring-primary/30 outline-none rounded-md transition-colors font-mono font-medium"
                                     aria-label={`查看包含 #${token.value.slice(1)} 标签的记录`}
                                 >
                                     {token.value}
@@ -83,7 +83,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                                     className="block my-5 group relative max-w-full overflow-hidden"
                                 >
                                     <div className="flex justify-center items-center">
-                                        <div className="relative rounded-sm overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-[0_2px_12px_-3px_rgba(0,0,0,0.1),0_4px_6px_-2px_rgba(0,0,0,0.05)] transition-all duration-500 group-hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] group-hover:scale-[1.01]">
+                                        <div className="relative rounded-md overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-[0_2px_12px_-3px_rgba(0,0,0,0.1),0_4px_6px_-2px_rgba(0,0,0,0.05)] transition-all duration-500 group-hover:shadow-[0_8px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-2px_rgba(0,0,0,0.04)] group-hover:scale-[1.01]">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <ImageZoom src={token.value} alt="记录中的图片附件">
                                                 <img

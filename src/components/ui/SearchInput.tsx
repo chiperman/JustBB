@@ -61,7 +61,7 @@ export function SearchInput() {
                     type="text"
                     placeholder={hasContext ? "在当前结果中搜索..." : "键入关键字搜索..."}
                     className={cn(
-                        "pl-9 pr-10 rounded-sm border-border bg-background/50 focus:bg-background transition-all outline-none ring-0 h-9",
+                        "pl-9 pr-10 rounded-md border-border bg-background/50 focus:bg-background transition-all outline-none ring-0 h-9",
                         hasContext && "border-primary/20 bg-primary/[0.02]"
                     )}
                     value={value}
@@ -105,7 +105,7 @@ export function SearchInput() {
                     {(value.trim() || searchParams.get('q')) && (
                         <button
                             onClick={handleGlobalSearch}
-                            className="group flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-primary/[0.03] hover:bg-primary/10 text-[10px] text-primary/60 hover:text-primary transition-all border border-primary/10 whitespace-nowrap"
+                            className="group flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/[0.03] hover:bg-primary/10 text-[10px] text-primary/60 hover:text-primary transition-all border border-primary/10 whitespace-nowrap"
                         >
                             <HugeiconsIcon icon={Globe02Icon} size={10} className="group-hover:rotate-12 transition-transform" />
                             <span>全量搜索</span>

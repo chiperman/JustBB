@@ -93,7 +93,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                     <Button
                         variant="ghost"
                         className={cn(
-                            "w-full flex items-center gap-3 h-9 p-2 hover:bg-accent hover:text-accent-foreground rounded-sm transition-all focus-visible:ring-0 group/settings overflow-hidden",
+                            "w-full flex items-center gap-3 h-9 p-2 hover:bg-accent hover:text-accent-foreground rounded-md transition-all focus-visible:ring-0 group/settings overflow-hidden",
                             isCollapsed ? "justify-center" : "justify-start px-3"
                         )}
                         aria-label="账号与设置"
@@ -125,13 +125,13 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         </AnimatePresence>
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent side="top" align="start" className="w-64 rounded-sm border-border/40 backdrop-blur-md bg-popover/90 p-1 shadow-2xl">
+                <DropdownMenuContent side="top" align="start" className="w-64 rounded-md border-border/40 backdrop-blur-md bg-popover/90 p-1 shadow-2xl">
                     <DropdownMenuLabel className="font-normal px-3 py-3">
                         <div className="flex flex-col space-y-2">
                             <p className="text-[12px] font-normal text-stone-400 uppercase tracking-wider font-sans opacity-60">Identity / 身份</p>
                             <div className="flex items-center gap-2.5">
                                 <div className={cn(
-                                    "p-2 rounded-sm",
+                                    "p-2 rounded-md",
                                     user ? "bg-primary/10" : "bg-muted"
                                 )}>
                                     {renderIdentity()}
@@ -154,21 +154,21 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                     <div className="px-1 py-1">
                         <DropdownMenuLabel className="px-2 py-1.5 text-[12px] font-normal text-stone-400 uppercase tracking-wider font-sans">Settings / 偏好</DropdownMenuLabel>
                         <DropdownMenuSub>
-                            <DropdownMenuSubTrigger className="rounded-sm">
+                            <DropdownMenuSubTrigger className="rounded-md">
                                 <HugeiconsIcon icon={Sun} size={16} className="mr-2" />
                                 <span>外观主题</span>
                             </DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
-                                <DropdownMenuSubContent className="rounded-sm ml-1">
-                                    <DropdownMenuItem className="rounded-sm" onClick={() => setTheme('light')}>
+                                <DropdownMenuSubContent className="rounded-md ml-1">
+                                    <DropdownMenuItem className="rounded-md" onClick={() => setTheme('light')}>
                                         <HugeiconsIcon icon={Sun} size={16} className="mr-2" />
                                         <span>浅色模式</span>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="rounded-sm" onClick={() => setTheme('dark')}>
+                                    <DropdownMenuItem className="rounded-md" onClick={() => setTheme('dark')}>
                                         <HugeiconsIcon icon={Moon} size={16} className="mr-2" />
                                         <span>深色模式</span>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="rounded-sm" onClick={() => setTheme('system')}>
+                                    <DropdownMenuItem className="rounded-md" onClick={() => setTheme('system')}>
                                         <HugeiconsIcon icon={Monitor} size={16} className="mr-2" />
                                         <span>跟随系统</span>
                                     </DropdownMenuItem>
@@ -188,7 +188,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
                                 <DropdownMenuItem
-                                    className="rounded-sm disabled:opacity-40"
+                                    className="rounded-md disabled:opacity-40"
                                     onSelect={(e) => e.preventDefault()}
                                     disabled={user?.role !== 'admin'}
                                     title={user?.role !== 'admin' ? "仅管理员可导出数据" : undefined}
@@ -197,7 +197,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                     <span>备份全站记录 (MD)</span>
                                 </DropdownMenuItem>
                             </AlertDialogTrigger>
-                            <AlertDialogContent className="rounded-sm border-border/50">
+                            <AlertDialogContent className="rounded-md border-border/50">
                                 <AlertDialogHeader>
                                     <AlertDialogTitle className="flex items-center gap-2 text-primary">
                                         <HugeiconsIcon icon={Download} size={20} />
@@ -208,8 +208,8 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                    <AlertDialogCancel className="rounded-sm">暂不导出</AlertDialogCancel>
-                                    <AlertDialogAction className="rounded-sm" onClick={handleExport}>
+                                    <AlertDialogCancel className="rounded-md">暂不导出</AlertDialogCancel>
+                                    <AlertDialogAction className="rounded-md" onClick={handleExport}>
                                         立即执行导出
                                     </AlertDialogAction>
                                 </AlertDialogFooter>
@@ -223,7 +223,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                     <div className="px-1 py-1">
                         {!user && (
                             <>
-                                <DropdownMenuItem className="rounded-sm" onClick={() => {
+                                <DropdownMenuItem className="rounded-md" onClick={() => {
                                     setViewMode('CARD_VIEW');
                                 }}>
                                     <HugeiconsIcon icon={LogIn} size={16} className="mr-2 text-primary" />
@@ -234,7 +234,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
 
                         {user && (
                             <DropdownMenuItem
-                                className="rounded-sm text-destructive focus:text-destructive focus:bg-destructive/10"
+                                className="rounded-md text-destructive focus:text-destructive focus:bg-destructive/10"
                                 onClick={handleLogout}
                                 disabled={loggingOut}
                             >

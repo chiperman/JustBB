@@ -140,7 +140,7 @@ export function SelectionToolbar() {
                                         size="sm"
                                         onClick={handleBatchRestore}
                                         disabled={!hasSelection || isPending}
-                                        className="h-8 gap-2 text-xs hover:bg-primary/5 hover:text-primary rounded-sm transition-all"
+                                        className="h-8 gap-2 text-xs hover:bg-primary/5 hover:text-primary rounded-md transition-all"
                                     >
                                         <HugeiconsIcon icon={ArchiveRestore} size={14} />
                                         <span>恢复</span>
@@ -150,7 +150,7 @@ export function SelectionToolbar() {
                                         size="sm"
                                         onClick={handleBatchPermanentDelete}
                                         disabled={!hasSelection || isPending}
-                                        className="h-8 gap-2 text-xs hover:bg-destructive/5 hover:text-destructive rounded-sm transition-all"
+                                        className="h-8 gap-2 text-xs hover:bg-destructive/5 hover:text-destructive rounded-md transition-all"
                                     >
                                         <HugeiconsIcon icon={ShieldAlert} size={14} />
                                         <span>彻底删除</span>
@@ -163,7 +163,7 @@ export function SelectionToolbar() {
                                         size="sm"
                                         onClick={() => setIsTagDialogOpen(true)}
                                         disabled={!hasSelection || isPending}
-                                        className="h-8 gap-2 text-xs hover:bg-primary/5 hover:text-primary rounded-sm transition-all"
+                                        className="h-8 gap-2 text-xs hover:bg-primary/5 hover:text-primary rounded-md transition-all"
                                     >
                                         <HugeiconsIcon icon={Tag} size={14} />
                                         <span>添加标签</span>
@@ -173,7 +173,7 @@ export function SelectionToolbar() {
                                         size="sm"
                                         onClick={handleBatchDelete}
                                         disabled={!hasSelection || isPending}
-                                        className="h-8 gap-2 text-xs hover:bg-destructive/10 hover:text-destructive rounded-sm transition-all"
+                                        className="h-8 gap-2 text-xs hover:bg-destructive/10 hover:text-destructive rounded-md transition-all"
                                     >
                                         {isPending ? <HugeiconsIcon icon={Loader2} size={14} className="animate-spin" /> : <HugeiconsIcon icon={Trash2} size={14} />}
                                         <span>删除</span>
@@ -188,7 +188,7 @@ export function SelectionToolbar() {
                                 size="sm"
                                 onClick={clearSelection}
                                 disabled={!hasSelection || isPending}
-                                className="h-8 px-2 rounded-sm text-muted-foreground hover:text-primary transition-colors"
+                                className="h-8 px-2 rounded-md text-muted-foreground hover:text-primary transition-colors"
                                 title="重置选择"
                             >
                                 <HugeiconsIcon icon={RotateCcw} size={14} />
@@ -197,7 +197,7 @@ export function SelectionToolbar() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => toggleSelectionMode(false)}
-                                className="h-8 w-8 p-0 rounded-sm hover:bg-accent transition-colors"
+                                className="h-8 w-8 p-0 rounded-md hover:bg-accent transition-colors"
                             >
                                 <HugeiconsIcon icon={X} size={16} className="text-muted-foreground" />
                             </Button>

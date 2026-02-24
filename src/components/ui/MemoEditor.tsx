@@ -341,7 +341,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 },
             }).configure({
                 HTMLAttributes: {
-                    class: 'text-primary font-mono bg-primary/10 px-1 rounded-sm mx-0.5 inline-block decoration-none',
+                    class: 'text-primary font-mono bg-primary/10 px-1 rounded-md mx-0.5 inline-block decoration-none',
                 },
                 suggestion: {
                     char: '@',
@@ -773,7 +773,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             <>
                 {parts.map((part, i) => (
                     part.toLowerCase() === query.toLowerCase() ? (
-                        <mark key={i} className="bg-primary/20 text-primary px-0.5 rounded-sm font-medium">{part}</mark>
+                        <mark key={i} className="bg-primary/20 text-primary px-0.5 rounded-md font-medium">{part}</mark>
                     ) : (
                         part
                     )
@@ -1022,7 +1022,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 e.stopPropagation();
                             }}
                         >
-                            <div className="bg-background border border-border rounded-sm shadow-2xl overflow-hidden flex flex-col max-h-[450px]">
+                            <div className="bg-background border border-border rounded-md shadow-2xl overflow-hidden flex flex-col max-h-[450px]">
                                 {isLoading && suggestions.length === 0 ? (
                                     <div className="px-3 py-10 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight flex flex-col items-center gap-2">
                                         <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -1057,7 +1057,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                                             )}
                                                         </div>
                                                         {item.count !== undefined && (
-                                                            <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
+                                                            <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">
                                                                 {item.count}
                                                             </span>
                                                         )}
@@ -1077,7 +1077,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                                                 }).replace(/\//g, '-') : ''}
                                                             </span>
                                                             {item.memo_number !== undefined && (
-                                                                <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
+                                                                <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">
                                                                     #{item.memo_number}
                                                                 </span>
                                                             )}

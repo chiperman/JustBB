@@ -120,7 +120,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                                     />
                                 </div>
                             )}
-                            <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded-sm">
+                            <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded-md">
                                 #{memo.memo_number}
                             </span>
                             <time className="text-xs text-muted-foreground font-sans">
@@ -171,7 +171,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                                             size="icon"
                                             onClick={toggleBacklinks}
                                             className={cn(
-                                                "h-8 w-8 rounded-sm transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
+                                                "h-8 w-8 rounded-md transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
                                                 showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground",
                                                 (showBacklinks || isMenuOpen) && "opacity-100",
                                             )}
@@ -258,7 +258,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                                                 >
                                                     {backlinks.length > 0 ? (
                                                         backlinks.map(link => (
-                                                            <div key={link.id} className="text-xs bg-muted/30 p-2 rounded-sm flex justify-between items-center group/link hover:bg-accent transition-colors">
+                                                            <div key={link.id} className="text-xs bg-muted/30 p-2 rounded-md flex justify-between items-center group/link hover:bg-accent transition-colors">
                                                                 <span className="text-muted-foreground truncate max-w-[200px]">{link.content.substring(0, 30)}...</span>
                                                                 <a
                                                                     href={`/?q=${link.memo_number}`}
@@ -282,11 +282,11 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
 
                     {/* 锁定覆盖层 */}
                     {memo.is_locked && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-background/20 backdrop-blur-[2px] rounded-sm pointer-events-none z-10">
+                        <div className="absolute inset-0 flex items-center justify-center bg-background/20 backdrop-blur-[2px] rounded-md pointer-events-none z-10">
                             <button
                                 onClick={handleUnlock}
                                 className={cn(
-                                    "bg-card px-5 py-2.5 rounded-sm text-xs font-medium shadow-md pointer-events-auto cursor-pointer hover:bg-accent hover:shadow-lg transition-all flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ring-offset-2",
+                                    "bg-card px-5 py-2.5 rounded-md text-xs font-medium shadow-md pointer-events-auto cursor-pointer hover:bg-accent hover:shadow-md transition-all flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ring-offset-2",
                                     !shouldReduceMotion && "active:scale-95"
                                 )}
                                 aria-label="解密内容"

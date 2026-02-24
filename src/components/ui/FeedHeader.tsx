@@ -115,7 +115,7 @@ export function FeedHeader() {
                                 // 强制重置路由以清除缓存和参数
                                 router.push('/');
                             }}
-                            className="group flex items-center gap-1.5 px-2 py-1 rounded-sm hover:bg-primary/5 transition-colors mr-1"
+                            className="group flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-primary/5 transition-colors mr-1"
                             title="返回首页并重置过滤器"
                         >
                             <HugeiconsIcon
@@ -143,7 +143,7 @@ export function FeedHeader() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-sm transition-all focus-visible:ring-0"
+                                className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-md transition-all focus-visible:ring-0"
                                 aria-label="更多选项"
                             >
                                 <HugeiconsIcon

@@ -111,7 +111,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                                 <p>Recorded via JustMemo</p>
                                 <p>碎片化人文记录工具</p>
                             </div>
-                            <div className="bg-white p-1 rounded-sm shadow-sm">
+                            <div className="bg-white p-1 rounded-md shadow-sm">
                                 <QRCodeSVG
                                     value={shareUrl || 'https://justmemo.app'}
                                     size={48}

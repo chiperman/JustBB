@@ -69,7 +69,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-md border-border/40 shadow-2xl rounded-sm">
+            <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-md border-border/40 shadow-2xl rounded-md">
                 <DialogHeader>
                     <DialogTitle className="text-lg font-bold flex items-center gap-2">
                         <HugeiconsIcon icon={Tag} size={20} className="text-primary" />
@@ -89,7 +89,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleAddCustomTag()}
                                 placeholder="搜索或输入新标签..."
-                                className="pl-9 h-9 rounded-sm bg-background border-border/40 focus-visible:ring-primary/20"
+                                className="pl-9 h-9 rounded-md bg-background border-border/40 focus-visible:ring-primary/20"
                             />
                         </div>
                         <Button
@@ -97,7 +97,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                             size="sm"
                             onClick={handleAddCustomTag}
                             disabled={!inputValue.trim()}
-                            className="h-9 px-3 rounded-sm"
+                            className="h-9 px-3 rounded-md"
                         >
                             <HugeiconsIcon icon={Plus} size={16} />
                         </Button>
@@ -110,7 +110,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                                 <Badge
                                     key={tag}
                                     variant="secondary"
-                                    className="gap-1 px-2 py-0.5 rounded-sm bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-default text-[10px]"
+                                    className="gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-default text-[10px]"
                                 >
                                     {tag}
                                     <button onClick={() => toggleTag(tag)} className="hover:text-destructive">
@@ -134,7 +134,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                                         <button
                                             key={tag.tag_name}
                                             onClick={() => toggleTag(tag.tag_name)}
-                                            className="text-xs px-3 py-1.5 rounded-sm bg-accent/30 hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20 transition-all text-muted-foreground"
+                                            className="text-xs px-3 py-1.5 rounded-md bg-accent/30 hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20 transition-all text-muted-foreground"
                                         >
                                             {tag.tag_name}
                                             <span className="ml-1 opacity-40 font-mono">({tag.count})</span>
@@ -155,11 +155,11 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                 </div>
 
                 <DialogFooter className="gap-2 sm:gap-0">
-                    <Button variant="ghost" onClick={onClose} className="rounded-sm">取消</Button>
+                    <Button variant="ghost" onClick={onClose} className="rounded-md">取消</Button>
                     <Button
                         onClick={handleConfirm}
                         disabled={selectedTags.length === 0 || isSubmitting}
-                        className="rounded-sm"
+                        className="rounded-md"
                     >
                         {isSubmitting && <HugeiconsIcon icon={Loader2} size={16} className="animate-spin mr-2" />}
                         确认添加

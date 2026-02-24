@@ -115,7 +115,7 @@ export function LinkPreview({ url, className }: LinkPreviewProps) {
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-primary hover:underline font-mono bg-primary/10 px-1.5 py-0.5 rounded-sm mx-0.5 hover:bg-primary/20 transition-colors max-w-full"
+                className="inline-flex items-center gap-1.5 text-primary hover:underline font-mono bg-primary/10 px-1.5 py-0.5 rounded-md mx-0.5 hover:bg-primary/20 transition-colors max-w-full"
                 title={url}
             >
                 <HugeiconsIcon icon={Link01Icon} size={14} className="shrink-0" />
@@ -172,7 +172,7 @@ export function LinkPreview({ url, className }: LinkPreviewProps) {
                     <img
                         src={`https://www.google.com/s2/favicons?domain=${metadata.domain}&sz=16`}
                         alt="favicon"
-                        className="w-3 h-3 rounded-sm opacity-80"
+                        className="w-3 h-3 rounded-md opacity-80"
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                     <span className="truncate font-medium">{metadata.domain}</span>

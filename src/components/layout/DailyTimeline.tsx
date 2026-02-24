@@ -102,7 +102,8 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
                                     const timeStr = dateObj.toLocaleString('zh-CN', {
                                         hour: '2-digit',
                                         minute: '2-digit',
-                                        hour12: false
+                                        hour12: false,
+                                        timeZone: 'Asia/Shanghai'
                                     });
                                     const isActive = activeMemoId === memo.id;
 

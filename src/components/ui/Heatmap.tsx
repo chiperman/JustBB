@@ -80,7 +80,10 @@ export const Heatmap = memo(function Heatmap() {
     // 计算总天数
     const totalActiveDays = useMemo(() => {
         if (!stats?.firstMemoDate) return 0;
-        return differenceInDays(new Date(), new Date(stats.firstMemoDate)) + 1;
+        const parts = stats.firstMemoDate.split('-');
+        if (parts.length < 3) return 0;
+        const firstDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        return differenceInDays(new Date(), firstDate) + 1;
     }, [stats?.firstMemoDate]);
 
     // 生成最近 12 周 (84 天) 的日期数据

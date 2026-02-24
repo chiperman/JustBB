@@ -64,12 +64,14 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
         const structure = new Map<number, Map<number, Set<number>>>();
 
         Object.keys(allDays).forEach((dateStr) => {
-            const date = new Date(dateStr);
-            const year = date.getFullYear();
-            const month = date.getMonth() + 1;
-            const day = date.getDate();
+            const parts = dateStr.split('-');
+            if (parts.length < 3) return;
 
-            if (isNaN(year)) return;
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]);
+            const day = parseInt(parts[2]);
+
+            if (isNaN(year) || isNaN(month) || isNaN(day)) return;
 
             if (!structure.has(year)) {
                 structure.set(year, new Map());

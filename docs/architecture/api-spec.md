@@ -1,6 +1,6 @@
 # JustMemo 接口设计规范 (API Spec)
 
-> 最后更新：2026-02-19
+> 最后更新：2026-02-24
 
 ## 1. 通用响应契约
 所有接口遵循以下统一返回格式：
@@ -81,28 +81,31 @@
 ## 5. 读操作 (Queries - 混合模式)
 
 ### 5.1 `getMemos` (Core Fetch)
-*   参数: 支持分页、标签、年份、搜索词及隐私过滤。
-*   特性: 针对访客自动隐藏私密内容，除非已成功解锁。
+*   参数: `params: { query?, adminCode?, limit?, offset?, tag?, date?, sort? }`
+*   特性: 
+    - 针对访客自动隐藏私密内容，除非已成功解锁。
+    - **排序与筛选**: 支持最前 (`newest`) 和最后 (`oldest`) 排序，以及基于 `tag` 和 `date` 的多维过滤。
 
-### 5.2 `getBacklinks` / `getMemoByNumber`
-*   功能: 处理笔记间的双向关联与编号检索。
-*   用途: 驱动前端的关联视图及输入建议。
+### 5.2 `searchMemosForMention`
+*   功能: 供 `@编号` 引用建议使用的分页搜索。
+*   参数: `query: string, offset: number, limit: number`
+*   补丁: 如果是数字查询，Action 层会自动将编号精确匹配结果优先置顶。
 
 ### 5.3 `getOnThisDayMemos` / `getArchivedMemos`
 *   功能: 检索“去年今日”记录或按时间周期浏览历史。
 
 ### 5.4 `getGalleryMemos` / `getTrashMemos`
-*   功能: 专门提取多媒体内容或回收站中的待处理记录。
+*   功能: 分别处理画廊（图片过滤）与回收站记录的分页检索。
 
-### 5.5 `getMemoStats` / `getTimelineStats`
-*   功能: 获取全量热力图及时间轴归档聚合数据。
+### 5.5 `getMemoStats_V2` (Stats)
+*   功能: 获取全量热力图及基础统计数据（字数、总数、起始日期）。
 
-### 5.6 `getAllTags` (Tags)
+### 5.6 `getDistinctTags` (Tags)
 *   功能: 获取全量标签及其计数，驱动侧边栏与建议项。
 
 ### 5.7 `getMemosWithLocations` (Locations)
 *   功能: 获取所有包含地理位置信息的笔记，驱动地图全视图。
 *   返回: `(Memo & { locations: Location[] })[]`
 
-### 5.8 `getAllMemos` (Search Action)
-*   功能: 获取全量数据以构建前端 `MemoCache`，支持极速本地搜索。
+### 5.8 `getMemoIndex`
+*   功能: 获取轻量级索引（ID, 编号, 时间, 内容），用于提及建议或基础离线索引。

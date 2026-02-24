@@ -1,6 +1,6 @@
 # JustMemo 数据库设计与函数 (SQL)
 
-> 最后更新：2026-02-19
+> 最后更新：2026-02-24 (精简重构：同步分页搜索优化)
 
 ## 1. 数据模型 (memos 表)
 *   `id`: uuid (PK)
@@ -21,6 +21,7 @@
 
 ```sql
 -- 安全检索函数：集成权限校验、关键过滤、Tag 搜索、日期筛选、分页与管理员特权
+-- 特性：针对纯数字查询，Action 层会自动执行一次精确匹配并将其置顶，弥补 ILIKE 对编号的权重不足。
 CREATE OR REPLACE FUNCTION search_memos_secure(
   query_text TEXT DEFAULT '', 
   input_code TEXT DEFAULT NULL,

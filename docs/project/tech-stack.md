@@ -1,6 +1,6 @@
 # JustMemo 技术选型总览
 
-> 最后更新日期：2026-02-22 (现代化视觉重构同步)
+> 最后更新日期：2026-02-24 (精简重构：移除废弃技术栈)
 
 ---
 
@@ -22,7 +22,9 @@
 | Tailwind CSS | ^4 | 原子化 CSS 框架 |
 | Radix UI | ^1.x | 无障碍组件原语 |
 | Framer Motion | ^12.x | 动画与过渡效果 |
-| Hugeicons (@hugeicons/react) | ^1.1.5 | 图标库，用于全站图标。配合自研 HugeiconsIcon Wrapper 确保尺寸、对齐与无障碍特性的全局统一。 |
+| Hugeicons | ^1.1.5 | **[唯一图标库]** 配合自研 Wrapper 确保全站图标视觉对齐。 |
+| Tiptap | ^2.x | 富文本编辑器核心，支持 JSON 结构化存储。 |
+| Leaflet | ^1.9 | 轻量级地图 SDK，配合 CartoDB 提供深浅色底图。 |
 | next-themes | ^0.4 | 深/浅色/系统主题切换 |
 
 ---

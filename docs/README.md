@@ -1,6 +1,6 @@
 # JustMemo 文档中心 (Documentation)
 
-> 最后更新：2026-02-19 (重构：文档体系规范化与分类整理)
+> 最后更新：2026-02-24 (精简重构：去除冗余，合并核心)
 
 欢迎使用 JustMemo 开发者文档。本项目是一个追求现代圆润感、基于 Next.js 16 和 Supabase 构建的高性能私密笔记系统。
 
@@ -10,40 +10,33 @@
 
 ### 🏗️ 架构与规范 (Architecture)
 *   [Logic Architecture](./architecture/logic-architecture.md)  
-    详解 Hybrid SPA 架构、PageDataCache 缓存策略及去骨架屏的无感导航设计。
+    **[核心]** 详解 Hybrid SPA 架构、SWR 缓存策略及纯远端分页的 Mention 逻辑。
 *   [API Spec](./architecture/api-spec.md)  
     Server Actions、RPC 函数及通用响应协议。
 *   [Database Schema](./architecture/database-schema.md)  
-    数据库表结构设计、核心安全函数及索引建议。
+    数据库表结构设计、核心安全函数及 JSONB 定位字段说明。
 *   [Security Architecture](./architecture/security-architecture.md)  
-    隐私策略、解锁流程、鉴权逻辑及写操作保护。
+    隐私策略、解锁流程及访问控制模型。
 
 ### 🎨 设计与体验 (Design)
 *   [Design System](./design/design-system.md)  
-    视觉风格、配色系统、排版规范及**全局动画技术规范**。
-*   [Login Transition](./design/login-transition.md)  
-    专项设计：登录页/主页平滑切换动效的实现逻辑。
+    视觉风格、配色系统及 12-8-4 核心视觉规范。
+*   [Interactions & Motion](./design/interactions.md)  
+    **[合并]** 专项设计：全屏编辑器交互、结构化同步 (JSON) 及登录入场动效。
 
-### ✨ 功能特性 (Features)
-*   [Selection & Batch Operations](./features/selection-batch.md)  
-    专项说明：多选模式实现、批量删除及批量标签管理的交互与架构。
-*   [Link Preview](./features/link-preview.md)  
-    自动解析记录中普通链接并利用 Server Action 渲染如 Twitter 风格的富文本预览卡片。
+### ✨ 主要功能 (Features)
+*   [Features Guide](./features/features-guide.md)  
+    **[整合]** 业务模块手册：涵盖画廊、地图定位、链接预览及多选批量操作。
 
-### 🧪 质量保证 (Quality)
-*   [Testing Strategy](./quality/testing-strategy.md)  
-    单元测试、集成测试、端到端测试方案及手动验收清单。
-
-### 🚀 项目规划 (Project)
-*   [Roadmap & Feature List](./project/roadmap.md)  
-    项目开发路线图、核心功能清单及当前进度追踪（目前 92% 已完成）。
+### 🧪 质量与工程 (Engineering)
 *   [Tech Stack](./project/tech-stack.md)  
-    项目核心技术栈（Next.js 16 + Supabase）、版本详细说明及代码目录结构。
+    技术栈（Hugeicons, Framer Motion 等）版本说明及目录结构。
+*   [Testing Strategy](./quality/testing-strategy.md)  
+    E2E 测试原则与手动验收清单。
 
 ---
 
 ## 🛠️ 维护规范
-1. 分类存放：所有新文档必须根据语义存放在对应的子目录下。
-2. 命名规范：所有文档文件采用 `kebab-case.md`。
-3. 更新频率：每当新增功能或修改核心架构时，必须同步更新相关文档。
-4. 内容风格：保持简洁、事实优先，并在文档顶部标注“最后更新日期”。
+1. **事实优先**：文档即系统，修改核心逻辑必须同步更新文档。
+2. **KISS 原则**：保持文档简洁，及时删除过时的过程性计划。
+3. **命名规范**：文件采用 `kebab-case.md`，使用 [Hugeicons](https://hugeicons.com/) 图标作为文档标识。

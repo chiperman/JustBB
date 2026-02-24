@@ -1,6 +1,6 @@
 # JustMemo 设计系统 (Design System)
 
-> 最后更新：2026-02-22 (重构：全面转向现代化圆润视觉风格)
+> 最后更新：2026-02-24 (精简重构：修复失效链接)
 
 ## 1. 视觉风格 (Visual Philosophy)
 **现代圆润感 (Modern Roundness)**：从早期的“纸质书写感”转向“极简效率主义”。强调视觉的连续性、高亲和度以及在 12px/8px 嵌套系统下的几何美感。
@@ -60,7 +60,7 @@
 *   **标准尺寸**: 14px (text-sm) 文字配 14px 图标 (`size-3.5`)。
 *   **图标库**: 全面选用 **Hugeicons** (`@hugeicons/react`)，风格倾向于 Soft 或 Rounded 系列。
 
-> 详细的编辑器动画策略与实现细节，请参阅: [编辑器动画策略](./editor-transitions.md)
+> 详细的编辑器动画策略与实现细节，请参阅: [交互与动画手册](./interactions.md)
 
 ## 7. 地图组件视觉规范 (Map Component Visuals)
 
@@ -90,5 +90,5 @@
 *   **面板宽度**: `w-56`（224px）。
 *   **开关样式**: 自定义 Toggle（`w-8 h-4` 圆角胶囊），激活态使用 `bg-primary`。
 
-> 详细的地图功能设计，请参阅: [定位与地图功能](../features/location-map.md)
+> 详细的地图功能设计，请参阅: [功能模块指南](../features/features-guide.md)
 

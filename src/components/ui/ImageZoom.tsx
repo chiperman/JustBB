@@ -30,6 +30,15 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
     const [isDragging, setIsDragging] = React.useState(false);
     const [currentScale, setCurrentScale] = React.useState(1);
     const isResettingRef = React.useRef(false);
+    const [viewport, setViewport] = React.useState({ width: 1000, height: 1000 });
+
+    // 初始化视口大小
+    React.useEffect(() => {
+        setViewport({ width: window.innerWidth, height: window.innerHeight });
+        const handleResize = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // 监听 scale 变化，用于逻辑判断
     React.useEffect(() => {
@@ -65,8 +74,8 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
         const factor = 0.002; // 缩放灵敏度
         let nextScale = rawScale.get() + delta * factor;
 
-        // 限制缩放范围 [1.0, 5.0]
-        nextScale = Math.min(Math.max(nextScale, 1), 5);
+        // 限制缩放范围 [1.0, 3.0]
+        nextScale = Math.min(Math.max(nextScale, 1), 3);
         rawScale.set(nextScale);
     };
 
@@ -74,6 +83,13 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
     const handleBackgroundClick = () => {
         if (isDragging) return;
         onClose();
+    };
+    // 根据缩放倍数动态计算约束范围，避免使用硬编码数值，防止高倍下找不回图片
+    const dragConstraints = {
+        top: -viewport.height * currentScale * 0.35,
+        bottom: viewport.height * currentScale * 0.35,
+        left: -viewport.width * currentScale * 0.2, // 收紧横向约束，防止宽屏丢失
+        right: viewport.width * currentScale * 0.2
     };
 
     return (
@@ -98,13 +114,7 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
                     className="relative flex items-center justify-center pointer-events-auto cursor-grab active:cursor-grabbing"
                     style={{ x, y, scale }}
                     drag
-                    // 根据缩放倍数动态增加约束范围，即便 100% 也允许一定程度拖拽
-                    dragConstraints={{
-                        top: -500 * currentScale,
-                        bottom: 500 * currentScale,
-                        left: -500 * currentScale,
-                        right: 500 * currentScale
-                    }}
+                    dragConstraints={dragConstraints}
                     dragElastic={0.1}
                     onDragStart={() => {
                         setIsDragging(true);

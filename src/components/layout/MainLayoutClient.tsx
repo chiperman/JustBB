@@ -42,11 +42,19 @@ export function MainLayoutClient({
     // 构建动态缓存键：基于路径和筛选项，确保不同日期的过滤不互相干扰
     const cacheKey = useMemo(() => {
         const params = new URLSearchParams();
-        if (searchParams.query) params.set('q', searchParams.query);
-        if (searchParams.tag) params.set('tag', searchParams.tag);
-        if (searchParams.date) params.set('date', searchParams.date);
-        if (searchParams.year) params.set('year', searchParams.year);
-        if (searchParams.month) params.set('month', searchParams.month);
+        const getV = (val: string | string[] | undefined) => Array.isArray(val) ? val[0] : (val ?? '');
+
+        const q = getV(searchParams.query);
+        const tag = getV(searchParams.tag);
+        const date = getV(searchParams.date);
+        const year = getV(searchParams.year);
+        const month = getV(searchParams.month);
+
+        if (q) params.set('q', q);
+        if (tag) params.set('tag', tag);
+        if (date) params.set('date', date);
+        if (year) params.set('year', year);
+        if (month) params.set('month', month);
         const qs = params.toString();
         return qs ? `/?${qs}` : '/';
     }, [searchParams]);

@@ -79,7 +79,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
             {isEditing ? (
                 <article
                     key="editor"
-                    className="bg-card border border-border rounded-card p-6 shadow-md ring-2 ring-primary/20 relative z-20"
+                    className="bg-card border border-border rounded-card p-6 ring-2 ring-primary/20 relative z-20"
                 >
                     <MemoEditor
                         mode="edit"

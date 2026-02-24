@@ -947,7 +947,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 }
             }}
             className={cn(
-                "border border-border rounded-inner relative focus-within:shadow-md",
+                "border border-border rounded-inner relative",
                 "flex flex-col items-stretch",
                 "selection:bg-primary/30", // Increased opacity for better visibility
                 isActuallyCollapsed ? "shadow-none cursor-pointer hover:bg-accent/5" : (hideFullscreen ? "h-full" : ""),
@@ -1022,7 +1022,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 e.stopPropagation();
                             }}
                         >
-                            <div className="bg-background border border-border rounded-md shadow-2xl overflow-hidden flex flex-col max-h-[450px]">
+                            <div className="bg-background border border-border rounded-md shadow-xl overflow-hidden flex flex-col max-h-[450px]">
                                 {isLoading && suggestions.length === 0 ? (
                                     <div className="px-3 py-10 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight flex flex-col items-center gap-2">
                                         <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />

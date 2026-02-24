@@ -62,7 +62,20 @@ export function MainLayoutClient({
     // 数据逻辑：优先初始数据 (SSR)，无初始数据时尝试读缓存 (SPA/回退)
     const cached = getCache(cacheKey);
     const [memos, setMemos] = useState<Memo[]>(initialMemos ?? cached?.memos ?? []);
-    // 如果有初始数据，就不需要 Loading；否则尝试等待客户端获取
+
+    // 关键修正：派生状态 (Derived State) 模式
+    // 在渲染期间直接检测 props 变化，消除 useEffect 的一帧延迟
+    const prevCacheKeyRef = useRef(cacheKey);
+    if (prevCacheKeyRef.current !== cacheKey) {
+        prevCacheKeyRef.current = cacheKey;
+        // 如果 SSR 传来了新数据，直接强制同步
+        if (initialMemos) {
+            setMemos(initialMemos);
+        } else if (cached) {
+            setMemos(cached.memos);
+        }
+    }
+
     const [isLoading, setIsLoading] = useState(!initialMemos && !cached);
 
     // 监听 URL 筛选参数变化，立即开启 Loading 反馈
@@ -76,20 +89,13 @@ export function MainLayoutClient({
         }
     }, [searchParamsStr]);
 
-    // 监听初始数据变化（SSR 到达或路由改变）
+    // 监听数据到达并更新缓存
     useEffect(() => {
-        // 关键：每当 initialMemos 更新或 cacheKey 改变，均需同步状态
         if (initialMemos) {
-            setMemos(initialMemos);
             setCache(cacheKey, { memos: initialMemos, searchParams, adminCode, initialIsAdmin });
             setIsLoading(false);
         }
-        // 如果是从 cache 加载且无 initialMemos (即本地回退导航)，也更新一次
-        else if (cached) {
-            setMemos(cached.memos);
-            setIsLoading(false);
-        }
-    }, [initialMemos, cacheKey, searchParams, adminCode, initialIsAdmin, setCache, cached]);
+    }, [initialMemos, cacheKey, searchParams, adminCode, initialIsAdmin, setCache]);
 
     const handleScroll = () => {
         if (scrollContainerRef.current) {

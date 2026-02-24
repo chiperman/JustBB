@@ -36,16 +36,20 @@ export function MemoFeed({ initialMemos = [], searchParams, adminCode, isAdmin =
     const observerTarget = useRef<HTMLDivElement>(null);
     const router = useRouter();
 
-    // 2. Refresh list when searchParams change
+    // 2. 核心修正：每当参数或初始数据变化，强制同步
     useEffect(() => {
         const currentParamsStr = JSON.stringify(searchParams);
-        if (currentParamsStr !== prevParamsRef.current) {
+        const paramsChanged = currentParamsStr !== prevParamsRef.current;
+
+        if (paramsChanged) {
             prevParamsRef.current = currentParamsStr;
-            // Reset state
             setMemos(initialMemos);
             setOffset(initialMemos.length);
             setHasMore(initialMemos.length >= 20);
             setIsInitialLoad(true);
+        } else {
+            // 参数没变，但数据内容变了（比如父组件加载完毕）
+            setMemos(initialMemos);
         }
     }, [searchParams, initialMemos]);
 

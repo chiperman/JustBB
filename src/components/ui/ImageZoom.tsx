@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, animate } from 'framer-motion';
 import { Dialog, DialogTrigger, DialogPortal } from './dialog';
 import { cn } from '@/lib/utils';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -19,11 +19,9 @@ interface ImageZoomProps {
  * 每次通过 key 重新挂载，确保 useMotionValue/useSpring 彻底重置
  */
 function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onClose: () => void }) {
-    // 基础运动值：x, y 平移
+    // 基础运动值：x, y 平移 - 直接使用 MotionValue 以获得极致跟手感
     const x = useMotionValue(0);
     const y = useMotionValue(0);
-    const springX = useSpring(x, { stiffness: 400, damping: 40 });
-    const springY = useSpring(y, { stiffness: 400, damping: 40 });
 
     // 缩放运动值：无级调节
     const rawScale = useMotionValue(1);
@@ -38,8 +36,9 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
             setCurrentScale(v);
             // 当缩放回到 1.0 时，平滑重置平移位置，解决“缩小不居中”的 bug
             if (v <= 1.01) {
-                x.set(0);
-                y.set(0);
+                // 使用 animate 函数实现平滑归位，而不影响平时的拖拽响应
+                animate(x, 0, { type: 'spring', stiffness: 300, damping: 30 });
+                animate(y, 0, { type: 'spring', stiffness: 300, damping: 30 });
             }
         });
     }, [scale, x, y]);
@@ -82,7 +81,7 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
                 {/* 缩放与平移层 */}
                 <motion.div
                     className="relative flex items-center justify-center pointer-events-auto cursor-grab active:cursor-grabbing"
-                    style={{ x: springX, y: springY, scale }}
+                    style={{ x, y, scale }}
                     drag
                     // 根据缩放倍数动态增加约束范围，即便 100% 也允许一定程度拖拽
                     dragConstraints={{

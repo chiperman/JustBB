@@ -325,6 +325,13 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             }),
             Mention.extend({
                 name: 'mention',
+                parseHTML() {
+                    return [
+                        {
+                            tag: 'span[data-type="mention"]',
+                        },
+                    ]
+                },
                 renderHTML({ node, HTMLAttributes }) {
                     return [
                         'span',
@@ -425,6 +432,13 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             }),
             Mention.extend({
                 name: 'hashtag',
+                parseHTML() {
+                    return [
+                        {
+                            tag: 'span[data-type="hashtag"]',
+                        },
+                    ]
+                },
                 renderHTML({ node, HTMLAttributes }) {
                     return [
                         'span',

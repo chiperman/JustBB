@@ -77,11 +77,8 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
     return (
         <>
             {isEditing ? (
-                <motion.article
+                <article
                     key="editor"
-                    initial={false}
-                    animate={{ opacity: 1 }}
-                    exit={{}}
                     className="bg-card border border-border rounded-card p-6 shadow-md ring-2 ring-primary/20 relative z-20"
                 >
                     <MemoEditor
@@ -91,11 +88,10 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                         onCancel={() => onEditChange?.(false)}
                         onSuccess={() => onEditChange?.(false)}
                     />
-                </motion.article>
+                </article>
             ) : (
-                <motion.article
+                <article
                     key="view"
-                    layout
                     onClick={handleCardClick}
                     className={cn(
                         "relative bg-card rounded-card p-6 transition-all border border-border focus-within:ring-2 focus-within:ring-primary/10 group",
@@ -306,7 +302,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                         onClose={() => setIsUnlockOpen(false)}
                         hint={memo.access_code_hint}
                     />
-                </motion.article>
+                </article>
             )}
         </>
     );

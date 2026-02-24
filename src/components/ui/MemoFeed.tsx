@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { MemoCard } from './MemoCard';
+import { MemoCardSkeleton } from './MemoCardSkeleton';
 import { getMemos, getArchivedMemos } from '@/actions/fetchMemos';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Loading01Icon as Loader2 } from '@hugeicons/core-free-icons';
@@ -259,8 +260,8 @@ export function MemoFeed({ initialMemos = [], searchParams, adminCode, isAdmin =
                         --- The End ---
                     </div>
                 ) : memos.length === 0 && !isLoading ? (
-                    <div className="text-center text-muted-foreground/60 py-12">
-                        暂无记录
+                    <div className="w-full">
+                        <MemoCardSkeleton isEmpty={true} />
                     </div>
                 ) : null}
             </div>

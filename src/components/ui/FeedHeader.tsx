@@ -105,6 +105,10 @@ export function FeedHeader() {
                     <div className="flex items-center whitespace-nowrap">
                         <Link
                             href="/"
+                            onClick={() => {
+                                // 强制重置路由以清除缓存和参数
+                                router.push('/');
+                            }}
                             className="group flex items-center gap-1.5 px-2 py-1 rounded-sm hover:bg-primary/5 transition-colors mr-1"
                             title="返回首页并重置过滤器"
                         >

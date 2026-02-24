@@ -46,7 +46,9 @@ export function MainLayoutClient({
 
     useEffect(() => {
         if (initialMemos) {
+            setMemos(initialMemos); // 关键：SSR 数据变化时更新本地状态
             setCache('/', { memos: initialMemos, searchParams, adminCode, initialIsAdmin });
+            setIsLoading(false);
             return;
         }
         // stale-while-revalidate：缓存命中也后台刷新
@@ -120,7 +122,6 @@ export function MainLayoutClient({
                                 adminCode={adminCode}
                                 isAdmin={effectiveIsAdmin}
                             />
-                            {memos.length === 0 && <MemoCardSkeleton />}
                         </>
                     )}
                 </div>

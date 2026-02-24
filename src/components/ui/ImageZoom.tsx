@@ -29,16 +29,31 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
 
     const [isDragging, setIsDragging] = React.useState(false);
     const [currentScale, setCurrentScale] = React.useState(1);
+    const isResettingRef = React.useRef(false);
 
     // 监听 scale 变化，用于逻辑判断
     React.useEffect(() => {
         return scale.on('change', (v) => {
             setCurrentScale(v);
-            // 当缩放回到 1.0 时，平滑重置平移位置，解决“缩小不居中”的 bug
-            if (v <= 1.01) {
-                // 使用 animate 函数实现平滑归位，而不影响平时的拖拽响应
-                animate(x, 0, { type: 'spring', stiffness: 300, damping: 30 });
-                animate(y, 0, { type: 'spring', stiffness: 300, damping: 30 });
+
+            // 当缩放回到 1.0 附近且不在重置中时，触发复位动画
+            if (v <= 1.01 && !isResettingRef.current && (Math.abs(x.get()) > 1 || Math.abs(y.get()) > 1)) {
+                isResettingRef.current = true;
+
+                // 使用更具阻尼感的 spring 配置，彻底消除“闪过头”
+                const springConfig = {
+                    type: 'spring' as const,
+                    stiffness: 260,
+                    damping: 35, // 增加阻尼
+                    restDelta: 0.5
+                };
+
+                animate(x, 0, springConfig);
+                animate(y, 0, springConfig);
+            }
+            // 如果又放大了，解锁状态位
+            else if (v > 1.1) {
+                isResettingRef.current = false;
             }
         });
     }, [scale, x, y]);
@@ -91,7 +106,12 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
                         right: 500 * currentScale
                     }}
                     dragElastic={0.1}
-                    onDragStart={() => setIsDragging(true)}
+                    onDragStart={() => {
+                        setIsDragging(true);
+                        isResettingRef.current = false; // 拖拽开始时立即释放锁，允许下次缩回时重置
+                        x.stop(); // 停止当前正在进行的动画
+                        y.stop();
+                    }}
                     onDragEnd={() => {
                         setTimeout(() => setIsDragging(false), 100);
                     }}

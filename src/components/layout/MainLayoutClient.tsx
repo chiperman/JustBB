@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { cn } from "@/lib/utils";
 import { AnimatePresence } from 'framer-motion';
 import { MemoEditor } from "@/components/ui/MemoEditor";

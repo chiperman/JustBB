@@ -86,3 +86,25 @@ export async function getAllMemos(): Promise<Memo[]> {
         };
     });
 }
+
+/**
+ * 获取所有 Memo 的轻量索引，仅包含 id, memo_number 和 created_at。
+ * 用于 @ 引用补全的初步筛选，避免拉取全量 content。
+ */
+export async function getMemoIndex(): Promise<{ id: string; memo_number: number; created_at: string }[]> {
+    const supabase = await createClient();
+
+    // 仅拉取必要的索引字段
+    const { data, error } = await supabase
+        .from('memos')
+        .select('id, memo_number, created_at')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching memo index:', error);
+        return [];
+    }
+
+    return (data || []) as { id: string; memo_number: number; created_at: string }[];
+}

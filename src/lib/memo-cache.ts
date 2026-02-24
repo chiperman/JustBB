@@ -3,22 +3,7 @@ const MEMO_CACHE_KEY = 'MEMO_DATA_CACHE_V1';
 export interface CacheItem {
     id: string;
     memo_number: number;
-    content: string; // Full text for search
     created_at: string;
-    // Add optional fields for full feed rendering if needed, 
-    // but for now we might keeping CacheItem simple or mapping FULL Memo to it?
-    // Actually search.ts getAllMemos returns Memo[]. 
-    // We should probably store Memo[] in cache if we want to render the feed from it.
-    // Let's extend CacheItem or just use Memo type if possible, but to avoid circular deps with types, 
-    // let's keep CacheItem generic or just use 'any' for now? 
-    // Better: let's stick to the plan. MemoFeed needs FULL data. 
-    // So CacheItem should be compatible with Memo. 
-    // Let's update CacheItem to index signature or include needed fields.
-    tags?: string[] | null;
-    is_pinned?: boolean;
-    is_locked?: boolean;
-    is_private?: boolean;
-    [key: string]: any;
 }
 
 class MemoCache {
@@ -29,7 +14,6 @@ class MemoCache {
     private listeners: (() => void)[] = [];
 
     private constructor() {
-        // Try load from storage immediately
         if (typeof window !== 'undefined') {
             this.loadFromStorage();
         }
@@ -61,6 +45,7 @@ class MemoCache {
         return this.isInitialized;
     }
 
+    // 在轻量索引模式下，"FullyLoaded" 指的是索引加载完成
     public setFullyLoaded(value: boolean) {
         this.isFullyLoaded = value;
         if (value) {
@@ -106,13 +91,8 @@ class MemoCache {
             }
         });
 
+        // 索引模式下仅按创建时间倒序排列
         this.items = Array.from(mergedMap.values()).sort((a, b) => {
-            if (a.is_pinned !== b.is_pinned) {
-                return a.is_pinned ? -1 : 1;
-            }
-            if (a.is_pinned && a.pinned_at !== b.pinned_at) {
-                return new Date(b.pinned_at || 0).getTime() - new Date(a.pinned_at || 0).getTime();
-            }
             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         });
 
@@ -121,13 +101,16 @@ class MemoCache {
         this.notify();
     }
 
+    /**
+     * 重构后的搜索逻辑：仅支持按编号搜索。
+     * 内容匹配将通过远程 API 并行执行。
+     */
     public search(query: string): CacheItem[] {
         if (!query) return this.items;
 
         const lowerQuery = query.toLowerCase();
         return this.items.filter(item =>
-            item.memo_number.toString().includes(lowerQuery) ||
-            item.content.toLowerCase().includes(lowerQuery)
+            item.memo_number.toString().includes(lowerQuery)
         );
     }
 
@@ -139,9 +122,6 @@ class MemoCache {
                 if (Array.isArray(data)) {
                     this.items = data;
                     this.isInitialized = true;
-                    // If we have data, we can assume it's somewhat loaded, 
-                    // but maybe not "Fully" if we want to force a refresh?
-                    // Let's assume if it's there, it's a good starting point.
                 }
             }
         } catch (e) {

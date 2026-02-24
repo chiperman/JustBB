@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { Button } from './button';
 import { Input } from './input';
 import { updateMemoContent } from '@/actions/update';
-import { getAllMemos } from '@/actions/search';
+import { getMemoIndex, searchMemosForMention } from '@/actions/search';
 import { Command, CommandList, CommandItem, CommandEmpty, CommandGroup } from './command';
 import { getAllTags } from '@/actions/tags';
 import { useTags } from '@/context/TagsContext';
@@ -73,25 +73,22 @@ interface CustomSuggestionProps extends SuggestionProps {
 }
 
 
-// Helper to generate smart snippet
-const generateSnippet = (content: string, query: string): string => {
+// Helper to generate smart snippet (Simplified for index-only mode)
+const generateSnippet = (content?: string, query?: string): string => {
+    if (!content) return '';
     // 1. Replace Markdown images with [图片]
     const text = content.replace(/!\[.*?\]\(.*?\)/g, '[图片]');
 
     // 2. Initial toggle if no query
-    if (!query.trim()) return text.substring(0, 100);
+    if (!query || !query.trim()) return text.substring(0, 100);
 
     const lowerText = text.toLowerCase();
     const lowerQuery = query.toLowerCase();
     const index = lowerText.indexOf(lowerQuery);
 
-    // 3. If query not found (shouldn't happen in search results, but safe guard)
     if (index === -1) return text.substring(0, 100);
-
-    // 4. If match is near the beginning, just show start
     if (index < 40) return text.substring(0, 100);
 
-    // 5. Contextual snippet
     const start = Math.max(0, index - 20);
     const end = Math.min(text.length, index + 80);
     return '...' + text.substring(start, end);
@@ -244,20 +241,12 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             // 2. Background Fetch Full Index
             if (!memoCache.getFullyLoaded()) {
                 try {
-                    const memos = await getAllMemos();
-
-                    const indexItems: CacheItem[] = memos.map(m => ({
-                        id: m.id!,
-                        memo_number: m.memo_number || 0,
-                        content: m.content || '',
-                        created_at: m.created_at || new Date().toISOString()
-                    }));
+                    const indexItems = await getMemoIndex();
                     memoCache.mergeItems(indexItems);
                     memoCache.setFullyLoaded(true);
 
-                    // If the user is currently looking at mentions, refresh the list immediately
                     if (suggestionTriggerRef.current === '@') {
-                        fetchMentionSuggestions(mentionQueryRef.current, true);
+                        fetchMentionSuggestions(mentionQueryRef.current);
                     }
                 } catch (e) {
                     console.error("Failed to fetch background index", e);
@@ -270,30 +259,59 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         initCache();
     }, []);
 
-    // --- 提取搜索逻辑 ---
-    // Update: Now using purely local index
-    // --- 提取搜索逻辑 ---
-    // Update: Now using global memoCache
-    const fetchMentionSuggestions = async (query: string, isUpdate = false) => {
+    /**
+     * 实现双路径并行搜索：
+     * 1. 瞬间从本地索引匹配 memo_number
+     * 2. 防抖后发起远程 API 搜索内容
+     */
+    const fetchMentionSuggestions = async (query: string) => {
         setMentionQuery(query);
         setSelectedIndex(0);
 
-        // Search in local cache
-        const searchResults = memoCache.search(query);
-
-        // Map to SuggestionItem with Smart Snippet
-        const filtered: SuggestionItem[] = searchResults.map(item => ({
+        // A. 本地路径：匹配编号 (瞬间)
+        const localMatches = memoCache.search(query);
+        const localResults: SuggestionItem[] = localMatches.map(item => ({
             id: item.id,
             label: `@${item.memo_number}`,
-            subLabel: generateSnippet(item.content, query),
+            subLabel: '编号匹配',
             memo_number: item.memo_number,
             created_at: item.created_at
         }));
 
-        // Update filtered results and reset pagination
-        setFilteredMentions(filtered); // Store FULL list of matches
-        setDisplayLimit(20); // Reset limit to 20 for instant render
-        setIsLoading(false);
+        setSuggestions(localResults);
+        setHasMoreMentions(false);
+
+        // B. 远程路径：防抖内容搜索
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+
+        if (!query.trim()) return;
+
+        debounceTimerRef.current = setTimeout(async () => {
+            setIsLoading(true);
+            try {
+                const remoteMemos = await searchMemosForMention(query, 0, 10);
+                const remoteResults: SuggestionItem[] = remoteMemos.map(m => ({
+                    id: m.id!,
+                    label: `@${m.memo_number}`,
+                    subLabel: generateSnippet(m.content, query),
+                    memo_number: m.memo_number,
+                    created_at: m.created_at
+                }));
+
+                // 合并去重
+                const localIds = new Set(localResults.map(r => r.id));
+                const merged = [
+                    ...localResults,
+                    ...remoteResults.filter(r => !localIds.has(r.id))
+                ];
+
+                setSuggestions(merged);
+            } catch (e) {
+                console.error("Remote mention search failed", e);
+            } finally {
+                setIsLoading(false);
+            }
+        }, 300);
     };
 
     const fetchHashtagSuggestions = (query: string) => {

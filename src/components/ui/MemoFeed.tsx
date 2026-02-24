@@ -244,7 +244,12 @@ export function MemoFeed({ initialMemos = [], searchParams, adminCode, isAdmin =
                                     memo={memo}
                                     isAdmin={isAdmin}
                                     isEditing={editingId === memo.id}
-                                    onEditChange={(editing) => setEditingId(editing ? memo.id : null)}
+                                    onEditChange={(editing, updatedMemo) => {
+                                        if (!editing && updatedMemo) {
+                                            setMemos(prev => prev.map(m => m.id === updatedMemo.id ? updatedMemo : m));
+                                        }
+                                        setEditingId(editing ? memo.id : null);
+                                    }}
                                 />
                             </motion.div>
                         );

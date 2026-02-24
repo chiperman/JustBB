@@ -98,7 +98,7 @@ interface MemoEditorProps {
     mode?: 'create' | 'edit';
     memo?: Memo;
     onCancel?: () => void;
-    onSuccess?: () => void;
+    onSuccess?: (memo?: Memo) => void;
     isCollapsed?: boolean;
     hideFullscreen?: boolean;
     contextMemos?: Memo[]; // 增加上下文 Memos 用于即时搜索
@@ -877,7 +877,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     setIsPinned(false);
                     router.refresh();
                 } else {
-                    onSuccess?.();
+                    onSuccess?.(newMemo);
                     router.refresh();
                 }
             } else {

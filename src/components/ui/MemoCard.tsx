@@ -21,7 +21,7 @@ interface MemoCardProps {
     memo: Memo;
     isAdmin?: boolean;
     isEditing?: boolean;
-    onEditChange?: (editing: boolean) => void;
+    onEditChange?: (editing: boolean, updatedMemo?: Memo) => void;
     showOriginalOnly?: boolean;
 }
 
@@ -86,7 +86,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                         memo={memo}
                         contextMemos={[memo]}
                         onCancel={() => onEditChange?.(false)}
-                        onSuccess={() => onEditChange?.(false)}
+                        onSuccess={(updatedMemo) => onEditChange?.(false, updatedMemo)}
                     />
                 </article>
             ) : (

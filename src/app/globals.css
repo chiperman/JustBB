@@ -193,21 +193,33 @@ body.font-sans {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 10px;
-  transition: background 0.3s ease;
+  background-color: rgba(0, 0, 0, 0.05);
+  border: 1px solid transparent;
+  /* 通过透明边框让滑块重心更细 */
+  background-clip: padding-box;
+  border-radius: 12px;
+  transition: background-color 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.15);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+  /* 通过透明边框让滑块重心更细 */
+  background-clip: padding-box;
+  border-radius: 12px;
+  transition: background-color 0.3s ease;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+@utility scrollbar-stable {
+  scrollbar-gutter: stable;
 }
 
 @utility scrollbar-overlay {
@@ -234,6 +246,13 @@ body.font-sans {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* 彻底解决全局交互元素缺少指针光标问题，强制覆盖任何框架默认设置 */
+html body button:not(:disabled),
+html body [role="button"]:not(:disabled),
+html body .cursor-pointer:not(:disabled) {
+  cursor: pointer !important;
 }
 
 /* Tiptap Editor Placeholder */

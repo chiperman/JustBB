@@ -96,7 +96,7 @@ export function FeedHeader() {
     return (
         <div className={cn(
             "flex items-center justify-between gap-4 py-2 h-10 transition-all duration-300",
-            hasContext && "mb-5" // 为 SearchInput 的绝对定位提示预留空间
+            hasContext && "mb-9" // 为 SearchInput 的绝对定位提示预留更多留白
         )}>
             {isSelectionMode ? (
                 <div className="flex items-center gap-4">

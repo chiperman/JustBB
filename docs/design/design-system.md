@@ -46,16 +46,14 @@
 
 ### 5.1 阴影分级体系 (Shadow Elevations)
 
-| 分级 | Tailwind 类名 | 特性说明 | 应用场景 |
-| :--- | :--- | :--- | :--- |
-| **Level 0 (Flat)** | `shadow-none` | 无阴影 | 列表中的基础标签、静态背景元素 |
-| **Level 1 (Subtle)** | `shadow-sm` | 极细阴影 (1px 垂直) | Logo Brand、小尺寸独立按钮、徽章悬停 |
-| **Level 2 (Raised)** | `shadow-md` | 明显海拔 (4px 垂直) | **标准反馈**：首页卡片、主操作按钮悬停、图片缩略图悬停 |
-| **Level 3 (Pop)** | `shadow-xl` | 浮空海拔 (20px 扩散) | 气泡框、对话框、下拉选择器背景 |
+| Level 0 (Flat) | `shadow-none` | 无阴影 | **导航项** (Logo, Header按钮)、侧边栏项、基础标签 |
+| Level 1 (Subtle) | `shadow-sm` | 极细阴影 (1px) | 小尺寸独立功能按钮（如：卡片内解锁/删除） |
+| Level 2 (Raised) | `shadow-md` | 明显海拔 (4px) | **标准反馈**：内容卡片悬停、主操作按钮悬停 |
+| Level 3 (Pop) | `shadow-xl` | 浮空海拔 (20px) | 弹出菜单、对话框、Tooltip 背景 |
 
 ### 5.2 颜色与基调
-*   **中性化原则**：所有阴影原则上使用中性灰色 (`rgba(0,0,0,0.1)`) 或对应的灰色 Token。禁止在阴影中使用品牌色（如橙色），以免破坏整体“人文”质感。
-*   **深色模式**：阴影应转化为更深、更柔和的半透明黑色或调整 border 替代效果。
+*   **中性化原则**：所有阴影使用中性灰色。严禁手动硬编码 `shadow-gray-400/20` 等非系统级阴影颜色。
+*   **Header 全局一致性**：Header 内的 Logo、下拉按钮、搜索框等导航类组件，悬停时统一使用 `hover:bg-accent` 且不带阴影 (Level 0)，确保海拔高度的一致性。
 
 ### 5.4 动画参数 (Motion Specs)
 详见核心动效定义：

@@ -115,7 +115,7 @@ export function FeedHeader() {
                                 // 强制重置路由以清除缓存和参数
                                 router.push('/');
                             }}
-                            className="group flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-accent/50 hover:shadow-md hover:shadow-gray-400/20 transition-all mr-1"
+                            className="group flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-accent transition-all mr-1"
                             title="回到首页"
                         >
                             <HugeiconsIcon

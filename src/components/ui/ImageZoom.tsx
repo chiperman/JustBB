@@ -81,13 +81,10 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
             >
                 {/* 缩放与平移层 */}
                 <motion.div
-                    className={cn(
-                        "relative flex items-center justify-center pointer-events-auto",
-                        currentScale > 1.05 ? "cursor-grab active:cursor-grabbing" : "cursor-default"
-                    )}
+                    className="relative flex items-center justify-center pointer-events-auto cursor-grab active:cursor-grabbing"
                     style={{ x: springX, y: springY, scale }}
-                    drag={currentScale > 1.05}
-                    // 根据缩放倍数动态增加约束范围
+                    drag
+                    // 根据缩放倍数动态增加约束范围，即便 100% 也允许一定程度拖拽
                     dragConstraints={{
                         top: -500 * currentScale,
                         bottom: 500 * currentScale,
@@ -99,7 +96,6 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
                     onDragEnd={() => {
                         setTimeout(() => setIsDragging(false), 100);
                     }}
-                    onClick={handleBackgroundClick}
                 >
                     <motion.img
                         src={src}
@@ -127,7 +123,7 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
                 <span className="text-primary font-mono text-xs bg-primary/20 px-2 py-0.5 rounded-full ring-1 ring-primary/30">
                     {Math.round(currentScale * 100)}%
                 </span>
-                <span>滚轮缩放 • {currentScale > 1.05 ? '拖拽平移 • ' : ''}点击关闭</span>
+                <span>滚轮缩放 • 拖拽平移 • 点击背景关闭</span>
             </motion.div>
 
             {/* 关闭按钮 */}

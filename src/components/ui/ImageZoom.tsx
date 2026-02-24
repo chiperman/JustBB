@@ -122,9 +122,12 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-white/10 backdrop-blur-2xl rounded-full border border-white/10 text-white/80 text-[10px] uppercase tracking-[0.25em] font-bold pointer-events-none whitespace-nowrap shadow-2xl z-20"
+                className="absolute bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-white/10 backdrop-blur-2xl rounded-full border border-white/10 text-white/80 text-[10px] uppercase tracking-[0.25em] font-bold pointer-events-none whitespace-nowrap shadow-2xl z-20 flex items-center gap-3"
             >
-                滚轮缩放 • {currentScale > 1.05 ? '拖拽平移 • ' : ''}点击关闭
+                <span className="text-primary font-mono text-xs bg-primary/20 px-2 py-0.5 rounded-full ring-1 ring-primary/30">
+                    {Math.round(currentScale * 100)}%
+                </span>
+                <span>滚轮缩放 • {currentScale > 1.05 ? '拖拽平移 • ' : ''}点击关闭</span>
             </motion.div>
 
             {/* 关闭按钮 */}

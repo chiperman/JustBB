@@ -113,7 +113,8 @@ export const Heatmap = memo(function Heatmap() {
             const colIndex = Math.floor(index / 7);
 
             // 当发生跨月，且该日期位于该列的起始附近（为了标签靠左对齐）
-            if (month !== lastMonth && day <= 7) {
+            // 调整为 day <= 14 以适应因 startOfWeek 导致的宽范围对齐要求
+            if (month !== lastMonth && (day <= 14)) {
                 const dateObj = new Date(parseInt(parts[0]), month - 1, 1);
                 const monthName = dateObj.toLocaleString('zh-CN', { month: 'short' });
                 labels.push({ name: monthName, colIndex });
@@ -248,7 +249,7 @@ export const Heatmap = memo(function Heatmap() {
                         {monthLabels.map(({ name, colIndex }, i) => (
                             <span
                                 key={`${name}-${i}`}
-                                className="absolute"
+                                className="absolute -translate-x-1"
                                 style={{ left: `${colIndex * 18}px` }}
                             >
                                 {name}

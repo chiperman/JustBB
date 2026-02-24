@@ -10,16 +10,16 @@ export default async function MemoPage(props: {
   const searchParams = await props.searchParams;
   const cookieStore = await cookies();
 
-  const query = typeof searchParams?.q === 'string' ? searchParams.q : undefined;
+  const query = Array.isArray(searchParams?.q) ? searchParams.q[0] : (typeof searchParams?.q === 'string' ? searchParams.q : undefined);
   const cookieCode = cookieStore.get('memo_access_code')?.value;
-  const urlCode = typeof searchParams?.code === 'string' ? searchParams.code : undefined;
+  const urlCode = Array.isArray(searchParams?.code) ? searchParams.code[0] : (typeof searchParams?.code === 'string' ? searchParams.code : undefined);
   const adminCode = urlCode || cookieCode;
 
-  const yearStr = typeof searchParams?.year === 'string' ? searchParams.year : undefined;
-  const monthStr = typeof searchParams?.month === 'string' ? searchParams.month : undefined;
-  const tagStr = typeof searchParams?.tag === 'string' ? searchParams.tag : undefined;
-  const dateStr = typeof searchParams?.date === 'string' ? searchParams.date : undefined;
-  const sortStr = typeof searchParams?.sort === 'string' ? searchParams.sort : 'newest';
+  const yearStr = Array.isArray(searchParams?.year) ? searchParams.year[0] : (typeof searchParams?.year === 'string' ? searchParams.year : undefined);
+  const monthStr = Array.isArray(searchParams?.month) ? searchParams.month[0] : (typeof searchParams?.month === 'string' ? searchParams.month : undefined);
+  const tagStr = Array.isArray(searchParams?.tag) ? searchParams.tag[0] : (typeof searchParams?.tag === 'string' ? searchParams.tag : undefined);
+  const dateStr = Array.isArray(searchParams?.date) ? searchParams.date[0] : (typeof searchParams?.date === 'string' ? searchParams.date : undefined);
+  const sortStr = Array.isArray(searchParams?.sort) ? searchParams.sort[0] : (typeof searchParams?.sort === 'string' ? searchParams.sort : 'newest');
 
   // 同时获取 Memos 和管理权限（并行执行）
   const [memosResult, isAdmin] = await Promise.all([

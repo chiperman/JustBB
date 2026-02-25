@@ -41,6 +41,7 @@ export function MapView({
     const mapInstanceRef = useRef<L.Map | null>(null);
     const tileLayerRef = useRef<L.TileLayer | null>(null);
     const markerInstancesRef = useRef<Map<string, L.Marker>>(new Map());
+    const markerClusterGroupRef = useRef<any>(null);
 
     // 用存储 Portal 渲染的目标节点
     const [popupTarget, setPopupTarget] = useState<{ container: HTMLElement, marker: MapMarker } | null>(null);
@@ -53,15 +54,38 @@ export function MapView({
         const updateOrInitMap = async () => {
             const L = (await import('leaflet')).default;
 
+            // 确保 Leaflet 挂载到全局，供陈旧插件使用
+            if (typeof window !== 'undefined') {
+                (window as any).L = L;
+            }
+
             if (!leafletLoaded) {
+                // 加载核心样式
                 // @ts-ignore
                 await import('leaflet/dist/leaflet.css');
+
+                // 只有在浏览器环境下才动态加载插件
+                if (typeof window !== 'undefined') {
+                    try {
+                        // 动态导入聚合插件的 CSS
+                        // @ts-ignore
+                        await import('leaflet.markercluster/dist/MarkerCluster.css');
+                        // @ts-ignore
+                        await import('leaflet.markercluster/dist/MarkerCluster.Default.css');
+
+                        // 动态加载逻辑核心 (MarkerCluster 必须在 L 存在后加载)
+                        require('leaflet.markercluster');
+                    } catch (e) {
+                        console.error('Failed to load markercluster plugin:', e);
+                    }
+                }
+
                 leafletLoaded = true;
 
-                // 注入全局动画样式
-                if (!document.getElementById('leaflet-marker-animations')) {
+                // 注入全局动画与聚合样式
+                if (!document.getElementById('map-view-styles')) {
                     const style = document.createElement('style');
-                    style.id = 'leaflet-marker-animations';
+                    style.id = 'map-view-styles';
                     style.innerHTML = `
                         @keyframes marker-fade-in {
                             from { opacity: 0; transform: scale(0.5); }
@@ -74,6 +98,34 @@ export function MapView({
                         .marker-fade-in { animation: marker-fade-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
                         .marker-fade-out { animation: marker-fade-out 0.3s ease-in forwards; }
                         .custom-map-marker { transition: all 0.3s ease; }
+                        
+                        /* 自定义聚合图标样式 */
+                        .custom-marker-cluster {
+                            background: rgba(217, 119, 87, 0.15);
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            backdrop-filter: blur(4px);
+                            transition: transform 0.2s ease;
+                        }
+                        .custom-marker-cluster:hover {
+                            transform: scale(1.1);
+                        }
+                        .cluster-inner {
+                            width: 32px;
+                            height: 32px;
+                            background: var(--color-primary, #d97757);
+                            border: 2px solid white;
+                            border-radius: 50%;
+                            color: white;
+                            font-weight: bold;
+                            font-size: 13px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            box-shadow: 0 4px 12px rgba(217, 119, 87, 0.4);
+                        }
                     `;
                     document.head.appendChild(style);
                 }
@@ -91,6 +143,7 @@ export function MapView({
                 const map = L.map(mapRef.current, {
                     center,
                     zoom,
+                    maxZoom: 20,
                     zoomControl: false,
                     attributionControl: mode === 'full',
                     dragging: mode !== 'mini' || interactive,
@@ -124,6 +177,33 @@ export function MapView({
             const map = mapInstanceRef.current;
             if (!map) return;
 
+            // 初始化或获取聚合组
+            if (!markerClusterGroupRef.current) {
+                // 安全检查：由于插件加载可能是异步且有副作用的，确保函数存在
+                // @ts-ignore
+                if (typeof L.markerClusterGroup === 'function') {
+                    // @ts-ignore
+                    markerClusterGroupRef.current = L.markerClusterGroup({
+                        showCoverageOnHover: true,
+                        zoomToBoundsOnClick: true,
+                        spiderfyOnMaxZoom: true,
+                        maxClusterRadius: 40, // 适当调小半径，让聚合更精准
+                        iconCreateFunction: (cluster: any) => {
+                            return L.divIcon({
+                                html: `<div class="cluster-inner"><span>${cluster.getChildCount()}</span></div>`,
+                                className: 'custom-marker-cluster',
+                                iconSize: L.point(40, 40)
+                            });
+                        }
+                    });
+                } else {
+                    console.warn('L.markerClusterGroup is not available, falling back to basic layer group');
+                    markerClusterGroupRef.current = L.layerGroup();
+                }
+                map.addLayer(markerClusterGroupRef.current);
+            }
+            const clusterGroup = markerClusterGroupRef.current;
+
             const getCartoDbUrl = () => {
                 const style = isDark ? 'dark_all' : 'rastertiles/voyager';
                 return `https://{s}.basemaps.cartocdn.com/${style}/{z}/{x}/{y}@2x.png`;
@@ -134,12 +214,13 @@ export function MapView({
                 tileLayerRef.current = L.tileLayer(newTileUrl, {
                     attribution: mode === 'full' ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>' : '',
                     maxZoom: 20,
+                    maxNativeZoom: 18, // 超过 18 级放大时，不发请求，直接拉伸已有图片，解决高比率由于无数据或限流导致的白屏/慢加载
                 }).addTo(map);
             } else {
                 tileLayerRef.current.setUrl(newTileUrl);
             }
 
-            // --- 标记点 Diffing 逻辑 ---
+            // --- 标记点 Diffing 与 聚合逻辑 ---
             const currentMarkers = markerInstancesRef.current;
             const nextMarkersMap = new Map<string, MapMarker>();
             markers.forEach(m => nextMarkersMap.set(`${m.lat.toFixed(6)},${m.lng.toFixed(6)}`, m));
@@ -152,10 +233,10 @@ export function MapView({
                         el.classList.remove('marker-fade-in');
                         el.classList.add('marker-fade-out');
                         setTimeout(() => {
-                            if (map.hasLayer(markerInstance)) map.removeLayer(markerInstance);
+                            if (clusterGroup.hasLayer(markerInstance)) clusterGroup.removeLayer(markerInstance);
                         }, 300);
                     } else {
-                        map.removeLayer(markerInstance);
+                        clusterGroup.removeLayer(markerInstance);
                     }
                     currentMarkers.delete(key);
                 }
@@ -163,18 +244,19 @@ export function MapView({
 
             // 2. 添加新点或更新旧点
             const markerIcon = L.divIcon({
-                className: 'custom-map-marker', // 仅作为容器，不应用 transform 动画
+                className: 'custom-map-marker',
                 html: `<div class="marker-icon-inner marker-fade-in" style="width: 24px; height: 24px; background: var(--color-primary, #d97757); border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><div style="width: 8px; height: 8px; background: white; border-radius: 50%;"></div></div>`,
                 iconSize: [24, 24],
                 iconAnchor: [12, 12],
             });
 
+            const newLayers: L.Marker[] = [];
             nextMarkersMap.forEach((markerData, key) => {
                 if (!currentMarkers.has(key)) {
                     const m = L.marker([markerData.lat, markerData.lng], {
                         icon: markerIcon,
                         draggable: !!onMarkerDragEnd
-                    }).addTo(map);
+                    });
 
                     // @ts-ignore
                     m._markerData = markerData;
@@ -190,20 +272,23 @@ export function MapView({
                             onMarkerDragEnd(newPos.lat, newPos.lng);
                         });
                     }
+                    newLayers.push(m);
                     currentMarkers.set(key, m);
                 } else {
-                    // 如果点已存在，只同步数据（不重绘标记以保持动画平滑）
                     const existingMarker = currentMarkers.get(key)!;
                     // @ts-ignore
                     existingMarker._markerData = markerData;
                 }
             });
 
-            // 3. 视野调整 (仅在数据初次加载或显著变化时执行)
+            if (newLayers.length > 0) {
+                clusterGroup.addLayers(newLayers);
+            }
+
+            // 3. 视野调整
             if (markers.length === 1 && !cancelled) {
                 map.setView([markers[0].lat, markers[0].lng], map.getZoom(), { animate: true });
             } else if (mode === 'full' && markers.length > 1 && currentMarkers.size === markers.length) {
-                // 只有在点全部添加完成后才计算 bounds，避免中间过程产生抖动
                 const bounds = L.latLngBounds(markers.map(m => [m.lat, m.lng] as [number, number]));
                 map.fitBounds(bounds, { padding: [50, 50] });
             }

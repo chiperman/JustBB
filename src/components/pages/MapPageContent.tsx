@@ -81,8 +81,8 @@ export function MapPageContent() {
 
             // 数据拉取及最小感知时长均完成后，结束 loading
             if (isMounted) {
-                // 确保模块已加载
-                if (mapModule && mapModule.MapView) {
+                // 判断获取到的 mapModule 中是否具备有效的 MapView 组件
+                if (mapModule && typeof mapModule.MapView !== 'undefined') {
                     setIsLoading(false);
                 }
             }

@@ -118,7 +118,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                         className="text-[14px] font-normal text-foreground truncate w-full flex items-center gap-1"
                                         suppressHydrationWarning
                                     >
-                                        {user ? user.email : (loading ? '加载中...' : '未登录/匿名')}
+                                        {user ? user.email : (loading ? '加载中...' : '未登录')}
                                     </span>
                                 </motion.div>
                             )}

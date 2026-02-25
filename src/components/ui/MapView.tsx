@@ -40,6 +40,7 @@ export function MapView({
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
     const tileLayerRef = useRef<L.TileLayer | null>(null);
+    const markerInstancesRef = useRef<Map<string, L.Marker>>(new Map());
 
     // 用存储 Portal 渲染的目标节点
     const [popupTarget, setPopupTarget] = useState<{ container: HTMLElement, marker: MapMarker } | null>(null);
@@ -56,6 +57,26 @@ export function MapView({
                 // @ts-ignore
                 await import('leaflet/dist/leaflet.css');
                 leafletLoaded = true;
+
+                // 注入全局动画样式
+                if (!document.getElementById('leaflet-marker-animations')) {
+                    const style = document.createElement('style');
+                    style.id = 'leaflet-marker-animations';
+                    style.innerHTML = `
+                        @keyframes marker-fade-in {
+                            from { opacity: 0; transform: scale(0.5); }
+                            to { opacity: 1; transform: scale(1); }
+                        }
+                        @keyframes marker-fade-out {
+                            from { opacity: 1; transform: scale(1); }
+                            to { opacity: 0; transform: scale(0.5); }
+                        }
+                        .marker-fade-in { animation: marker-fade-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+                        .marker-fade-out { animation: marker-fade-out 0.3s ease-in forwards; }
+                        .custom-map-marker { transition: all 0.3s ease; }
+                    `;
+                    document.head.appendChild(style);
+                }
             }
 
             if (cancelled || !mapRef.current) return;
@@ -84,11 +105,9 @@ export function MapView({
                     });
                 }
 
-                // 监听 Popup 打开事件，用于 React Portal 注入
                 map.on('popupopen', (e) => {
                     const container = e.popup.getElement()?.querySelector('.leaflet-popup-content') as HTMLElement;
                     if (container) {
-                        // 从 marker 的自定义数据中获取 marker 对象
                         // @ts-ignore
                         const markerData = e.popup._source._markerData;
                         setPopupTarget({ container, marker: markerData });
@@ -120,47 +139,71 @@ export function MapView({
                 tileLayerRef.current.setUrl(newTileUrl);
             }
 
-            map.eachLayer((layer) => {
-                if (layer instanceof L.Marker) {
-                    map.removeLayer(layer);
-                }
-            });
+            // --- 标记点 Diffing 逻辑 ---
+            const currentMarkers = markerInstancesRef.current;
+            const nextMarkersMap = new Map<string, MapMarker>();
+            markers.forEach(m => nextMarkersMap.set(`${m.lat.toFixed(6)},${m.lng.toFixed(6)}`, m));
 
+            // 1. 移除不再需要的点
+            for (const [key, markerInstance] of currentMarkers.entries()) {
+                if (!nextMarkersMap.has(key)) {
+                    const el = markerInstance.getElement()?.querySelector('.marker-icon-inner');
+                    if (el) {
+                        el.classList.remove('marker-fade-in');
+                        el.classList.add('marker-fade-out');
+                        setTimeout(() => {
+                            if (map.hasLayer(markerInstance)) map.removeLayer(markerInstance);
+                        }, 300);
+                    } else {
+                        map.removeLayer(markerInstance);
+                    }
+                    currentMarkers.delete(key);
+                }
+            }
+
+            // 2. 添加新点或更新旧点
             const markerIcon = L.divIcon({
-                className: 'custom-map-marker',
-                html: `<div style="width: 24px; height: 24px; background: var(--color-primary, #d97757); border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><div style="width: 8px; height: 8px; background: white; border-radius: 50%;"></div></div>`,
+                className: 'custom-map-marker', // 仅作为容器，不应用 transform 动画
+                html: `<div class="marker-icon-inner marker-fade-in" style="width: 24px; height: 24px; background: var(--color-primary, #d97757); border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><div style="width: 8px; height: 8px; background: white; border-radius: 50%;"></div></div>`,
                 iconSize: [24, 24],
                 iconAnchor: [12, 12],
             });
 
-            markers.forEach(marker => {
-                const m = L.marker([marker.lat, marker.lng], {
-                    icon: markerIcon,
-                    draggable: !!onMarkerDragEnd
-                }).addTo(map);
+            nextMarkersMap.forEach((markerData, key) => {
+                if (!currentMarkers.has(key)) {
+                    const m = L.marker([markerData.lat, markerData.lng], {
+                        icon: markerIcon,
+                        draggable: !!onMarkerDragEnd
+                    }).addTo(map);
 
-                // 将数据挂载到 marker 实例上以便 popup 获取
-                // @ts-ignore
-                m._markerData = marker;
-
-                // 绑定一个空的 Popup，React Portal 会接管它
-                m.bindPopup('<div class="react-popup-root"></div>', {
-                    maxWidth: 550,
-                    minWidth: 400,
-                    className: 'modern-map-popup'
-                });
-
-                if (onMarkerDragEnd) {
-                    m.on('dragend', (e: L.LeafletEvent) => {
-                        const newPos = (e.target as L.Marker).getLatLng();
-                        onMarkerDragEnd(newPos.lat, newPos.lng);
+                    // @ts-ignore
+                    m._markerData = markerData;
+                    m.bindPopup('<div class="react-popup-root"></div>', {
+                        maxWidth: 550,
+                        minWidth: 400,
+                        className: 'modern-map-popup'
                     });
+
+                    if (onMarkerDragEnd) {
+                        m.on('dragend', (e: L.LeafletEvent) => {
+                            const newPos = (e.target as L.Marker).getLatLng();
+                            onMarkerDragEnd(newPos.lat, newPos.lng);
+                        });
+                    }
+                    currentMarkers.set(key, m);
+                } else {
+                    // 如果点已存在，只同步数据（不重绘标记以保持动画平滑）
+                    const existingMarker = currentMarkers.get(key)!;
+                    // @ts-ignore
+                    existingMarker._markerData = markerData;
                 }
             });
 
+            // 3. 视野调整 (仅在数据初次加载或显著变化时执行)
             if (markers.length === 1 && !cancelled) {
                 map.setView([markers[0].lat, markers[0].lng], map.getZoom(), { animate: true });
-            } else if (mode === 'full' && markers.length > 1) {
+            } else if (mode === 'full' && markers.length > 1 && currentMarkers.size === markers.length) {
+                // 只有在点全部添加完成后才计算 bounds，避免中间过程产生抖动
                 const bounds = L.latLngBounds(markers.map(m => [m.lat, m.lng] as [number, number]));
                 map.fitBounds(bounds, { padding: [50, 50] });
             }

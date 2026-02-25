@@ -165,6 +165,33 @@ export function MapView({
                         // @ts-ignore
                         const markerData = e.popup._source._markerData;
                         setPopupTarget({ container, marker: markerData });
+
+                        // 获取真实的弹窗高度以计算平移居中（延迟给 React Portal 渲染时间）
+                        setTimeout(() => {
+                            const popupElement = e.popup.getElement();
+                            if (!popupElement || !mapInstanceRef.current) return;
+
+                            // 这里的 popupElement 实际上包含了箭头
+                            const popupHeight = popupElement.offsetHeight; 
+                            
+                            // 获取目标点的原始地理坐标 (LatLng)
+                            // @ts-ignore
+                            const latlng = e.popup.getLatLng();
+
+                            // 通过 map project 把目标点转换为屏幕上的像素坐标
+                            const px = mapInstanceRef.current.project(latlng);
+
+                            // 从目标点向屏幕上方偏移 `Popup高度的一半` + `一定的冗余(20px, 大概是箭头的容错)`
+                            // 这样标记加上弹窗的整体就在屏幕Y轴中心了
+                            px.y -= (popupHeight / 2 + 20);
+
+                            // unproject 转回地理坐标，进行平滑过渡 (animate) 
+                            mapInstanceRef.current.panTo(mapInstanceRef.current.unproject(px), {
+                                animate: true,
+                                duration: 0.5
+                            });
+
+                        }, 50); // 给 React 50ms 注入 DOM 的时间
                     }
                 });
 
@@ -264,7 +291,8 @@ export function MapView({
                     m.bindPopup('<div class="react-popup-root"></div>', {
                         maxWidth: 550,
                         minWidth: 400,
-                        className: 'modern-map-popup'
+                        className: 'modern-map-popup',
+                        autoPan: false // 禁用原生自动平移，使用上面我们自己计算的居中平移
                     });
 
                     if (onMarkerDragEnd) {

@@ -108,14 +108,14 @@ export function FeedHeader() {
                 </div>
             ) : (
                 <div className="flex items-center gap-1.5 overflow-hidden">
-                    <div className="flex items-center whitespace-nowrap">
+                    <div className="flex items-center whitespace-nowrap h-8">
                         <Link
                             href="/"
                             onClick={() => {
                                 // 强制重置路由以清除缓存和参数
                                 router.push('/');
                             }}
-                            className="group flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-accent transition-all mr-1"
+                            className="group flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-accent transition-all mr-1 h-full"
                             title="回到首页"
                         >
                             <HugeiconsIcon
@@ -123,18 +123,18 @@ export function FeedHeader() {
                                 size={14}
                                 className="text-primary/70 group-hover:text-primary transition-colors"
                             />
-                            <span className="text-sm font-bold tracking-tight text-primary/90 group-hover:text-primary transition-colors">
+                            <span className="text-sm font-bold tracking-tight text-primary/90 group-hover:text-primary transition-colors leading-none">
                                 JustMemo
                             </span>
                         </Link>
 
                         {activeDate && (
-                            <>
-                                <span className="text-muted-foreground/30 text-[10px] font-light mx-0.5">/</span>
-                                <span className="text-xs font-mono font-medium text-primary tracking-tight tabular-nums">
+                            <div className="flex items-center gap-1.5 h-full px-1">
+                                <span className="text-muted-foreground/30 text-[10px] font-light">/</span>
+                                <span className="text-xs font-mono font-medium text-primary tracking-tight tabular-nums leading-none">
                                     {activeDate}
                                 </span>
-                            </>
+                            </div>
                         )}
                     </div>
 

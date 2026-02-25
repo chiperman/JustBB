@@ -61,7 +61,7 @@ export function SearchInput() {
                     type="text"
                     placeholder={hasContext ? "在当前结果中搜索..." : "键入关键字搜索..."}
                     className={cn(
-                        "pl-9 pr-10 rounded-md border-border bg-background/50 focus:bg-background transition-all outline-none ring-0 h-9",
+                        "pl-9 pr-10 rounded-md border-border bg-background/50 focus:bg-background transition-all outline-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 h-9",
                         hasContext && "border-primary/20 bg-primary/[0.02]"
                     )}
                     value={value}
@@ -86,14 +86,14 @@ export function SearchInput() {
             </div>
 
             {hasContext && (
-                <div className="absolute top-full left-0 right-0 pt-1 flex items-center justify-between px-0.5 animate-in fade-in slide-in-from-top-1 duration-200 pointer-events-auto">
-                    <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground/70">
+                <div className="absolute top-full left-0 right-0 pt-1 flex items-center justify-between px-0.5 animate-in fade-in slide-in-from-top-1 duration-200 pointer-events-auto h-7">
+                    <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground/70 flex-1 min-w-0 h-full">
                         <HugeiconsIcon
                             icon={activeDate || activeYear ? Calendar03Icon : Tag01Icon}
                             size={12}
-                            className="text-primary/40"
+                            className="text-primary/40 shrink-0"
                         />
-                        <span className="truncate max-w-[150px] md:max-w-none">
+                        <span className="truncate">
                             正在
                             <span className="text-primary/80 mx-0.5">
                                 {activeDate || (activeYear && activeMonth ? `${activeYear}-${activeMonth}` : activeTag)}
@@ -105,7 +105,7 @@ export function SearchInput() {
                     {(value.trim() || searchParams.get('q')) && (
                         <button
                             onClick={handleGlobalSearch}
-                            className="group flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/[0.03] hover:bg-primary/10 text-[10px] text-primary/60 hover:text-primary transition-all border border-primary/10 whitespace-nowrap"
+                            className="group flex items-center gap-1 px-1.5 h-5 rounded-md bg-primary/[0.03] hover:bg-primary/10 text-[10px] text-primary/60 hover:text-primary transition-all border border-primary/10 whitespace-nowrap ml-2"
                         >
                             <HugeiconsIcon icon={Globe02Icon} size={10} className="group-hover:rotate-12 transition-transform" />
                             <span>全量搜索</span>

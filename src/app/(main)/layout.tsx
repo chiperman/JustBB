@@ -41,12 +41,10 @@ export default async function MainLayout({
                         </ClientRouter>
                     </main>
 
-                    {/* 右侧边栏 - 移动端隐藏 */}
-                    <div className="hidden xl:block h-full overflow-y-auto scrollbar-hide border-l border-border/40">
-                        <Suspense fallback={<div className="w-80" />}>
-                            <RightSidebar initialData={initialTimeline as any} />
-                        </Suspense>
-                    </div>
+                    {/* 右侧边栏 - 内部自控显示状态 */}
+                    <Suspense fallback={null}>
+                        <RightSidebar initialData={initialTimeline as any} />
+                    </Suspense>
                 </div>
             </div>
         </ClientLayoutProviders>

@@ -122,7 +122,7 @@ export function MainLayoutClient({
             {/* 固定顶部区域 - 品牌、搜索 & 编辑器 */}
             <div
                 className={cn(
-                    "flex-none z-30 px-4 md:px-10 sticky top-0 pt-8 pb-4 transition-all duration-300 ease-in-out scrollbar-stable overflow-y-auto scrollbar-hide",
+                    "flex-none z-30 px-4 md:px-10 sticky top-0 pt-8 pb-4 transition-all duration-300 ease-in-out scrollbar-stable overflow-y-auto",
                     isScrolled
                         ? "bg-background/80 backdrop-blur-2xl border-b border-border/40 shadow-sm"
                         : "bg-background/0"

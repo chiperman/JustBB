@@ -138,7 +138,8 @@ export function MapView({
                     ? [markers[0].lat, markers[0].lng] as [number, number]
                     : [35.6762, 139.6503] as [number, number];
 
-                const zoom = mode === 'mini' ? 13 : (markers.length > 1 ? 5 : 13);
+                // 如果只有一个点或者处于 full 模式且有多个点，均默认放大至 12 级以聚焦最新地点
+                const zoom = mode === 'mini' ? 13 : (markers.length > 0 ? 12 : 5);
 
                 const map = L.map(mapRef.current, {
                     center,
@@ -285,12 +286,12 @@ export function MapView({
                 clusterGroup.addLayers(newLayers);
             }
 
-            // 3. 视野调整
-            if (markers.length === 1 && !cancelled) {
-                map.setView([markers[0].lat, markers[0].lng], map.getZoom(), { animate: true });
-            } else if (mode === 'full' && markers.length > 1 && currentMarkers.size === markers.length) {
-                const bounds = L.latLngBounds(markers.map(m => [m.lat, m.lng] as [number, number]));
-                map.fitBounds(bounds, { padding: [50, 50] });
+            // 3. 视野调整: 加载完成时始终通过动画流利地飞去/移动至最新定位，而不是看到所有的散点
+            if (markers.length > 0 && !cancelled) {
+                // 判断当前视野与目标点是否相距较远，如果较远可考虑 flyTo 效果，较近使用 setView 效果。默认使用 animate: true
+                // 这里统一聚焦到第一个点（最新一条记录），默认给 12 级的合适视野
+                const targetZoom = map.getZoom() < 12 ? 12 : map.getZoom();
+                map.setView([markers[0].lat, markers[0].lng], targetZoom, { animate: true, duration: 1.0 });
             }
         };
 

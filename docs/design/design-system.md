@@ -1,6 +1,6 @@
 # JustMemo 设计系统 (Design System)
 
-> 最后更新：2026-02-24 (精简重构：修复失效链接)
+> 最后更新：2026-02-24 (新增滚动容器对齐规范)
 
 ## 1. 视觉风格 (Visual Philosophy)
 **现代圆润感 (Modern Roundness)**：从早期的“纸质书写感”转向“极简效率主义”。强调视觉的连续性、高亲和度以及在 12px/8px 嵌套系统下的几何美感。
@@ -91,4 +91,67 @@
 *   **开关样式**: 自定义 Toggle（`w-8 h-4` 圆角胶囊），激活态使用 `bg-primary`。
 
 > 详细的地图功能设计，请参阅: [功能模块指南](../features/features-guide.md)
+
+## 8. 滚动容器对齐规范 (Scroll Container Alignment)
+
+> 最后更新：2026-02-24
+
+### 8.1 问题背景
+
+当页面中存在多个垂直排列的独立 `overflow-y` 容器时（如固定顶部区域 + 可滚动内容区域），若两个容器对滚动条空间的处理方式不一致，会导致内部 `max-w-*` + `mx-auto` 居中内容出现水平偏移，视觉上表现为"下方内容向左移动，与上方卡片不对齐"。
+
+### 8.2 根本原因：`scrollbar-width: none` 会取消 `scrollbar-gutter`
+
+CSS 的 `scrollbar-gutter: stable` 会为滚动条**始终预留一段固定宽度的空白区域**（即 gutter），使得滚动条出现/消失时内容区域宽度保持不变。
+
+但有一个关键陷阱：
+
+> **当 `scrollbar-width: none` 被设置时，`scrollbar-gutter: stable` 将完全失效。**
+
+Tailwind 工具类 `scrollbar-hide` 实现如下：
+
+```css
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;   /* ← 这一行会取消 scrollbar-gutter */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+```
+
+因此，同时使用 `scrollbar-stable`（`scrollbar-gutter: stable`）和 `scrollbar-hide` 时，后者会静默覆盖前者，gutter 预留效果为 **0px**。
+
+### 8.3 首页布局中的具体表现
+
+首页 `MainLayoutClient` 包含两个独立容器：
+
+| 容器 | 类名 | `scrollbar-gutter` 实际预留 |
+|:---|:---|:---|
+| 顶部固定区域 | `scrollbar-stable overflow-y-auto scrollbar-hide` | **0px**（被 `scrollbar-hide` 取消） |
+| 底部滚动区域 | `overflow-y-auto scrollbar-stable` | **~6px**（正常预留） |
+
+两个 `max-w-4xl mx-auto` 内容区域的可用宽度相差约 6px，`mx-auto` 居中后底部内容整体偏左约 3px。
+
+### 8.4 修复方案
+
+**移除顶部容器上多余的 `scrollbar-hide`**，让 `scrollbar-stable` 在两个容器上都能正常生效：
+
+```tsx
+// 修复前（错误）
+"... scrollbar-stable overflow-y-auto scrollbar-hide"
+
+// 修复后（正确）
+"... scrollbar-stable overflow-y-auto"
+```
+
+顶部 header 内容在正常情况下不会触发高度溢出，因此不会出现可见的滚动条。两个容器均通过 `scrollbar-gutter: stable` 预留相同的 gutter 空间，内容宽度完全一致。
+
+### 8.5 通用规范
+
+在同一页面使用多个独立滚动容器，且需要相互对齐时，必须遵守以下规则：
+
+1. **禁止混用 `scrollbar-hide` 与 `scrollbar-stable`**：`scrollbar-width: none` 会静默取消 `scrollbar-gutter: stable`。
+2. **统一 gutter 策略**：所有需要对齐的容器必须使用完全相同的 gutter 方案（要么都 `stable`，要么都不预留）。
+3. **隐藏滚动条使用 webkit-only 方案**：若需视觉上隐藏滚动条但保留 gutter 空间，应仅覆盖 `::-webkit-scrollbar { display: none }` 而不设置 `scrollbar-width: none`。
 

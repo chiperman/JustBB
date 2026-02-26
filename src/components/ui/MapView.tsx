@@ -46,6 +46,8 @@ export function MapView({
     // 用存储 Portal 渲染的目标节点
     const [popupTarget, setPopupTarget] = useState<{ container: HTMLElement, marker: MapMarker } | null>(null);
     const [currentZoom, setCurrentZoom] = useState<number | null>(null);
+    const [showZoomIndicator, setShowZoomIndicator] = useState(false);
+    const zoomTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         if (!mapRef.current) return;
@@ -307,9 +309,23 @@ export function MapView({
 
             // --- 附加功能: 记录并同步当前层级 ---
             setCurrentZoom(map.getZoom());
-            map.on('zoomend', () => {
+
+            const handleZoomActivity = () => {
                 setCurrentZoom(map.getZoom());
-            });
+                setShowZoomIndicator(true);
+
+                if (zoomTimeoutRef.current) {
+                    clearTimeout(zoomTimeoutRef.current);
+                }
+
+                zoomTimeoutRef.current = setTimeout(() => {
+                    setShowZoomIndicator(false);
+                }, 1500);
+            };
+
+            map.on('zoomstart', handleZoomActivity);
+            map.on('zoom', handleZoomActivity);
+            map.on('zoomend', handleZoomActivity);
 
         };
 
@@ -325,6 +341,9 @@ export function MapView({
             if (mapInstanceRef.current) {
                 mapInstanceRef.current.remove();
                 mapInstanceRef.current = null;
+            }
+            if (zoomTimeoutRef.current) {
+                clearTimeout(zoomTimeoutRef.current);
             }
         };
     }, []);
@@ -345,8 +364,11 @@ export function MapView({
         >
             {/* 底部正中缩放层级指示器 */}
             {currentZoom !== null && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[400] flex items-center justify-center">
-                    <div className="bg-background/80 backdrop-blur-md border border-border/50 text-foreground text-xs font-mono px-3 py-1.5 rounded-full shadow-md select-none opacity-80 transition-opacity hover:opacity-100 flex items-center gap-2">
+                <div className={cn(
+                    "absolute bottom-4 left-1/2 -translate-x-1/2 z-[400] flex items-center justify-center transition-opacity duration-300",
+                    showZoomIndicator ? "opacity-100" : "opacity-0 pointer-events-none"
+                )}>
+                    <div className="bg-background/80 backdrop-blur-md border border-border/50 text-foreground text-xs font-mono px-3 py-1.5 rounded-full shadow-md select-none flex items-center gap-2">
                         <span className="text-muted-foreground">Zoom</span>
                         <span className="font-semibold">{currentZoom}</span>
                     </div>

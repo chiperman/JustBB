@@ -91,8 +91,8 @@ Strictly adhere to the **Conventional Commits** specification.
     - **Write in Chinese**.
     - Wrap lines at 72 chars to ensure readability in terminal.
     - **List Style**:
-      - **Unordered List (`-`)**: Used for **Parallel Details**. Use this to list multiple components or changes that make up the single atomic feature/fix.
-      - **Ordered List (`1.`)**: Used for **Logical Progression**. Use this to describe the sequential steps taken to complete a complex refactor or fix.
+      - **Unordered List (`-`)**: Used for **ALL** details. You MUST use this to list components, changes, or logical steps that make up the commit.
+      - **Ordered List (`1.`)**: **STRICTLY PROHIBITED**. Do NOT use ordered sequences in the commit message body.
       - **Requirement**: No redundant introductory sentences (e.g., do not write "The following steps were taken"). List items should follow the subject directly after a blank line.
 3.  **Breaking Changes**:
     - Add `!` after type/scope.
@@ -183,14 +183,14 @@ feat(alerts): 为警报系统增加 Slack 线程回复功能
 - 优化了通知推送的延迟逻辑
 ```
 
-### Refactor (Logical Progression)
+### Refactor (Logical Steps)
 
 ```text
 refactor: 重构用户验证逻辑
 
-1. 将三个重复的验证端点提取到共享的 Validator 类中
-2. 统一了各模块的错误返回码规范
-3. 更新了受影响的单元测试，确保逻辑一致性
+- 将三个重复的验证端点提取到共享的 Validator 类中
+- 统一了各模块的错误返回码规范
+- 更新了受影响的单元测试，确保逻辑一致性
 ```
 
 ### Simple Bug Fix

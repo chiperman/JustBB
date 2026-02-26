@@ -34,7 +34,7 @@
     "git-commit": {
       "source": "chiperman/agent-skills",
       "sourceType": "github",
-      "computedHash": "78c30550a5b34f9fc23b037cdf616e831a28033dfa57958e51100834cae94f54"
+      "computedHash": "3d61e45e83fa1c7c95680e4d8766b4bbb15b50f17a7ed8b92326e57c2c3de8ca"
     },
     "interaction-design": {
       "source": "wshobson/agents",

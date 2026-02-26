@@ -10,6 +10,9 @@ import { LocationHoverPreview } from './LocationHoverPreview';
 import { useSearchParams } from 'next/navigation';
 import { ImageZoom } from './ImageZoom';
 import { LinkPreview } from './LinkPreview';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { CheckmarkCircle01Icon as Check, Copy01Icon as Copy } from '@hugeicons/core-free-icons';
+import { toast } from '@/hooks/use-toast';
 
 interface MemoContentProps {
     content: string;
@@ -130,6 +133,10 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                             return (
                                 <LinkPreview key={`link-${index}`} url={token.value} />
                             );
+                        case 'email':
+                            return (
+                                <EmailComponent key={`email-${index}`} email={token.value} />
+                            );
                         case 'text':
                         default:
                             return <span key={`text-${index}`} className="text-foreground/90">{highlightText(token.value, searchQuery)}</span>;
@@ -143,5 +150,47 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
         <div className={cn("text-base leading-relaxed break-words whitespace-pre-wrap flex flex-col gap-0", className)}>
             {renderContent(content)}
         </div>
+    );
+}
+
+function EmailComponent({ email }: { email: string }) {
+    const [copied, setCopied] = React.useState(false);
+
+    const handleCopy = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigator.clipboard.writeText(email).then(() => {
+            setCopied(true);
+            toast({
+                description: "邮件地址已复制到剪贴板",
+                duration: 2000,
+            });
+            setTimeout(() => setCopied(false), 2000);
+        });
+    };
+
+    return (
+        <span className="group/email inline">
+            <span className="inline-flex w-0 group-hover/email:w-6 overflow-hidden transition-all duration-300 ease-in-out items-center align-middle shrink-0">
+                <button
+                    onClick={handleCopy}
+                    className="p-1 rounded-md bg-primary/5 hover:bg-primary/10 text-primary transition-all focus:outline-none focus:ring-1 focus:ring-primary/30 mr-1 opacity-0 group-hover/email:opacity-100 border border-primary/10"
+                    title="复制邮件地址"
+                >
+                    {copied ? (
+                        <HugeiconsIcon icon={Check} size={14} />
+                    ) : (
+                        <HugeiconsIcon icon={Copy} size={14} />
+                    )}
+                </button>
+            </span>
+            <a
+                href={`mailto:${email}`}
+                className="text-primary transition-colors inline align-baseline"
+                aria-label={`发送邮件至 ${email}`}
+            >
+                {email}
+            </a>
+        </span>
     );
 }

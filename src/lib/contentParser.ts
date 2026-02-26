@@ -5,6 +5,7 @@ export type ContentToken =
     | { type: 'image'; value: string }
     | { type: 'code'; value: string; lang?: string }
     | { type: 'location'; value: string; name: string; lat: number; lng: number }
+    | { type: 'email'; value: string }
     | { type: 'link'; value: string };
 
 export function parseContentTokens(text: string): ContentToken[] {
@@ -14,18 +15,19 @@ export function parseContentTokens(text: string): ContentToken[] {
     // 3. Markdown 图片: ![alt](url)
     // 4. 引用匹配: @数字 
     // 5. Tag匹配: #标签 (不含空格，中文或字母数字)
-    // 6. 图片直链: http(s)://...jpg/png/gif/webp
+    // 6. Email匹配: test@example.com
+    // 7. 图片直链: http(s)://...jpg/png/gif/webp
 
     // 预处理：移除异常的调试用标签 (如 < a id=0 >, < span id=1 >)
     // 这些可能是历史数据中混入的 React/DevTools 调试残留
     const cleanText = text.replace(/<\s*(?:a|span)\s+id=\d+\s*>/g, '').replace(/<\s*\/\s*(?:a|span)\s*>/g, '');
 
-    const regex = /```(\w*)\n?([\s\S]*?)```|📍\[([^\]]+)\]\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)|!\[.*?\]\((https?:\/\/[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+\.(?:jpg|jpeg|png|gif|webp))\)|(@\d+)|(?<=^|\s|[^a-zA-Z0-9])(#[\w\u4e00-\u9fa5]+)|(https?:\/\/[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+\.(?:jpg|jpeg|png|gif|webp))|(https?:\/\/[^\s\u4e00-\u9fa5<]+[^\s\u4e00-\u9fa5<.,;:!?'"”’。，！？）】])/g;
+    const regex = /```(\w*)\n?([\s\S]*?)```|📍\[([^\]]+)\]\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)|!\[.*?\]\((https?:\/\/[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+\.(?:jpg|jpeg|png|gif|webp))\)|(@\d+)|(?<=^|\s|[^a-zA-Z0-9])(#[\w\u4e00-\u9fa5]+)|([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)|(https?:\/\/[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+\.(?:jpg|jpeg|png|gif|webp))|(https?:\/\/[^\s\u4e00-\u9fa5<]+[^\s\u4e00-\u9fa5<.,;:!?'"”’。，！？）】])/g;
 
     const tokens: ContentToken[] = [];
     let lastIndex = 0;
 
-    cleanText.replace(regex, (match, lang, codeContent, locName, locLat, locLng, mdImgUrl, atRef, hashTag, rawImgUrl, rawLink, index) => {
+    cleanText.replace(regex, (match, lang, codeContent, locName, locLat, locLng, mdImgUrl, atRef, hashTag, email, rawImgUrl, rawLink, index) => {
         // 添加匹配前的纯文本
         if (index > lastIndex) {
             tokens.push({ type: 'text', value: cleanText.slice(lastIndex, index) });
@@ -41,6 +43,8 @@ export function parseContentTokens(text: string): ContentToken[] {
             tokens.push({ type: 'ref', value: atRef });
         } else if (hashTag) {
             tokens.push({ type: 'tag', value: hashTag });
+        } else if (email) {
+            tokens.push({ type: 'email', value: email });
         } else if (rawImgUrl) {
             tokens.push({ type: 'image', value: rawImgUrl });
         } else if (rawLink) {

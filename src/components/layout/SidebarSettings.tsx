@@ -54,7 +54,10 @@ interface SidebarSettingsProps {
 
 
 export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
-    const { user, loading, refreshUser, isMounted } = useUser();
+    const { user, loading, refreshUser } = useUser();
+    const { setViewMode } = useLoginMode();
+    const { setTheme } = useTheme();
+    const router = useRouter();
     const [loggingOut, setLoggingOut] = React.useState(false);
 
     const handleLogout = async () => {

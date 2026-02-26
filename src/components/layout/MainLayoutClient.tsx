@@ -110,19 +110,6 @@ export function MainLayoutClient({
 
     return (
         <div className="flex flex-col h-screen overflow-hidden bg-accent/20 relative">
-            {/* 全局加载进度条 */}
-            {isLoading && (
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary/20 z-[100] overflow-hidden">
-                    <div className="h-full bg-primary animate-[loading_1.5s_ease-in-out_infinite] origin-left w-1/3" />
-                </div>
-            )}
-            <style jsx global>{`
-                @keyframes loading {
-                    0% { transform: translateX(-100%) scaleX(0.5); }
-                    50% { transform: translateX(50%) scaleX(1.5); }
-                    100% { transform: translateX(200%) scaleX(0.5); }
-                }
-            `}</style>
             {/* 固定顶部区域 - 品牌、搜索 & 编辑器 */}
             <div
                 className={cn(

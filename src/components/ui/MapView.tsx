@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import type { MapMarker } from '@/lib/location-cache';
 import { MemoCard } from './MemoCard';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Location04Icon } from '@hugeicons/core-free-icons';
+import { Location04Icon, ZoomInAreaIcon } from '@hugeicons/core-free-icons';
 
 // Leaflet CSS 需要在客户端动态导入
 let leafletLoaded = false;
@@ -96,10 +96,21 @@ export function MapView({
                 // 如果只有一个点或者处于 full 模式且有多个点，均默认放大至 12 级以聚焦最新地点
                 const zoom = mode === 'mini' ? 13 : (markers.length > 0 ? 12 : 5);
 
+                // 动态计算最小缩放级别，使地图能铺满容器宽度
+                // 假设瓦片大小为256px，0级缩放时整个世界宽度为256px
+                // 宽度缩放公式：width = 256 * 2^zoom
+                // 因此所需最小zoom: zoom = log2(containerWidth / 256)
+                const containerWidth = mapRef.current.clientWidth;
+                // 为了稍微增加一点宽容度，向上取一点点
+                const calculatedMinZoom = Math.max(2, Math.ceil(Math.log2(containerWidth / 256)));
+
                 const map = L.map(mapRef.current, {
                     center,
                     zoom,
                     maxZoom: 20,
+                    minZoom: calculatedMinZoom, // 动态计算，避免左右出现灰边
+                    maxBounds: L.latLngBounds(L.latLng(-90, -180), L.latLng(90, 180)), // 限制拖拽边界到真实世界的经纬度极值
+                    maxBoundsViscosity: 1.0, // 边界完全粘性，不允许拖出界
                     zoomControl: false,
                     attributionControl: mode === 'full',
                     dragging: mode !== 'mini' || interactive,
@@ -110,6 +121,20 @@ export function MapView({
                     zoomAnimation: true,
                     markerZoomAnimation: true
                 });
+
+                // 处理窗口大小改变时的 minZoom 更新
+                const handleResize = () => {
+                    if (!mapRef.current || !mapInstanceRef.current) return;
+                    const newWidth = mapRef.current.clientWidth;
+                    const newMinZoom = Math.max(2, Math.ceil(Math.log2(newWidth / 256)));
+                    if (newMinZoom !== mapInstanceRef.current.getMinZoom()) {
+                        mapInstanceRef.current.setMinZoom(newMinZoom);
+                    }
+                };
+                window.addEventListener('resize', handleResize);
+                // 保存清理函数以供后续移除
+                // @ts-ignore
+                map._cleanupResize = () => window.removeEventListener('resize', handleResize);
 
                 if (onMapClick) {
                     map.on('click', (e: L.LeafletMouseEvent) => {
@@ -227,7 +252,9 @@ export function MapView({
                 tileLayerRef.current = L.tileLayer(newTileUrl, {
                     attribution: mode === 'full' ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>' : '',
                     maxZoom: 20,
+                    minZoom: 2,
                     maxNativeZoom: 18, // 超过 18 级放大时，不发请求，直接拉伸已有图片，解决高比率由于无数据或限流导致的白屏/慢加载
+                    noWrap: true, // 禁止瓦片在水平方向上重复
                 }).addTo(map);
             } else {
                 tileLayerRef.current.setUrl(newTileUrl);
@@ -273,9 +300,14 @@ export function MapView({
 
                     // @ts-ignore
                     m._markerData = markerData;
+
+                    const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 600;
+                    const popupMaxWidth = Math.min(550, windowWidth - 40);
+                    const popupMinWidth = Math.min(300, windowWidth - 60);
+
                     m.bindPopup('<div class="react-popup-root"></div>', {
-                        maxWidth: 550,
-                        minWidth: 400,
+                        maxWidth: popupMaxWidth,
+                        minWidth: popupMinWidth,
                         className: 'modern-map-popup',
                         autoPan: false // 禁用原生自动平移，使用上面我们自己计算的居中平移
                     });
@@ -339,6 +371,11 @@ export function MapView({
     useEffect(() => {
         return () => {
             if (mapInstanceRef.current) {
+                // @ts-ignore
+                if (mapInstanceRef.current._cleanupResize) {
+                    // @ts-ignore
+                    mapInstanceRef.current._cleanupResize();
+                }
                 mapInstanceRef.current.remove();
                 mapInstanceRef.current = null;
             }
@@ -369,6 +406,7 @@ export function MapView({
                     showZoomIndicator ? "opacity-100" : "opacity-0 pointer-events-none"
                 )}>
                     <div className="bg-background/80 backdrop-blur-md border border-border/50 text-foreground text-xs font-mono px-3 py-1.5 rounded-full shadow-md select-none flex items-center gap-2">
+                        <HugeiconsIcon icon={ZoomInAreaIcon} size={14} className="text-muted-foreground" />
                         <span className="text-muted-foreground">Zoom</span>
                         <span className="font-semibold">{currentZoom}</span>
                     </div>

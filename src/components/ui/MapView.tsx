@@ -151,6 +151,9 @@ export function MapView({
                     scrollWheelZoom: mode === 'mini' ? 'center' : true,
                     doubleClickZoom: mode !== 'mini' || interactive,
                     touchZoom: mode !== 'mini' || interactive,
+                    fadeAnimation: true,
+                    zoomAnimation: true,
+                    markerZoomAnimation: true
                 });
 
                 if (onMapClick) {
@@ -172,11 +175,12 @@ export function MapView({
                             if (!popupElement || !mapInstanceRef.current) return;
 
                             // 这里的 popupElement 实际上包含了箭头
-                            const popupHeight = popupElement.offsetHeight; 
-                            
+                            const popupHeight = popupElement.offsetHeight;
+
                             // 获取目标点的原始地理坐标 (LatLng)
                             // @ts-ignore
                             const latlng = e.popup.getLatLng();
+                            if (!latlng) return;
 
                             // 通过 map project 把目标点转换为屏幕上的像素坐标
                             const px = mapInstanceRef.current.project(latlng);
@@ -213,7 +217,7 @@ export function MapView({
                     // @ts-ignore
                     markerClusterGroupRef.current = L.markerClusterGroup({
                         showCoverageOnHover: true,
-                        zoomToBoundsOnClick: true,
+                        zoomToBoundsOnClick: false, // 禁用原生直接缩放，改为下面我们自定义的飞行缩放
                         spiderfyOnMaxZoom: true,
                         maxClusterRadius: 40, // 适当调小半径，让聚合更精准
                         iconCreateFunction: (cluster: any) => {
@@ -223,6 +227,19 @@ export function MapView({
                                 iconSize: L.point(40, 40)
                             });
                         }
+                    });
+
+                    // 自定义聚合点点击效果：步进式缩放 (+2 级)，让聚合内容循序渐进地分散开，避免瞬间闪现
+                    markerClusterGroupRef.current.on('clusterclick', (a: any) => {
+                        const currentZoom = map.getZoom();
+                        const maxZoom = map.getMaxZoom();
+                        // 每次点击增加 2 级缩放，但不超过地图最大缩放级别
+                        const targetZoom = Math.min(currentZoom + 2, maxZoom);
+
+                        map.flyTo(a.layer.getLatLng(), targetZoom, {
+                            duration: 0.8,
+                            easeLinearity: 0.25
+                        });
                     });
                 } else {
                     console.warn('L.markerClusterGroup is not available, falling back to basic layer group');

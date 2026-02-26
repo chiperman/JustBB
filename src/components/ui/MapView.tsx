@@ -45,6 +45,7 @@ export function MapView({
 
     // 用存储 Portal 渲染的目标节点
     const [popupTarget, setPopupTarget] = useState<{ container: HTMLElement, marker: MapMarker } | null>(null);
+    const [currentZoom, setCurrentZoom] = useState<number | null>(null);
 
     useEffect(() => {
         if (!mapRef.current) return;
@@ -81,54 +82,6 @@ export function MapView({
                 }
 
                 leafletLoaded = true;
-
-                // 注入全局动画与聚合样式
-                if (!document.getElementById('map-view-styles')) {
-                    const style = document.createElement('style');
-                    style.id = 'map-view-styles';
-                    style.innerHTML = `
-                        @keyframes marker-fade-in {
-                            from { opacity: 0; transform: scale(0.5); }
-                            to { opacity: 1; transform: scale(1); }
-                        }
-                        @keyframes marker-fade-out {
-                            from { opacity: 1; transform: scale(1); }
-                            to { opacity: 0; transform: scale(0.5); }
-                        }
-                        .marker-fade-in { animation: marker-fade-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-                        .marker-fade-out { animation: marker-fade-out 0.3s ease-in forwards; }
-                        .custom-map-marker { transition: all 0.3s ease; }
-                        
-                        /* 自定义聚合图标样式 */
-                        .custom-marker-cluster {
-                            background: rgba(217, 119, 87, 0.15);
-                            border-radius: 50%;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            backdrop-filter: blur(4px);
-                            transition: transform 0.2s ease;
-                        }
-                        .custom-marker-cluster:hover {
-                            transform: scale(1.1);
-                        }
-                        .cluster-inner {
-                            width: 32px;
-                            height: 32px;
-                            background: var(--color-primary, #d97757);
-                            border: 2px solid white;
-                            border-radius: 50%;
-                            color: white;
-                            font-weight: bold;
-                            font-size: 13px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            box-shadow: 0 4px 12px rgba(217, 119, 87, 0.4);
-                        }
-                    `;
-                    document.head.appendChild(style);
-                }
             }
 
             if (cancelled || !mapRef.current) return;
@@ -219,27 +172,40 @@ export function MapView({
                         showCoverageOnHover: true,
                         zoomToBoundsOnClick: false, // 禁用原生直接缩放，改为下面我们自定义的飞行缩放
                         spiderfyOnMaxZoom: true,
+                        // @ts-ignore
+                        spiderLegPolylineOptions: { weight: 0, opacity: 0 }, // 隐藏展开时两点之间画出的连线（蜘蛛腿）
                         maxClusterRadius: 40, // 适当调小半径，让聚合更精准
+                        animateAddingMarkers: false, // 禁用分步拆解动画以避免计算偏移坐标导致的视觉滞后
                         iconCreateFunction: (cluster: any) => {
                             return L.divIcon({
-                                html: `<div class="cluster-inner"><span>${cluster.getChildCount()}</span></div>`,
-                                className: 'custom-marker-cluster',
+                                html: `<div style="width: 100%; height: 100%; background: rgba(217, 119, 87, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+                                         <div style="width: 32px; height: 32px; background: var(--color-primary, #d97757); border: 2px solid white; border-radius: 50%; color: white; font-weight: bold; font-size: 13px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(217, 119, 87, 0.4); transition: transform 0.2s ease;" onmouseenter="this.style.transform='scale(1.1)'" onmouseleave="this.style.transform='scale(1)'">
+                                           <span>${cluster.getChildCount()}</span>
+                                         </div>
+                                       </div>`,
+                                className: '',
                                 iconSize: L.point(40, 40)
                             });
                         }
                     });
 
-                    // 自定义聚合点点击效果：步进式缩放 (+2 级)，让聚合内容循序渐进地分散开，避免瞬间闪现
                     markerClusterGroupRef.current.on('clusterclick', (a: any) => {
-                        const currentZoom = map.getZoom();
+                        const bounds = a.layer.getBounds();
+                        const targetZoom = map.getBoundsZoom(bounds);
                         const maxZoom = map.getMaxZoom();
-                        // 每次点击增加 2 级缩放，但不超过地图最大缩放级别
-                        const targetZoom = Math.min(currentZoom + 2, maxZoom);
 
-                        map.flyTo(a.layer.getLatLng(), targetZoom, {
-                            duration: 0.8,
-                            easeLinearity: 0.25
-                        });
+                        // 如果需要的展开层级已大于或等于地图极限，说明里面的几个点可能坐标极度贴近甚至完全重合
+                        if (targetZoom >= maxZoom || map.getZoom() >= maxZoom) {
+                            // 调用原生展开蜘蛛腿
+                            a.layer.spiderfy();
+                        } else {
+                            // 否则优雅地平滑飞行到恰好能包涵这批点的最佳层级
+                            map.flyToBounds(bounds, {
+                                padding: [50, 50],
+                                duration: 0.8,
+                                easeLinearity: 0.25
+                            });
+                        }
                     });
                 } else {
                     console.warn('L.markerClusterGroup is not available, falling back to basic layer group');
@@ -338,6 +304,13 @@ export function MapView({
                 const targetZoom = map.getZoom() < 12 ? 12 : map.getZoom();
                 map.setView([markers[0].lat, markers[0].lng], targetZoom, { animate: true, duration: 1.0 });
             }
+
+            // --- 附加功能: 记录并同步当前层级 ---
+            setCurrentZoom(map.getZoom());
+            map.on('zoomend', () => {
+                setCurrentZoom(map.getZoom());
+            });
+
         };
 
         updateOrInitMap();
@@ -370,6 +343,16 @@ export function MapView({
             )}
             style={{ zIndex: 0 }}
         >
+            {/* 底部正中缩放层级指示器 */}
+            {currentZoom !== null && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[400] flex items-center justify-center">
+                    <div className="bg-background/80 backdrop-blur-md border border-border/50 text-foreground text-xs font-mono px-3 py-1.5 rounded-full shadow-md select-none opacity-80 transition-opacity hover:opacity-100 flex items-center gap-2">
+                        <span className="text-muted-foreground">Zoom</span>
+                        <span className="font-semibold">{currentZoom}</span>
+                    </div>
+                </div>
+            )}
+
             {popupTarget && createPortal(
                 <div className="flex flex-col max-h-[600px] w-full">
                     <div className="p-4 border-b border-border/50 bg-background/50 backdrop-blur-sm sticky top-0 z-10 rounded-t-card">

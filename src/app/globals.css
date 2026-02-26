@@ -335,3 +335,63 @@ html body .cursor-pointer:not(:disabled) {
 .modern-map-popup .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--color-primary), 0.4);
 }
+
+/* -------------------------------------------------------------------------- */
+/* Leaflet Markers & Clusters Animation & Styles                              */
+/* -------------------------------------------------------------------------- */
+
+@keyframes marker-fade-in {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes marker-fade-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.5); }
+}
+
+.marker-fade-in { 
+  animation: marker-fade-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; 
+}
+
+.marker-fade-out { 
+  animation: marker-fade-out 0.3s ease-in forwards; 
+}
+
+/* 只包含透明度等外观过渡，坚决不能包含 transform，否则会造成缩放平移滞后漂移！ */
+.custom-map-marker { 
+  transition: opacity 0.3s ease, background-color 0.3s ease; 
+}
+
+/* 自定义聚合图标样式 */
+.custom-marker-cluster {
+  background: rgba(217, 119, 87, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  /* 注意这里不能加 transition，否则地图移动会滞后 */
+}
+
+.custom-marker-cluster:hover .cluster-inner {
+  /* hover 缩放放在内层上，不干扰外层 Leaflet 自己维护的 transform 定位 */
+  transform: scale(1.1);
+}
+
+.cluster-inner {
+  width: 32px;
+  height: 32px;
+  background: var(--color-primary, #d97757);
+  border: 2px solid white;
+  border-radius: 50%;
+  color: white;
+  font-weight: bold;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(217, 119, 87, 0.4);
+  /* 将外层的缩放过渡改加在内部盒子上 */
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}

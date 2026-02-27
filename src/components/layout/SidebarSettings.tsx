@@ -260,7 +260,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         )}
                     </div>
                 </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu >
 
         </>
     );

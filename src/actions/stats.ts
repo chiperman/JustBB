@@ -9,7 +9,12 @@ export async function getMemoStats() {
     const { data, error } = await supabase.rpc('get_memo_stats_v2');
 
     if (error) {
-        console.error('Error fetching memo stats via RPC v2:', error);
+        console.error('Error fetching memo stats via RPC v2:', {
+            message: error.message,
+            code: error.code,
+            details: error.details,
+            hint: error.hint
+        });
         return {
             totalMemos: 0,
             totalTags: 0,
@@ -30,7 +35,12 @@ export async function getTimelineStats(): Promise<TimelineStats> {
     const { data, error } = await supabase.rpc('get_timeline_stats');
 
     if (error) {
-        console.error('Error fetching timeline stats via RPC:', error);
+        console.error('Error fetching timeline stats via RPC:', {
+            message: error.message,
+            code: error.code,
+            details: error.details,
+            hint: error.hint
+        });
         return {
             days: {}
         };

@@ -14,6 +14,8 @@ export async function getSupabaseUsageStats() {
     const projectRef = process.env.SUPABASE_PROJECT_REF;
     const managementApiKey = process.env.SUPABASE_MANAGEMENT_API_KEY;
 
+    let managementApiError: string | null = null;
+
     // 优先尝试使用 Management API (全指标模式)
     if (projectRef && managementApiKey) {
         try {
@@ -69,11 +71,12 @@ export async function getSupabaseUsageStats() {
                     }
                 };
             } else {
-                console.warn(`Supabase Management API failed (${response.status}), attempting SQL fallback.`);
-                // 404 或者其他 API 错误时，不直接报错，而是继续执行下方的 SQL 回退逻辑
+                managementApiError = `Management API failed: ${response.status}`;
+                console.warn(`${managementApiError}, attempting SQL fallback.`);
             }
         } catch (error: any) {
-            console.error(`Supabase Management API error: ${error.message}, attempting SQL fallback.`);
+            managementApiError = `Management API error: ${error.message}`;
+            console.error(`${managementApiError}, attempting SQL fallback.`);
         }
     }
 
@@ -81,20 +84,38 @@ export async function getSupabaseUsageStats() {
     try {
         const supabase = getSupabaseAdmin();
 
-        // 1. 获取用户数 (使用 auth.users 视图，需要 Admin 权限)
+        // 1. 获取用户数
         const { count: userCount, error: userError } = await (supabase as any)
             .from('auth.users')
             .select('*', { count: 'exact', head: true });
 
-        if (userError) throw userError;
+        if (userError) {
+            console.error('SQL Fallback: Error fetching user count:', {
+                message: userError.message,
+                code: userError.code,
+                hint: userError.hint
+            });
+        }
 
-        // 2. 获取数据库大小 (需要预先在 Supabase 中定义 get_database_size RPC)
+        // 2. 获取数据库大小
         const { data: dbBytesData, error: dbError } = await (supabase as any).rpc('get_database_size');
 
-        // 如果没有定义 RPC，默认返回一个基础值或通过日志提示
         const dbBytes = typeof dbBytesData === 'number' ? dbBytesData : 0;
         if (dbError) {
-            console.warn('Fallback RPC get_database_size not found, skipping db size in fallback mode.');
+            console.warn('SQL Fallback: Error fetching db size (RPC get_database_size):', {
+                message: dbError.message,
+                code: dbError.code,
+                hint: dbError.hint
+            });
+        }
+
+        // 如果 Management API 失败且 SQL 关键统计也失败，则认为整体失败
+        if (managementApiError && userError && dbError) {
+            return {
+                success: false,
+                isFullIndicator: false,
+                error: `Usage fetch failed. API: ${managementApiError}. SQL: ${userError.message}`
+            };
         }
 
         return {
@@ -112,7 +133,6 @@ export async function getSupabaseUsageStats() {
                     limit: 50000,
                     percentage: Math.min(Math.round(((userCount || 0) / MAU_LIMIT) * 100), 100)
                 },
-                // 基础版无法获取 Egress 和 Storage 实时配额，返回 0
                 storage: { used: 0, limit: 1024, percentage: 0, unit: 'MB' },
                 egress: { used: 0, limit: 2, percentage: 0, unit: 'GB' },
                 realtime: { connections: 0, messages: 0 },

@@ -7,7 +7,6 @@ import { GalleryPageContent } from '@/components/pages/GalleryPageContent';
 import { TagsPageContent } from '@/components/pages/TagsPageContent';
 import { MapPageContent } from '@/components/pages/MapPageContent';
 import TrashClient from '@/app/(main)/trash/TrashClient';
-import AdminPage from '@/app/(main)/admin/page';
 
 /**
  * 客户端路由器
@@ -56,9 +55,6 @@ function renderView(view: string) {
     }
     if (view === '/trash') {
         return <TrashClient />;
-    }
-    if (view === '/admin') {
-        return <AdminPage />;
     }
     // 兜底：显示首页
     return <MainLayoutClient />;

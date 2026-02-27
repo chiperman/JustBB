@@ -55,7 +55,7 @@ describe('getSupabaseUsageStats', () => {
         expect(result.isFullIndicator).toBe(false);
     });
 
-    it('should handle management API errors gracefully', async () => {
+    it('should fallback to SQL mode when Management API fails', async () => {
         global.fetch = vi.fn().mockResolvedValue({
             ok: false,
             status: 500
@@ -63,7 +63,8 @@ describe('getSupabaseUsageStats', () => {
 
         const result = await getSupabaseUsageStats();
 
-        expect(result.success).toBe(false);
-        expect(result.error).toBeDefined();
+        // 虽然 API 失败，但因为有 SQL 回退，整体依然返回成功，但 isFullIndicator 为 false
+        expect(result.success).toBe(true);
+        expect(result.isFullIndicator).toBe(false);
     });
 });

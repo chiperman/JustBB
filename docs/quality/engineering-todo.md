@@ -9,11 +9,11 @@
 
 ## 🧹 代码洁癖与规范 (Priority: Medium)
 - [x] **全量警告清扫**：已完成 ESLint 全量清理（包含 `next/image` 优化和冗余代码移除）。
-- [ ] **环境变量校验**：增加构建时环境变量存在性检查逻辑。
+- [x] **环境变量校验**：已在构建时增加硬性校验拦截逻辑 (`next.config.ts`)。
 
 ## 🧪 自动化测试 (Priority: Medium)
-- [ ] **权限回归测试**：将 `scripts/test-rls.ts` 转化为自动化测试用例。
-- [ ] **数据过滤测试**：将 `scripts/test-date-filter.ts` 转化为自动化测试用例。
+- [x] **权限回归测试**：已将 RLS 校验逻辑迁入 `security.test.ts`。
+- [x] **数据过滤测试**：已将日期过滤逻辑迁入 `fetchMemos.integrated.test.ts`。
 
 ## 🚀 持续集成 (Priority: Low)
-- [ ] **GitHub Actions**：配置全自动 CI 流程。
+- [x] **GitHub Actions**：已配置基础 CI 流水线 (`ci.yml`)。

@@ -1,0 +1,49 @@
+name: JustBB CI
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Check Lint
+      run: npm run lint
+
+    - name: Unit Tests (Mocked)
+      run: npx vitest run --exclude "**/*.integrated.test.ts" --exclude "src/actions/security.test.ts"
+      env:
+        # Mock env vars for non-integrated tests if needed (env.ts validation)
+        NEXT_PUBLIC_SUPABASE_URL: "http://localhost:54321"
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: "mock_key"
+        SUPABASE_SERVICE_ROLE_KEY: "mock_key"
+        ADMIN_PASSWORD: "mock_password"
+
+    - name: Build Project
+      run: npm run build
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: "http://localhost:54321"
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: "mock_key"
+        SUPABASE_SERVICE_ROLE_KEY: "mock_key"
+        ADMIN_PASSWORD: "mock_password"
+        # 禁用构建时某些可能尝试连接数据库的静态导出 (如果有)
+        SKIP_ENV_VALIDATION: "false"
+
+    # 注意：集成测试 (security.test.ts, *.integrated.test.ts) 需要本地 Supabase 环境。
+    # 在 CI 中通常需要启动 Supabase Local CLI。为了简化演示，这里暂不包含 Supabase 启动逻辑。
+    # 真正的生产 CI 应包含: npx supabase start && npm run test:integrated

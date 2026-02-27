@@ -134,7 +134,7 @@ export function MemoEditor({
     isCollapsed: isPropCollapsed = false,
     hideFullscreen = false,
     className,
-    contextMemos = []
+    contextMemos,
 }: MemoEditorProps) {
     const { refreshTags } = useTags();
     const { refreshStats } = useStats();
@@ -251,8 +251,8 @@ export function MemoEditor({
                 });
 
                 setHasMoreMentions(items.length === 20); // 如果返回了满额，说明可能还有更多
-            } catch (e) {
-                console.error("Remote mention search failed", e);
+            } catch (_e) {
+                console.error("Remote mention search failed", _e);
             } finally {
                 setIsLoading(false);
                 isFetchingMoreRef.current = false;
@@ -590,7 +590,7 @@ export function MemoEditor({
                         try {
                             const json = JSON.parse(draftContent);
                             editor.commands.setContent(json);
-                        } catch (e) {
+                        } catch {
                             // Fallback to plain text for legacy drafts or if JSON fails
                             editor.commands.setContent(textToTiptapHtml(draftContent));
                         }

@@ -221,7 +221,7 @@ function StatCard({
                 <div className="flex-1 relative w-full mb-[24px]">
                     {/* Y-axis Ticks Layer */}
                     <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-                        {ticks.map((tick, i) => (
+                        {ticks.map((tick) => (
                             <div key={tick} className="flex items-center w-full h-[1px] relative">
                                 <div className="flex-1" />
                                 <span className="text-[10px] text-muted-foreground/40 font-mono font-medium absolute right-[-32px] w-[28px] text-left tabular-nums">

@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { unlockWithCode } from '@/actions/unlock';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { CircleLock01Icon as Lock } from '@hugeicons/core-free-icons';
-import { useRouter } from 'next/navigation';
 
 interface UnlockDialogProps {
     isOpen: boolean;
@@ -25,7 +24,6 @@ export function UnlockDialog({ isOpen, onClose, hint }: UnlockDialogProps) {
     const [code, setCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const router = useRouter();
 
     const handleUnlock = async () => {
         setLoading(true);
@@ -38,7 +36,7 @@ export function UnlockDialog({ isOpen, onClose, hint }: UnlockDialogProps) {
             } else {
                 setError(result.error || '解锁失败');
             }
-        } catch (err) {
+        } catch {
             setError('发生未知错误');
         } finally {
             setLoading(false);

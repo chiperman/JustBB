@@ -79,16 +79,6 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
         }
     };
 
-    // Text Parallax Variants
-    const textVariants: Variants = {
-        home: { x: 0, opacity: 0.05 },
-        split: (custom) => ({
-            x: custom * 50, // Parallax shift
-            opacity: 0.08,
-            transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
-        })
-    };
-
     // Mapping viewMode to variant keys
     const getVariant = () => {
         if (viewMode === 'HOME_FOCUS') return 'home';

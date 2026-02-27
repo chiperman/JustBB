@@ -8,7 +8,6 @@ import {
     Sun01Icon as Sun,
     Moon01Icon as Moon,
     ComputerIcon as Monitor,
-    TextFontIcon as Type,
     Logout02Icon as LogOut,
     Login03Icon as LogIn,
     Download02Icon as Download,

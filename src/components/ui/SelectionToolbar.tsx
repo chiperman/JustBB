@@ -20,7 +20,6 @@ import { useToast } from '@/hooks/use-toast';
 import { batchDeleteMemos, batchRestoreMemos, batchPermanentDeleteMemos } from '@/actions/delete';
 import { batchAddTagsToMemos } from '@/actions/update';
 import { TagSelectDialog } from './TagSelectDialog';
-import { cn } from '@/lib/utils';
 import { useTags } from '@/context/TagsContext';
 import { useStats } from '@/context/StatsContext';
 

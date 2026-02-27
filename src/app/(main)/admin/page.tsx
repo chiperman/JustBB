@@ -1,6 +1,10 @@
 'use client';
 
 import { DataExporter } from "@/components/ui/DataExporter";
+import { UsageModal } from "@/components/admin/UsageModal";
+import { Button } from "@/components/ui/button";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Database01Icon, CheckListIcon } from "@hugeicons/core-free-icons";
 
 export default function AdminPage() {
     return (
@@ -21,14 +25,27 @@ export default function AdminPage() {
                 </section>
 
                 <section className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-                    <h3 className="text-lg font-semibold mb-4">关于项目</h3>
-                    <div className="space-y-4 text-sm leading-relaxed text-muted-foreground">
-                        <p>
-                            JustMemo 是一个专注于“碎片化人文记录”的私有笔记系统。
-                        </p>
-                        <p>
-                            基于 Next.js 15, Tailwind CSS 与 Supabase 构建。采用了原子化提交与高度权限隔离的架构设计。
-                        </p>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold">服务用量</h3>
+                        <UsageModal
+                            trigger={
+                                <Button variant="outline" size="sm" className="rounded-xl gap-2 h-9 px-4">
+                                    <HugeiconsIcon icon={CheckListIcon} size={14} />
+                                    查看配额详情
+                                </Button>
+                            }
+                        />
+                    </div>
+                    <div className="p-4 bg-muted/20 rounded-xl border border-border/50 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-primary/10 p-2 rounded-lg">
+                                <HugeiconsIcon icon={Database01Icon} size={18} className="text-primary" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium">Supabase 基础设施</p>
+                                <p className="text-xs text-muted-foreground">实时监控数据库、存储与 API 资源使用情况。</p>
+                            </div>
+                        </div>
                     </div>
                 </section>
 

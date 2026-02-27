@@ -74,25 +74,21 @@ export function UsageModal({ trigger }: UsageModalProps) {
                             </div>
                             <DialogTitle className="text-xl font-bold tracking-tight">Supabase 用量</DialogTitle>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-9 w-9 rounded-xl hover:bg-black/5 dark:hover:bg-white/5"
+                                className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-all active:scale-90"
                                 onClick={fetchData}
                                 disabled={loading}
+                                title="手动刷新"
                             >
                                 <HugeiconsIcon
                                     icon={RefreshIcon}
-                                    size={18}
+                                    size={16}
                                     className={cn(loading && "animate-spin")}
                                 />
                             </Button>
-                            <DialogClose asChild>
-                                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-black/5 dark:hover:bg-white/5">
-                                    <HugeiconsIcon icon={X} size={18} />
-                                </Button>
-                            </DialogClose>
                         </div>
                     </DialogHeader>
 
@@ -227,8 +223,14 @@ export function UsageModal({ trigger }: UsageModalProps) {
                         </AnimatePresence>
                     </div>
 
-                    <div className="p-6 pt-2 bg-muted/30 border-t border-border/50 text-[10px] text-muted-foreground text-center">
-                        数据每分钟同步一次。配额基于 Supabase 免费层级 (Free Plan) 标准。
+                    <div className="p-5 pt-3 bg-muted/20 border-t border-border/40 text-[10px] text-muted-foreground/60 leading-relaxed">
+                        <div className="flex items-start gap-2">
+                            <HugeiconsIcon icon={ApiIcon} size={12} className="shrink-0 mt-0.5" />
+                            <p>
+                                {/* @ts-ignore */}
+                                数据{loading ? "更新中..." : "每分钟同步一次"}。完整指标需正确配置 `SUPABASE_PROJECT_REF` 与 `MANAGEMENT_API_KEY`。配额基于 Supabase 免费层级 (Free Plan) 标准。
+                            </p>
+                        </div>
                     </div>
                 </div>
             </DialogContent>

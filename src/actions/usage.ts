@@ -69,18 +69,11 @@ export async function getSupabaseUsageStats() {
                     }
                 };
             } else {
-                return {
-                    success: false,
-                    isFullIndicator: false,
-                    error: `Supabase Management API failed: ${response.status}`
-                };
+                console.warn(`Supabase Management API failed (${response.status}), attempting SQL fallback.`);
+                // 404 或者其他 API 错误时，不直接报错，而是继续执行下方的 SQL 回退逻辑
             }
         } catch (error: any) {
-            return {
-                success: false,
-                isFullIndicator: false,
-                error: `Supabase Management API error: ${error.message}`
-            };
+            console.error(`Supabase Management API error: ${error.message}, attempting SQL fallback.`);
         }
     }
 

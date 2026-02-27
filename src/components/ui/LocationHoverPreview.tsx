@@ -33,10 +33,7 @@ interface LocationHoverPreviewProps {
 }
 
 export function LocationHoverPreview({ name, lat, lng, children }: LocationHoverPreviewProps) {
-    const [MapView, setMapView] = React.useState<React.ComponentType<{
-        markers: { name: string; lat: number; lng: number }[];
-        mode: 'mini' | 'full';
-    }> | null>(null);
+    const [MapView, setMapView] = React.useState<React.ComponentType<any> | null>(null);
 
     const handleOpenChange = React.useCallback(async (open: boolean) => {
         if (open && !MapView) {

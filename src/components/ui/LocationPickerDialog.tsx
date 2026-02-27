@@ -41,15 +41,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
 
 
 
-    const [MapView, setMapView] = React.useState<React.ComponentType<{
-        markers: { name: string; lat: number; lng: number }[];
-        mode: 'mini' | 'full';
-        interactive?: boolean;
-        className?: string;
-        onMarkerClick?: (marker: { name: string; lat: number; lng: number }) => void;
-        onMapClick?: (lat: number, lng: number) => void;
-        onMarkerDragEnd?: (lat: number, lng: number) => void;
-    }> | null>(null);
+    const [MapView, setMapView] = React.useState<React.ComponentType<any> | null>(null);
 
     // 懒加载 MapView
     React.useEffect(() => {
@@ -309,11 +301,11 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                                 mode="mini"
                                 interactive={true}
                                 className="w-full h-[220px]"
-                                onMapClick={(flat, flng) => {
+                                onMapClick={(flat: number, flng: number) => {
                                     setLat(flat.toFixed(6).toString());
                                     setLng(flng.toFixed(6).toString());
                                 }}
-                                onMarkerDragEnd={(flat, flng) => {
+                                onMarkerDragEnd={(flat: number, flng: number) => {
                                     setLat(flat.toFixed(6).toString());
                                     setLng(flng.toFixed(6).toString());
                                 }}

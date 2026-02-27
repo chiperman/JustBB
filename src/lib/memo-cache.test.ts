@@ -15,7 +15,7 @@ describe('MemoCache', () => {
 
     it('should set items and mark as initialized', () => {
         const items: CacheItem[] = [
-            { id: '1', memo_number: 1, created_at: new Date().toISOString() }
+            { id: '1', memo_number: 1, content: 'test', created_at: new Date().toISOString() }
         ];
         memoCache.setItems(items);
         expect(memoCache.getItems()).toHaveLength(1);
@@ -23,10 +23,10 @@ describe('MemoCache', () => {
     });
 
     it('should add item to the beginning', () => {
-        const item1: CacheItem = { id: '1', memo_number: 1, created_at: '2023-01-01' };
+        const item1: CacheItem = { id: '1', memo_number: 1, content: 'test1', created_at: '2023-01-01' };
         memoCache.setItems([item1]);
 
-        const item2: CacheItem = { id: '2', memo_number: 2, created_at: '2023-01-02' };
+        const item2: CacheItem = { id: '2', memo_number: 2, content: 'test2', created_at: '2023-01-02' };
         memoCache.addItem(item2);
 
         const items = memoCache.getItems();
@@ -36,9 +36,9 @@ describe('MemoCache', () => {
 
     it('should search by memo number only', () => {
         const items: CacheItem[] = [
-            { id: '1', memo_number: 101, created_at: '2023-01-01' },
-            { id: '2', memo_number: 102, created_at: '2023-01-02' },
-            { id: '3', memo_number: 103, created_at: '2023-01-03' }
+            { id: '1', memo_number: 101, content: 'content1', created_at: '2023-01-01' },
+            { id: '2', memo_number: 102, content: 'content2', created_at: '2023-01-02' },
+            { id: '3', memo_number: 103, content: 'content3', created_at: '2023-01-03' }
         ];
         memoCache.setItems(items);
 
@@ -52,13 +52,13 @@ describe('MemoCache', () => {
 
     it('should merge items correctly', () => {
         const oldItems: CacheItem[] = [
-            { id: '1', memo_number: 1, created_at: '2023-01-01T10:00:00Z' }
+            { id: '1', memo_number: 1, content: 'old', created_at: '2023-01-01T10:00:00Z' }
         ];
         memoCache.setItems(oldItems);
 
         const newItems: CacheItem[] = [
-            { id: '1', memo_number: 1, created_at: '2023-01-01T10:00:00Z' }, // Same ID
-            { id: '2', memo_number: 2, created_at: '2023-01-02T10:00:00Z' }
+            { id: '1', memo_number: 1, content: 'new', created_at: '2023-01-01T10:00:00Z' }, // Same ID
+            { id: '2', memo_number: 2, content: 'item2', created_at: '2023-01-02T10:00:00Z' }
         ];
 
         memoCache.mergeItems(newItems);

@@ -54,6 +54,14 @@
     - `exportAllMemos`: 无
 *   安全: 仅限已认证管理员。
 
+### 2.9 `getSupabaseUsageStats`
+*   功能: 获取 Supabase 项目的实时监控指标。
+*   输入: 无
+*   逻辑:
+    - 优先尝试通过 Supabase Management API 获取全量指标。
+    - 若配置缺失，则回退通过 SQL 获取基础 DB 大小与用户数。
+*   安全: 仅限已认证管理员，API 请求仅在服务端执行。
+
 ## 3. 身份验证与权限 (Auth Actions)
 
 ### 3.1 用户流

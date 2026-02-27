@@ -43,6 +43,13 @@
 - **快捷复制**: 悬浮邮件地址时显示带有平滑动画的复制按钮。
 - **视觉优化**: 采用 14px 图标确保在高分屏下的亚像素渲染清晰度。
 
+### 6. 📊 Supabase 用量监控 (Usage Monitoring)
+提供项目配额透明度。
+- **采集**: 通过 Management API 抓取全量指标（DB, Storage, MAU, Egress），支持 SQL 基础回退。
+- **展示**: 实时变色进度条 + 模态框仪表盘。
+- **位置**: 管理员设置页面。
+- **详情**: 参见 [usage-monitoring.md](./usage-monitoring.md)。
+
 ---
 
 ## 🛠️ 公共逻辑规范

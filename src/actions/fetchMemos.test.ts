@@ -15,7 +15,7 @@ describe('getMemos TDD', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        (createClient as any).mockResolvedValue(mockSupabase);
+        vi.mocked(createClient).mockResolvedValue(mockSupabase as unknown as ReturnType<typeof createClient>);
     });
 
     it('should call search_memos_secure with default parameters', async () => {

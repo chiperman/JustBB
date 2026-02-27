@@ -7,14 +7,11 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-    DialogClose,
 } from "@/components/ui/dialog";
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
-    Cancel01Icon as X,
     RotateLeft01Icon as RefreshIcon,
     Database01Icon,
-    AiCloud01Icon,
     UserGroupIcon,
     GlobalIcon,
     FlashIcon,
@@ -31,10 +28,25 @@ interface UsageModalProps {
     trigger: React.ReactNode;
 }
 
+interface UsageData {
+    db: { used: number; limit: number; percentage: number; unit: string };
+    storage: { used: number; limit: number; percentage: number; unit: string };
+    mau: { used: number; limit: number; percentage: number };
+    egress: { used: number; limit: number; percentage: number; unit: string };
+    realtime: { connections: number; messages: number };
+    functions: { invocations: number };
+}
+
+interface SuccessStats {
+    success: true;
+    isFullIndicator: boolean;
+    data: UsageData;
+}
+
 export function UsageModal({ trigger }: UsageModalProps) {
     const [isOpen, setIsOpen] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
-    const [stats, setStats] = React.useState<any>(null);
+    const [stats, setStats] = React.useState<SuccessStats | null>(null);
     const [error, setError] = React.useState<string | null>(null);
 
     const fetchData = React.useCallback(async () => {
@@ -42,13 +54,13 @@ export function UsageModal({ trigger }: UsageModalProps) {
         setError(null);
         try {
             const result = await getSupabaseUsageStats();
-            if (result.success) {
-                setStats(result);
+            if (result.success && result.data) {
+                setStats(result as SuccessStats);
             } else {
                 setError(result.error || "获取数据失败");
             }
-        } catch (err: any) {
-            setError(err.message || "未知错误");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "未知错误");
         } finally {
             setLoading(false);
         }
@@ -227,7 +239,6 @@ export function UsageModal({ trigger }: UsageModalProps) {
                         <div className="flex items-start gap-2">
                             <HugeiconsIcon icon={ApiIcon} size={12} className="shrink-0 mt-0.5" />
                             <p>
-                                {/* @ts-ignore */}
                                 数据{loading ? "更新中..." : "每分钟同步一次"}。完整指标需正确配置 `SUPABASE_PROJECT_REF` 与 `MANAGEMENT_API_KEY`。配额基于 Supabase 免费层级 (Free Plan) 标准。
                             </p>
                         </div>

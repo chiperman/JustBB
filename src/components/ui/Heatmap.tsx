@@ -8,14 +8,6 @@ import { HeatmapModal } from './HeatmapModal';
 import { useReducedMotion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-// 定义接口以匹配 actions/stats.ts 的返回值
-interface HeatmapStats {
-    totalMemos: number;
-    totalTags: number;
-    firstMemoDate: string | null;
-    days: Record<string, { count: number; wordCount: number }>;
-}
-
 // 提取单元格组件以减少重渲染范围
 const HeatmapCell = memo(({
     dateStr,
@@ -64,8 +56,7 @@ const HeatmapCell = memo(({
 HeatmapCell.displayName = 'HeatmapCell';
 
 import { useStats } from '@/context/StatsContext';
-
-// ... interface and HeatmapCell definition stay the same ...
+import { HeatmapStats } from '@/types/stats';
 
 export const Heatmap = memo(function Heatmap() {
     const { stats, isLoading: contextLoading, isMounted } = useStats();
@@ -77,14 +68,17 @@ export const Heatmap = memo(function Heatmap() {
 
     const loading = !isMounted || contextLoading;
 
+    // 获取关键日期以计算
+    const firstMemoDate = stats.firstMemoDate;
+
     // 计算总天数
     const totalActiveDays = useMemo(() => {
-        if (!stats?.firstMemoDate) return 0;
-        const parts = stats.firstMemoDate.split('-');
+        if (!firstMemoDate) return 0;
+        const parts = firstMemoDate.split('-');
         if (parts.length < 3) return 0;
         const firstDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
         return differenceInDays(new Date(), firstDate) + 1;
-    }, [stats?.firstMemoDate]);
+    }, [firstMemoDate]);
 
     // 生成对齐到周日的日期数据 (约 12-13 周)
     const heatmapDays = useMemo(() => {

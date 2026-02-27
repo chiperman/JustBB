@@ -2,14 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { getMemoStats } from '@/actions/stats';
-
-// 严格匹配 actions/stats.ts 的返回结构
-interface HeatmapStats {
-    totalMemos: number;
-    totalTags: number;
-    firstMemoDate: string | null;
-    days: Record<string, { count: number; wordCount: number }>;
-}
+import { HeatmapStats } from '@/types/stats';
 
 interface StatsContextType {
     stats: HeatmapStats;
@@ -32,7 +25,7 @@ export function StatsProvider({
     initialData
 }: {
     children: React.ReactNode;
-    initialData?: HeatmapStats;
+    initialData?: HeatmapStats | null;
 }) {
     const [stats, setStats] = useState<HeatmapStats>(initialData || defaultStats);
     const [isLoading, setIsLoading] = useState(!initialData);

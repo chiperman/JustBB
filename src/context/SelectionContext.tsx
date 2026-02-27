@@ -15,19 +15,21 @@ interface SelectionContextType {
 const SelectionContext = createContext<SelectionContextType | undefined>(undefined);
 
 export function SelectionProvider({ children }: { children: React.ReactNode }) {
-    const [isSelectionMode, setIsSelectionMode] = useState(false);
-    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const { currentView } = useView();
+    const [isSelectionMode, setIsSelectionMode] = useState(currentView === '/trash');
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-    // Reset selection mode when navigation occurs (except for trash page where it's always on)
-    useEffect(() => {
+    // Reset selection mode when navigation occurs (Sync during render)
+    const [prevView, setPrevView] = useState(currentView);
+    if (prevView !== currentView) {
+        setPrevView(currentView);
         if (currentView === '/trash') {
             setIsSelectionMode(true);
         } else {
             setIsSelectionMode(false);
             setSelectedIds(new Set());
         }
-    }, [currentView]);
+    }
 
     const toggleSelectionMode = useCallback((enabled?: boolean) => {
         setIsSelectionMode(prev => {

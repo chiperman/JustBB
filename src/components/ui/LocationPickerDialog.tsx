@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Search01Icon as SearchIcon, Loading03Icon as LoadingIcon, Location04Icon, Navigation03Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { useToast } from '@/hooks/use-toast';
+import type { MapView as MapViewType } from './MapView';
 
 interface NominatimResult {
     display_name: string;
@@ -41,7 +42,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
 
 
 
-    const [MapView, setMapView] = React.useState<React.ComponentType<any> | null>(null);
+    const [MapView, setMapView] = React.useState<typeof MapViewType | null>(null);
 
     // 懒加载 MapView
     React.useEffect(() => {
@@ -167,7 +168,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
     };
 
     const markers = lat.trim() && lng.trim() && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))
-        ? [{ name: name || '选中位置', lat: parseFloat(lat), lng: parseFloat(lng) }]
+        ? [{ name: name || '选中位置', lat: parseFloat(lat), lng: parseFloat(lng), items: [] }]
         : [];
 
     return (

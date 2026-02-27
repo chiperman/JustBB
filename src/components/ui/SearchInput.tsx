@@ -10,12 +10,15 @@ import { cn } from "@/lib/utils";
 export function SearchInput() {
     const searchParams = useSearchParams();
     const { replace } = useRouter();
-    const [value, setValue] = useState(searchParams.get('q') || '');
+    const q = searchParams.get('q') || '';
+    const [value, setValue] = useState(q);
 
-    // 同步 URL 参数到本地状态
-    useEffect(() => {
-        setValue(searchParams.get('q') || '');
-    }, [searchParams]);
+    // 同步 URL 参数到本地状态 (渲染期间同步模式)
+    const [prevQ, setPrevQ] = useState(q);
+    if (prevQ !== q) {
+        setPrevQ(q);
+        setValue(q);
+    }
 
     const activeDate = searchParams.get('date');
     const activeTag = searchParams.get('tag');

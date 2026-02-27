@@ -10,7 +10,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
  */
 export const supabase = typeof window !== 'undefined'
     ? createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
-    : null as any; // 在服务端访问此常量会返回 null 或引起推断，强制使用 server 工具
+    : null as unknown as ReturnType<typeof createBrowserClient<Database>>; // 在服务端访问此常量会返回 null 或引起推断，强制使用 server 工具
 
 /**
  * 服务端使用的管理实例 (绕过 RLS)

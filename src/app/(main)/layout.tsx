@@ -43,7 +43,7 @@ export default async function MainLayout({
 
                     {/* 右侧边栏 - 内部自控显示状态 */}
                     <Suspense fallback={null}>
-                        <RightSidebar initialData={initialTimeline as any} />
+                        <RightSidebar initialData={initialTimeline} />
                     </Suspense>
                 </div>
             </div>

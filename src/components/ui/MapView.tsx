@@ -41,7 +41,12 @@ export function MapView({
     const mapInstanceRef = useRef<L.Map | null>(null);
     const tileLayerRef = useRef<L.TileLayer | null>(null);
     const markerInstancesRef = useRef<Map<string, L.Marker>>(new Map());
-    const markerClusterGroupRef = useRef<any>(null);
+    // 定义聚合组类型：标准 FeatureGroup + 插件提供的 addLayers/removeLayers/hasLayer 方法
+    type MarkerClusterGroup = L.FeatureGroup & {
+        addLayers: (layers: L.Layer[]) => void;
+        removeLayers: (layers: L.Layer[]) => void;
+    };
+    const markerClusterGroupRef = useRef<MarkerClusterGroup | null>(null);
 
     // 用存储 Portal 渲染的目标节点
     const [popupTarget, setPopupTarget] = useState<{ container: HTMLElement, marker: MapMarker } | null>(null);
@@ -59,25 +64,25 @@ export function MapView({
 
             // 确保 Leaflet 挂载到全局，供陈旧插件使用
             if (typeof window !== 'undefined') {
-                (window as any).L = L;
+                (window as unknown as { L: typeof L }).L = L;
             }
 
             if (!leafletLoaded) {
                 // 加载核心样式
-                // @ts-ignore
+                // @ts-expect-error External CSS import
                 await import('leaflet/dist/leaflet.css');
 
                 // 只有在浏览器环境下才动态加载插件
                 if (typeof window !== 'undefined') {
                     try {
                         // 动态导入聚合插件的 CSS
-                        // @ts-ignore
+                        // @ts-expect-error External CSS import
                         await import('leaflet.markercluster/dist/MarkerCluster.css');
-                        // @ts-ignore
+                        // @ts-expect-error External CSS import
                         await import('leaflet.markercluster/dist/MarkerCluster.Default.css');
 
                         // 动态加载逻辑核心 (MarkerCluster 必须在 L 存在后加载)
-                        require('leaflet.markercluster');
+                        await import('leaflet.markercluster');
                     } catch (e) {
                         console.error('Failed to load markercluster plugin:', e);
                     }
@@ -133,7 +138,7 @@ export function MapView({
                 };
                 window.addEventListener('resize', handleResize);
                 // 保存清理函数以供后续移除
-                // @ts-ignore
+                // @ts-expect-error Custom property on map instance
                 map._cleanupResize = () => window.removeEventListener('resize', handleResize);
 
                 if (onMapClick) {
@@ -145,8 +150,8 @@ export function MapView({
                 map.on('popupopen', (e) => {
                     const container = e.popup.getElement()?.querySelector('.leaflet-popup-content') as HTMLElement;
                     if (container) {
-                        // @ts-ignore
-                        const markerData = e.popup._source._markerData;
+                        // @ts-expect-error Internal property access
+                        const markerData = e.popup._source._markerData as MapMarker;
                         setPopupTarget({ container, marker: markerData });
 
                         // 获取真实的弹窗高度以计算平移居中（延迟给 React Portal 渲染时间）
@@ -158,7 +163,6 @@ export function MapView({
                             const popupHeight = popupElement.offsetHeight;
 
                             // 获取目标点的原始地理坐标 (LatLng)
-                            // @ts-ignore
                             const latlng = e.popup.getLatLng();
                             if (!latlng) return;
 
@@ -192,18 +196,15 @@ export function MapView({
             // 初始化或获取聚合组
             if (!markerClusterGroupRef.current) {
                 // 安全检查：由于插件加载可能是异步且有副作用的，确保函数存在
-                // @ts-ignore
                 if (typeof L.markerClusterGroup === 'function') {
-                    // @ts-ignore
-                    markerClusterGroupRef.current = L.markerClusterGroup({
+                    markerClusterGroupRef.current = (L as unknown as { markerClusterGroup: (options: object) => MarkerClusterGroup }).markerClusterGroup({
                         showCoverageOnHover: true,
                         zoomToBoundsOnClick: false, // 禁用原生直接缩放，改为下面我们自定义的飞行缩放
                         spiderfyOnMaxZoom: true,
-                        // @ts-ignore
                         spiderLegPolylineOptions: { weight: 0, opacity: 0 }, // 隐藏展开时两点之间画出的连线（蜘蛛腿）
                         maxClusterRadius: 40, // 适当调小半径，让聚合更精准
                         animateAddingMarkers: false, // 禁用分步拆解动画以避免计算偏移坐标导致的视觉滞后
-                        iconCreateFunction: (cluster: any) => {
+                        iconCreateFunction: (cluster: { getChildCount: () => number }) => {
                             return L.divIcon({
                                 html: `<div style="width: 100%; height: 100%; background: rgba(217, 119, 87, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
                                          <div style="width: 32px; height: 32px; background: var(--color-primary, #d97757); border: 2px solid white; border-radius: 50%; color: white; font-weight: bold; font-size: 13px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(217, 119, 87, 0.4); transition: transform 0.2s ease;" onmouseenter="this.style.transform='scale(1.1)'" onmouseleave="this.style.transform='scale(1)'">
@@ -214,9 +215,9 @@ export function MapView({
                                 iconSize: L.point(40, 40)
                             });
                         }
-                    });
+                    }) as MarkerClusterGroup;
 
-                    markerClusterGroupRef.current.on('clusterclick', (a: any) => {
+                    markerClusterGroupRef.current.on('clusterclick', (a: { layer: { getBounds: () => L.LatLngBounds, spiderfy: () => void } }) => {
                         const bounds = a.layer.getBounds();
                         const targetZoom = map.getBoundsZoom(bounds);
                         const maxZoom = map.getMaxZoom();
@@ -236,7 +237,7 @@ export function MapView({
                     });
                 } else {
                     console.warn('L.markerClusterGroup is not available, falling back to basic layer group');
-                    markerClusterGroupRef.current = L.layerGroup();
+                    markerClusterGroupRef.current = L.featureGroup() as MarkerClusterGroup;
                 }
                 map.addLayer(markerClusterGroupRef.current);
             }
@@ -298,7 +299,7 @@ export function MapView({
                         draggable: !!onMarkerDragEnd
                     });
 
-                    // @ts-ignore
+                    // @ts-expect-error Custom data property on marker
                     m._markerData = markerData;
 
                     const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 600;
@@ -322,7 +323,7 @@ export function MapView({
                     currentMarkers.set(key, m);
                 } else {
                     const existingMarker = currentMarkers.get(key)!;
-                    // @ts-ignore
+                    // @ts-expect-error Custom data property on marker
                     existingMarker._markerData = markerData;
                 }
             });
@@ -371,9 +372,9 @@ export function MapView({
     useEffect(() => {
         return () => {
             if (mapInstanceRef.current) {
-                // @ts-ignore
+                // @ts-expect-error Custom cleanup property
                 if (mapInstanceRef.current._cleanupResize) {
-                    // @ts-ignore
+                    // @ts-expect-error Custom cleanup property
                     mapInstanceRef.current._cleanupResize();
                 }
                 mapInstanceRef.current.remove();

@@ -142,7 +142,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                                     ))
                                 ) : inputValue ? (
                                     <div className="w-full text-center py-4 text-xs text-muted-foreground italic">
-                                        按回车键创建新标签 "{inputValue}"
+                                        按回车键创建新标签 &quot;{inputValue}&quot;
                                     </div>
                                 ) : (
                                     <div className="w-full text-center py-4 text-xs text-muted-foreground italic">

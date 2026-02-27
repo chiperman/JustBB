@@ -21,14 +21,11 @@ export function ClientRouter({ children }: { children: ReactNode }) {
     // 是否已经发生过客户端导航
     // 初始为 false → 显示 SSR 的 {children}
     // 首次 navigate() 后变为 true → 永远由客户端渲染
-    const [isRouterActive, setIsRouterActive] = useState(false);
     const [initialPath] = useState(currentView);
+    const [isRouterActiveState, setIsRouterActiveState] = useState(false);
 
-    useEffect(() => {
-        if (currentView !== initialPath) {
-            setIsRouterActive(true);
-        }
-    }, [currentView, initialPath]);
+    // 只要路径变了，就永久激活客户端路由模式
+    const isRouterActive = isRouterActiveState || currentView !== initialPath;
 
     // 尚未客户端导航过，显示 SSR 内容
     if (!isRouterActive) {

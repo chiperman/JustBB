@@ -30,14 +30,14 @@ async function testDateFilter() {
 
     if (filteredData && filteredData.length > 0) {
         console.log('   Sample created_at dates:');
-        filteredData.slice(0, 5).forEach((memo: any) => {
+        filteredData.slice(0, 5).forEach((memo: { created_at: string }) => {
             const memoDate = new Date(memo.created_at).toISOString().split('T')[0];
             const match = memoDate === testDate ? '✅' : '❌';
             console.log(`     ${match} ${memo.created_at} (${memoDate})`);
         });
 
         // Check if all memos match the filter date
-        const allMatch = filteredData.every((memo: any) => {
+        const allMatch = filteredData.every((memo: { created_at: string }) => {
             const memoDate = new Date(memo.created_at).toISOString().split('T')[0];
             return memoDate === testDate;
         });
@@ -63,7 +63,7 @@ async function testDateFilter() {
     console.log(`   Found ${allData?.length || 0} memos without filter`);
 
     // Count distinct dates
-    const dates = new Set(allData?.map((m: any) => new Date(m.created_at).toISOString().split('T')[0]));
+    const dates = new Set((allData || []).map((m: { created_at: string }) => new Date(m.created_at).toISOString().split('T')[0]));
     console.log(`   Distinct dates in all memos: ${dates.size}`);
     console.log('   Dates:', [...dates].sort().join(', '));
 }

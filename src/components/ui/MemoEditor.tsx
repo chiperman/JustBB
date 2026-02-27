@@ -44,6 +44,10 @@ const mentionPluginKey = new PluginKey('mention');
 const hashtagPluginKey = new PluginKey('hashtag');
 
 // 建议项类型
+import { Memo, TagStat } from '@/types/memo';
+import { Editor } from '@tiptap/react';
+import { SuggestionProps, SuggestionKeyDownProps } from '@tiptap/suggestion';
+
 interface SuggestionItem {
     id: string;
     label: string;
@@ -52,7 +56,10 @@ interface SuggestionItem {
     memo_number?: number;
     created_at?: string;
 }
-import { useReducedMotion } from 'framer-motion';
+
+type CustomSuggestionProps = SuggestionProps<SuggestionItem>;
+
+import { useReducedMotion, AnimatePresence, motion } from 'framer-motion';
 import {
     Dialog,
     DialogContent,
@@ -60,17 +67,7 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
-import { AnimatePresence, motion } from 'framer-motion';
 import { spring, ease, duration } from '@/lib/animation';
-
-import { Memo, TagStat } from '@/types/memo';
-import { Editor } from '@tiptap/react';
-
-import { SuggestionProps } from '@tiptap/suggestion';
-
-interface CustomSuggestionProps extends SuggestionProps {
-    command: (props: any) => void;
-}
 
 
 // Helper to generate smart snippet (Simplified for index-only mode)
@@ -182,8 +179,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     // Refs for Tiptap closures
     const suggestionsRef = useRef<SuggestionItem[]>([]);
     const selectedIndexRef = useRef(0);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const suggestionPropsRef = useRef<any>(null);
+    const suggestionPropsRef = useRef<CustomSuggestionProps | null>(null);
     const lastRequestIdRef = useRef(0);
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isFetchingMoreRef = useRef(false);
@@ -254,7 +250,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             setIsLoading(true);
             try {
                 const results = await searchMemosForMention(query, offset, 20);
-                const items: SuggestionItem[] = results.map((m: any) => ({
+                const items: SuggestionItem[] = results.map((m) => ({
                     id: m.id!,
                     label: `@${m.memo_number}`,
                     subLabel: generateSnippet(m.content, query),
@@ -347,7 +343,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     char: '@',
                     pluginKey: mentionPluginKey,
                     render: () => {
-                        const updatePosition = (props: any) => {
+                        const updatePosition = (props: CustomSuggestionProps) => {
                             const rect = props.clientRect?.();
                             if (rect && relativeGroupRef.current) {
                                 const parentRect = relativeGroupRef.current.getBoundingClientRect();
@@ -367,14 +363,14 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         };
 
                         return {
-                            onStart: (props) => {
+                            onStart: (props: CustomSuggestionProps) => {
                                 suggestionPropsRef.current = props;
                                 setShowSuggestions(true);
                                 setSuggestionTrigger('@');
                                 fetchMentionSuggestions(props.query, 0);
                                 updatePosition(props);
                             },
-                            onUpdate: (props) => {
+                            onUpdate: (props: CustomSuggestionProps) => {
                                 suggestionPropsRef.current = props;
                                 fetchMentionSuggestions(props.query, 0);
                                 updatePosition(props);
@@ -457,11 +453,11 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     allowSpaces: false,
                     // 自定义匹配规则以支持中文等非 ASCII 字符
                     // 这里允许 # 后跟任意非空格字符
-                    allow: ({ editor, range }) => {
+                    allow: () => {
                         return true;
                     },
                     render: () => {
-                        const updatePosition = (props: any) => {
+                        const updatePosition = (props: CustomSuggestionProps) => {
                             const rect = props.clientRect?.();
                             if (rect && relativeGroupRef.current) {
                                 const parentRect = relativeGroupRef.current.getBoundingClientRect();
@@ -480,14 +476,14 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         };
 
                         return {
-                            onStart: (props) => {
+                            onStart: (props: CustomSuggestionProps) => {
                                 suggestionPropsRef.current = props;
                                 setShowSuggestions(true);
                                 setSuggestionTrigger('#');
                                 fetchHashtagSuggestions(props.query);
                                 updatePosition(props);
                             },
-                            onUpdate: (props) => {
+                            onUpdate: (props: CustomSuggestionProps) => {
                                 suggestionPropsRef.current = props;
                                 fetchHashtagSuggestions(props.query);
                                 updatePosition(props);
@@ -608,7 +604,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 }
                             ]).run();
                         }
-                    };
+                    } as unknown as CustomSuggestionProps;
 
                     setShowSuggestions(true);
                     setSuggestionTrigger(char);
@@ -841,8 +837,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             }
 
             if (result.success) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const newMemo = (result as any).data;
+                const newMemo = result.data as Memo | undefined;
                 if (newMemo) {
                     if (newMemo) {
                         // Update Cache Optimistically
@@ -885,7 +880,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 setError(typeof result.error === 'string' ? result.error : '操作失败，请稍后重试');
             }
         } catch (err) {
-            setError('服务器连接失败');
+            setError(err instanceof Error ? err.message : '服务器连接失败');
         } finally {
             setIsPending(false);
         }

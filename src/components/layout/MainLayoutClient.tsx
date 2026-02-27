@@ -65,9 +65,9 @@ export function MainLayoutClient({
 
     // 关键修正：派生状态 (Derived State) 模式
     // 在渲染期间直接检测 props 变化，消除 useEffect 的一帧延迟
-    const prevCacheKeyRef = useRef(cacheKey);
-    if (prevCacheKeyRef.current !== cacheKey) {
-        prevCacheKeyRef.current = cacheKey;
+    const [prevCacheKey, setPrevCacheKey] = useState(cacheKey);
+    if (prevCacheKey !== cacheKey) {
+        setPrevCacheKey(cacheKey);
         // 如果 SSR 传来了新数据，直接强制同步
         if (initialMemos) {
             setMemos(initialMemos);
@@ -82,24 +82,19 @@ export function MainLayoutClient({
 
     const [isLoading, setIsLoading] = useState(!initialMemos && !cached);
 
-    // 监听 URL 筛选参数变化，立即开启 Loading 反馈
+    // 监听 URL 筛选参数变化，立即开启 Loading 反馈 (派生模式)
     const searchParamsStr = JSON.stringify(searchParams);
-    const prevSearchParamsRef = useRef(searchParamsStr);
+    const [prevSearchParamsStr, setPrevSearchParamsStr] = useState(searchParamsStr);
+    if (prevSearchParamsStr !== searchParamsStr) {
+        setPrevSearchParamsStr(searchParamsStr);
+        setIsLoading(true);
+    }
 
-    useEffect(() => {
-        if (prevSearchParamsRef.current !== searchParamsStr) {
-            setIsLoading(true);
-            prevSearchParamsRef.current = searchParamsStr;
-        }
-    }, [searchParamsStr]);
-
-    // 监听数据到达并更新缓存
-    useEffect(() => {
-        if (initialMemos) {
-            setCache(cacheKey, { memos: initialMemos, searchParams, adminCode, initialIsAdmin });
-            setIsLoading(false);
-        }
-    }, [initialMemos, cacheKey, searchParams, adminCode, initialIsAdmin, setCache]);
+    // 监听数据到达并更新缓存 (渲染同步模式)
+    if (initialMemos) {
+        setCache(cacheKey, { memos: initialMemos, searchParams, adminCode, initialIsAdmin });
+        if (isLoading) setIsLoading(false);
+    }
 
     const handleScroll = () => {
         if (scrollContainerRef.current) {

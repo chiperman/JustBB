@@ -74,8 +74,8 @@ export async function getSupabaseUsageStats() {
                 managementApiError = `Management API failed: ${response.status}`;
                 console.warn(`${managementApiError}, attempting SQL fallback.`);
             }
-        } catch (error: any) {
-            managementApiError = `Management API error: ${error.message}`;
+        } catch (error) {
+            managementApiError = `Management API error: ${error instanceof Error ? error.message : String(error)}`;
             console.error(`${managementApiError}, attempting SQL fallback.`);
         }
     }
@@ -85,7 +85,7 @@ export async function getSupabaseUsageStats() {
         const supabase = getSupabaseAdmin();
 
         // 1. 获取用户数
-        const { count: userCount, error: userError } = await (supabase as any)
+        const { count: userCount, error: userError } = await (supabase as unknown as { from: (s: string) => { select: (p: string, options: object) => Promise<{ count: number | null, error: { message: string, code: string, hint: string } | null }> } })
             .from('auth.users')
             .select('*', { count: 'exact', head: true });
 
@@ -98,7 +98,7 @@ export async function getSupabaseUsageStats() {
         }
 
         // 2. 获取数据库大小
-        const { data: dbBytesData, error: dbError } = await (supabase as any).rpc('get_database_size');
+        const { data: dbBytesData, error: dbError } = await (supabase as unknown as { rpc: (s: string) => Promise<{ data: number | null, error: { message: string, code: string, hint: string } | null }> }).rpc('get_database_size');
 
         const dbBytes = typeof dbBytesData === 'number' ? dbBytesData : 0;
         if (dbError) {
@@ -139,11 +139,11 @@ export async function getSupabaseUsageStats() {
                 functions: { invocations: 0 }
             }
         };
-    } catch (error: any) {
+    } catch (error) {
         return {
             success: false,
             isFullIndicator: false,
-            error: `Fallback mode failed: ${error.message}`
+            error: `Fallback mode failed: ${error instanceof Error ? error.message : String(error)}`
         };
     }
 }

@@ -5,6 +5,7 @@ import * as HoverCardPrimitive from '@radix-ui/react-hover-card';
 import { cn } from '@/lib/utils';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Location04Icon } from '@hugeicons/core-free-icons';
+import type { MapView as MapViewType } from './MapView';
 
 const HoverCard = HoverCardPrimitive.Root;
 const HoverCardTrigger = HoverCardPrimitive.Trigger;
@@ -33,7 +34,7 @@ interface LocationHoverPreviewProps {
 }
 
 export function LocationHoverPreview({ name, lat, lng, children }: LocationHoverPreviewProps) {
-    const [MapView, setMapView] = React.useState<React.ComponentType<any> | null>(null);
+    const [MapView, setMapView] = React.useState<typeof MapViewType | null>(null);
 
     const handleOpenChange = React.useCallback(async (open: boolean) => {
         if (open && !MapView) {
@@ -60,7 +61,7 @@ export function LocationHoverPreview({ name, lat, lng, children }: LocationHover
                     <div className="rounded-inner overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
                         {MapView ? (
                             <MapView
-                                markers={[{ name: '', lat, lng }]}
+                                markers={[{ name: '', lat, lng, items: [] }]}
                                 mode="mini"
                             />
                         ) : (

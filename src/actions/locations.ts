@@ -28,7 +28,7 @@ export async function getMemosWithLocations(): Promise<{
     }
 
     // 过滤有效的 location 数据
-    const memosWithLocations = (data as any[])
+    const memosWithLocations = (data || [])
         .filter(memo => {
             const locs = memo.locations;
             return Array.isArray(locs) && locs.length > 0;

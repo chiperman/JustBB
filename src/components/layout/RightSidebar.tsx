@@ -16,10 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTimeline } from '@/context/TimelineContext';
 import { useView } from '@/context/ViewContext';
-
-interface TimelineStats {
-    days: Record<string, { count: number }>;
-}
+import { TimelineStats } from '@/types/stats';
 
 export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     const [allDays, setAllDays] = useState<Record<string, { count: number }>>(initialData?.days || {});

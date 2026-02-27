@@ -7,6 +7,7 @@ import { LoginTransitionWrapper } from "@/components/layout/LoginTransitionWrapp
 import { MobileLayoutWrapper } from "@/components/layout/MobileLayoutWrapper";
 import { TagsProvider } from "@/context/TagsContext";
 import { StatsProvider } from "@/context/StatsContext";
+import { HeatmapStats } from "@/types/stats";
 import { SelectionProvider } from "@/context/SelectionContext";
 import { SelectionToolbar } from "@/components/ui/SelectionToolbar";
 import { ViewProvider } from "@/context/ViewContext";
@@ -15,7 +16,7 @@ import { PageDataCacheProvider } from "@/context/PageDataCache";
 interface ClientLayoutProvidersProps {
     children: React.ReactNode;
     initialTags?: { tag_name: string; count: number }[];
-    initialStats?: any;
+    initialStats?: HeatmapStats | null;
 }
 
 export function ClientLayoutProviders({

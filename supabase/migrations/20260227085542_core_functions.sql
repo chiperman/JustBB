@@ -50,7 +50,11 @@ RETURNS TABLE (
   pinned_at TIMESTAMPTZ,
   is_locked BOOLEAN,
   word_count INT
-) AS $$
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   RETURN QUERY
   SELECT 
@@ -80,7 +84,7 @@ BEGIN
     AND (
       m.is_private = FALSE 
       OR (m.is_private = TRUE AND (
-        (auth.uid() IS NOT NULL OR (m.access_code IS NOT NULL AND m.access_code = crypt(input_code, m.access_code)))
+        (auth.uid() IS NOT NULL OR (m.access_code IS NOT NULL AND input_code IS NOT NULL AND m.access_code = crypt(input_code, m.access_code)))
         OR (query_text = '' AND filters->>'tag' IS NULL)
       ))
     )
@@ -99,7 +103,7 @@ BEGIN
   LIMIT limit_val
   OFFSET offset_val;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- 3. Get Memo Stats V2 (Heatmap and General Stats)
 CREATE OR REPLACE FUNCTION get_memo_stats_v2()

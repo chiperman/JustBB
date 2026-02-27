@@ -14,7 +14,8 @@ import {
     Download02Icon as Download,
     Loading01Icon as Loader2,
     ShieldCheck,
-    UserCircleIcon as UserCircle
+    UserCircleIcon as UserCircle,
+    CheckListIcon
 } from '@hugeicons/core-free-icons';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
@@ -47,6 +48,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { motion, AnimatePresence } from 'framer-motion';
+import { UsageModal } from '@/components/admin/UsageModal';
 
 interface SidebarSettingsProps {
     isCollapsed?: boolean;
@@ -218,6 +220,17 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
+
+                        {user?.role === 'admin' && (
+                            <UsageModal
+                                trigger={
+                                    <DropdownMenuItem className="rounded-md" onSelect={(e) => e.preventDefault()}>
+                                        <HugeiconsIcon icon={CheckListIcon} size={16} className="mr-2" />
+                                        <span>服务用量监控</span>
+                                    </DropdownMenuItem>
+                                }
+                            />
+                        )}
                     </div>
 
                     <DropdownMenuSeparator className="opacity-50" />

@@ -1,2 +1,2 @@
 npx lint-staged
-npm run build
+SKIP_ENV_VALIDATION=true npm run build

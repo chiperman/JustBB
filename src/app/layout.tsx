@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AgentationWrapper } from "@/components/AgentationWrapper";
+import { env } from "@/lib/env";
 import "./globals.css";
+
+// 强制执行环境校验
+if (typeof window === 'undefined') {
+  void env;
+}
 
 export const metadata: Metadata = {
   title: "JustMemo - 碎片化人文记录",

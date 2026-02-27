@@ -15,7 +15,8 @@ describe('getMemos TDD', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        vi.mocked(createClient).mockResolvedValue(mockSupabase as unknown as ReturnType<typeof createClient>);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        vi.mocked(createClient).mockResolvedValue(mockSupabase as any);
     });
 
     it('should call search_memos_secure with default parameters', async () => {
@@ -40,6 +41,16 @@ describe('getMemos TDD', () => {
 
         expect(mockRpc).toHaveBeenCalledWith('search_memos_secure', expect.objectContaining({
             filters: { tag: 'TestTag' }
+        }));
+    });
+
+    it('should pass date filter to RPC', async () => {
+        mockRpc.mockResolvedValue({ data: [], error: null });
+
+        await getMemos({ date: '2026-02-06' });
+
+        expect(mockRpc).toHaveBeenCalledWith('search_memos_secure', expect.objectContaining({
+            filters: { date: '2026-02-06' }
         }));
     });
 

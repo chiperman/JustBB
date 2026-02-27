@@ -6,6 +6,7 @@ import { zhCN } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ImageZoom } from '@/components/ui/ImageZoom';
+import Image from 'next/image';
 
 interface GalleryGridProps {
     memos: Memo[];
@@ -74,13 +75,14 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
                                     aria-label={`查看由 ${format(item.dateObj, 'yyyy-MM-dd')} 发布的图片 Memo`}
                                 >
                                     {/* Frame Effect - Inner Padding */}
-                                    <div className="relative overflow-hidden aspect-auto rounded-[1px]">
+                                    <div className="relative overflow-hidden aspect-[4/3] rounded-[1px]">
                                         <ImageZoom src={item.imageUrl || ''} alt="Memo multimedia content">
-                                            <img
+                                            <Image
                                                 src={item.imageUrl || ''}
                                                 alt="Memo multimedia content"
-                                                className="w-full h-auto object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                                                loading="lazy"
+                                                fill
+                                                className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                             />
                                         </ImageZoom>
 

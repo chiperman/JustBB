@@ -6,6 +6,7 @@ import { Dialog, DialogTrigger, DialogPortal } from './dialog';
 import { cn } from '@/lib/utils';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon } from '@hugeicons/core-free-icons';
+import Image from 'next/image';
 
 interface ImageZoomProps {
     src: string;
@@ -126,18 +127,21 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
                         setTimeout(() => setIsDragging(false), 100);
                     }}
                 >
-                    <motion.img
-                        src={src}
-                        alt={alt || "大图"}
-                        initial={false}
-                        style={{
-                            boxShadow: "0 20px 40px -10px rgba(0,0,0,0.4)"
-                        }}
+                    <div
                         className={cn(
-                            "block w-full h-full max-w-[95vw] max-h-[90vh] object-contain rounded-[2px]",
+                            "relative w-full h-full max-w-[95vw] max-h-[90vh] rounded-[2px] overflow-hidden shadow-[0_20px_40px_-10px_rgba(0,0,0,0.4)]",
                         )}
-                        draggable={false}
-                    />
+                    >
+                        <Image
+                            src={src}
+                            alt={alt || "大图"}
+                            fill
+                            className="object-contain"
+                            draggable={false}
+                            priority
+                            unoptimized={src.startsWith('data:')}
+                        />
+                    </div>
                 </motion.div>
             </motion.div>
 
@@ -206,11 +210,14 @@ export function ImageZoom({ src, alt, className, children }: ImageZoomProps) {
                     className={cn("cursor-zoom-in group/zoom relative overflow-hidden rounded-inner shadow-sm ring-1 ring-black/5", className)}
                 >
                     {children || (
-                        <img
-                            src={src}
-                            alt={alt || "图片预览"}
-                            className="w-full h-auto object-cover"
-                        />
+                        <div className="relative aspect-square w-full">
+                            <Image
+                                src={src}
+                                alt={alt || "图片预览"}
+                                fill
+                                className="object-cover"
+                            />
+                        </div>
                     )}
                 </motion.div>
             </DialogTrigger>

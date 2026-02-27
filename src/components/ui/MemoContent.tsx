@@ -13,6 +13,7 @@ import { LinkPreview } from './LinkPreview';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { CheckmarkCircle01Icon as Check, Copy01Icon as Copy } from '@hugeicons/core-free-icons';
 import { toast } from '@/hooks/use-toast';
+import Image from 'next/image';
 
 interface MemoContentProps {
     content: string;
@@ -89,12 +90,15 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                                         <div className="relative rounded-md overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-[0_2px_12px_-3px_rgba(0,0,0,0.1),0_4px_6px_-2px_rgba(0,0,0,0.05)] transition-all duration-500 group-hover:shadow-[0_8px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-2px_rgba(0,0,0,0.04)] group-hover:scale-[1.01]">
                                             { }
                                             <ImageZoom src={token.value} alt="记录中的图片附件">
-                                                <img
-                                                    src={token.value}
-                                                    alt="记录中的图片附件"
-                                                    className="max-h-[550px] w-auto object-contain block h-auto select-none"
-                                                    loading="lazy"
-                                                />
+                                                <div className="relative max-h-[550px] w-full aspect-auto h-[300px]">
+                                                    <Image
+                                                        src={token.value}
+                                                        alt="记录中的图片附件"
+                                                        fill
+                                                        className="object-contain select-none"
+                                                        sizes="(max-width: 768px) 100vw, 800px"
+                                                    />
+                                                </div>
                                             </ImageZoom>
                                         </div>
                                     </div>

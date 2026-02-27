@@ -46,10 +46,31 @@
 ### 3.2 视觉隐喻
 - 强调空间的流动性与平滑的几何衔接。
 - 动画参数统一遵循 [Design System](design-system.md) 规范。
+---
+
+## 4. 复合型交互组件 (Interactive Components)
+
+### 4.1 邮件点击与复制 (Email Interaction)
+- **悬浮展开**: 复制按钮采用 `w-0` 到 `w-6` 的宽度过渡。
+    - `duration: 0.3, ease: 'easeInOut'`
+- **状态反馈**: 点击后按钮图标切换为 Checkmark 并停留 2000ms，配合 Toast 提示。
+
+### 4.2 地图状态指示器 (Map Zoom Indicator)
+- **触发逻辑**: 仅在用户进行缩放操作（`zoomstart`, `zoom`）时显示。
+- **自动隐藏**: 停止操作 1.5 秒后平滑淡出。
+    - 动画：`opacity: 0` (300ms)。
 
 ---
 
-## 4. 防退化检查 (Regression Checklist)
+## 5. 地图高级交互 (Map Advanced Interactions)
+
+### 5.1 聚合点探索 (Cluster Navigation)
+- **最佳包含缩放**: 点击聚合点时不再使用固定级数累加，而是通过 `flyToBounds` 自动计算足以展示所有子节点的最小范围。
+- **蜘蛛腿 (Spiderfy)**: 当到达极限缩放层级（Zoom 20）仍存在重合点时，触发蜘蛛腿展开。
+
+---
+
+## 6. 防退化检查 (Regression Checklist)
 - [ ] **展开/收缩**: 整体平稳，无晃动，无“果冻效应”。
 - [ ] **多选切换**: 编辑器瞬间出现/消失，内容绝对静止。
 - [ ] **全屏同步**: 关闭全屏后，首页编辑器内容完整且结构正确。

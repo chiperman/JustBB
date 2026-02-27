@@ -67,6 +67,7 @@
 *   **核心逻辑**: 图标高度必须与文本高度完全一致。
 *   **标准尺寸**: 14px (text-sm) 文字配 14px 图标 (`size-3.5`)。
 *   **图标库**: 全面选用 **Hugeicons** (`@hugeicons/react`)，风格倾向于 Soft 或 Rounded 系列。
+*   **亚像素清晰度**: 针对 `14px` 等小尺寸图标（如邮件复制按钮），采用 `Two-Tone` 或特定的亚像素对齐逻辑，避免渲染模糊。
 
 > 详细的编辑器动画策略与实现细节，请参阅: [交互与动画手册](./interactions.md)
 
@@ -97,6 +98,12 @@
 *   **触发器**: 齿轮图标（`Settings03Icon`），绝对定位于地图右上角。
 *   **面板宽度**: `w-56`（224px）。
 *   **开关样式**: 自定义 Toggle（`w-8 h-4` 圆角胶囊），激活态使用 `bg-primary`。
+
+### 7.5 缩放指示器 (Zoom Indicator)
+*   **容器样式**: `bg-background/80`, `backdrop-blur-md`, `rounded-full`。
+*   **阴影**: `shadow-md`。
+*   **字体**: `font-mono`。
+*   **图标**: `ZoomInAreaIcon` (Hugeicons)。
 
 > 详细的地图功能设计，请参阅: [功能模块指南](../features/features-guide.md)
 

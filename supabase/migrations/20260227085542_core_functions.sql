@@ -99,7 +99,7 @@ BEGIN
   LIMIT limit_val
   OFFSET offset_val;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 
 -- 3. Get Memo Stats V2 (Heatmap and General Stats)
 CREATE OR REPLACE FUNCTION get_memo_stats_v2()
@@ -139,5 +139,5 @@ CREATE INDEX IF NOT EXISTS idx_memos_timeline_optimization
 ON memos (created_at) 
 WHERE deleted_at IS NULL AND is_private = FALSE;
 
-CREATE INDEX IF NOT EXISTS idx_memos_search_content ON memos USING gin (content tsvector_ops);
+CREATE INDEX IF NOT EXISTS idx_memos_search_content ON memos USING gin (content gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_memos_tags ON memos USING gin (tags);

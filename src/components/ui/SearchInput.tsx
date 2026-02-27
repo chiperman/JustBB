@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Search01Icon, Cancel01Icon, Calendar03Icon, Tag01Icon, Globe02Icon } from '@hugeicons/core-free-icons';
 import { useRouter, useSearchParams } from 'next/navigation';

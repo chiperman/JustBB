@@ -3,12 +3,10 @@
 import { MemoContent } from './MemoContent';
 import { MemoActions } from './MemoActions';
 import { MemoEditor } from './MemoEditor';
-import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { PinIcon, ChatLock01Icon as LockIcon, Link02Icon } from '@hugeicons/core-free-icons';
 import { memo, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { cn, formatDate } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -26,7 +24,6 @@ interface MemoCardProps {
 }
 
 export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditing, onEditChange, showOriginalOnly = false }: MemoCardProps) {
-    const router = useRouter();
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const shouldReduceMotion = useReducedMotion();

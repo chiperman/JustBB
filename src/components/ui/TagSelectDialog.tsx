@@ -14,7 +14,6 @@ import {
     Loading01Icon as Loader2,
     Search01Icon as Search
 } from '@hugeicons/core-free-icons';
-import { cn } from '@/lib/utils';
 
 interface TagSelectDialogProps {
     isOpen: boolean;

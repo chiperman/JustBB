@@ -26,10 +26,6 @@ export async function login(formData: FormData): Promise<{ success: boolean; err
         return { success: false, error: error.message };
     }
 
-    // 检查管理员权限
-    // 权限逻辑统一使用 app_metadata.role
-    const isAdmin = data.user?.app_metadata?.role === 'admin';
-
     // 允许所有人登录，只需确认为已验证用户
     if (!data.user) {
         return { success: false, error: '登录失败' };

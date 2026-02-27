@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import {
     DropdownMenu,
@@ -25,18 +24,11 @@ import {
     HugeiconsIcon,
 } from '@hugeicons/react';
 import {
-    Delete02Icon,
-    Tag01Icon,
     CheckmarkSquare02Icon,
     ArrowDown01Icon,
     Sorting05Icon,
     Home01Icon,
-    Loading01Icon
 } from '@hugeicons/core-free-icons';
-import { batchDeleteMemos } from '@/actions/delete';
-import { batchAddTagsToMemos } from '@/actions/update';
-import { TagSelectDialog } from './TagSelectDialog';
-import { useToast } from '@/hooks/use-toast';
 
 
 export function FeedHeader() {
@@ -46,44 +38,8 @@ export function FeedHeader() {
     const currentSort = searchParams.get('sort') || 'newest';
     const activeDate = searchParams.get('date');
 
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    const { isSelectionMode, toggleSelectionMode, selectedIds, clearSelection } = useSelection();
+    const { isSelectionMode, toggleSelectionMode, selectedIds } = useSelection();
     const { isAdmin } = useUser();
-    const { toast } = useToast();
-    const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
-
-    const handleBatchDelete = async () => {
-        if (selectedIds.size === 0) return;
-        if (!window.confirm(`确定要将选中的 ${selectedIds.size} 条笔记放入回收站吗？`)) return;
-
-        setIsDeleting(true);
-        try {
-            const res = await batchDeleteMemos(Array.from(selectedIds));
-            if (res.success) {
-                toast({ title: '已批量删除', description: `成功删除 ${selectedIds.size} 条笔记` });
-                toggleSelectionMode(false);
-            } else {
-                toast({ title: '删除失败', description: res.error, variant: 'destructive' });
-            }
-        } finally {
-            setIsDeleting(false);
-        }
-    };
-
-    const handleBatchAddTags = async (tags: string[]) => {
-        const res = await batchAddTagsToMemos(Array.from(selectedIds), tags);
-        if (res.success) {
-            toast({ title: '已添加标签', description: `成功为 ${selectedIds.size} 条笔记添加了标签` });
-            toggleSelectionMode(false);
-        } else {
-            toast({ title: '添加失败', description: res.error, variant: 'destructive' });
-        }
-    };
 
     const handleSortChange = (value: string) => {
         const params = new URLSearchParams(searchParams.toString());

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { getTimelineStats } from '@/actions/stats';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import {
     Timeline,
@@ -15,12 +14,12 @@ import { DailyTimeline } from './DailyTimeline';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTimeline } from '@/context/TimelineContext';
-import { useView } from '@/context/ViewContext';
 import { TimelineStats } from '@/types/stats';
+import { cn } from '@/lib/utils';
 
 export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
-    const [allDays, setAllDays] = useState<Record<string, { count: number }>>(initialData?.days || {});
-    const [isMounted, setIsMounted] = useState(false);
+    const [allDays] = useState<Record<string, { count: number }>>(initialData?.days || {});
+    const [isMounted] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -121,10 +120,6 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
         '', '一月', '二月', '三月', '四月', '五月', '六月',
         '七月', '八月', '九月', '十月', '十一月', '十二月'
     ];
-
-    const cn = (...classes: (string | undefined | null | false)[]) => {
-        return classes.filter(Boolean).join(' ');
-    };
 
     const handleYearClick = (e: React.MouseEvent, year: number) => {
         e.preventDefault();

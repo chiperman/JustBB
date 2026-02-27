@@ -6,7 +6,7 @@ import { Memo } from '@/types/memo';
 import { cn } from '@/lib/utils';
 import { Timeline, TimelineItem, TimelineLine, TimelineDot, TimelineHeading, TimelineContent } from '@/components/ui/timeline';
 import { Skeleton } from '@/components/ui/skeleton';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface DailyTimelineProps {
     date: string;

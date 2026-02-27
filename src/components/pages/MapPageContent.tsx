@@ -2,20 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { getMemosWithLocations } from '@/actions/locations';
-import { Location04Icon, Loading03Icon as LoadingIcon, Cancel01Icon as CloseIcon, LinkSquare02Icon as LinkIcon } from '@hugeicons/core-free-icons';
+import { Location04Icon, Cancel01Icon as CloseIcon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { locationCache, type MapMarker } from '@/lib/location-cache';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
 // 模块级预加载：JS chunk 解析时即开始下载 MapView，不等 useEffect
 const mapViewPromise = import('@/components/ui/MapView');
 
 export function MapPageContent() {
-    const router = useRouter();
     const [markers, setMarkers] = useState<MapMarker[]>([]);
-    const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
     const [isLoading, setIsLoading] = useState(!locationCache.getInitialized());
     const [MapView, setMapView] = useState<React.ComponentType<{
         markers: MapMarker[];

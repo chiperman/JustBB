@@ -4,7 +4,7 @@ import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Cancel01Icon as X, Tick02Icon as CheckCircle2, AlertCircleIcon as AlertCircle, InformationCircleIcon as Info } from "@hugeicons/core-free-icons"
+import { Cancel01Icon as X } from "@hugeicons/core-free-icons"
 
 import { cn } from "@/lib/utils"
 

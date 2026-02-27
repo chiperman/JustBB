@@ -6,7 +6,6 @@ import { UserWarningIcon as ShieldAlert, ArrowLeft01Icon as ArrowLeft, Logout01I
 import Link from 'next/link';
 import { logout } from '@/actions/auth';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
 export default function UnauthorizedPage() {
     const router = useRouter();

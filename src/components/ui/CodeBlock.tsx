@@ -5,7 +5,6 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Copy01Icon as Copy, CheckmarkCircle01Icon as Check } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 interface CodeBlockProps {

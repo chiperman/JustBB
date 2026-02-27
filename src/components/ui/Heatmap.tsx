@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo, memo, useCallback } from 'react';
-import { getMemoStats } from '@/actions/stats';
+import { useState, useMemo, memo, useCallback } from 'react';
 import { startOfDay, subDays, format, eachDayOfInterval, differenceInDays, startOfWeek } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { HeatmapModal } from './HeatmapModal';
@@ -56,7 +55,6 @@ const HeatmapCell = memo(({
 HeatmapCell.displayName = 'HeatmapCell';
 
 import { useStats } from '@/context/StatsContext';
-import { HeatmapStats } from '@/types/stats';
 
 export const Heatmap = memo(function Heatmap() {
     const { stats, isLoading: contextLoading, isMounted } = useStats();

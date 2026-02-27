@@ -3,13 +3,10 @@
 import { useState, useMemo } from 'react';
 import {
     format,
-    startOfYear,
-    endOfYear,
     eachMonthOfInterval,
     startOfMonth,
     endOfMonth,
     eachDayOfInterval,
-    getDay,
     getYear,
     startOfWeek,
     endOfWeek,
@@ -18,7 +15,6 @@ import {
 import {
     Dialog,
     DialogContent,
-    DialogHeader,
     DialogTitle,
     DialogTrigger,
     DialogClose,
@@ -78,23 +74,6 @@ const itemVariants = {
             damping: 24
         } as const
     }
-};
-
-const viewVariants = {
-    enter: (direction: number) => ({
-        x: direction > 0 ? 20 : -20,
-        opacity: 0
-    }),
-    center: {
-        zIndex: 1,
-        x: 0,
-        opacity: 1
-    },
-    exit: (direction: number) => ({
-        zIndex: 0,
-        x: direction < 0 ? 20 : -20,
-        opacity: 0
-    })
 };
 
 export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {

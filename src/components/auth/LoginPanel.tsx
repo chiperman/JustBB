@@ -14,7 +14,6 @@ import {
     ArrowRight01Icon as ArrowRight,
     PencilEdit01Icon as Edit2,
     CheckmarkCircle01Icon as Check,
-    Cancel01Icon as X
 } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -160,7 +159,7 @@ export function LoginPanel() {
 
             setAuthMode(exists ? 'LOGIN' : 'REGISTER');
             setStep('AUTH');
-        } catch (err) {
+        } catch {
             setError('检查用户状态失败，请重试');
         } finally {
             setLoading(false);
@@ -382,20 +381,9 @@ export function LoginPanel() {
                 const nextIndex = Math.min(digits.length, 7);
                 otpInputs.current[nextIndex]?.focus();
             }
-        } catch (err) {
-            console.error('Failed to read clipboard:', err);
+        } catch (error) {
+            console.error('Failed to read clipboard:', error);
         }
-    };
-
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.08,
-                delayChildren: 0.1,
-            },
-        },
     };
 
     const itemVariants: Variants = {

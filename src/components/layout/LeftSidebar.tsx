@@ -36,7 +36,7 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
         setHasMounted(true);
     }, []);
 
-    const { isAdmin, isMounted } = useUser();
+    const { isAdmin } = useUser();
 
     const isMobile = !!onClose;
     const effectiveIsCollapsed = isMobile ? false : isCollapsed;
@@ -78,7 +78,6 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
     const velocity = useVelocity(springY);
     const scaleY = useTransform(velocity, [-1200, 0, 1200], [1.3, 1, 1.3]);
     const scaleX = useTransform(velocity, [-1200, 0, 1200], [0.9, 1, 0.9]);
-    const opacity = useTransform(springY, [-100, 0, 1000], [1, 1, 1]);
 
     // 同步外部路由变化到物理引擎
     useEffect(() => {

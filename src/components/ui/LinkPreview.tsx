@@ -5,7 +5,6 @@ import { fetchLinkMetadata, LinkMetadata } from '@/actions/link-preview';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Link01Icon } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 
 interface LinkPreviewProps {
     url: string;
@@ -65,7 +64,7 @@ export function LinkPreview({ url, className }: LinkPreviewProps) {
                         setError(true);
                     }
                 }
-            } catch (err) {
+            } catch {
                 if (isMounted) {
                     setError(true);
                 }

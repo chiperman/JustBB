@@ -3,7 +3,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { Memo } from '@/types/memo';
 import { cookies } from 'next/headers';
-import bcrypt from 'bcryptjs';
 
 export async function searchMemosForMention(query: string, offset: number = 0, limit: number = 10): Promise<Memo[]> {
     const supabase = await createClient();

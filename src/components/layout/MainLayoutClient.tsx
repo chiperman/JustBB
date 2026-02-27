@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { cn } from "@/lib/utils";
 import { AnimatePresence } from 'framer-motion';
 import { MemoEditor } from "@/components/ui/MemoEditor";
@@ -11,7 +11,6 @@ import { Memo } from "@/types/memo";
 import { useUser } from '@/context/UserContext';
 import { useSelection } from '@/context/SelectionContext';
 import { usePageDataCache } from '@/context/PageDataCache';
-import { getMemos } from '@/actions/fetchMemos';
 
 interface MainLayoutClientProps {
     memos?: Memo[];

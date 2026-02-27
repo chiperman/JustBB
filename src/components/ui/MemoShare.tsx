@@ -59,7 +59,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
         } finally {
             setIsGenerating(false);
         }
-    }, [memo.id]);
+    }, [memo.id, toast]);
 
     return (
         <Dialog>

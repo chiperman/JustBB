@@ -1,8 +1,6 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { createClient } from '@/utils/supabase/server';
-import bcrypt from 'bcryptjs';
 
 export async function unlockWithCode(code: string): Promise<{ success: boolean; error?: string }> {
     if (!code) return { success: false, error: '请输入口令' };
@@ -14,7 +12,6 @@ export async function unlockWithCode(code: string): Promise<{ success: boolean; 
     // 或者是针对具体 Memo 的校验。
 
     // 如果是全局管理员模式（对应目前 searchParams: code 的逻辑）:
-    const adminCodeHash = process.env.ADMIN_CODE_HASH; // 假设环境变量中有 hash
 
     // 如果没有环境变量定义，我们暂时使用简单校验或针对具体记录的校验
     // 但 page.tsx 目前是将 code 传给 search_memos_secure。

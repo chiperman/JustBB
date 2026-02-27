@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState } from 'react';
 import { useView } from '@/context/ViewContext';
 import { MainLayoutClient } from '@/components/layout/MainLayoutClient';
 import { GalleryPageContent } from '@/components/pages/GalleryPageContent';
@@ -22,10 +22,9 @@ export function ClientRouter({ children }: { children: ReactNode }) {
     // 初始为 false → 显示 SSR 的 {children}
     // 首次 navigate() 后变为 true → 永远由客户端渲染
     const [initialPath] = useState(currentView);
-    const [isRouterActiveState, setIsRouterActiveState] = useState(false);
 
     // 只要路径变了，就永久激活客户端路由模式
-    const isRouterActive = isRouterActiveState || currentView !== initialPath;
+    const isRouterActive = currentView !== initialPath;
 
     // 尚未客户端导航过，显示 SSR 内容
     if (!isRouterActive) {

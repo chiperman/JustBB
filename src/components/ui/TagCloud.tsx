@@ -1,10 +1,8 @@
 'use client';
 
-import { useEffect, useState, memo } from 'react';
-import { getAllTags } from '@/actions/tags';
+import { memo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { HugeiconsIcon } from '@hugeicons/react';
 import { Badge } from '@/components/ui/badge';
 
 import { useTags } from '@/context/TagsContext';

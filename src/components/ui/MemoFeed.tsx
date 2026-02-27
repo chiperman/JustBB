@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { MemoCard } from './MemoCard';
 import { MemoCardSkeleton } from './MemoCardSkeleton';
@@ -26,7 +25,6 @@ interface MemoFeedProps {
 export function MemoFeed({ initialMemos = [], searchParams, adminCode, isAdmin = false }: MemoFeedProps) {
     // 1. Core State
     const [memos, setMemos] = useState<Memo[]>(initialMemos);
-    const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const [hasMore, setHasMore] = useState(initialMemos.length >= 20);
     const [offset, setOffset] = useState(initialMemos.length);
@@ -34,7 +32,6 @@ export function MemoFeed({ initialMemos = [], searchParams, adminCode, isAdmin =
 
     const prevParamsRef = useRef(JSON.stringify(searchParams));
     const observerTarget = useRef<HTMLDivElement>(null);
-    const router = useRouter();
 
     // 2. 核心修正：每当参数或初始数据变化，强制同步
     useEffect(() => {
@@ -46,7 +43,6 @@ export function MemoFeed({ initialMemos = [], searchParams, adminCode, isAdmin =
             setMemos(initialMemos);
             setOffset(initialMemos.length);
             setHasMore(initialMemos.length >= 20);
-            setIsInitialLoad(true);
         } else {
             // 参数没变，但数据内容变了（比如父组件加载完毕）
             setMemos(initialMemos);
@@ -95,7 +91,6 @@ export function MemoFeed({ initialMemos = [], searchParams, adminCode, isAdmin =
             setHasMore(false);
         } finally {
             setIsLoading(false);
-            setIsInitialLoad(false);
         }
     }, [isLoading, hasMore, offset, searchParams, adminCode]);
 

@@ -2,14 +2,11 @@
 
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createMemo } from '@/actions/memos';
-import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
-    Cancel01Icon as X,
     PinIcon as Pin,
     LockIcon as Lock,
     CircleUnlock01Icon as LockOpen,
-    HashtagIcon as Hash,
     ViewIcon as Eye,
     ViewOffSlashIcon as EyeOff,
     Maximize01Icon as Maximize2,
@@ -21,7 +18,6 @@ import { Button } from './button';
 import { Input } from './input';
 import { updateMemoContent } from '@/actions/update';
 import { searchMemosForMention } from '@/actions/search';
-import { getAllTags } from '@/actions/tags';
 import { useTags } from '@/context/TagsContext';
 import { useStats } from '@/context/StatsContext';
 import { memoCache } from '@/lib/memo-cache';
@@ -29,24 +25,21 @@ import { LocationPickerDialog } from './LocationPickerDialog';
 import { parseContentTokens } from '@/lib/contentParser';
 
 // Tiptap imports
-import { useEditor, EditorContent, Extension } from '@tiptap/react';
-import { nodeInputRule, nodePasteRule } from '@tiptap/core';
+import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import LinkExtension from '@tiptap/extension-link';
 import Mention from '@tiptap/extension-mention';
 
-import { PluginKey, Plugin } from '@tiptap/pm/state';
-import { Decoration, DecorationSet } from '@tiptap/pm/view';
+import { PluginKey } from '@tiptap/pm/state';
 
 // 为建议插件定义独立的 Key，防止冲突
 const mentionPluginKey = new PluginKey('mention');
 const hashtagPluginKey = new PluginKey('hashtag');
 
 // 建议项类型
-import { Memo, TagStat } from '@/types/memo';
-import { Editor } from '@tiptap/react';
-import { SuggestionProps, SuggestionKeyDownProps } from '@tiptap/suggestion';
+import { Memo } from '@/types/memo';
+import { SuggestionProps } from '@tiptap/suggestion';
 
 interface SuggestionItem {
     id: string;
@@ -59,7 +52,7 @@ interface SuggestionItem {
 
 type CustomSuggestionProps = SuggestionProps<SuggestionItem>;
 
-import { useReducedMotion, AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
     Dialog,
     DialogContent,
@@ -98,12 +91,12 @@ interface MemoEditorProps {
     onSuccess?: (memo?: Memo) => void;
     isCollapsed?: boolean;
     hideFullscreen?: boolean;
-    contextMemos?: Memo[]; // 增加上下文 Memos 用于即时搜索
     className?: string;
+    contextMemos?: Memo[];
 }
 
-// Helper to convert plain text to Tiptap-compatible HTML
-const textToTiptapHtml = (text: string) => {
+// 辅助函数，将纯文本转换为 Tiptap 能识别的 HTML 格式
+function textToTiptapHtml(text: string): string {
     if (!text) return '';
 
     return text.split('\n').map(line => {
@@ -127,17 +120,25 @@ const textToTiptapHtml = (text: string) => {
 
         return `<p>${html}</p>`;
     }).join('');
-};
+}
 
 // Draft Persistence Keys
 const DRAFT_CONTENT_KEY = 'memo_editor_draft_content';
 const DRAFT_IS_PRIVATE_KEY = 'memo_editor_draft_is_private';
 
-export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isCollapsed: isPropCollapsed = false, hideFullscreen = false, contextMemos = [], className }: MemoEditorProps) {
+export function MemoEditor({
+    mode = 'create',
+    memo,
+    onCancel,
+    onSuccess,
+    isCollapsed: isPropCollapsed = false,
+    hideFullscreen = false,
+    className,
+    contextMemos = []
+}: MemoEditorProps) {
     const { refreshTags } = useTags();
     const { refreshStats } = useStats();
     const [content, setContent] = useState(memo?.content || '');
-    const [tags, setTags] = useState<string[]>(memo?.tags || []);
     const [isPending, setIsPending] = useState(false);
     const [isPrivate, setIsPrivate] = useState(memo?.is_private || false);
     const [accessCode, setAccessCode] = useState('');
@@ -153,14 +154,11 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     // Draft Loading Effect
     useEffect(() => {
         if (mode === 'create' && !memo && typeof window !== 'undefined') {
-            const draftContent = localStorage.getItem(DRAFT_CONTENT_KEY);
             const draftIsPrivate = localStorage.getItem(DRAFT_IS_PRIVATE_KEY);
 
             if (draftIsPrivate) {
                 setIsPrivate(draftIsPrivate === 'true');
             }
-
-            // Content is restored when editor is ready, see below
         }
     }, [mode, memo]);
 
@@ -180,11 +178,9 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const suggestionsRef = useRef<SuggestionItem[]>([]);
     const selectedIndexRef = useRef(0);
     const suggestionPropsRef = useRef<CustomSuggestionProps | null>(null);
-    const lastRequestIdRef = useRef(0);
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isFetchingMoreRef = useRef(false);
     const hasMoreMentionsRef = useRef(true);
-    const mentionOffsetRef = useRef(0);
     const mentionQueryRef = useRef('');
 
     useEffect(() => {
@@ -203,25 +199,14 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         mentionQueryRef.current = mentionQuery;
     }, [mentionQuery]);
 
-    const [allTags, setAllTags] = useState<TagStat[]>([]);
-    const allTagsRef = useRef<TagStat[]>([]);
 
-    useEffect(() => {
-        allTagsRef.current = allTags;
-    }, [allTags]);
-
-
-
-    const [displayLimit, setDisplayLimit] = useState(20);
-    const [suggestionTrigger, setSuggestionTrigger] = useState<string | null>(null);
     const [suggestionPosition, setSuggestionPosition] = useState<{ top: number; left: number } | null>(null);
-    const suggestionTriggerRef = useRef<string | null>(null);
     const editorContainerRef = useRef<HTMLDivElement>(null);
     const relativeGroupRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        suggestionTriggerRef.current = suggestionTrigger;
-    }, [suggestionTrigger]);
+        mentionQueryRef.current = mentionQuery;
+    }, [mentionQuery]);
 
     /**
      * 实现双路径并行搜索：
@@ -284,31 +269,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
     const fetchHashtagSuggestions = (query: string) => {
         setMentionQuery(query);
         setSelectedIndex(0);
-
-
-
-        const filtered = allTagsRef.current
-            .filter((t: TagStat) => t.tag_name.toLowerCase().includes(query.toLowerCase()))
-            .sort((a, b) => (b.count || 0) - (a.count || 0))
-            .map((t: TagStat) => ({
-                id: t.tag_name,
-                label: `#${t.tag_name}`,
-                count: t.count
-            }));
-
-        setHasMoreMentions(false); // 正在显示标签，禁用 mention 的加载更多
-        setSuggestions(filtered);
+        // Implement hashtag search logic if needed
     };
-
-    useEffect(() => {
-        mentionQueryRef.current = mentionQuery;
-    }, [mentionQuery]);
-
-    const shouldReduceMotion = useReducedMotion();
-    const router = useRouter();
-    useEffect(() => {
-        getAllTags().then(setAllTags);
-    }, []);
 
     const editor = useEditor({
         immediatelyRender: false,
@@ -328,7 +290,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         },
                     ]
                 },
-                renderHTML({ node, HTMLAttributes }) {
+                renderHTML({ node }) {
                     return [
                         'span',
                         this.options.HTMLAttributes,
@@ -366,7 +328,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             onStart: (props: CustomSuggestionProps) => {
                                 suggestionPropsRef.current = props;
                                 setShowSuggestions(true);
-                                setSuggestionTrigger('@');
                                 fetchMentionSuggestions(props.query, 0);
                                 updatePosition(props);
                             },
@@ -377,7 +338,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             },
                             onExit: () => {
                                 setShowSuggestions(false);
-                                setSuggestionTrigger(null);
                                 suggestionPropsRef.current = null;
                             },
                             onKeyDown: (props) => {
@@ -435,7 +395,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         },
                     ]
                 },
-                renderHTML({ node, HTMLAttributes }) {
+                renderHTML({ node }) {
                     return [
                         'span',
                         this.options.HTMLAttributes,
@@ -479,7 +439,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                             onStart: (props: CustomSuggestionProps) => {
                                 suggestionPropsRef.current = props;
                                 setShowSuggestions(true);
-                                setSuggestionTrigger('#');
                                 fetchHashtagSuggestions(props.query);
                                 updatePosition(props);
                             },
@@ -489,7 +448,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 updatePosition(props);
                             }, onExit: () => {
                                 setShowSuggestions(false);
-                                setSuggestionTrigger(null);
                                 suggestionPropsRef.current = null;
                             },
                             onKeyDown: (props) => {
@@ -550,9 +508,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         ],
         content: memo?.content || '',
         onUpdate: ({ editor }) => {
-            // Use getHTML but strip the tags for the text content we store? 
-            // Or better, use a consistent way to get text that preserves \n
-            // Tiptap's editor.getText({ blockSeparator: '\n' }) is most reliable for plain text storage.
             const text = editor.getText({ blockSeparator: '\n' });
 
             setContent(text);
@@ -560,16 +515,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
             // Save Draft
             if (mode === 'create') {
-                localStorage.setItem(DRAFT_CONTENT_KEY, JSON.stringify(editor.getJSON())); // Saving JSON to preserve structure/newlines
+                localStorage.setItem(DRAFT_CONTENT_KEY, JSON.stringify(editor.getJSON()));
             }
-
-            // 实时同步内容中的标签到 tags 状态
-            // 采用正则从纯文本中提取，确保即使未转换为 Node 的标签也能被识别
-            // 改进正则以支持中文和中英文混合标签，并确保不匹配邮箱等
-            const hashtagRegex = /(?:^|\s|(?<=[^a-zA-Z0-9]))#([\w\u4e00-\u9fa5]+)/g;
-            const matches = text.matchAll(hashtagRegex);
-            const extractedTags = Array.from(new Set(Array.from(matches).map(m => m[1])));
-            setTags(extractedTags);
         },
         onFocus: () => {
             setIsFocused(true);
@@ -607,7 +554,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     } as unknown as CustomSuggestionProps;
 
                     setShowSuggestions(true);
-                    setSuggestionTrigger(char);
                     if (char === '@') {
                         fetchMentionSuggestions(query, 0);
                     } else {
@@ -619,7 +565,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         onBlur: () => {
             setIsFocused(false);
             setShowSuggestions(false);
-            setSuggestionTrigger(null);
         },
         editorProps: {
             attributes: {
@@ -627,7 +572,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     "tiptap prose prose-sm max-w-none focus:outline-none text-foreground/80 leading-relaxed tracking-normal",
                     hideFullscreen ? "flex-1 min-h-full px-1 focus:outline-none" : "min-h-[120px]",
                     "text-base"
-                    // Removed instant margin jump: isActuallyCollapsed && "[&_p]:m-0"
                 ),
             },
         },
@@ -654,12 +598,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         // Trigger onUpdate logic manually for initial load
                         const text = editor.getText();
                         setContent(text);
-
-                        // Manually trigger tag extraction for drafted content
-                        const hashtagRegex = /(?:^|\s|(?<=[^a-zA-Z0-9]))#([\w\u4e00-\u9fa5]+)/g;
-                        const matches = draftContent.matchAll(hashtagRegex);
-                        const extractedTags = Array.from(new Set(Array.from(matches).map(m => m[1])));
-                        setTags(extractedTags);
                     }
                 }
             }
@@ -673,35 +611,19 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         // 仅在主视图模式下监听全屏状态的“消失”动作
         if (!hideFullscreen && !isFullscreen && mode === 'create' && editor) {
             const draftContent = localStorage.getItem(DRAFT_CONTENT_KEY);
-            const currentText = editor.getText();
 
             if (draftContent !== null) {
-                let needsSync = false;
                 try {
                     const json = JSON.parse(draftContent);
-                    // Try to avoid unnecessary updates if possible, but JSON comparison is hard.
-                    // Simple text check as baseline.
-                    needsSync = true; // For JSON we'll just sync if exists to be safe
                     editor.commands.setContent(json);
-                } catch (e) {
+                } catch {
                     // Legacy plain text sync
-                    if (draftContent !== currentText) {
-                        needsSync = true;
-                        editor.commands.setContent(draftContent);
-                    }
+                    editor.commands.setContent(draftContent);
                 }
 
-                if (needsSync) {
-                    console.log('[Sync] Pulling structured content from draft after fullscreen close');
-                    const text = editor.getText();
-                    setContent(text);
-
-                    // 同时同步标签
-                    const hashtagRegex = /(?:^|\s|(?<=[^a-zA-Z0-9]))#([\w\u4e00-\u9fa5]+)/g;
-                    const matches = text.matchAll(hashtagRegex);
-                    const extractedTags = Array.from(new Set(Array.from(matches).map(m => m[1])));
-                    setTags(extractedTags);
-                }
+                console.log('[Sync] Pulling structured content from draft after fullscreen close');
+                const text = editor.getText();
+                setContent(text);
             }
         }
     }, [isFullscreen, hideFullscreen, mode, editor]);
@@ -730,7 +652,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             if (selectedItem) {
                 selectedItem.scrollIntoView({
                     block: 'nearest',
-                    behavior: 'instant' // 避免快速操作时的平滑滚动延迟导致“抽搐”
+                    behavior: 'instant'
                 });
             }
         }
@@ -743,7 +665,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
 
         if (suggestionPropsRef.current) {
             const rawLabel = item.label;
-            // 保持原有逻辑：移除 @ 或 # 前缀再插入，交给 Node 渲染处理
             let label = rawLabel;
             if (rawLabel.startsWith('@') || rawLabel.startsWith('#')) {
                 label = rawLabel.slice(1);
@@ -786,7 +707,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         }
 
         if (!newState) {
-            // Turning on: reset any previous inputs
             setAccessCode('');
             setAccessHint('');
         }
@@ -806,19 +726,12 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
         const textContent = editor?.getText({ blockSeparator: '\n' }) || content;
         if (!textContent.trim() || isPending) return;
 
-        // 终极校验：发布前再次从文本中提取标签
-        // 使用更严谨的正则提取，支持中文且避免误识
-        const hashtagRegex = /(?:^|\s|(?<=[^a-zA-Z0-9]))#([\w\u4e00-\u9fa5]+)/g;
-        const matches = textContent.matchAll(hashtagRegex);
-        const finalTags = Array.from(new Set(Array.from(matches).map(m => m[1])));
-
         setIsPending(true);
         setError(null);
         setShowPrivateDialog(false);
 
         const formData = new FormData();
         formData.append('content', textContent);
-        finalTags.forEach(tag => formData.append('tags', tag));
         formData.append('is_private', String(isPrivate));
         formData.append('is_pinned', String(isPinned));
 
@@ -839,42 +752,31 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
             if (result.success) {
                 const newMemo = result.data as Memo | undefined;
                 if (newMemo) {
-                    if (newMemo) {
-                        // Update Cache Optimistically
-                        memoCache.addItem({
-                            id: newMemo.id,
-                            memo_number: newMemo.memo_number || 0,
-                            content: newMemo.content,
-                            created_at: newMemo.created_at
-                        });
+                    memoCache.addItem({
+                        id: newMemo.id,
+                        memo_number: newMemo.memo_number || 0,
+                        content: newMemo.content,
+                        created_at: newMemo.created_at
+                    });
 
-                        // No need to update local state since we use memoCache now, 
-                        // but if we are in 'edit', we might need to refresh something? 
-                        // Actually logic below was dealing with 'suggestionItems' state directly.
-                        // 并行刷新统计数据，不阻塞
-                        Promise.all([
-                            refreshTags?.(),
-                            refreshStats?.()
-                        ]).catch(err => console.error('[Sync] Stats refresh failed:', err));
-                    }
+                    Promise.all([
+                        refreshTags?.(),
+                        refreshStats?.()
+                    ]).catch(err => console.error('[Sync] Stats refresh failed:', err));
                 }
 
                 if (mode === 'create') {
-                    // Clear Draft
                     localStorage.removeItem(DRAFT_CONTENT_KEY);
                     localStorage.removeItem(DRAFT_IS_PRIVATE_KEY);
 
                     editor?.commands.setContent('');
                     setContent('');
-                    setTags([]);
                     setIsPrivate(false);
                     setAccessCode('');
                     setAccessHint('');
                     setIsPinned(false);
-                    // 移除冗余的 router.refresh()，因为我们已经手动同步了 state
                 } else {
                     onSuccess?.(newMemo);
-                    // 移除冗余的 router.refresh()
                 }
             } else {
                 setError(typeof result.error === 'string' ? result.error : '操作失败，请稍后重试');
@@ -926,25 +828,19 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                 willChange: "transform, height, opacity",
                 overflow: (isActuallyCollapsed || isAnimating) ? 'hidden' : 'visible'
             }}
-            onClick={(e) => {
-                // 仅在点击处于边缘空白区域（非编辑器正文）且没有正在选择文字时触发
+            onClick={() => {
                 if ((isActuallyCollapsed || hideFullscreen) && editor) {
                     const selection = window.getSelection();
                     if (selection && selection.toString().length > 0) {
-                        return; // 如果有选区，不干扰
+                        return;
                     }
-
-                    // 如果点击的目标是 section 或者是 editor 容器内部的垫片（非编辑器本身）
-                    const target = e.target as HTMLElement;
-                    if (target === e.currentTarget || target.closest('.editor-full-height-trigger')) {
-                        editor.commands.focus('end');
-                    }
+                    editor.commands.focus('end');
                 }
             }}
             className={cn(
                 "border border-border rounded-inner relative",
                 "flex flex-col items-stretch",
-                "selection:bg-primary/30", // Increased opacity for better visibility
+                "selection:bg-primary/30",
                 isActuallyCollapsed ? "shadow-none cursor-pointer hover:bg-accent/5" : (hideFullscreen ? "h-full" : ""),
                 className
             )}>
@@ -964,8 +860,8 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         ref={editorContainerRef}
                         animate={{
                             height: isActuallyCollapsed ? 26 : (hideFullscreen ? "100%" : "auto"),
-                            minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? "100%" : 120), // Animate minHeight to avoid snap
-                            opacity: 1, // Ensure opacity is always 1 unless we want to fade out
+                            minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? "100%" : 120),
+                            opacity: 1,
                             overflow: (isActuallyCollapsed || isAnimating) ? "hidden" : "visible"
                         }}
                         transition={{
@@ -976,7 +872,7 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         style={{
                             minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? 0 : 120),
                             willChange: "transform, height, min-height",
-                            maxHeight: hideFullscreen ? 'none' : 500, // Fixed max-height, let height animation handle the collapse
+                            maxHeight: hideFullscreen ? 'none' : 500,
                             maskImage: isActuallyCollapsed && !isAnimating
                                 ? 'linear-gradient(to bottom, black 90%, transparent 100%)'
                                 : 'none',
@@ -998,7 +894,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                         )}
                         <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "h-full")} />
 
-                        {/* 展开捕捉层：在收缩状态下占据整个编辑区，确保点击任意位置均可无感触发展开 */}
                         {isActuallyCollapsed && (
                             <div className="absolute inset-0 z-10 cursor-pointer editor-full-height-trigger" />
                         )}
@@ -1012,7 +907,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 left: suggestionPosition.left,
                             }}
                             onMouseDown={(e) => {
-                                // 强制阻止事件冒泡和默认干扰，防止编辑器因建议菜单的操作失焦
                                 e.preventDefault();
                                 e.stopPropagation();
                             }}
@@ -1085,7 +979,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                             </li>
                                         ))}
 
-                                        {/* Pagination Feedback - Only show if loading more or has more */}
                                         {(isLoading || hasMoreMentions) && (
                                             <div className="px-3 py-3 border-t border-border/10">
                                                 {isLoading ? (
@@ -1133,7 +1026,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                     }}
                     style={{ willChange: "opacity, height" }}
                     className="overflow-hidden bg-transparent"
-                    // 阻止页脚区域点击时的焦点转移，防止编辑器在点击按钮时意外收缩
                     onMouseDown={(e) => e.preventDefault()}
                 >
                     <div className="pt-5 mt-4 border-t border-border/50 flex justify-between items-center">
@@ -1198,14 +1090,12 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                             if (mode === 'edit') {
                                                 onCancel?.();
                                             } else {
-                                                // Clear Draft
                                                 localStorage.removeItem(DRAFT_CONTENT_KEY);
                                                 localStorage.removeItem(DRAFT_IS_PRIVATE_KEY);
 
                                                 editor?.commands.setContent('');
                                                 setContent('');
-                                                setTags([]);
-                                                setIsPrivate(false); // Reset private state
+                                                setIsPrivate(false);
                                             }
                                         }}
                                         className="h-8 px-3 text-muted-foreground hover:text-foreground transition-colors"
@@ -1241,7 +1131,6 @@ export function MemoEditor({ mode = 'create', memo, onCancel, onSuccess, isColla
                                 memo={memo}
                                 isCollapsed={false}
                                 hideFullscreen={true}
-                                contextMemos={contextMemos}
                                 onCancel={() => {
                                     setIsFullscreen(false);
                                     onCancel?.();

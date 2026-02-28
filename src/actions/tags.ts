@@ -7,7 +7,7 @@ export async function getAllTags() {
     const { data, error } = await supabase.rpc('get_distinct_tags');
 
     if (error) {
-        console.error('Error fetching tags:', error);
+        console.error('Error fetching tags (get_distinct_tags):', error.message || error);
         return [];
     }
 

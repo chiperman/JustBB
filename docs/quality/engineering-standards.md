@@ -1,37 +1,56 @@
-# 工程质量与开发规范
+# JustBB 工程化标准与开发规范
 
-本文档记录了 JustBB 项目的自动化工作流、质量守卫及后续工程化完善计划。
+> 最后更新：2026-02-28
 
-## 1. 已建立的工作流
+## 1. 核心开发工作流 (SOP)
 
-### 1.1 代码提交守卫 (Git Hooks)
-项目已集成 `husky` 和 `lint-staged`，在执行 `git commit` 前会自动触发以下检查：
-- **增量 Lint**：仅对修改的文件执行 `eslint --fix`。
-- **增量测试**：仅对受影响的模块执行 `vitest`。
-- **全量构建**：执行 `next build` 确保 TypeScript 类型安全且项目可生产交付。
-- **环境安全网**：引入 Zod 进行运行时与构建时环境变量 Schema 验证 (见 `src/lib/env.ts` 与 `next.config.ts`)。
+所有新功能开发或复杂需求实现必须严格遵循以下顺序，禁止跳步。
 
-### 1.2 持续集成 (CI/CD)
-- **GitHub Actions (`ci.yml`)**：在 Push 和 PR 触发云端 Lint 扫描、Mock 测试与全量 Next 编译运行，保障集成质量。
-- **集成测试体系**：存量测试脚本已自动化转为 `fetchMemos.integrated.test.ts` 和 `security.test.ts`。
+### Step 1: 构思方案 (Research & Reasoning)
+- 明确问题本质与最终目标。
+- 扫描代码现状，识别依赖与潜在冲突。
+- 给出 1-2 个技术方案，标注已知与未知点。
+- **原则**：禁止输出实现代码。
 
-### 1.3 数据库变更管理 (Database DevOps)
-- **Supabase CLI**：已初始化，数据库配置代码化。
-- **迁移逻辑**：核心 SQL 函数已从脚本迁移至 `supabase/migrations`，支持版本控制。
-- **脚本化命令**：
-  - `npm run types:generate`：同步云端数据库类型到前端。
-  - `npm run supabase:push`：推送本地变更到云端。
+### Step 2: 提请审核 (Design Review)
+- 向用户展示构思方案。
+- **强制声明**：`等待审核，不进入实现阶段`。
+- 必须获得用户明确授权（如回复“开始”）后方可继续。
 
-## 2. 后续完善计划 (Roadmap)
+### Step 3: 质量先行 (Test Definition / TDD)
+- 定义“正确”的标准。
+- 编写核心逻辑的单元测试 (Unit Tests) 或集成测试 (Integration Tests)。
+- 确保测试框架已就绪。
 
-### 第一优先级：安全性代码化
-- [ ] **RLS 策略迁移**：将云端手动配置的 Row Level Security 策略转化为 Migration 脚本。
-- [ ] **存储桶权限**：代码化管理 Storage Bucket 的访问策略。
+### Step 4: 任务分解 (Task Breakdown)
+- 将需求拆解为原子化的 `Task List`。
+- 每个任务必须目标清晰、可独立验证。
 
-### 第二优先级：代码纯净度
-- [x] **清扫 Lint 警告**：已消除 `unused-vars` 警告，保持控制台 100% 洁净。
-- [x] **测试覆盖率**：已将 `scripts/` 下的手动测试逻辑整合进 `vitest` 自动化测试套件。
+### Step 5: 执行实现 (Implementation)
+- 严格按 Task List 编码。
+- 遵循 KISS 原则（简洁优先）。
+- 保持与既有代码风格一致。
 
-### 第三优先级：部署自动化
-- [x] **GitHub Actions**：已配置 CI 流程，实现推送自动校验 (`ci.yml`)。
-- [ ] **Preview Deploy**：配置 PR 预览环境。
+### Step 6: 全量验证 (Verification)
+- 运行 `npm run build` 或 `tsc` 确保编译通过。
+- 运行 `npm test` 确保逻辑回归正常。
+- 严禁“带病入库”。
+
+### Step 7: 文档同步 (Documentation Sync)
+- 同步更新 `/docs` 下的相关文档（API、数据库、架构等）。
+- 确保文档即系统。
+
+### Step 8: 显式授权提交 (Atomic Commits)
+- 检查 `git status`。
+- 询问确认：`变更已就绪，是否需要执行提交（commit）？`。
+- 遵循 Conventional Commits 规范执行本地 commit。
+
+## 2. 代码质量规范
+- **类型安全**：严禁使用 `any`（除非第三方库兼容性极端情况）。
+- **错误日志**：报错必须包含上下文（message, code, hint），禁止输出空对象 `{}`。
+- **环境隔离**：所有环境变量必须通过 `src/lib/env.ts` 的 Zod 强校验访问。
+
+## 3. Git 提交规范
+- **格式**：`type(scope): subject`。
+- **Subject**：中文描述，简洁明了。
+- **Body**：详细说明“为什么”改动，而非“做了什么”。

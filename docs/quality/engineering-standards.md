@@ -9,8 +9,13 @@
 - **增量 Lint**：仅对修改的文件执行 `eslint --fix`。
 - **增量测试**：仅对受影响的模块执行 `vitest`。
 - **全量构建**：执行 `next build` 确保 TypeScript 类型安全且项目可生产交付。
+- **环境安全网**：引入 Zod 进行运行时与构建时环境变量 Schema 验证 (见 `src/lib/env.ts` 与 `next.config.ts`)。
 
-### 1.2 数据库变更管理 (Database DevOps)
+### 1.2 持续集成 (CI/CD)
+- **GitHub Actions (`ci.yml`)**：在 Push 和 PR 触发云端 Lint 扫描、Mock 测试与全量 Next 编译运行，保障集成质量。
+- **集成测试体系**：存量测试脚本已自动化转为 `fetchMemos.integrated.test.ts` 和 `security.test.ts`。
+
+### 1.3 数据库变更管理 (Database DevOps)
 - **Supabase CLI**：已初始化，数据库配置代码化。
 - **迁移逻辑**：核心 SQL 函数已从脚本迁移至 `supabase/migrations`，支持版本控制。
 - **脚本化命令**：
@@ -24,9 +29,9 @@
 - [ ] **存储桶权限**：代码化管理 Storage Bucket 的访问策略。
 
 ### 第二优先级：代码纯净度
-- [ ] **清扫 Lint 警告**：消除剩余的 90+ 个 `unused-vars` 警告，保持控制台 100% 洁净。
-- [ ] **测试覆盖率**：将 `scripts/` 下的手动测试逻辑整合进 `vitest` 自动化测试套件。
+- [x] **清扫 Lint 警告**：已消除 `unused-vars` 警告，保持控制台 100% 洁净。
+- [x] **测试覆盖率**：已将 `scripts/` 下的手动测试逻辑整合进 `vitest` 自动化测试套件。
 
 ### 第三优先级：部署自动化
-- [ ] **GitHub Actions**：配置 CI 流程，实现推送自动校验。
+- [x] **GitHub Actions**：已配置 CI 流程，实现推送自动校验 (`ci.yml`)。
 - [ ] **Preview Deploy**：配置 PR 预览环境。

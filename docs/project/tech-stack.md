@@ -1,6 +1,6 @@
 # JustMemo 技术选型总览
 
-> 最后更新日期：2026-02-24 (精简重构：移除废弃技术栈)
+> 最后更新日期：2026-02-27 (工程化升级：增强安全校验与性能优化)
 
 ---
 
@@ -26,6 +26,7 @@
 | Tiptap | ^2.x | 富文本编辑器核心，支持 JSON 结构化存储。 |
 | Leaflet | ^1.9 | 轻量级地图 SDK，配合 CartoDB 提供深浅色底图。 |
 | next-themes | ^0.4 | 深/浅色/系统主题切换 |
+| next/image | Built-in | **[图片优化]** 全量迁移至 `next/image`，实现 WebP 自动转换与延迟加载。 |
 
 ---
 
@@ -34,7 +35,7 @@
 | 技术 | 版本 | 说明 |
 |------|------|------|
 | Supabase | ^2.x | BaaS 平台（PostgreSQL + Auth + Storage） |
-| Zod | ^4.x | 数据校验与类型推断 |
+| Zod | ^4.x | **[安全守卫]** 核心用于运行时与构建时环境变量强校验 (`src/lib/env.ts`)。 |
 | bcryptjs | ^3.x | 密码 Hash 处理 |
 | date-fns | ^4.x | 日期格式化与计算 |
 
@@ -48,7 +49,7 @@ src/
 ├── components/    # UI 库与业务组件
 ├── actions/       # Server Actions 逻辑
 ├── context/       # React Context 全局状态管理 (View, PageDataCache, User, Selection, Tags, Stats, Timeline, LoginMode)
-├── lib/           # Supabase Client、工具函数、加密逻辑
+├── lib/           # Supabase Client、工具函数、加密逻辑、环境校验 (env.ts)
 └── types/         # TypeScript 类型定义
 ```
 
@@ -67,7 +68,11 @@ src/
 
 ### 6.1 Git 规范
 *   原子化提交 (Atomic Commits)：每个 Commit 只做一件事。
-*   Commit 规范 (Commitizen)：强制采用 `type(scope): subject` 格式，并遵循 `.agent/skills/git-commit` 技能定义的执行协议。主题与正文使用 中文。
+*   Commit 规范 (Commitlint)：强制采用 `type(scope): subject` 格式。主题与正文使用 中文。
+*   自动化守卫：通过 Husky 触发 `pre-commit` 钩子，执行全量类型检查与构建校验。
+
+### 6.2 环境变量安全
+*   **强校验机制**：基于 Zod 定义 `envSchema`。在 `next.config.ts` 中集成校验，缺失必要变量将直接中止构建，防止“带病上线”。
 
 ---
 

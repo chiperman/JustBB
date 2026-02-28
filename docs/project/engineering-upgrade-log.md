@@ -4,7 +4,16 @@
 
 ## 改动概览
 
-### 1. 自动化守卫体系建立
+### 1. 自动化 CI/CD 与测试补全 (新增)
+- **GitHub Actions**：
+  - 新增 `.github/workflows/ci.yml`，在 Push 和 PR 阶段强制进行 Lint、Test 和 Build 检查。
+- **自动化集成测试**：
+  - 移除了 `scripts/test-date-filter.ts` 和 `scripts/test-rls.ts` 等手动脚本。
+  - 将测试逻辑全量迁入 `fetchMemos.integrated.test.ts` 和 `security.test.ts`，统一使用 Vitest + 本地 Supabase 运行。
+- **环境安全网**：
+  - 引入 Zod 实现运行时和构建时 (`next.config.ts`) 环境变量强校验。
+
+### 2. 自动化守卫体系建立 (前期)
 - **Husky & lint-staged**：
   - 解决了“带病代码”入库的问题。
   - 强制要求 commit 前必须通过 `next build` 校验。

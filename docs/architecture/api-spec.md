@@ -1,6 +1,6 @@
 # JustMemo 接口设计规范 (API Spec)
 
-> 最后更新：2026-02-24
+> 最后更新：2026-02-27 (工程化升级：同步 RPC 隐私增强与排序逻辑)
 
 ## 1. 通用响应契约
 所有接口遵循以下统一返回格式：
@@ -91,16 +91,18 @@
 ### 5.1 `getMemos` (Core Fetch)
 *   参数: `params: { query?, adminCode?, limit?, offset?, tag?, date?, sort? }`
 *   特性: 
-    - 针对访客自动隐藏私密内容，除非已成功解锁。
-    - **排序与筛选**: 支持最前 (`newest`) 和最后 (`oldest`) 排序，以及基于 `tag` 和 `date` 的多维过滤。
+    - 针对访客自动隐藏私密内容（物理级脱敏），除非已成功解锁。
+    - **排序逻辑**: 默认按 `is_pinned` DESC, `pinned_at` DESC, `created_at` DESC。
+    - **脱敏**: 未解锁的私密记录 `word_count` 归 0，内容为空，标签移除。
 
 ### 5.2 `searchMemosForMention`
 *   功能: 供 `@编号` 引用建议使用的分页搜索。
 *   参数: `query: string, offset: number, limit: number`
 *   补丁: 如果是数字查询，Action 层会自动将编号精确匹配结果优先置顶。
 
-### 5.3 `getOnThisDayMemos` / `getArchivedMemos`
-*   功能: 检索“去年今日”记录或按时间周期浏览历史。
+### 5.3 `getTimelineStats` (Archived)
+*   功能: 获取归档时间轴计数。
+*   特性: 2026-02-27 更新后，仅返回公开内容的计数。
 
 ### 5.4 `getGalleryMemos` / `getTrashMemos`
 *   功能: 分别处理画廊（图片过滤）与回收站记录的分页检索。
@@ -114,6 +116,3 @@
 ### 5.7 `getMemosWithLocations` (Locations)
 *   功能: 获取所有包含地理位置信息的笔记，驱动地图全视图。
 *   返回: `(Memo & { locations: Location[] })[]`
-
-### 5.8 `getMemoIndex`
-*   功能: 获取轻量级索引（ID, 编号, 时间, 内容），用于提及建议或基础离线索引。

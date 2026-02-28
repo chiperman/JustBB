@@ -1,6 +1,6 @@
 # JustMemo 数据库设计与函数 (SQL)
 
-> 最后更新：2026-02-24 (精简重构：同步分页搜索优化)
+> 最后更新：2026-02-27 (工程化升级：同步核心函数隐私增强与排序优化)
 
 ## 1. 数据模型 (memos 表)
 *   `id`: uuid (PK)
@@ -62,35 +62,31 @@ BEGIN
       WHEN m.access_code IS NOT NULL AND m.access_code = crypt(input_code, m.access_code) THEN FALSE
       ELSE TRUE
     END as is_locked,
-    m.word_count
+    CASE 
+      WHEN (m.is_private = TRUE AND NOT (auth.uid() IS NOT NULL OR (m.access_code IS NOT NULL AND m.access_code = crypt(input_code, m.access_code)))) THEN 0
+      ELSE m.word_count
+    END as word_count
   FROM memos m
   WHERE 
-    -- 1. 软删除过滤
     m.deleted_at IS NULL
     AND (
-      -- 2. 权限校验
       m.is_private = FALSE 
       OR (m.is_private = TRUE AND (
-        -- 管理员或正确口令
-        (auth.uid() IS NOT NULL OR (m.access_code IS NOT NULL AND m.access_code = crypt(input_code, m.access_code)))
-        -- 仅在非搜索模式（无关键字且无标签）下允许访客看到私密记录占位
+        (auth.uid() IS NOT NULL OR (m.access_code IS NOT NULL AND input_code IS NOT NULL AND m.access_code = crypt(input_code, m.access_code)))
         OR (query_text = '' AND filters->>'tag' IS NULL)
       ))
     )
     AND (
-      -- 3. 关键词过滤
       m.content ILIKE '%' || query_text || '%' OR
       query_text = ANY(m.tags) OR
       (m.is_private = TRUE AND query_text = '')
     )
-    -- 4. Tag 过滤
     AND (filters->>'tag' IS NULL OR filters->>'tag' = ANY(m.tags))
-    -- 5. 日期过滤
     AND (filters->>'date' IS NULL OR (m.created_at AT TIME ZONE 'Asia/Shanghai')::DATE = (filters->>'date')::DATE)
   ORDER BY 
-    m.is_pinned DESC, 
-    m.pinned_at DESC NULLS LAST,
     CASE WHEN sort_order = 'oldest' THEN m.created_at END ASC,
+    CASE WHEN sort_order = 'newest' OR sort_order IS NULL THEN m.is_pinned END DESC,
+    CASE WHEN sort_order = 'newest' OR sort_order IS NULL THEN m.pinned_at END DESC NULLS LAST,
     CASE WHEN sort_order = 'newest' OR sort_order IS NULL THEN m.created_at END DESC
   LIMIT limit_val OFFSET offset_val;
 END;
@@ -103,45 +99,50 @@ DECLARE
   result JSONB;
 BEGIN
   SELECT jsonb_build_object(
-    'totalMemos', count(*),
-    'totalTags', (SELECT count(DISTINCT unnest(tags)) FROM memos WHERE deleted_at IS NULL),
-    'firstMemoDate', min(created_at),
+    'totalMemos', (SELECT count(*)::INT FROM memos WHERE deleted_at IS NULL),
+    'totalTags', (SELECT count(DISTINCT unnest(tags))::INT FROM memos WHERE deleted_at IS NULL),
+    'firstMemoDate', (SELECT min(created_at AT TIME ZONE 'Asia/Shanghai')::DATE::TEXT FROM memos WHERE deleted_at IS NULL),
     'days', (
-      SELECT jsonb_object_agg(day, jsonb_build_object('count', cnt, 'wordCount', wc))
+      SELECT jsonb_object_agg(day, stats)
       FROM (
         SELECT 
-          (created_at AT TIME ZONE 'Asia/Shanghai')::DATE::TEXT as day,
-          count(*) as cnt,
-          sum(word_count) as wc
+          (created_at AT TIME ZONE 'Asia/Shanghai')::DATE::TEXT AS day,
+          jsonb_build_object(
+            'count', count(*)::INT,
+            'wordCount', sum(word_count)::INT
+          ) AS stats
         FROM memos
         WHERE deleted_at IS NULL
         GROUP BY 1
       ) s
     )
-  ) INTO result
-  FROM memos 
-  WHERE deleted_at IS NULL;
+  ) INTO result;
   RETURN result;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 时间轴归档函数：获取月份归档计数
+-- 时间轴归档函数：获取月份归档计数（仅公开内容）
 CREATE OR REPLACE FUNCTION get_timeline_stats()
 RETURNS JSONB AS $$
+DECLARE
+  result JSONB;
 BEGIN
-  RETURN (
-    SELECT jsonb_build_object(
-      'days', jsonb_object_agg(day, jsonb_build_object('count', cnt))
+  SELECT jsonb_build_object(
+    'days', (
+      SELECT jsonb_object_agg(day, stats)
+      FROM (
+        SELECT 
+          (created_at AT TIME ZONE 'Asia/Shanghai')::DATE::TEXT AS day,
+          jsonb_build_object(
+            'count', count(*)
+          ) AS stats
+        FROM memos
+        WHERE deleted_at IS NULL AND is_private = FALSE
+        GROUP BY 1
+      ) s
     )
-    FROM (
-      SELECT 
-        (created_at AT TIME ZONE 'Asia/Shanghai')::DATE::TEXT as day,
-        count(*) as cnt
-      FROM memos
-      WHERE deleted_at IS NULL
-      GROUP BY 1
-    ) s
-  );
+  ) INTO result;
+  RETURN result;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -171,6 +172,12 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ```sql
 -- 高性能标签检索
 CREATE INDEX idx_memos_tags ON memos USING GIN (tags);
+
+-- 全文检索增强 (pg_trgm)
+CREATE INDEX idx_memos_search_content ON memos USING gin (content gin_trgm_ops);
+
+-- 时间轴与公开内容优化索引
+CREATE INDEX idx_memos_timeline_optimization ON memos (created_at) WHERE deleted_at IS NULL AND is_private = FALSE;
 
 -- 排序与过滤复合索引
 CREATE INDEX idx_memos_main_flow ON memos (is_pinned DESC, created_at DESC) WHERE deleted_at IS NULL;

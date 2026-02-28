@@ -5,6 +5,7 @@ CREATE OR REPLACE FUNCTION get_timeline_stats()
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, extensions
 AS $$
 DECLARE
   result JSONB;
@@ -53,7 +54,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 BEGIN
   RETURN QUERY
@@ -110,6 +111,7 @@ CREATE OR REPLACE FUNCTION get_memo_stats_v2()
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, extensions
 AS $$
 DECLARE
   result JSONB;
@@ -143,6 +145,7 @@ CREATE OR REPLACE FUNCTION get_distinct_tags()
 RETURNS TABLE (tag_name TEXT, count BIGINT)
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, extensions
 AS $$
 BEGIN
   RETURN QUERY

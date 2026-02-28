@@ -29,7 +29,6 @@ export type Env = z.infer<typeof envSchema>;
  * 失败时抛出友好错误并中止进程
  */
 export function validateEnv() {
-    console.info('🔍 正在校验环境变量...');
     const parsed = envSchema.safeParse(process.env);
 
     if (!parsed.success) {
@@ -48,8 +47,6 @@ export function validateEnv() {
         if (process.env.SKIP_ENV_VALIDATION === 'true') {
             console.warn('⚠️ 警告: 环境变量校验失败，但在 SKIP_ENV_VALIDATION 模式下继续执行。');
         }
-    } else {
-        console.info('✅ 环境变量校验通过');
     }
 
     return parsed.data as Env;

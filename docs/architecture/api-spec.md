@@ -1,6 +1,6 @@
 # JustMemo 接口设计规范 (API Spec)
 
-> 最后更新：2026-02-28 (双向流模式：游标分页与上下文抓取支持)
+> 最后更新：2026-02-28 (单日日历翻页与单向瀑布流模式)
 
 ## 1. 通用响应契约
 所有接口遵循以下统一返回格式：
@@ -29,17 +29,20 @@
 ## 3. 读操作 (Queries - 双向流分页模式)
 
 ### 3.1 `getMemos` (核心分页)
-*   参数: `params: { query?, limit?, before_date?, after_date?, tag?, sort? }`
+*   参数: `params: { query?, limit?, before_date?, after_date?, tag?, date?, sort? }`
 *   特性: 
-    - **游标分页**: 彻底弃用 Offset，通过 `before_date` (向下) 或 `after_date` (向上) 确定数据起止点。
-    - **智能脱敏**: 私密内容在物理层进行元数据抹除（内容/标签置空，字数归零）。
+    - **游标分页**: 彻底弃用 Offset。通过 `before_date` (向下) 或 `after_date` (向上) 确定数据起止点。
+    - **优先级逻辑**: 若 `before_date` 或 `after_date` 存在，系统将自动忽略 `date` (Calendar Date) 过滤条件，以确保双向流在跨天滚动时不会被截断。
+    - **智能脱敏**: 私密内容在物理层进行元数据抹除。
 
-### 3.2 `getMemosContext` (传送定位)
-*   功能: 以目标日期为中心抓取上下文窗口。
-*   参数: `params: { targetDate: string, limit: number }`
+### 3.2 `getSingleDayMemosWithNeighbors` (单日翻页查询)
+*   功能: 获取指定单日的日记内容，并探测存在日记的上一个/下一个日期。用于驱动 Calendar Pager 翻页模式。
+*   参数: `params: { targetDate: string, adminCode?: string, tag?: string, query?: string }`
 *   逻辑: 
-    - 同时拉取 `targetDate` 之前的 10 条和之后的 10 条。
-    - 确保用户点击时间轴跳转后，上下均有缓冲内容，实现丝滑漫游。
+    - 并发拉取 `targetDate` 当天的所有日记。
+    - 利用 `limit(1)` 向前探测最近的一个 `prevDate`。
+    - 利用 `limit(1)` 向后探测最近的一个 `nextDate`。
+    - 返回 `{ memos, prevDate, nextDate }` 给前端渲染 "View Older" / "View Newer" 导航器。
 
 ### 3.3 `getArchivedMemos` / `getGalleryMemos` / `getTrashMemos`
 *   功能: 特定维度的聚合过滤查询。

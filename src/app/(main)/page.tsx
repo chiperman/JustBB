@@ -1,4 +1,4 @@
-import { getMemos, getArchivedMemos, getMemosContext } from "@/actions/fetchMemos";
+import { getMemos, getArchivedMemos } from "@/actions/fetchMemos";
 import { Memo } from "@/types/memo";
 import { cookies } from 'next/headers';
 import { MainLayoutClient } from "@/components/layout/MainLayoutClient";

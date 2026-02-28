@@ -12,7 +12,7 @@ import { useUser } from '@/context/UserContext';
 import { useSelection } from '@/context/SelectionContext';
 import { usePageDataCache } from '@/context/PageDataCache';
 import { useTimeline } from '@/context/TimelineContext';
-import { getMemosContext } from '@/actions/fetchMemos';
+import { getSingleDayMemosWithNeighbors } from '@/actions/fetchMemos';
 
 interface MainLayoutClientProps {
     memos?: Memo[];
@@ -39,6 +39,10 @@ export function MainLayoutClient({
     const [isTeleporting, setIsTeleporting] = useState(false);
     const [isContextMode, setIsContextMode] = useState(!!searchParams.date);
 
+    // Calendar Pager states
+    const [prevAvailableDate, setPrevAvailableDate] = useState<string | null>(null);
+    const [nextAvailableDate, setNextAvailableDate] = useState<string | null>(null);
+
     // 构建动态缓存键
     const cacheKey = useMemo(() => {
         const params = new URLSearchParams();
@@ -58,23 +62,25 @@ export function MainLayoutClient({
     const [memos, setMemos] = useState<Memo[]>(initialMemos ?? cached?.memos ?? []);
     const [lastInitialMemos, setLastInitialMemos] = useState(initialMemos);
 
-    // 核心：处理传送逻辑
+    // 核心：处理传送逻辑 (Calendar Pager)
     useEffect(() => {
         if (!teleportDate) return;
 
         const performTeleport = async () => {
-            console.log(`[Main] Teleporting to: ${teleportDate}`);
+            console.log(`[Main] Teleporting (Pager Mode) to: ${teleportDate}`);
 
-            // 1. 预设布局：强制折叠编辑器，消除高度变动
+            // 1. 预设布局
             setIsScrolled(true);
             setIsTeleporting(true);
             setIsContextMode(true);
 
             // 立即清空当前列表，让视觉产生“时空跳跃”的清屏感
             setMemos([]);
+            setPrevAvailableDate(null);
+            setNextAvailableDate(null);
 
             try {
-                const data = await getMemosContext({
+                const result = await getSingleDayMemosWithNeighbors({
                     targetDate: teleportDate,
                     adminCode,
                     query: Array.isArray(searchParams.query) ? searchParams.query[0] : (searchParams.query as string),
@@ -82,7 +88,10 @@ export function MainLayoutClient({
                 });
 
                 await new Promise(r => setTimeout(r, 300));
-                setMemos(data);
+
+                setMemos(result.memos);
+                setPrevAvailableDate(result.prevDate);
+                setNextAvailableDate(result.nextDate);
 
                 // 2. 精准定位补偿
                 setTimeout(() => {
@@ -90,8 +99,7 @@ export function MainLayoutClient({
                     const header = headerRef.current;
 
                     if (container && header) {
-                        // 强制滚动到真正的最初始顶部，因为我们取的就是倒序前 20 条，最上面那条就是我们点击的日期。
-                        // 这里稍微往下挪 1 个像素，防止 IntersectionObserver 一落地就判定触顶触发向上加载（导致抓取未来数据）
+                        // 强制滚动到真正的最初始顶部
                         container.scrollTop = 1;
                     }
                     setIsTeleporting(false);
@@ -199,6 +207,8 @@ export function MainLayoutClient({
                                     adminCode={adminCode}
                                     isAdmin={effectiveIsAdmin}
                                     forceContextMode={isContextMode}
+                                    prevAvailableDate={prevAvailableDate}
+                                    nextAvailableDate={nextAvailableDate}
                                 />
                             </motion.div>
                         </AnimatePresence>

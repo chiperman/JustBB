@@ -7,6 +7,8 @@ interface TimelineContextType {
     setActiveId: (id: string | null) => void;
     isManualClick: boolean;
     setManualClick: (val: boolean) => void;
+    teleportDate: string | null;
+    setTeleportDate: (date: string | null) => void;
 }
 
 const TimelineContext = createContext<TimelineContextType | undefined>(undefined);
@@ -14,6 +16,7 @@ const TimelineContext = createContext<TimelineContextType | undefined>(undefined
 export function TimelineProvider({ children }: { children: React.ReactNode }) {
     const [activeId, setActiveIdState] = useState<string | null>(null);
     const [isManualClick, setIsManualClick] = useState(false);
+    const [teleportDate, setTeleportDate] = useState<string | null>(null);
     const manualClickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const setActiveId = useCallback((id: string | null) => {
@@ -31,7 +34,14 @@ export function TimelineProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     return (
-        <TimelineContext.Provider value={{ activeId, setActiveId, isManualClick, setManualClick }}>
+        <TimelineContext.Provider value={{
+            activeId,
+            setActiveId,
+            isManualClick,
+            setManualClick,
+            teleportDate,
+            setTeleportDate
+        }}>
             {children}
         </TimelineContext.Provider>
     );
@@ -45,7 +55,9 @@ export function useTimeline() {
             activeId: null,
             setActiveId: () => { },
             isManualClick: false,
-            setManualClick: () => { }
+            setManualClick: () => { },
+            teleportDate: null,
+            setTeleportDate: () => { }
         };
     }
     return context;

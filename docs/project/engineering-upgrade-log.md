@@ -1,9 +1,15 @@
-# 工程化升级记录 (2026-02-27)
+# 工程化升级记录
 
-本次升级完成了从“基础开发”到“自动化工程化”的跨越，重点解决了代码质量难以持续保证和数据库维护碎片化的问题。
+## 2026-02-28: Calendar Pager 架构演进
+- **重构背景**：原有的“混合上下文无限向上加载”方案（利用 `useLayoutEffect` 和虚拟 Buffer）带来了无法根除的滚动条跳跃和渲染生涩感。
+- **架构迁移**：
+  - 彻底移除了 `MemoFeed` 向上滚动的 Observer 监听和相关虚拟队列。
+  - 引入**单日翻页模式 (Calendar Pager Mode)**：当点击特定日期时，系统通过 `getSingleDayMemosWithNeighbors` 并发拉取单日全量数据及真实的相邻前/后有数据的日期（通过 `limit(1)` 探针）。
+  - UI 改为静态单日展示，首尾附带极为优雅的 `[View Newer]` / `[View Older]` 传送按钮，实现了完全无抖动、瞬间响应的 Timeline 浏览体验。
 
-## 改动概览
+---
 
+## 2026-02-27: 自动化工程化跃迁
 ### 1. 自动化 CI/CD 与测试补全 (新增)
 - **GitHub Actions**：
   - 新增 `.github/workflows/ci.yml`，在 Push 和 PR 阶段强制进行 Lint、Test 和 Build 检查。

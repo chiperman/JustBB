@@ -62,30 +62,84 @@ export async function getMemos(params: {
 }
 
 /**
- * 以目标日期为中心抓取上下文窗口
- * 返回目标日期前后的平衡数据（共 limit 条）
+ * 获取指定单日的日记内容，并探测存在日记的上一个/下一个日期 (相邻游标)
+ * 用于驱动全新的 Calendar Pager 翻页模式
  */
-export async function getMemosContext(params: {
-    targetDate: string;
-    limit?: number;
+export async function getSingleDayMemosWithNeighbors(params: {
+    targetDate: string; // YYYY-MM-DD
     adminCode?: string;
     tag?: string;
     query?: string;
 }) {
-    const { targetDate, limit = 20, adminCode, tag, query } = params;
+    const { targetDate, adminCode = '', tag, query } = params;
 
-    // 将日期字符串 (YYYY-MM-DD) 转换为当天最后一秒，确保包含选定当天的所有日记
     const endOfDayTarget = `${targetDate}T23:59:59.999Z`;
+    const startOfDayTarget = `${targetDate}T00:00:00.000Z`;
 
-    // 仅向过去方向抓取 limit 条数据
-    const olderMemos = await getMemos({
+    // 1. 获取当天的所有数据 (不受 limit 限制以展示全天内容)
+    const dayMemos = await getMemos({
         query, adminCode, tag,
-        limit,
-        sort: 'newest',
-        before_date: endOfDayTarget
+        limit: 100, // 假设单日一般不超过100条
+        date: targetDate,
+        sort: 'newest'
     });
 
-    return olderMemos;
+    const supabase = await createClient();
+
+    // 鉴权安全上下文 (探测邻居时也必须尊从权限，否则用户看到"下一天"按钮但点过去没权限)
+    const canViewPrivate = adminCode === process.env.ADMIN_CODE;
+
+    // 2. 探测上一天 (存在更老的日记)
+    // 条件：创建时间 < startOfDayTarget
+    let prevQuery = supabase
+        .from('memos')
+        .select('created_at')
+        .is('deleted_at', null)
+        .lt('created_at', startOfDayTarget)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+    if (!canViewPrivate) {
+        prevQuery = prevQuery.eq('is_private', false);
+    }
+    if (tag) {
+        prevQuery = prevQuery.contains('tags', [tag]);
+    }
+
+    // 3. 探测下一天 (存在较新的日记)
+    // 条件：创建时间 > endOfDayTarget
+    let nextQuery = supabase
+        .from('memos')
+        .select('created_at')
+        .is('deleted_at', null)
+        .gt('created_at', endOfDayTarget)
+        .order('created_at', { ascending: true })
+        .limit(1);
+
+    if (!canViewPrivate) {
+        nextQuery = nextQuery.eq('is_private', false);
+    }
+    if (tag) {
+        nextQuery = nextQuery.contains('tags', [tag]);
+    }
+
+    // 并发执行探测
+    const [prevRes, nextRes] = await Promise.all([prevQuery, nextQuery]);
+
+    // 提取日期 (YYYY-MM-DD)
+    const formatToDateStr = (timestamp?: string) => {
+        if (!timestamp) return null;
+        return timestamp.split('T')[0];
+    };
+
+    const prevDate = prevRes.data && prevRes.data.length > 0 ? formatToDateStr(prevRes.data[0].created_at) : null;
+    const nextDate = nextRes.data && nextRes.data.length > 0 ? formatToDateStr(nextRes.data[0].created_at) : null;
+
+    return {
+        memos: dayMemos,
+        prevDate,
+        nextDate
+    };
 }
 
 export async function getArchivedMemos(year: number, month: number, limit: number = 20, offset: number = 0) {

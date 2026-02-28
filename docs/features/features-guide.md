@@ -50,6 +50,21 @@
 - **位置**: 管理员设置页面。
 - **详情**: 参见 [usage-monitoring.md](./usage-monitoring.md)。
 
+### 7. 📅 时间轴与单日翻页 (Calendar Pager)
+重塑了 JustBB 核心的 Timeline 导航体验，用极其简洁克制的“单页闭环”代替了易产生物理抖动的“混合上下文向上滚动”。
+- **三种独立浏览模式**:
+    1. **热力图模式 (Heatmap Hard Filter)**: 点击热力图单元格，触发 URL Date 参数变化（如 `/?date=2024-05-18`）。这是一种“强制过滤”，页面变为该日的专属归档视图，没有上下翻页器。
+    2. **时间轴模式 (Timeline Soft Teleport)**: 在普通首页往下无限翻时，点击右侧时间轴的某一天。页面 **URL 不变**，执行原地时空跳跃。
+        - 列表瞬间清屏，仅展示被点击日期当天的全部日记。
+        - **Calendar Pager 导航器**: 在列表的顶部和底部分别生成优雅的 `[View Newer]` / `[View Older]` 翻页按钮。
+    3. **标准瀑布流模式 (Infinite Scroll)**: 在没有任何日期参数、也不处于单日翻页上下文时，首页默认行为为极其顺滑的单向（向下）无限瀑布流加载。
+- **并发探针技术 (Cursor Probing)**: 
+    - 支撑“单日翻页模式”的核心 API 是 `getSingleDayMemosWithNeighbors`。
+    - 当用户传送到某一天时，后端并发执行 3 组查询：抓取当日数据、利用 `limit(1)` 叠加 `lt` 过滤出过去最近的一天（作为 View Older 游标）、利用 `gt` 过滤出未来最近的一天（作为 View Newer 游标）。
+- **零抖动体验 (Zero-Jank Strategy)**:
+    - 废弃了所有基于 IntersectionObserver 触发向上抓取未来数据、以及 `useLayoutEffect` 尝试锚定滚动条物理位置的技术债。
+    - 每一次 Teleport 或 Pager 交互，都转化为彻底的清屏与单日重绘，极大提升了渲染的确定性与手感。
+
 ---
 
 ## 🛠️ 公共逻辑规范

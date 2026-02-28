@@ -1,6 +1,6 @@
 # JustMemo 数据库设计与函数 (SQL)
 
-> 最后更新：2026-02-27 (工程化升级：同步核心函数隐私增强与排序优化)
+> 最后更新：2026-02-28 (双向流升级：同步游标分页与健壮性优化)
 
 ## 1. 数据模型 (memos 表)
 *   `id`: uuid (PK)
@@ -20,8 +20,7 @@
 ## 2. 核心安全函数 (RPC)
 
 ```sql
--- 安全检索函数：集成权限校验、关键过滤、Tag 搜索、日期筛选、分页与管理员特权
--- 特性：针对纯数字查询，Action 层会自动执行一次精确匹配并将其置顶，弥补 ILIKE 对编号的权重不足。
+-- 安全检索函数：集成权限校验、关键过滤、Tag 搜索、日期筛选、游标分页与管理员特权
 CREATE OR REPLACE FUNCTION search_memos_secure(
   query_text TEXT DEFAULT '', 
   input_code TEXT DEFAULT NULL,
@@ -83,6 +82,9 @@ BEGIN
     )
     AND (filters->>'tag' IS NULL OR filters->>'tag' = ANY(m.tags))
     AND (filters->>'date' IS NULL OR (m.created_at AT TIME ZONE 'Asia/Shanghai')::DATE = (filters->>'date')::DATE)
+    -- 游标分页逻辑：支持向上/向下无限滚动
+    AND (filters->>'before_date' IS NULL OR m.created_at <= (filters->>'before_date')::TIMESTAMPTZ)
+    AND (filters->>'after_date' IS NULL OR m.created_at > (filters->>'after_date')::TIMESTAMPTZ)
   ORDER BY 
     CASE WHEN sort_order = 'oldest' THEN m.created_at END ASC,
     CASE WHEN sort_order = 'newest' OR sort_order IS NULL THEN m.is_pinned END DESC,
@@ -90,7 +92,7 @@ BEGIN
     CASE WHEN sort_order = 'newest' OR sort_order IS NULL THEN m.created_at END DESC
   LIMIT limit_val OFFSET offset_val;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions;
 
 -- 统计信息聚合函数 (V2)：一次请求获取热力图数据与基础统计
 CREATE OR REPLACE FUNCTION get_memo_stats_v2()
@@ -99,11 +101,11 @@ DECLARE
   result JSONB;
 BEGIN
   SELECT jsonb_build_object(
-    'totalMemos', (SELECT count(*)::INT FROM memos WHERE deleted_at IS NULL),
-    'totalTags', (SELECT count(DISTINCT unnest(tags))::INT FROM memos WHERE deleted_at IS NULL),
-    'firstMemoDate', (SELECT min(created_at AT TIME ZONE 'Asia/Shanghai')::DATE::TEXT FROM memos WHERE deleted_at IS NULL),
+    'totalMemos', (SELECT COALESCE(count(*)::INT, 0) FROM memos WHERE deleted_at IS NULL),
+    'totalTags', (SELECT COALESCE(count(DISTINCT tag)::INT, 0) FROM (SELECT unnest(tags) as tag FROM memos WHERE deleted_at IS NULL) t),
+    'firstMemoDate', (SELECT COALESCE(min(created_at AT TIME ZONE 'Asia/Shanghai')::DATE::TEXT, NULL) FROM memos WHERE deleted_at IS NULL),
     'days', (
-      SELECT jsonb_object_agg(day, stats)
+      SELECT COALESCE(jsonb_object_agg(day, stats), '{}'::JSONB)
       FROM (
         SELECT 
           (created_at AT TIME ZONE 'Asia/Shanghai')::DATE::TEXT AS day,
@@ -119,7 +121,7 @@ BEGIN
   ) INTO result;
   RETURN result;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions;
 
 -- 时间轴归档函数：获取月份归档计数（仅公开内容）
 CREATE OR REPLACE FUNCTION get_timeline_stats()
@@ -129,7 +131,7 @@ DECLARE
 BEGIN
   SELECT jsonb_build_object(
     'days', (
-      SELECT jsonb_object_agg(day, stats)
+      SELECT COALESCE(jsonb_object_agg(day, stats), '{}'::JSONB)
       FROM (
         SELECT 
           (created_at AT TIME ZONE 'Asia/Shanghai')::DATE::TEXT AS day,
@@ -144,20 +146,20 @@ BEGIN
   ) INTO result;
   RETURN result;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions;
 
 -- 标签提取函数：获取所有已使用的标签
 CREATE OR REPLACE FUNCTION get_distinct_tags()
 RETURNS TABLE (tag_name TEXT, count BIGINT) AS $$
 BEGIN
   RETURN QUERY
-  SELECT unnest(tags) as tag_name, count(*) as count
+  SELECT unnest(tags) as tag_name, count(*)::BIGINT as count
   FROM memos
   WHERE deleted_at IS NULL
   GROUP BY tag_name
   ORDER BY count DESC;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions;
 ```
 
 ### 支持的 filters 参数
@@ -165,7 +167,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 |------|------|------|
 | `tag` | string | 按标签过滤 |
 | `date` | string (YYYY-MM-DD) | 按日期过滤（使用 Asia/Shanghai 本地时区） |
-| `has_media` | boolean | 过滤包含媒体的记录 |
+| `before_date` | timestamp | 游标：获取此时间之前的记录（含） |
+| `after_date` | timestamp | 游标：获取此时间之后的记录 |
 
 ## 3. 推荐索引 (Performance)
 
@@ -175,6 +178,9 @@ CREATE INDEX idx_memos_tags ON memos USING GIN (tags);
 
 -- 全文检索增强 (pg_trgm)
 CREATE INDEX idx_memos_search_content ON memos USING gin (content gin_trgm_ops);
+
+-- 地理位置检索
+CREATE INDEX idx_memos_locations ON memos USING gin (locations);
 
 -- 时间轴与公开内容优化索引
 CREATE INDEX idx_memos_timeline_optimization ON memos (created_at) WHERE deleted_at IS NULL AND is_private = FALSE;

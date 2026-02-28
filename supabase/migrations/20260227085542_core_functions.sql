@@ -96,6 +96,9 @@ BEGIN
     )
     AND (filters->>'tag' IS NULL OR filters->>'tag' = ANY(m.tags))
     AND (filters->>'date' IS NULL OR (m.created_at AT TIME ZONE 'Asia/Shanghai')::DATE = (filters->>'date')::DATE)
+    -- 6. 游标分页 (支持双向加载)
+    AND (filters->>'before_date' IS NULL OR m.created_at <= (filters->>'before_date')::TIMESTAMPTZ)
+    AND (filters->>'after_date' IS NULL OR m.created_at > (filters->>'after_date')::TIMESTAMPTZ)
   ORDER BY 
     CASE WHEN sort_order = 'oldest' THEN m.created_at END ASC,
     CASE WHEN sort_order = 'newest' OR sort_order IS NULL THEN m.is_pinned END DESC,

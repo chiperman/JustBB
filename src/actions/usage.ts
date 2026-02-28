@@ -1,6 +1,7 @@
 "use server";
 
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { env } from "@/lib/env";
 
 const DB_LIMIT = 500 * 1024 * 1024; // 500MB (Bytes)
 const STORAGE_LIMIT = 1024 * 1024 * 1024; // 1GB (Bytes)
@@ -11,8 +12,8 @@ const bytesToMB = (bytes: number) => Math.round(bytes / (1024 * 1024));
 const bytesToGB = (bytes: number) => Number((bytes / (1024 * 1024 * 1024)).toFixed(2));
 
 export async function getSupabaseUsageStats() {
-    const projectRef = process.env.SUPABASE_PROJECT_REF;
-    const managementApiKey = process.env.SUPABASE_MANAGEMENT_API_KEY;
+    const projectRef = env.SUPABASE_PROJECT_REF;
+    const managementApiKey = env.SUPABASE_MANAGEMENT_API_KEY;
 
     let managementApiError: string | null = null;
 

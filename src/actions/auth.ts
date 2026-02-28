@@ -5,6 +5,7 @@ import { createAdminClient } from '@/utils/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Provider } from '@supabase/supabase-js';
+import { env } from '@/lib/env';
 
 export async function login(formData: FormData): Promise<{ success: boolean; error?: string }> {
     const email = formData.get('email') as string;
@@ -136,7 +137,7 @@ export async function signInWithOAuth(provider: Provider) {
     const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback`,
+            redirectTo: `${env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback`,
             // 提醒：第三方登录后，仍然需要在 callback 中检查 admin 权限，或者由系统管理员预先设置角色
         },
     });
@@ -190,7 +191,7 @@ export async function sendPasswordResetEmail(email: string): Promise<{ success: 
     const supabase = await createClient();
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password`,
+        redirectTo: `${env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password`,
     });
 
     if (error) {

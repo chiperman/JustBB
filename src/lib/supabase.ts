@@ -1,8 +1,9 @@
 import { createBrowserClient, createServerClient } from '@supabase/ssr';
 import { Database } from '@/types/database';
+import { env } from './env';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 /**
  * 客户端使用的匿名实例 (兼容性导出)
@@ -17,7 +18,7 @@ export const supabase = typeof window !== 'undefined'
  * 仅在 Server Actions/API 中使用
  */
 export const getSupabaseAdmin = () => {
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
     // 我们仍然使用 createServerClient 但传入 serviceRoleKey，
     // 这样它可以正确处理服务端环境，同时具备管理权限。

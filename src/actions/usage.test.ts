@@ -8,16 +8,31 @@ const mockSupabase = {
     select: vi.fn().mockResolvedValue({ count: 100, error: null })
 };
 
+// 预定义 Mock 环境变量
+let mockEnv = {
+    SUPABASE_MANAGEMENT_API_KEY: 'test_key',
+    SUPABASE_PROJECT_REF: 'test_ref'
+};
+
 vi.mock('@/lib/supabase', () => ({
     getSupabaseAdmin: vi.fn(() => mockSupabase)
+}));
+
+vi.mock('@/lib/env', () => ({
+    env: {
+        get SUPABASE_MANAGEMENT_API_KEY() { return mockEnv.SUPABASE_MANAGEMENT_API_KEY },
+        get SUPABASE_PROJECT_REF() { return mockEnv.SUPABASE_PROJECT_REF }
+    }
 }));
 
 describe('getSupabaseUsageStats', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        // Reset environment variables
-        process.env.SUPABASE_MANAGEMENT_API_KEY = 'test_key';
-        process.env.SUPABASE_PROJECT_REF = 'test_ref';
+        // Reset mock environment
+        mockEnv = {
+            SUPABASE_MANAGEMENT_API_KEY: 'test_key',
+            SUPABASE_PROJECT_REF: 'test_ref'
+        };
     });
 
     it('should calculate correct percentages and format units', async () => {
@@ -45,10 +60,8 @@ describe('getSupabaseUsageStats', () => {
     });
 
     it('should fallback to SQL mode when API key is missing', async () => {
-        delete process.env.SUPABASE_MANAGEMENT_API_KEY;
+        mockEnv.SUPABASE_MANAGEMENT_API_KEY = undefined as unknown as string;
 
-        // Mock database responses for fallback
-        // This is a simplified mock, real implementation will use getSupabaseAdmin
         const result = await getSupabaseUsageStats();
 
         expect(result.success).toBe(true);

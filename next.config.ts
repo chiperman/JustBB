@@ -5,8 +5,7 @@ if (process.env.NODE_ENV !== 'development' && process.env.SKIP_ENV_VALIDATION !=
   const requiredEnv = [
     'NEXT_PUBLIC_SUPABASE_URL',
     'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-    'SUPABASE_SERVICE_ROLE_KEY',
-    'ADMIN_PASSWORD'
+    'SUPABASE_SERVICE_ROLE_KEY'
   ];
 
   const missing = requiredEnv.filter(k => !process.env[k]);

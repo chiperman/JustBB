@@ -5,18 +5,20 @@ import { z } from 'zod';
  * 包含应用运行所需的最小关键配置集
  */
 const envSchema = z.object({
+    // --- 强制项 (必须存在，否则构建/启动拦截) ---
     // Supabase 基础配置
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
-
     // 服务端私密配置 (Service Role)
     SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
 
-    // 业务逻辑配置
-    ADMIN_PASSWORD: z.string().min(1, "管理员密码必须在 .env 中设置"),
-
-    // 可选配置示例 (如后续需要)
-    // NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
+    // --- 可选项 (有默认逻辑或回退机制) ---
+    // 应用访问 URL (重定向用)
+    NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+    
+    // Supabase 管理 API (用量统计增强用)
+    SUPABASE_PROJECT_REF: z.string().optional(),
+    SUPABASE_MANAGEMENT_API_KEY: z.string().optional(),
 });
 
 // 导出解析后的环境变量类型

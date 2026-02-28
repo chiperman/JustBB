@@ -1,4 +1,4 @@
-import { getMemos, getArchivedMemos } from "@/actions/fetchMemos";
+import { getMemos, getArchivedMemos, getMemosContext } from "@/actions/fetchMemos";
 import { Memo } from "@/types/memo";
 import { cookies } from 'next/headers';
 import { MainLayoutClient } from "@/components/layout/MainLayoutClient";
@@ -27,6 +27,11 @@ export default async function MemoPage(props: {
   // 同时获取 Memos 和管理权限（并行执行）
   const [memosResult, isAdmin] = await Promise.all([
     (async () => {
+      // 核心重构：如果指定了具体日期，执行“上下文抓取”模式
+      if (dateStr) {
+        return (await getMemosContext({ targetDate: dateStr, adminCode, tag: tagStr, query })) || [];
+      }
+
       if (yearStr && monthStr) {
         const year = parseInt(yearStr);
         const month = parseInt(monthStr);

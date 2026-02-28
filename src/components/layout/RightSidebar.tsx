@@ -126,10 +126,17 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
         const id = `year-${year}`;
         setManualClick(true);
         setActiveId(id);
-        const element = document.getElementById(id);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // 优先尝试平滑滚动到主内容区域
+        const contentElement = document.getElementById(id);
+        if (contentElement) {
+            contentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // 更新 URL 但不触发刷新 (shallow push)
+            window.history.pushState(null, '', `/?year=${year}`);
+            return;
         }
+        
+        // 如果内容不在 DOM 中，则正常跳转
         router.push(`/?year=${year}`);
     };
 
@@ -138,10 +145,14 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
         const id = `month-${year}-${month}`;
         setManualClick(true);
         setActiveId(id);
-        const element = document.getElementById(id);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        const contentElement = document.getElementById(id);
+        if (contentElement) {
+            contentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            window.history.pushState(null, '', `/?year=${year}&month=${month}`);
+            return;
         }
+        
         router.push(`/?year=${year}&month=${month}`);
     };
 
@@ -150,23 +161,27 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
         const id = `date-${dateStr}`;
         setManualClick(true);
         setActiveId(id);
-        const element = document.getElementById(id);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        const contentElement = document.getElementById(id);
+        if (contentElement) {
+            contentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            window.history.pushState(null, '', `/?date=${dateStr}`);
+            return;
         }
+        
         router.push(`/?date=${dateStr}`);
     };
 
     if (!isHomePage) return null;
 
     return (
-        <aside className="hidden xl:flex w-80 h-full flex-col p-6 border-l border-border/40 bg-background/50 backdrop-blur-md overflow-y-auto scrollbar-hide">
+        <aside className="hidden xl:flex w-80 h-full flex-col p-6 border-l border-border/40 bg-background/50 backdrop-blur-md overflow-hidden">
             <div className="flex items-center justify-between mb-8">
                 <h3 className="text-sm font-bold text-foreground uppercase tracking-widest font-mono border-b-2 border-primary/20 pb-1.5 flex-1">
                     时间轴
                 </h3>
             </div>
-            <div className="flex-1 relative overflow-hidden">
+            <div className="flex-1 relative overflow-y-auto scrollbar-hide pr-1">
                 <AnimatePresence mode="wait">
                     {!isMounted && Object.keys(allDays).length === 0 ? (
                         <motion.div

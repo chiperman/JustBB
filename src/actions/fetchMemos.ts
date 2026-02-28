@@ -29,7 +29,13 @@ export async function getMemos(params: {
 
     const supabase = await createClient();
     const filters: Record<string, unknown> = tag ? { tag } : {};
-    if (date) filters.date = date;
+
+    // 逻辑修正：如果存在游标（向上或向下滚动），则不应应用 calendar date 的强等过滤
+    // 否则数据流会被限制在同一天内
+    if (date && !before_date && !after_date) {
+        filters.date = date;
+    }
+
     if (after_date) filters.after_date = after_date;
     if (before_date) filters.before_date = before_date;
 
@@ -67,29 +73,19 @@ export async function getMemosContext(params: {
     query?: string;
 }) {
     const { targetDate, limit = 20, adminCode, tag, query } = params;
-    const halfLimit = Math.floor(limit / 2);
 
-    // 并行抓取两个方向的数据
-    const [newerMemos, olderMemos] = await Promise.all([
-        // 1. 未来方向 (After targetDate)
-        getMemos({
-            query, adminCode, tag,
-            limit: halfLimit,
-            sort: 'oldest', // 拿到最接近 targetDate 的
-            after_date: targetDate
-        }),
-        // 2. 过去方向 (Before & Including targetDate)
-        getMemos({
-            query, adminCode, tag,
-            limit: limit - halfLimit,
-            sort: 'newest', // 拿到最接近 targetDate 的
-            before_date: targetDate
-        })
-    ]);
+    // 将日期字符串 (YYYY-MM-DD) 转换为当天最后一秒，确保包含选定当天的所有日记
+    const endOfDayTarget = `${targetDate}T23:59:59.999Z`;
 
-    // 合并并按降序排列
-    const combined = [...newerMemos, ...olderMemos];
-    return combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    // 仅向过去方向抓取 limit 条数据
+    const olderMemos = await getMemos({
+        query, adminCode, tag,
+        limit,
+        sort: 'newest',
+        before_date: endOfDayTarget
+    });
+
+    return olderMemos;
 }
 
 export async function getArchivedMemos(year: number, month: number, limit: number = 20, offset: number = 0) {

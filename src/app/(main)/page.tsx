@@ -27,9 +27,9 @@ export default async function MemoPage(props: {
   // 同时获取 Memos 和管理权限（并行执行）
   const [memosResult, isAdmin] = await Promise.all([
     (async () => {
-      // 核心重构：如果指定了具体日期，执行“上下文抓取”模式
+      // 核心重构：如果指定了具体日期，作为硬过滤 (Hard filter)，只查这一天的数据
       if (dateStr) {
-        return (await getMemosContext({ targetDate: dateStr, adminCode, tag: tagStr, query })) || [];
+        return (await getMemos({ limit: 50, query, adminCode, tag: tagStr, date: dateStr, sort: sortStr })) || [];
       }
 
       if (yearStr && monthStr) {

@@ -2,12 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { MemoCard } from './MemoCard';
 import { MemoCardSkeleton } from './MemoCardSkeleton';
-import { getMemos, getArchivedMemos } from '@/actions/fetchMemos';
+import { getMemos } from '@/actions/fetchMemos';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Loading01Icon as Loader2 } from '@hugeicons/core-free-icons';
 import { Memo } from '@/types/memo';
 import { useTimeline } from '@/context/TimelineContext';
 import { mergeMemos } from '@/lib/streamUtils';
+import { useLayoutEffect } from 'react';
 
 interface MemoFeedProps {
     initialMemos: Memo[];
@@ -21,57 +22,75 @@ interface MemoFeedProps {
     };
     adminCode?: string;
     isAdmin?: boolean;
+    forceContextMode?: boolean;
 }
 
-export function MemoFeed({ initialMemos = [], searchParams, adminCode, isAdmin = false }: MemoFeedProps) {
-    // 1. Core State
+export function MemoFeed({
+    initialMemos = [],
+    searchParams,
+    adminCode,
+    isAdmin = false,
+    forceContextMode = false
+}: MemoFeedProps) {
     const [memos, setMemos] = useState<Memo[]>(initialMemos);
     const [isLoadingOlder, setIsLoadingOlder] = useState(false);
     const [isLoadingNewer, setIsLoadingNewer] = useState(false);
-    const [hasMoreOlder, setHasMoreOlder] = useState(initialMemos.length >= 20);
-    const [hasMoreNewer, setHasMoreNewer] = useState(false); // 默认处于顶端，除非是传送模式
+    // 只有非日期过滤状态下，才允许向上/下加载更多。如果带了 date 参数，这就是一个严格的“单日归档”
+    const [hasMoreOlder, setHasMoreOlder] = useState(!searchParams.date && initialMemos.length >= 10);
+    const [hasMoreNewer, setHasMoreNewer] = useState(!searchParams.date && forceContextMode);
     const [editingId, setEditingId] = useState<string | null>(null);
 
     const prevParamsRef = useRef(JSON.stringify(searchParams));
+    const prevForceContextModeRef = useRef(forceContextMode);
+
     const observerTargetBottom = useRef<HTMLDivElement>(null);
     const observerTargetTop = useRef<HTMLDivElement>(null);
     const feedContainerRef = useRef<HTMLDivElement>(null);
 
-    // 2. 状态同步：当参数变化或初始数据到达
+    // 记录手动向上加载前的滚动状态
+    const scrollPreservationRef = useRef<{ expected: boolean; prevHeight: number; prevScrollTop: number }>({
+        expected: false,
+        prevHeight: 0,
+        prevScrollTop: 0,
+    });
+
+    // 1. 外部状态同步
     useEffect(() => {
         const currentParamsStr = JSON.stringify(searchParams);
         const paramsChanged = currentParamsStr !== prevParamsRef.current;
+        const forceModeChanged = forceContextMode !== prevForceContextModeRef.current;
 
-        if (paramsChanged) {
+        if (paramsChanged || forceModeChanged) {
+            console.log(`[Feed] Syncing props. paramsChanged: ${paramsChanged}, forceModeChanged: ${forceModeChanged}`);
             prevParamsRef.current = currentParamsStr;
+            prevForceContextModeRef.current = forceContextMode;
+
             setMemos(initialMemos);
-            setHasMoreOlder(initialMemos.length >= 10); // 上下文模式下，单边数据可能较少
-            
-            // 关键：如果存在日期定位，开启向上加载开关
-            if (searchParams.date) {
-                setHasMoreNewer(true);
-            } else {
-                setHasMoreNewer(false);
-            }
-        } else {
+            setHasMoreOlder(!searchParams.date && initialMemos.length >= 10);
+            setHasMoreNewer(!searchParams.date && forceContextMode);
+        } else if (initialMemos.length > 0 && memos.length === 0) {
+            // 处理首次加载
             setMemos(initialMemos);
         }
-    }, [searchParams, initialMemos]);
+    }, [searchParams, initialMemos, forceContextMode, memos.length]);
 
-    // 3. 加载逻辑：双向拉取
+    // 2. 双向抓取逻辑
     const fetchMemosBatch = useCallback(async (direction: 'older' | 'newer') => {
         if (direction === 'older' && (isLoadingOlder || !hasMoreOlder)) return;
         if (direction === 'newer' && (isLoadingNewer || !hasMoreNewer)) return;
 
         const isOlder = direction === 'older';
-        isOlder ? setIsLoadingOlder(true) : setIsLoadingNewer(true);
+        if (isOlder) {
+            setIsLoadingOlder(true);
+        } else {
+            setIsLoadingNewer(true);
+        }
 
         try {
             const limit = 20;
             let nextMemos: Memo[] = [];
 
             if (isOlder) {
-                // 向下加载：获取比当前最旧记录更早的
                 const lastMemo = memos[memos.length - 1];
                 nextMemos = await getMemos({
                     ...searchParams,
@@ -80,56 +99,73 @@ export function MemoFeed({ initialMemos = [], searchParams, adminCode, isAdmin =
                     before_date: lastMemo?.created_at,
                     sort: 'newest'
                 });
-                
-                // 去重
+
                 const uniqueNew = nextMemos.filter(nm => !memos.find(m => m.id === nm.id));
-                if (uniqueNew.length < limit) setHasMoreOlder(false);
+                if (nextMemos.length < limit || uniqueNew.length === 0) {
+                    setHasMoreOlder(false);
+                }
                 if (uniqueNew.length > 0) setMemos(prev => mergeMemos(prev, uniqueNew));
             } else {
-                // 向上加载：获取比当前最新记录更晚的
                 const firstMemo = memos[0];
                 nextMemos = await getMemos({
                     ...searchParams,
                     adminCode,
                     limit,
                     after_date: firstMemo?.created_at,
-                    sort: 'oldest' // 拿最接近当前窗口的
+                    sort: 'oldest'
                 });
 
                 const uniqueNew = nextMemos.filter(nm => !memos.find(m => m.id === nm.id));
-                if (uniqueNew.length < limit) setHasMoreNewer(false);
-                
+
+                // 关键判定：如果没抓到数据或不足 limit，或去重后无新数据，彻底关闭向上加载开关
+                if (nextMemos.length < limit || uniqueNew.length === 0) {
+                    console.log("[Feed] Absolute top reached or duplicate boundary.");
+                    setHasMoreNewer(false);
+                }
+
                 if (uniqueNew.length > 0) {
-                    // --- 滚动锚定补偿 (Scroll Anchoring) ---
-                    // 1. 获取主滚动容器（在 MainLayoutClient 中定义）
                     const scrollContainer = feedContainerRef.current?.closest('.overflow-y-auto');
                     if (scrollContainer) {
-                        const previousHeight = scrollContainer.scrollHeight;
-                        const previousScrollTop = scrollContainer.scrollTop;
-
-                        // 2. 更新数据
-                        setMemos(prev => mergeMemos(prev, uniqueNew));
-
-                        // 3. 在下一帧补偿滚动高度
-                        requestAnimationFrame(() => {
-                            const newHeight = scrollContainer.scrollHeight;
-                            const heightDiff = newHeight - previousHeight;
-                            scrollContainer.scrollTop = previousScrollTop + heightDiff;
-                        });
-                    } else {
-                        setMemos(prev => mergeMemos(prev, uniqueNew));
+                        scrollPreservationRef.current = {
+                            expected: true,
+                            prevHeight: scrollContainer.scrollHeight,
+                            prevScrollTop: scrollContainer.scrollTop
+                        };
                     }
+                    setMemos(prev => mergeMemos(prev, uniqueNew));
                 }
             }
         } catch (err) {
-            console.error(`Failed to load ${direction} memos:`, err);
-            isOlder ? setHasMoreOlder(false) : setHasMoreNewer(false);
+            console.error(`[Feed] Failed to load ${direction}:`, err);
+            if (isOlder) {
+                setHasMoreOlder(false);
+            } else {
+                setHasMoreNewer(false);
+            }
         } finally {
-            isOlder ? setIsLoadingOlder(false) : setIsLoadingNewer(false);
+            if (isOlder) {
+                setIsLoadingOlder(false);
+            } else {
+                setIsLoadingNewer(false);
+            }
         }
     }, [isLoadingOlder, isLoadingNewer, hasMoreOlder, hasMoreNewer, memos, searchParams, adminCode]);
 
-    // 4. 双向监听
+    // 绘制前微任务：向上加载后瞬间修复高度差，实现“视觉定轴”
+    useLayoutEffect(() => {
+        if (scrollPreservationRef.current.expected) {
+            const scrollContainer = feedContainerRef.current?.closest('.overflow-y-auto');
+            if (scrollContainer) {
+                const currentHeight = scrollContainer.scrollHeight;
+                const heightDiff = currentHeight - scrollPreservationRef.current.prevHeight;
+
+                scrollContainer.scrollTop = scrollPreservationRef.current.prevScrollTop + heightDiff;
+            }
+            scrollPreservationRef.current.expected = false;
+        }
+    }, [memos]);
+
+    // 3. 监听哨兵
     useEffect(() => {
         const bottom = observerTargetBottom.current;
         const top = observerTargetTop.current;
@@ -144,57 +180,62 @@ export function MemoFeed({ initialMemos = [], searchParams, adminCode, isAdmin =
             { threshold: 0.1, rootMargin: '400px' }
         );
 
-        const topObserver = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting && !isLoadingNewer && hasMoreNewer) {
-                    fetchMemosBatch('newer');
-                }
-            },
-            { threshold: 0.1, rootMargin: '400px' }
-        );
-
         bottomObserver.observe(bottom);
-        topObserver.observe(top);
-        
+
         return () => {
-            bottomObserver.unobserve(bottom);
-            topObserver.unobserve(top);
+            bottomObserver.disconnect();
         };
     }, [fetchMemosBatch, isLoadingOlder, isLoadingNewer, hasMoreOlder, hasMoreNewer]);
 
-    // 5. Scroll Spy (同步侧边栏高亮)
+    // 4. Scroll Spy
     const { setActiveId, isManualClick } = useTimeline();
     useEffect(() => {
         if (isManualClick || memos.length === 0) return;
         const observer = new IntersectionObserver(
             (entries) => {
                 const intersecting = entries.filter(e => e.isIntersecting);
-                if (intersecting.length > 0) setActiveId(intersecting[0].target.id);
+                if (intersecting.length > 0) {
+                    setActiveId(intersecting[0].target.id);
+                }
             },
             { rootMargin: '-80px 0px -80% 0px', threshold: 0 }
         );
         const anchors = document.querySelectorAll('div[id^="date-"], div[id^="month-"], div[id^="year-"]');
         anchors.forEach((a) => observer.observe(a));
         return () => observer.disconnect();
-    }, [isManualClick, setActiveId, memos]);
+    }, [isManualClick, setActiveId, memos.length]);
 
-    // 6. Animation Variants
+    // 我们去除了 scale 和 y 的物理位移，仅保留透明度渐显
+    // 这样能确保刚插入 DOM 时，它的物理高度 100% 确定，scrollAnchor 补偿才能一击命中。
     const itemVariants: Variants = {
-        initial: { opacity: 0, y: 20, scale: 0.98 },
-        animate: {
-            opacity: 1, y: 0, scale: 1,
-            transition: { type: 'spring', stiffness: 260, damping: 26 }
-        },
-        exit: { opacity: 0, scale: 0.98, transition: { duration: 0.2 } }
+        initial: { opacity: 0 },
+        animate: (custom: number) => ({
+            opacity: 1,
+            transition: {
+                duration: 0.3,
+                delay: custom * 0.05
+            }
+        }),
+        exit: { opacity: 0, transition: { duration: 0.2 } }
     };
 
     return (
         <div ref={feedContainerRef} className="space-y-6">
-            {/* Top Sentry: 向上加载更多 */}
-            <div ref={observerTargetTop} className="h-4 w-full invisible" />
-            
+            <div ref={observerTargetTop} className="h-1 w-full invisible" />
+
+            {hasMoreNewer && !isLoadingNewer && memos.length > 0 && (
+                <div className="flex justify-center -mt-2 pb-4">
+                    <button
+                        onClick={() => fetchMemosBatch('newer')}
+                        className="px-4 py-1.5 text-xs font-medium text-muted-foreground/60 bg-muted/30 hover:bg-muted hover:text-foreground rounded-full transition-colors font-mono tracking-tight"
+                    >
+                        Click to load newer memos
+                    </button>
+                </div>
+            )}
+
             {isLoadingNewer && (
-                <div className="flex items-center justify-center py-4">
+                <div className="flex items-center justify-center py-4 -mt-2">
                     <HugeiconsIcon icon={Loader2} size={20} className="animate-spin text-primary/40" />
                 </div>
             )}
@@ -220,7 +261,7 @@ export function MemoFeed({ initialMemos = [], searchParams, adminCode, isAdmin =
                         const prevMonth = prevDateFull ? prevDateFull.split('-')[1] : null;
 
                         const isFirstOfYear = currentYear !== prevYear;
-                        const isFirstOfMonth = currentMonth !== prevMonth || isFirstOfYear;
+                        const isFirstOfMonth = (currentMonth !== prevMonth || isFirstOfYear) && prevDateFull !== null;
                         const isFirstOfDay = currentDate !== prevDateFull;
 
                         return (
@@ -228,15 +269,15 @@ export function MemoFeed({ initialMemos = [], searchParams, adminCode, isAdmin =
                                 key={memo.id}
                                 id={`memo-${memo.id}`}
                                 variants={itemVariants}
-                                layout
                                 initial="initial"
                                 animate="animate"
                                 exit="exit"
+                                custom={index % 20}
                                 className="break-inside-avoid relative"
                             >
-                                {isFirstOfYear && <div id={`year-${currentYear}`} className="absolute -top-32 invisible" aria-hidden="true" />}
-                                {isFirstOfMonth && <div id={`month-${currentYear}-${parseInt(currentMonth)}`} className="absolute -top-32 invisible" aria-hidden="true" />}
-                                {isFirstOfDay && <div id={`date-${currentDate}`} className="absolute -top-32 invisible" aria-hidden="true" />}
+                                {isFirstOfYear && <div id={`year-${currentYear}`} className="absolute top-0 invisible" aria-hidden="true" />}
+                                {isFirstOfMonth && <div id={`month-${currentYear}-${parseInt(currentMonth)}`} className="absolute top-0 invisible" aria-hidden="true" />}
+                                {isFirstOfDay && <div id={`date-${currentDate}`} className="absolute top-0 invisible" aria-hidden="true" />}
                                 <MemoCard
                                     memo={memo}
                                     isAdmin={isAdmin}
@@ -254,7 +295,6 @@ export function MemoFeed({ initialMemos = [], searchParams, adminCode, isAdmin =
                 </AnimatePresence>
             </motion.div>
 
-            {/* Bottom Sentry: 向下加载更多 */}
             <div ref={observerTargetBottom} className="py-8 flex flex-col items-center justify-center min-h-[100px]">
                 {isLoadingOlder ? (
                     <div className="flex items-center">

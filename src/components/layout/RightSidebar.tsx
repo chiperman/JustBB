@@ -19,10 +19,16 @@ import { cn } from '@/lib/utils';
 
 export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     const [allDays] = useState<Record<string, { count: number }>>(initialData?.days || {});
-    const [isMounted] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
+
+    // 关键修复：确保在挂载后才开启客户端特有逻辑
+    useEffect(() => {
+        // eslint-disable-next-line
+        setIsMounted(true);
+    }, []);
 
     // Only display on homepage
     const isHomePage = pathname === '/';
@@ -32,20 +38,21 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     const yearFilter = searchParams.get('year');
     const monthFilter = searchParams.get('month');
 
-    const { activeId, setActiveId, setManualClick } = useTimeline();
+    const { activeId, setActiveId, setManualClick, setTeleportDate } = useTimeline();
 
     // 自动滚动侧边栏以确保选中项可见
     useEffect(() => {
-        if (activeId) {
+        if (isMounted && activeId) {
             const element = document.getElementById(`nav-${activeId}`);
             if (element) {
                 element.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
-    }, [activeId]);
+    }, [activeId, isMounted]);
 
     // 当 URL 参数变化时（热力图筛选），同步本地高亮状态
     useEffect(() => {
+        if (!isMounted) return;
         if (dateFilter) {
             setActiveId(`date-${dateFilter}`);
         } else if (yearFilter && monthFilter) {
@@ -53,7 +60,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
         } else if (yearFilter) {
             setActiveId(`year-${yearFilter}`);
         }
-    }, [dateFilter, yearFilter, monthFilter, setActiveId]);
+    }, [dateFilter, yearFilter, monthFilter, setActiveId, isMounted]);
 
     // 构建时间轴数据结构（始终基于全量数据）
     const fullTimeline = useMemo(() => {
@@ -94,8 +101,9 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
             });
     }, [allDays]);
 
-    // 计算高亮状态 - 优先使用 Context 中的状态，其次是 URL 参数
+    // 计算高亮状态 - 增加 isMounted 守卫以解决 Hydration Mismatch
     const isYearActive = (year: number) => {
+        if (!isMounted) return false; // 服务端始终返回 false
         const id = `year-${year}`;
         if (activeId === id) return true;
         if (!activeId && yearFilter === String(year) && !monthFilter && !dateFilter) return true;
@@ -103,6 +111,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     };
 
     const isMonthActive = (year: number, month: number) => {
+        if (!isMounted) return false;
         const id = `month-${year}-${month}`;
         if (activeId === id) return true;
         if (!activeId && yearFilter === String(year) && monthFilter === String(month) && !dateFilter) return true;
@@ -110,6 +119,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     };
 
     const isDayActive = (dateStr: string) => {
+        if (!isMounted) return false;
         const id = `date-${dateStr}`;
         if (activeId === id) return true;
         if (!activeId && dateFilter === dateStr) return true;
@@ -118,7 +128,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
 
     const monthNames = [
         '', '一月', '二月', '三月', '四月', '五月', '六月',
-        '七月', '八月', '九月', '十月', '十一月', '十二月'
+        '七月', '八月', '调九月', '十月', '十一月', '十二月'
     ];
 
     const handleYearClick = (e: React.MouseEvent, year: number) => {
@@ -126,18 +136,15 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
         const id = `year-${year}`;
         setManualClick(true);
         setActiveId(id);
-        
-        // 优先尝试平滑滚动到主内容区域
+
+        // 查找主内容区域的锚点
         const contentElement = document.getElementById(id);
         if (contentElement) {
             contentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            // 更新 URL 但不触发刷新 (shallow push)
-            window.history.pushState(null, '', `/?year=${year}`);
             return;
         }
-        
-        // 如果内容不在 DOM 中，则正常跳转
-        router.push(`/?year=${year}`);
+
+        setTeleportDate(`${year}-01-01`);
     };
 
     const handleMonthClick = (e: React.MouseEvent, year: number, month: number) => {
@@ -145,15 +152,14 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
         const id = `month-${year}-${month}`;
         setManualClick(true);
         setActiveId(id);
-        
+
         const contentElement = document.getElementById(id);
         if (contentElement) {
             contentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            window.history.pushState(null, '', `/?year=${year}&month=${month}`);
             return;
         }
-        
-        router.push(`/?year=${year}&month=${month}`);
+
+        setTeleportDate(`${year}-${String(month).padStart(2, '0')}-01`);
     };
 
     const handleDayClick = (e: React.MouseEvent, dateStr: string) => {
@@ -161,15 +167,17 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
         const id = `date-${dateStr}`;
         setManualClick(true);
         setActiveId(id);
-        
+
+        // 优先在当前页面寻找锚点
         const contentElement = document.getElementById(id);
         if (contentElement) {
+            console.log(`[Sidebar] Local scroll to ${id}`);
             contentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            window.history.pushState(null, '', `/?date=${dateStr}`);
             return;
         }
-        
-        router.push(`/?date=${dateStr}`);
+
+        console.log(`[Sidebar] Teleporting to ${dateStr}`);
+        setTeleportDate(dateStr);
     };
 
     if (!isHomePage) return null;
@@ -236,8 +244,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
                                                     : "bg-background border-border"
                                             )} />
                                             <TimelineHeading className="mb-6">
-                                                <a
-                                                    href={`/?year=${yearGroup.year}`}
+                                                <button
                                                     className={cn(
                                                         "transition-colors cursor-pointer text-sm font-bold font-mono tracking-tighter",
                                                         isYearActive(yearGroup.year)
@@ -247,7 +254,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
                                                     onClick={(e) => handleYearClick(e, yearGroup.year)}
                                                 >
                                                     {yearGroup.year}
-                                                </a>
+                                                </button>
                                             </TimelineHeading>
                                             <TimelineContent>
                                                 {yearGroup.months.map((monthGroup) => (
@@ -265,13 +272,12 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
                                                                     ? "text-primary"
                                                                     : "text-muted-foreground/80 hover:text-primary"
                                                             )}>
-                                                                <a
-                                                                    href={`/?year=${yearGroup.year}&month=${monthGroup.month}`}
-                                                                    className="block w-full"
+                                                                <button
+                                                                    className="block w-full text-left"
                                                                     onClick={(e) => handleMonthClick(e, yearGroup.year, monthGroup.month)}
                                                                 >
                                                                     {monthNames[monthGroup.month]}
-                                                                </a>
+                                                                </button>
                                                             </h5>
                                                         </div>
                                                         <div className="flex flex-col gap-1.5">
@@ -287,10 +293,10 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
                                                                                 className="-left-[25px]"
                                                                             />
                                                                         )}
-                                                                        <a
-                                                                            href={`/?date=${dateStr}`}
+                                                                        <button
+                                                                            type="button"
                                                                             className={cn(
-                                                                                "text-[10px] transition-colors block py-0.5 pl-1 cursor-pointer font-mono font-bold tracking-tight",
+                                                                                "w-full text-left text-[10px] transition-colors block py-0.5 pl-1 cursor-pointer font-mono font-bold tracking-tight",
                                                                                 isActive
                                                                                     ? "text-primary"
                                                                                     : "text-muted-foreground/50 hover:text-primary/70"
@@ -298,7 +304,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
                                                                             onClick={(e) => handleDayClick(e, dateStr)}
                                                                         >
                                                                             {day}号
-                                                                        </a>
+                                                                        </button>
                                                                     </div>
                                                                 );
                                                             })}

@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS public.memos (
     pinned_at TIMESTAMPTZ,
     access_code TEXT,
     access_code_hint TEXT,
-    word_count INT DEFAULT 0 NOT NULL
+    word_count INT DEFAULT 0 NOT NULL,
+    locations JSONB DEFAULT '[]'::JSONB
 );
 
 -- 3. Update trigger for updated_at

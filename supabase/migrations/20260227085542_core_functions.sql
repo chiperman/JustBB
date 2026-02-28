@@ -11,7 +11,7 @@ DECLARE
 BEGIN
   SELECT jsonb_build_object(
     'days', (
-      SELECT jsonb_object_agg(day, stats)
+      SELECT COALESCE(jsonb_object_agg(day, stats), '{}'::JSONB)
       FROM (
         SELECT 
           (created_at AT TIME ZONE 'Asia/Shanghai')::DATE::TEXT AS day,
@@ -115,11 +115,11 @@ DECLARE
   result JSONB;
 BEGIN
   SELECT jsonb_build_object(
-    'totalMemos', (SELECT count(*)::INT FROM memos WHERE deleted_at IS NULL),
-    'totalTags', (SELECT count(DISTINCT unnest(tags))::INT FROM memos WHERE deleted_at IS NULL),
-    'firstMemoDate', (SELECT min(created_at AT TIME ZONE 'Asia/Shanghai')::DATE::TEXT FROM memos WHERE deleted_at IS NULL),
+    'totalMemos', (SELECT COALESCE(count(*)::INT, 0) FROM memos WHERE deleted_at IS NULL),
+    'totalTags', (SELECT COALESCE(count(DISTINCT tag)::INT, 0) FROM (SELECT unnest(tags) as tag FROM memos WHERE deleted_at IS NULL) t),
+    'firstMemoDate', (SELECT COALESCE(min(created_at AT TIME ZONE 'Asia/Shanghai')::DATE::TEXT, NULL) FROM memos WHERE deleted_at IS NULL),
     'days', (
-      SELECT jsonb_object_agg(day, stats)
+      SELECT COALESCE(jsonb_object_agg(day, stats), '{}'::JSONB)
       FROM (
         SELECT 
           (created_at AT TIME ZONE 'Asia/Shanghai')::DATE::TEXT AS day,
@@ -138,10 +138,27 @@ BEGIN
 END;
 $$;
 
--- 4. Indexes
+-- 4. Get Distinct Tags
+CREATE OR REPLACE FUNCTION get_distinct_tags()
+RETURNS TABLE (tag_name TEXT, count BIGINT)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT unnest(tags) as tag_name, count(*)::BIGINT as count
+  FROM memos
+  WHERE deleted_at IS NULL
+  GROUP BY tag_name
+  ORDER BY count DESC;
+END;
+$$;
+
+-- 5. Indexes
 CREATE INDEX IF NOT EXISTS idx_memos_timeline_optimization 
 ON memos (created_at) 
 WHERE deleted_at IS NULL AND is_private = FALSE;
 
 CREATE INDEX IF NOT EXISTS idx_memos_search_content ON memos USING gin (content gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_memos_tags ON memos USING gin (tags);
+CREATE INDEX IF NOT EXISTS idx_memos_locations ON memos USING gin (locations);

@@ -1,6 +1,6 @@
 # JustMemo 接口设计规范 (API Spec)
 
-> 最后更新：2026-02-27 (工程化升级：同步 RPC 隐私增强与排序逻辑)
+> 最后更新：2026-02-28 (双向流模式：游标分页与上下文抓取支持)
 
 ## 1. 通用响应契约
 所有接口遵循以下统一返回格式：
@@ -15,104 +15,44 @@
 
 ## 2. Server Actions (Mutations - 仅管理员)
 
-### 2.1 `createMemo`
-*   功能: 发布新记录。
-*   输入: `formData: { content: string, tags: string[], is_private: boolean, is_pinned: boolean, access_code?: string, access_code_hint?: string }`
-*   校验: `content` 不能为空且需经过 Zod 校验。
-*   内容规范: `content` 支持 Markdown 基本语法、`#标签` 和 `@编号`。
+### 2.1 `createMemo` / `updateMemo` 系列
+*   功能: 发布、编辑、状态切换。
+*   输入: `formData` 或具体参数。
+*   安全: 经过 Zod 强校验与 Supabase Auth 鉴权。
 
-### 2.2 `updateMemoContent`
-*   功能: 编辑记录内容及基本状态。
-*   输入: `formData: { id: string, content: string, tags: string[], is_private: boolean, is_pinned: boolean }`
+### 2.2 `deleteMemo` / `restoreMemo`
+*   功能: 软删除（进入/移出垃圾箱）。
 
-### 2.3 `updateMemoState`
-*   功能: 仅更新记录的状态（私密/置顶/口令）。
-*   输入: `formData: { id: string, is_private?: boolean, is_pinned?: boolean, access_code?: string, access_code_hint?: string }`
+### 2.3 `batchDeleteMemos` / `batchAddTagsToMemos`
+*   功能: 批量管理记录。
 
-### 2.4 `deleteMemo` / `restoreMemo`
-*   功能: 移入/移出垃圾箱（软删除）。
-*   输入: `id: string`
+## 3. 读操作 (Queries - 双向流分页模式)
 
-### 2.5 `permanentDeleteMemo`
-*   功能: 管理员永久物理删除单条记录。
-*   输入: `id: string`
-
-### 2.6 `emptyTrash`
-*   功能: 清空回收站中所有已软删除的记录。
-*   输入: 无
-
-### 2.7 `batchDeleteMemos` / `batchAddTagsToMemos`
-*   功能: 批量软删除或批量添加标签。
-*   输入: 
-    - `batchDeleteMemos`: `ids: string[]`
-    - `batchAddTagsToMemos`: `ids: string[], tags: string[]`
-
-### 2.8 `exportMemos` / `exportAllMemos`
-*   功能: 导出特定格式的数据或获取全量数据。
-*   输入: 
-    - `exportMemos`: `format: 'json' | 'markdown'`
-    - `exportAllMemos`: 无
-*   安全: 仅限已认证管理员。
-
-### 2.9 `getSupabaseUsageStats`
-*   功能: 获取 Supabase 项目的实时监控指标。
-*   输入: 无
-*   逻辑:
-    - 优先尝试通过 Supabase Management API 获取全量指标。
-    - 若配置缺失，则回退通过 SQL 获取基础 DB 大小与用户数。
-*   安全: 仅限已认证管理员，API 请求仅在服务端执行。
-
-## 3. 身份验证与权限 (Auth Actions)
-
-### 3.1 用户流
-*   `login` / `signup`: 执行邮箱/密码登录或注册。
-*   `logout`: 清理当前会话。
-*   `verifyOtp`: 校验验证码（用于重置或两步验证）。
-*   `sendPasswordResetEmail` / `updatePassword`: 处理密码重置逻辑。
-
-### 3.2 辅助查询
-*   `getCurrentUser`: 获取当前登录用户信息。
-*   `isAdmin`: 校验当前用户是否具有管理员权限。
-*   `checkUserExists`: 预检查邮箱占用情况。
-*   `signInWithOAuth`: 发起第三方 OAuth 登录流程。
-
-## 4. 鉴权与安全 (Safety Actions)
-
-### 4.1 `unlockWithCode`
-*   功能: 校验口令并解锁会话。
-*   输入: `code: string`
-*   返回: 成功时设置 HttpOnly Cookie，前端随后可重试获取内容。
-
-### 4.2 `clearUnlockCode`
-*   功能: 手动锁定当前会话，清除 Cookie。
-
-## 5. 读操作 (Queries - 混合模式)
-
-### 5.1 `getMemos` (Core Fetch)
-*   参数: `params: { query?, adminCode?, limit?, offset?, tag?, date?, sort? }`
+### 3.1 `getMemos` (核心分页)
+*   参数: `params: { query?, limit?, before_date?, after_date?, tag?, sort? }`
 *   特性: 
-    - 针对访客自动隐藏私密内容（物理级脱敏），除非已成功解锁。
-    - **排序逻辑**: 默认按 `is_pinned` DESC, `pinned_at` DESC, `created_at` DESC。
-    - **脱敏**: 未解锁的私密记录 `word_count` 归 0，内容为空，标签移除。
+    - **游标分页**: 彻底弃用 Offset，通过 `before_date` (向下) 或 `after_date` (向上) 确定数据起止点。
+    - **智能脱敏**: 私密内容在物理层进行元数据抹除（内容/标签置空，字数归零）。
 
-### 5.2 `searchMemosForMention`
-*   功能: 供 `@编号` 引用建议使用的分页搜索。
-*   参数: `query: string, offset: number, limit: number`
-*   补丁: 如果是数字查询，Action 层会自动将编号精确匹配结果优先置顶。
+### 3.2 `getMemosContext` (传送定位)
+*   功能: 以目标日期为中心抓取上下文窗口。
+*   参数: `params: { targetDate: string, limit: number }`
+*   逻辑: 
+    - 同时拉取 `targetDate` 之前的 10 条和之后的 10 条。
+    - 确保用户点击时间轴跳转后，上下均有缓冲内容，实现丝滑漫游。
 
-### 5.3 `getTimelineStats` (Archived)
-*   功能: 获取归档时间轴计数。
-*   特性: 2026-02-27 更新后，仅返回公开内容的计数。
+### 3.3 `getArchivedMemos` / `getGalleryMemos` / `getTrashMemos`
+*   功能: 特定维度的聚合过滤查询。
 
-### 5.4 `getGalleryMemos` / `getTrashMemos`
-*   功能: 分别处理画廊（图片过滤）与回收站记录的分页检索。
+## 4. 统计与辅助 (Stats & Auth)
 
-### 5.5 `getMemoStats_V2` (Stats)
-*   功能: 获取全量热力图及基础统计数据（字数、总数、起始日期）。
+### 4.1 `getMemoStats_V2`
+*   功能: 获取全量热力图及基础统计。
+*   健壮性: 在无数据状态下返回合法的零值 JSON。
 
-### 5.6 `getDistinctTags` (Tags)
-*   功能: 获取全量标签及其计数，驱动侧边栏与建议项。
+### 4.2 `getTimelineStats`
+*   功能: 驱动侧边栏时间轴。
+*   特性: 仅返回公开内容的统计分布。
 
-### 5.7 `getMemosWithLocations` (Locations)
-*   功能: 获取所有包含地理位置信息的笔记，驱动地图全视图。
-*   返回: `(Memo & { locations: Location[] })[]`
+### 4.3 `getCurrentUser` / `isAdmin`
+*   功能: 身份与权限校验。

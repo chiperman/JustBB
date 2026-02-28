@@ -12,6 +12,8 @@ export async function getMemos(params: {
     tag?: string;
     date?: string;
     sort?: string;
+    after_date?: string;  // 游标：在此日期之后
+    before_date?: string; // 游标：在此日期之前（含）
 }) {
     const {
         query = '',
@@ -20,16 +22,17 @@ export async function getMemos(params: {
         offset: offsetVal = 0,
         tag = null,
         date = null,
-        sort = 'newest'
+        sort = 'newest',
+        after_date = null,
+        before_date = null
     } = params;
 
     const supabase = await createClient();
     const filters: Record<string, unknown> = tag ? { tag } : {};
-    if (date) {
-        filters.date = date;
-    }
+    if (date) filters.date = date;
+    if (after_date) filters.after_date = after_date;
+    if (before_date) filters.before_date = before_date;
 
-    // 调用我们在 [DB-4] 中定义的 RPC 函数
     const { data, error } = await supabase.rpc('search_memos_secure', {
         query_text: query,
         input_code: adminCode,
@@ -50,6 +53,43 @@ export async function getMemos(params: {
     }
 
     return data as unknown as Memo[];
+}
+
+/**
+ * 以目标日期为中心抓取上下文窗口
+ * 返回目标日期前后的平衡数据（共 limit 条）
+ */
+export async function getMemosContext(params: {
+    targetDate: string;
+    limit?: number;
+    adminCode?: string;
+    tag?: string;
+    query?: string;
+}) {
+    const { targetDate, limit = 20, adminCode, tag, query } = params;
+    const halfLimit = Math.floor(limit / 2);
+
+    // 并行抓取两个方向的数据
+    const [newerMemos, olderMemos] = await Promise.all([
+        // 1. 未来方向 (After targetDate)
+        getMemos({
+            query, adminCode, tag,
+            limit: halfLimit,
+            sort: 'oldest', // 拿到最接近 targetDate 的
+            after_date: targetDate
+        }),
+        // 2. 过去方向 (Before & Including targetDate)
+        getMemos({
+            query, adminCode, tag,
+            limit: limit - halfLimit,
+            sort: 'newest', // 拿到最接近 targetDate 的
+            before_date: targetDate
+        })
+    ]);
+
+    // 合并并按降序排列
+    const combined = [...newerMemos, ...olderMemos];
+    return combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
 export async function getArchivedMemos(year: number, month: number, limit: number = 20, offset: number = 0) {

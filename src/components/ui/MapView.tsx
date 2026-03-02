@@ -112,7 +112,7 @@ export function MapView({
                 const map = L.map(mapRef.current, {
                     center,
                     zoom,
-                    maxZoom: 20,
+                    maxZoom: 18,
                     minZoom: calculatedMinZoom, // 动态计算，避免左右出现灰边
                     maxBounds: L.latLngBounds(L.latLng(-90, -180), L.latLng(90, 180)), // 限制拖拽边界到真实世界的经纬度极值
                     maxBoundsViscosity: 1.0, // 边界完全粘性，不允许拖出界
@@ -252,7 +252,7 @@ export function MapView({
             if (!tileLayerRef.current) {
                 tileLayerRef.current = L.tileLayer(newTileUrl, {
                     attribution: mode === 'full' ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>' : '',
-                    maxZoom: 20,
+                    maxZoom: 18,
                     minZoom: 2,
                     maxNativeZoom: 18, // 超过 18 级放大时，不发请求，直接拉伸已有图片，解决高比率由于无数据或限流导致的白屏/慢加载
                     noWrap: true, // 禁止瓦片在水平方向上重复
@@ -409,7 +409,7 @@ export function MapView({
                     <div className="bg-background/80 backdrop-blur-md border border-border/50 text-foreground text-xs font-mono px-3 py-1.5 rounded-full shadow-md select-none flex items-center gap-2">
                         <HugeiconsIcon icon={ZoomInAreaIcon} size={14} className="text-muted-foreground" />
                         <span className="text-muted-foreground">Zoom</span>
-                        <span className="font-semibold">{currentZoom}</span>
+                        <span className="font-semibold">{Math.round(currentZoom)}</span>
                     </div>
                 </div>
             )}

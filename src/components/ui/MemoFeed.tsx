@@ -201,11 +201,11 @@ export function MemoFeed({
             const prevYear = prevDateFull ? prevDateFull.split("-")[0] : null;
             const prevMonth = prevDateFull ? prevDateFull.split("-")[1] : null;
 
-            const isFirstOfYear = currentYear !== prevYear;
+            const isFirstOfYear = currentYear !== prevYear && !memo.is_pinned;
             const isFirstOfMonth =
               (currentMonth !== prevMonth || isFirstOfYear) &&
-              prevDateFull !== null;
-            const isFirstOfDay = currentDate !== prevDateFull;
+              prevDateFull !== null && !memo.is_pinned;
+            const isFirstOfDay = currentDate !== prevDateFull && !memo.is_pinned;
 
             return (
               <motion.div

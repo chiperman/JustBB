@@ -8,8 +8,6 @@ import { Loading01Icon as Loader2 } from "@hugeicons/core-free-icons";
 import { Memo } from "@/types/memo";
 import { useTimeline } from "@/context/TimelineContext";
 import { mergeMemos } from "@/lib/streamUtils";
-import { useLayoutEffect } from "react";
-import { Button } from "@/components/ui/button";
 
 interface MemoFeedProps {
   initialMemos: Memo[];
@@ -23,10 +21,6 @@ interface MemoFeedProps {
   };
   adminCode?: string;
   isAdmin?: boolean;
-  forceContextMode?: boolean;
-  prevAvailableDate?: string | null;
-  nextAvailableDate?: string | null;
-  contextType?: "year" | "month" | "day" | null;
 }
 
 export function MemoFeed({
@@ -34,24 +28,17 @@ export function MemoFeed({
   searchParams,
   adminCode,
   isAdmin = false,
-  forceContextMode = false,
-  prevAvailableDate = null,
-  nextAvailableDate = null,
-  contextType = null,
 }: MemoFeedProps) {
   const [memos, setMemos] = useState<Memo[]>(initialMemos);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
 
-  // 1. 对于普通主页流水线，如果 initialMemos >= 10，则支持更多
-  // 2. 对于上下文传送模式，如果 initialMemos 恰好达到 20 条（当前获取 limit），说明同时间段内可能还有
   const [hasMoreOlder, setHasMoreOlder] = useState(
-    (!searchParams.date && !forceContextMode && initialMemos.length >= 10) ||
-      (forceContextMode && initialMemos.length === 20),
+    (!searchParams.date && initialMemos.length >= 10) ||
+    initialMemos.length === 20,
   );
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const prevParamsRef = useRef(JSON.stringify(searchParams));
-  const prevForceContextModeRef = useRef(forceContextMode);
 
   const observerTargetBottom = useRef<HTMLDivElement>(null);
 
@@ -59,29 +46,21 @@ export function MemoFeed({
   useEffect(() => {
     const currentParamsStr = JSON.stringify(searchParams);
     const paramsChanged = currentParamsStr !== prevParamsRef.current;
-    const forceModeChanged =
-      forceContextMode !== prevForceContextModeRef.current;
 
-    if (paramsChanged || forceModeChanged) {
-      console.log(
-        `[Feed] Syncing props. paramsChanged: ${paramsChanged}, forceModeChanged: ${forceModeChanged}`,
-      );
+    if (paramsChanged) {
+      console.log(`[Feed] Syncing props. paramsChanged: ${paramsChanged}`);
       prevParamsRef.current = currentParamsStr;
-      prevForceContextModeRef.current = forceContextMode;
 
-      setMemos(initialMemos);
       setMemos(initialMemos);
       // 根据新属性重置是否有更多数据
       setHasMoreOlder(
-        (!searchParams.date &&
-          !forceContextMode &&
-          initialMemos.length >= 10) ||
-          (forceContextMode && initialMemos.length === 20),
+        (!searchParams.date && initialMemos.length >= 10) ||
+        initialMemos.length === 20,
       );
     } else if (initialMemos.length > 0 && memos.length === 0) {
       setMemos(initialMemos);
     }
-  }, [searchParams, initialMemos, forceContextMode, memos.length]);
+  }, [searchParams, initialMemos, memos.length]);
 
   // 2. 首页单向抓取逻辑 (无限下拉)
   const fetchMemosBatch = useCallback(
@@ -94,43 +73,36 @@ export function MemoFeed({
         const limit = 20;
         const lastMemo = memos[memos.length - 1];
 
-        // 动态计算该上下文维度的 startIso(作为边界防溢出)
-        let afterDateIso: string | undefined = undefined;
-        if (forceContextMode && contextType && memos.length > 0) {
-          const utcDate = new Date(memos[0].created_at);
-          const localDate = new Date(utcDate.getTime() + 8 * 60 * 60 * 1000);
-          const currentDateStr = localDate.toISOString().split("T")[0];
-          const [yStr, mStr] = currentDateStr.split("-");
-          let startIso = "";
-          if (contextType === "year") {
-            startIso = `${yStr}-01-01T00:00:00.000+08:00`;
-          } else if (contextType === "month") {
-            startIso = `${yStr}-${mStr}-01T00:00:00.000+08:00`;
-          } else {
-            startIso = `${currentDateStr}T00:00:00.000+08:00`;
-          }
-          afterDateIso = new Date(
-            new Date(startIso).getTime() - 1,
-          ).toISOString();
-        }
-
         const nextMemos = await getMemos({
           ...searchParams,
           adminCode,
           limit,
           before_date: lastMemo?.created_at,
-          after_date: afterDateIso,
           sort: "newest",
         });
 
-        const uniqueNew = nextMemos.filter(
+        // Filter to ensure we do not exceed the context boundary
+        let validNewMemos = nextMemos.filter(
           (nm) => !memos.find((m) => m.id === nm.id),
         );
-        if (nextMemos.length < limit || uniqueNew.length === 0) {
+
+        validNewMemos = validNewMemos.filter((nm) => {
+          const memoDate = new Date(new Date(nm.created_at).getTime() + 8 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0]; // YYYY-MM-DD
+          if (searchParams.year && searchParams.month) return memoDate.startsWith(`${searchParams.year}-${String(searchParams.month).padStart(2, "0")}`);
+          if (searchParams.year) return memoDate.startsWith(searchParams.year);
+          if (searchParams.date) return memoDate === searchParams.date;
+          return true;
+        });
+
+        // If no valid new memos are returned, or we hit a natural end of limit
+        if (nextMemos.length < limit || validNewMemos.length === 0) {
           setHasMoreOlder(false);
         }
-        if (uniqueNew.length > 0)
-          setMemos((prev) => mergeMemos(prev, uniqueNew));
+
+        if (validNewMemos.length > 0)
+          setMemos((prev) => mergeMemos(prev, validNewMemos));
       } catch (err) {
         console.error(`[Feed] Failed to load older memos:`, err);
         setHasMoreOlder(false);
@@ -152,7 +124,7 @@ export function MemoFeed({
           fetchMemosBatch("older");
         }
       },
-      { threshold: 0.1, rootMargin: "400px" },
+      { threshold: 0.1, rootMargin: "1200px" },
     );
     bottomObserver.observe(bottom);
 
@@ -162,7 +134,7 @@ export function MemoFeed({
   }, [fetchMemosBatch, isLoadingOlder, hasMoreOlder]);
 
   // 4. Scroll Spy
-  const { setActiveId, isManualClick, setTeleportDate } = useTimeline();
+  const { setActiveId, isManualClick } = useTimeline();
   useEffect(() => {
     if (isManualClick || memos.length === 0) return;
     const observer = new IntersectionObserver(
@@ -194,43 +166,11 @@ export function MemoFeed({
     exit: { opacity: 0, transition: { duration: 0.2 } },
   };
 
-  const newerLabel =
-    contextType === "year"
-      ? "下一年"
-      : contextType === "month"
-        ? "下一月"
-        : "下一日";
-  const olderLabel =
-    contextType === "year"
-      ? "上一年"
-      : contextType === "month"
-        ? "上一月"
-        : "上一日";
+
 
   return (
     <div className="space-y-6">
-      {/* 上一篇：Calendar Pager Navigator */}
-      {forceContextMode && nextAvailableDate && memos.length > 0 ? (
-        <div className="py-4 flex flex-col items-center justify-center min-h-[60px]">
-          <button
-            onClick={() => {
-              if (contextType)
-                setTeleportDate({ date: nextAvailableDate, type: contextType });
-            }}
-            className="group flex flex-col items-center gap-2 transition-all duration-300 ease-in-out"
-            title={`Go to ${nextAvailableDate}`}
-          >
-            <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/50 group-hover:text-primary transition-colors">
-              <span>View Newer memos</span>
-              <span className="opacity-60 group-hover:opacity-100 transition-opacity">
-                ({nextAvailableDate} {newerLabel})
-              </span>
-            </div>
-          </button>
-        </div>
-      ) : forceContextMode && !nextAvailableDate && memos.length > 0 ? (
-        <div className="min-h-[32px] pt-4" />
-      ) : null}
+
 
       <motion.div initial={false} className="columns-1 gap-6 space-y-6">
         <AnimatePresence mode="popLayout">
@@ -317,35 +257,8 @@ export function MemoFeed({
         ref={observerTargetBottom}
         className="py-4 flex flex-col items-center justify-center min-h-[60px]"
       >
-        {/* 模式 1: 时间轴点击的专属上下文 Navigator（底部，仅在当前区间数据耗尽后显示） */}
-        {forceContextMode &&
-        !hasMoreOlder &&
-        prevAvailableDate &&
-        memos.length > 0 ? (
-          <button
-            onClick={() => {
-              if (contextType)
-                setTeleportDate({ date: prevAvailableDate, type: contextType });
-            }}
-            className="group flex flex-col items-center gap-2 transition-all duration-300 ease-in-out"
-            title={`Go to ${prevAvailableDate}`}
-          >
-            <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/50 group-hover:text-primary transition-colors">
-              <span>View Older memos</span>
-              <span className="opacity-60 group-hover:opacity-100 transition-opacity">
-                ({prevAvailableDate} {olderLabel})
-              </span>
-            </div>
-          </button>
-        ) : forceContextMode &&
-          !hasMoreOlder &&
-          !prevAvailableDate &&
-          memos.length > 0 ? (
-          <div className="text-center text-xs text-muted-foreground/40 font-mono tracking-widest uppercase">
-            --- Zero Content Before ---
-          </div>
-        ) : /* 模式 2: 长列表无限加载的 Spinner */
-        isLoadingOlder ? (
+
+        {isLoadingOlder ? (
           <div className="flex items-center">
             <HugeiconsIcon
               icon={Loader2}
@@ -356,7 +269,7 @@ export function MemoFeed({
               加载更多...
             </span>
           </div>
-        ) : !hasMoreOlder && memos.length > 0 && !forceContextMode ? (
+        ) : !hasMoreOlder && memos.length > 0 ? (
           <div className="text-center text-xs text-muted-foreground/40 font-mono tracking-widest uppercase">
             --- The End ---
           </div>

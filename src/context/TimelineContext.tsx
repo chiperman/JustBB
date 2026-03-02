@@ -13,10 +13,6 @@ interface TimelineContextType {
   setActiveId: (id: string | null) => void;
   isManualClick: boolean;
   setManualClick: (val: boolean) => void;
-  teleportDate: { date: string; type: "year" | "month" | "day" } | null;
-  setTeleportDate: (
-    val: { date: string; type: "year" | "month" | "day" } | null,
-  ) => void;
 }
 
 const TimelineContext = createContext<TimelineContextType | undefined>(
@@ -26,10 +22,6 @@ const TimelineContext = createContext<TimelineContextType | undefined>(
 export function TimelineProvider({ children }: { children: React.ReactNode }) {
   const [activeId, setActiveIdState] = useState<string | null>(null);
   const [isManualClick, setIsManualClick] = useState(false);
-  const [teleportDate, setTeleportDate] = useState<{
-    date: string;
-    type: "year" | "month" | "day";
-  } | null>(null);
   const manualClickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const setActiveId = useCallback((id: string | null) => {
@@ -54,8 +46,6 @@ export function TimelineProvider({ children }: { children: React.ReactNode }) {
         setActiveId,
         isManualClick,
         setManualClick,
-        teleportDate,
-        setTeleportDate,
       }}
     >
       {children}
@@ -69,11 +59,9 @@ export function useTimeline() {
     // 返回一个安全的占位符，防止在导航/渲染间隙崩溃
     return {
       activeId: null,
-      setActiveId: () => {},
+      setActiveId: () => { },
       isManualClick: false,
-      setManualClick: () => {},
-      teleportDate: null,
-      setTeleportDate: () => {},
+      setManualClick: () => { },
     };
   }
   return context;

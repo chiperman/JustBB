@@ -12,7 +12,6 @@ import { useUser } from "@/context/UserContext";
 import { useSelection } from "@/context/SelectionContext";
 import { usePageDataCache } from "@/context/PageDataCache";
 import { useTimeline } from "@/context/TimelineContext";
-import { getContextMemosWithNeighbors } from "@/actions/fetchMemos";
 
 interface MainLayoutClientProps {
   memos?: Memo[];
@@ -35,21 +34,7 @@ export function MainLayoutClient({
   const headerRef = useRef<HTMLDivElement>(null);
   const { getCache, setCache } = usePageDataCache();
 
-  const { teleportDate, setTeleportDate, setActiveId, setManualClick } =
-    useTimeline();
-  const [isTeleporting, setIsTeleporting] = useState(false);
-  const [isContextMode, setIsContextMode] = useState(!!searchParams.date);
-
-  // Calendar Pager states
-  const [prevAvailableDate, setPrevAvailableDate] = useState<string | null>(
-    null,
-  );
-  const [nextAvailableDate, setNextAvailableDate] = useState<string | null>(
-    null,
-  );
-  const [contextType, setContextType] = useState<
-    "year" | "month" | "day" | null
-  >(null);
+  const { setActiveId, setManualClick } = useTimeline();
 
   // 构建动态缓存键
   const cacheKey = useMemo(() => {
@@ -78,112 +63,22 @@ export function MainLayoutClient({
   );
   const [lastInitialMemos, setLastInitialMemos] = useState(initialMemos);
 
-  // 核心：处理传送逻辑 (Calendar Pager)
-  useEffect(() => {
-    if (!teleportDate) return;
 
-    const performTeleport = async () => {
-      console.log(
-        `[Main] Teleporting (Pager Mode) to: ${teleportDate.date} (${teleportDate.type})`,
-      );
 
-      // 1. 预设布局
-      setIsScrolled(true);
-      setIsTeleporting(true);
-      setIsContextMode(true);
-      setActiveId(null);
-      setManualClick(true);
-      setContextType(teleportDate.type);
-
-      // 立即清空当前列表，让视觉产生“时空跳跃”的清屏感
-      setMemos([]);
-      setPrevAvailableDate(null);
-      setNextAvailableDate(null);
-
-      try {
-        const result = await getContextMemosWithNeighbors({
-          targetDate: teleportDate.date,
-          type: teleportDate.type,
-          adminCode,
-          query: Array.isArray(searchParams.query)
-            ? searchParams.query[0]
-            : (searchParams.query as string),
-          tag: Array.isArray(searchParams.tag)
-            ? searchParams.tag[0]
-            : (searchParams.tag as string),
-        });
-
-        await new Promise((r) => setTimeout(r, 300));
-
-        setMemos(result.memos);
-        setPrevAvailableDate(result.prevDate);
-        setNextAvailableDate(result.nextDate);
-
-        // 2. 精准定位补偿
-        setTimeout(() => {
-          const container = scrollContainerRef.current;
-          const header = headerRef.current;
-
-          if (container && header) {
-            // 强制滚动到真正的最初始顶部
-            container.scrollTop = 1;
-          }
-          setIsTeleporting(false);
-          setManualClick(false);
-        }, 100);
-      } catch (err) {
-        console.error("Teleport failed:", err);
-        setIsTeleporting(false);
-      } finally {
-        setTeleportDate(null);
-      }
-    };
-
-    performTeleport();
-  }, [
-    teleportDate,
-    adminCode,
-    searchParams.query,
-    searchParams.tag,
-    setTeleportDate,
-  ]);
+  const [isLoading, setIsLoading] = useState(!initialMemos && !cached);
 
   // 派生状态同步
   const [prevCacheKey, setPrevCacheKey] = useState(cacheKey);
   if (prevCacheKey !== cacheKey) {
     setPrevCacheKey(cacheKey);
-    setIsContextMode(false);
-    setContextType(null); // URL变化清除上下文类型
     setLastInitialMemos(initialMemos);
     if (initialMemos) setMemos(initialMemos);
     else if (cached) setMemos(cached.memos);
+    if (!initialMemos && !cached) setIsLoading(true);
   } else if (initialMemos && initialMemos !== lastInitialMemos) {
     setLastInitialMemos(initialMemos);
-    if (!isTeleporting) {
-      setMemos(initialMemos);
-    }
+    setMemos(initialMemos);
   }
-
-  const [isLoading, setIsLoading] = useState(!initialMemos && !cached);
-
-  useEffect(() => {
-    const critical = JSON.stringify({
-      q: searchParams.query,
-      t: searchParams.tag,
-      y: searchParams.year,
-      m: searchParams.month,
-    });
-    if (!initialMemos && !cached) {
-      setIsLoading(true);
-    }
-  }, [
-    searchParams.query,
-    searchParams.tag,
-    searchParams.year,
-    searchParams.month,
-    initialMemos,
-    cached,
-  ]);
 
   if (initialMemos) {
     setCache(cacheKey, {
@@ -198,10 +93,7 @@ export function MainLayoutClient({
   const handleScroll = () => {
     if (scrollContainerRef.current) {
       const top = scrollContainerRef.current.scrollTop;
-      // 只有当不在传送过程中时，才允许滚动条反向控制 setIsScrolled
-      if (!isTeleporting) {
-        setIsScrolled(top > 100);
-      }
+      setIsScrolled(top > 100);
     }
   };
 
@@ -250,7 +142,7 @@ export function MainLayoutClient({
         className="flex-1 overflow-y-auto scrollbar-hover p-4 md:px-10 md:pt-0 md:pb-8 scrollbar-stable scroll-smooth"
       >
         <div className="max-w-4xl mx-auto w-full pb-20">
-          {isLoading && !isTeleporting ? (
+          {isLoading ? (
             <div className="space-y-6">
               <MemoCardSkeleton />
               <MemoCardSkeleton />
@@ -258,7 +150,7 @@ export function MainLayoutClient({
           ) : (
             <AnimatePresence mode="wait">
               <motion.div
-                key={isTeleporting ? "teleporting" : feedKey}
+                key={feedKey}
                 variants={teleportVariants}
                 initial="initial"
                 animate="animate"
@@ -270,10 +162,6 @@ export function MainLayoutClient({
                   searchParams={searchParams}
                   adminCode={adminCode}
                   isAdmin={effectiveIsAdmin}
-                  forceContextMode={isContextMode}
-                  contextType={contextType}
-                  prevAvailableDate={prevAvailableDate}
-                  nextAvailableDate={nextAvailableDate}
                 />
               </motion.div>
             </AnimatePresence>
@@ -281,23 +169,6 @@ export function MainLayoutClient({
         </div>
       </div>
 
-      <AnimatePresence>
-        {isTeleporting && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 flex items-center justify-center bg-background/10 backdrop-blur-sm pointer-events-none"
-          >
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-1 h-12 bg-primary/40 animate-pulse" />
-              <span className="text-[10px] font-mono tracking-tighter text-primary/60 uppercase">
-                TELEPORTING
-              </span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

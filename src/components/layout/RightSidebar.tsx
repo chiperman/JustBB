@@ -40,8 +40,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
   const yearFilter = searchParams.get("year");
   const monthFilter = searchParams.get("month");
 
-  const { activeId, setActiveId, setManualClick, setTeleportDate } =
-    useTimeline();
+  const { activeId, setActiveId, setManualClick } = useTimeline();
 
   // 自动滚动侧边栏以确保选中项可见
   useEffect(() => {
@@ -158,7 +157,13 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     setManualClick(true);
     setActiveId(id);
 
-    setTeleportDate({ date: `${year}-01-01`, type: "year" });
+    // Instead of teleporting silently, we push state to URL to enable caching
+    // setTeleportDate({ date: `${year}-01-01`, type: "year" });
+    const currentParams = new URLSearchParams(searchParams.toString());
+    currentParams.delete("date");
+    currentParams.delete("month");
+    currentParams.set("year", String(year));
+    router.push(`/?${currentParams.toString()}`);
   };
 
   const handleMonthClick = (
@@ -171,10 +176,11 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     setManualClick(true);
     setActiveId(id);
 
-    setTeleportDate({
-      date: `${year}-${String(month).padStart(2, "0")}-01`,
-      type: "month",
-    });
+    const currentParams = new URLSearchParams(searchParams.toString());
+    currentParams.delete("date");
+    currentParams.set("year", String(year));
+    currentParams.set("month", String(month));
+    router.push(`/?${currentParams.toString()}`);
   };
 
   const handleDayClick = (e: React.MouseEvent, dateStr: string) => {
@@ -183,8 +189,12 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     setManualClick(true);
     setActiveId(id);
 
-    console.log(`[Sidebar] Teleporting to ${dateStr}`);
-    setTeleportDate({ date: dateStr, type: "day" });
+    console.log(`[Sidebar] Routing to ${dateStr} for caching`);
+    const currentParams = new URLSearchParams(searchParams.toString());
+    currentParams.delete("year");
+    currentParams.delete("month");
+    currentParams.set("date", dateStr);
+    router.push(`/?${currentParams.toString()}`);
   };
 
   if (!isHomePage) return null;
@@ -279,11 +289,11 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
                                 yearGroup.year,
                                 monthGroup.month,
                               ) && (
-                                <TimelineLine
-                                  active={true}
-                                  className="-left-[25px]"
-                                />
-                              )}
+                                  <TimelineLine
+                                    active={true}
+                                    className="-left-[25px]"
+                                  />
+                                )}
                               <h5
                                 className={cn(
                                   "text-[11px] font-bold pl-1 transition-colors cursor-pointer block uppercase tracking-wide",

@@ -285,15 +285,13 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
                             id={`nav-month-${yearGroup.year}-${monthGroup.month}`}
                           >
                             <div className="relative mb-3">
-                              {isMonthActive(
-                                yearGroup.year,
-                                monthGroup.month,
-                              ) && (
-                                  <TimelineLine
-                                    active={true}
-                                    className="-left-[25px]"
-                                  />
+                              <TimelineLine
+                                active={isMonthActive(
+                                  yearGroup.year,
+                                  monthGroup.month,
                                 )}
+                                className={cn("-left-[25px] transition-opacity duration-300", !isMonthActive(yearGroup.year, monthGroup.month) && "opacity-0")}
+                              />
                               <h5
                                 className={cn(
                                   "text-[11px] font-bold pl-1 transition-colors cursor-pointer block uppercase tracking-wide",
@@ -330,12 +328,10 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
                                     className="relative"
                                     id={`nav-date-${dateStr}`}
                                   >
-                                    {isActive && (
-                                      <TimelineLine
-                                        active={true}
-                                        className="-left-[25px]"
-                                      />
-                                    )}
+                                    <TimelineLine
+                                      active={isActive}
+                                      className={cn("-left-[25px] transition-opacity duration-300", !isActive && "opacity-0")}
+                                    />
                                     <button
                                       type="button"
                                       className={cn(

@@ -109,12 +109,10 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
 
                                     return (
                                         <div key={memo.id} className="relative">
-                                            {isActive && (
-                                                <TimelineLine
-                                                    active={true}
-                                                    className="-left-[25px]"
-                                                />
-                                            )}
+                                            <TimelineLine
+                                                active={isActive}
+                                                className={cn("-left-[25px] transition-opacity duration-300", !isActive && "opacity-0")}
+                                            />
                                             <a
                                                 href={`#memo-${memo.id}`}
                                                 onClick={(e) => handleMemoClick(e, memo.id)}

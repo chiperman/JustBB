@@ -145,7 +145,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     "六月",
     "七月",
     "八月",
-    "调九月",
+    "九月",
     "十月",
     "十一月",
     "十二月",

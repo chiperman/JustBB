@@ -4,7 +4,7 @@ import { MemoCard } from "./MemoCard";
 import { MemoCardSkeleton } from "./MemoCardSkeleton";
 import { getMemos } from "@/actions/fetchMemos";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Loading01Icon as Loader2 } from "@hugeicons/core-free-icons";
+import { Loading03Icon as Loader2 } from "@hugeicons/core-free-icons";
 import { Memo } from "@/types/memo";
 import { useTimeline } from "@/context/TimelineContext";
 import { mergeMemos } from "@/lib/streamUtils";
@@ -73,13 +73,16 @@ export function MemoFeed({
         const limit = 20;
         const lastMemo = memos[memos.length - 1];
 
-        const nextMemos = await getMemos({
-          ...searchParams,
-          adminCode,
-          limit,
-          before_date: lastMemo?.created_at,
-          sort: "newest",
-        });
+        const [nextMemos] = await Promise.all([
+          getMemos({
+            ...searchParams,
+            adminCode,
+            limit,
+            before_date: lastMemo?.created_at,
+            sort: "newest",
+          }),
+          new Promise((resolve) => setTimeout(resolve, 1000)), // 保证至少有 1000ms 的动画时间，旋转一整圈
+        ]);
 
         // Filter to ensure we do not exceed the context boundary
         let validNewMemos = nextMemos.filter(
@@ -124,7 +127,11 @@ export function MemoFeed({
           fetchMemosBatch("older");
         }
       },
-      { threshold: 0.1, rootMargin: "1200px" },
+      {
+        root: document.getElementById("feed-scroll-container"),
+        rootMargin: "0px 0px 1200px 0px",
+        threshold: 0
+      },
     );
     bottomObserver.observe(bottom);
 
@@ -260,11 +267,17 @@ export function MemoFeed({
 
         {isLoadingOlder ? (
           <div className="flex items-center">
-            <HugeiconsIcon
-              icon={Loader2}
-              size={24}
-              className="animate-spin text-muted-foreground/50"
-            />
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+              className="flex items-center justify-center"
+            >
+              <HugeiconsIcon
+                icon={Loader2}
+                size={24}
+                className="text-muted-foreground/50 transform-gpu will-change-transform"
+              />
+            </motion.div>
             <span className="ml-2 text-xs text-muted-foreground/60">
               加载更多...
             </span>

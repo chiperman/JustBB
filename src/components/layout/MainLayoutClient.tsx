@@ -137,6 +137,7 @@ export function MainLayoutClient({
       </div>
 
       <div
+        id="feed-scroll-container"
         ref={scrollContainerRef}
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto scrollbar-hover p-4 md:px-10 md:pt-0 md:pb-8 scrollbar-stable scroll-smooth"

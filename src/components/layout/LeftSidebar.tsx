@@ -219,17 +219,19 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
                 variants={navVariants}
                 className="flex-1 px-1 space-y-1 overflow-y-auto overflow-x-hidden custom-scrollbar mb-[24px] relative"
             >
-                {/* Active Indicator - hydrate 后才显示，避免 SSR 阶段闪到首页位置 */}
-                <motion.div
-                    style={{
-                        y: springY,
-                        scaleY,
-                        scaleX,
-                        opacity: hasMounted ? 1 : 0,
-                        originY: 0.5
-                    }}
-                    className="absolute left-0 w-1 h-5 bg-primary rounded-full z-10"
-                />
+                {/* Active Indicator - 彻底在 hydrate 完成后才注入 DOM，消除 SSR/Client 属性不匹配 */}
+                {hasMounted && (
+                    <motion.div
+                        style={{
+                            y: springY,
+                            scaleY,
+                            scaleX,
+                            opacity: 1, // 既然已经挂载，直接显示
+                            originY: 0.5
+                        }}
+                        className="absolute left-0 w-1 h-5 bg-primary rounded-full z-10"
+                    />
+                )}
 
                 {navItems.map((item) => {
                     // hasMounted 为 false 时不高亮任何项，避免 SSR 阶段首页被错误高亮

@@ -19,13 +19,9 @@ export function useView() {
 }
 
 export function ViewProvider({ children }: { children: ReactNode }) {
-    // 初始值从 window.location 获取（SSR 时用 '/'）
-    const [currentView, setCurrentView] = useState(() => {
-        if (typeof window !== 'undefined') {
-            return window.location.pathname;
-        }
-        return '/';
-    });
+    // 初始值全系统统一为 '/'，确保水合阶段 Server/Client 树完全一致
+    // 实际路径会在 mount 后的 useEffect 中同步
+    const [currentView, setCurrentView] = useState('/');
 
     const navigate = useCallback((path: string) => {
         if (path === currentView) return;

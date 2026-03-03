@@ -244,11 +244,11 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
                             <button
                                 onClick={() => handleItemClick(item.href)}
                                 className={cn(
-                                    "flex items-center p-2 h-9 rounded transition-colors group relative hover:bg-accent hover:text-accent-foreground w-full text-left cursor-pointer",
+                                    "flex items-center p-2 h-9 rounded transition-colors group relative hover:bg-accent w-full text-left cursor-pointer",
                                     effectiveIsCollapsed ? "justify-center gap-0" : "px-3 gap-3",
                                     isActive
-                                        ? "text-primary font-medium"
-                                        : "text-muted-foreground"
+                                        ? "text-primary font-medium hover:text-primary"
+                                        : "text-muted-foreground hover:text-accent-foreground"
                                 )}
                                 title={item.label}
                             >

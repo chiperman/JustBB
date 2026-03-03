@@ -87,14 +87,14 @@ export function UsageModal({ trigger }: UsageModalProps) {
                                 Supabase 用量
                             </DialogTitle>
                             <Button
-                                variant="outline"
+                                variant="ghost"
                                 size="icon"
                                 onClick={() => {
                                     setLoading(true);
                                     setStats(null);
-                                    fetchData().then(() => setLoading(false)); // Use fetchData
+                                    fetchData().then(() => setLoading(false));
                                 }}
-                                className="h-7 w-7 rounded-xl border-gray-100 text-gray-400 hover:text-primary hover:border-primary/20 transition-all transition-colors"
+                                className="h-7 w-7 rounded-md text-gray-400 hover:text-primary hover:bg-accent transition-all active:scale-95 shadow-none"
                                 disabled={loading}
                             >
                                 <HugeiconsIcon
@@ -109,7 +109,7 @@ export function UsageModal({ trigger }: UsageModalProps) {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+                                className="h-8 w-8 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all active:scale-95"
                             >
                                 <HugeiconsIcon icon={CloseIcon} size={16} />
                             </Button>
@@ -126,7 +126,7 @@ export function UsageModal({ trigger }: UsageModalProps) {
                                     exit={{ opacity: 0, y: -10 }}
                                     className="flex flex-col items-center justify-center py-20 space-y-4"
                                 >
-                                    <div className="bg-orange-50/50 p-6 rounded-full">
+                                    <div className="bg-orange-50/50 p-6 rounded-card">
                                         <HugeiconsIcon
                                             icon={ReloadIcon} // Changed from ReloadIcon
                                             size={32}
@@ -142,11 +142,11 @@ export function UsageModal({ trigger }: UsageModalProps) {
                                     animate={{ opacity: 1, scale: 1 }}
                                     className="py-8 text-center space-y-4"
                                 >
-                                    <div className="bg-red-500/10 p-4 rounded-2xl inline-block">
+                                    <div className="bg-red-500/10 p-4 rounded-card inline-block">
                                         <HugeiconsIcon icon={ApiIcon} size={32} className="text-red-500" />
                                     </div>
                                     <p className="text-sm text-red-500 font-medium px-4">{error}</p>
-                                    <Button onClick={fetchData} variant="outline" size="sm" className="rounded-full">重试</Button>
+                                    <Button onClick={fetchData} variant="outline" size="sm" className="rounded-md active:scale-95 shadow-sm">重试</Button>
                                 </motion.div>
                             ) : stats ? (
                                 <motion.div
@@ -162,7 +162,7 @@ export function UsageModal({ trigger }: UsageModalProps) {
                                             <span className="text-sm font-medium text-gray-600">数据源模式</span>
                                         </div>
                                         <span className={cn(
-                                            "text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-xl border shadow-sm",
+                                            "text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-md border shadow-none",
                                             stats.isFullIndicator
                                                 ? "bg-green-50 text-green-600 border-green-100"
                                                 : "bg-[#FFF4E5] text-[#D97706] border-[#FDBA74]/30"

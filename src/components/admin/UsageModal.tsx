@@ -10,19 +10,21 @@ import {
 } from "@/components/ui/dialog";
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
-    RotateLeft01Icon as RefreshIcon,
     Database01Icon,
     UserGroupIcon,
     GlobalIcon,
     FlashIcon,
     ApiIcon,
-    CheckListIcon
+    CheckListIcon,
+    RotateRight01Icon as RefreshIcon,
+    Cancel01Icon as CloseIcon,
 } from '@hugeicons/core-free-icons';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { UsageProgress } from "./UsageProgress";
 import { getSupabaseUsageStats } from "@/actions/usage";
 import { motion, AnimatePresence } from 'framer-motion';
+import { DialogClose } from "@/components/ui/dialog";
 
 interface UsageModalProps {
     trigger: React.ReactNode;
@@ -77,34 +79,43 @@ export function UsageModal({ trigger }: UsageModalProps) {
             <DialogTrigger asChild>
                 {trigger}
             </DialogTrigger>
-            <DialogContent className="max-w-md bg-background border-none p-0 overflow-hidden shadow-2xl rounded-3xl">
-                <div className="flex flex-col h-full bg-gradient-to-b from-muted/30 to-background">
-                    <DialogHeader className="p-6 pb-4 flex flex-row items-center justify-between space-y-0">
-                        <div className="flex items-center gap-2">
-                            <div className="bg-primary/10 p-2 rounded-xl">
-                                <HugeiconsIcon icon={Database01Icon} size={20} className="text-primary" />
+            <DialogContent className="max-w-md bg-white border-none p-0 overflow-hidden shadow-2xl rounded-3xl [&>button]:hidden">
+                <div className="flex flex-col h-full bg-[#fcfcfc]">
+                    <div className="p-6 pb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-orange-100/50 p-2.5 rounded-2xl">
+                                <HugeiconsIcon icon={Database01Icon} size={22} className="text-orange-600/80" />
                             </div>
-                            <DialogTitle className="text-xl font-bold tracking-tight">Supabase 用量</DialogTitle>
+                            <div className="flex items-center gap-2">
+                                <DialogTitle className="text-2xl font-bold tracking-tight text-gray-900">Supabase 用量</DialogTitle>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-xl border-gray-100 bg-white hover:bg-gray-50 transition-all active:scale-95 shadow-none group"
+                                    onClick={fetchData}
+                                    disabled={loading}
+                                    title="刷新数据"
+                                >
+                                    <HugeiconsIcon
+                                        icon={RefreshIcon}
+                                        size={14}
+                                        className={cn("text-gray-500 group-hover:text-gray-900", loading && "animate-spin")}
+                                    />
+                                </Button>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <DialogClose asChild>
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-all active:scale-90"
-                                onClick={fetchData}
-                                disabled={loading}
-                                title="手动刷新"
+                                className="h-8 w-8 rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100"
                             >
-                                <HugeiconsIcon
-                                    icon={RefreshIcon}
-                                    size={16}
-                                    className={cn(loading && "animate-spin")}
-                                />
+                                <HugeiconsIcon icon={CloseIcon} size={18} />
                             </Button>
-                        </div>
-                    </DialogHeader>
+                        </DialogClose>
+                    </div>
 
-                    <div className="px-6 pb-8 space-y-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
+                    <div className="px-6 pb-8 space-y-7 overflow-y-auto max-h-[70vh] custom-scrollbar">
                         <AnimatePresence mode="wait">
                             {loading && !stats ? (
                                 <motion.div
@@ -140,32 +151,32 @@ export function UsageModal({ trigger }: UsageModalProps) {
                                     key="content"
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="space-y-6"
+                                    className="space-y-7"
                                 >
-                                    {/* Status Badge */}
-                                    <div className="flex items-center justify-between bg-muted/20 p-3 rounded-2xl border border-border/50">
-                                        <div className="flex items-center gap-2">
-                                            <div className={cn("w-2 h-2 rounded-full animate-pulse", stats.isFullIndicator ? "bg-green-500" : "bg-amber-500")} />
-                                            <span className="text-xs font-medium text-muted-foreground">数据源模式</span>
+                                    {/* Status Badge - Image Style */}
+                                    <div className="flex items-center justify-between bg-orange-50/40 p-4 rounded-[20px] border border-orange-100/50">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className={cn("w-2 h-2 rounded-full", stats.isFullIndicator ? "bg-green-500" : "bg-orange-400")} />
+                                            <span className="text-sm font-medium text-gray-600">数据源模式</span>
                                         </div>
                                         <span className={cn(
-                                            "text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-lg border",
+                                            "text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-xl border shadow-sm",
                                             stats.isFullIndicator
-                                                ? "bg-green-500/10 text-green-600 border-green-500/20"
-                                                : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                                                ? "bg-green-50 text-green-600 border-green-100"
+                                                : "bg-[#FFF4E5] text-[#D97706] border-[#FDBA74]/30"
                                         )}>
                                             {stats.isFullIndicator ? "Management API (全量)" : "SQL Fallback (基础)"}
                                         </span>
                                     </div>
 
                                     {/* Metrics Groups */}
-                                    <div className="space-y-6">
+                                    <div className="space-y-8">
                                         <section className="space-y-4">
-                                            <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground/50 uppercase tracking-widest">
-                                                <HugeiconsIcon icon={Database01Icon} size={12} />
+                                            <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest pl-1">
+                                                <HugeiconsIcon icon={Database01Icon} size={14} />
                                                 <span>存储与数据库</span>
                                             </div>
-                                            <div className="grid gap-5">
+                                            <div className="grid gap-2">
                                                 <UsageProgress
                                                     label="数据库大小"
                                                     used={stats.data.db.used}
@@ -173,28 +184,15 @@ export function UsageModal({ trigger }: UsageModalProps) {
                                                     percentage={stats.data.db.percentage}
                                                     unit="MB"
                                                 />
-                                                <UsageProgress
-                                                    label="对象存储"
-                                                    used={stats.data.storage.used}
-                                                    limit={stats.data.storage.limit}
-                                                    percentage={stats.data.storage.percentage}
-                                                    unit="MB"
-                                                />
                                             </div>
                                         </section>
 
                                         <section className="space-y-4">
-                                            <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground/50 uppercase tracking-widest">
-                                                <HugeiconsIcon icon={UserGroupIcon} size={12} />
-                                                <span>访问与流量</span>
+                                            <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest pl-1">
+                                                <HugeiconsIcon icon={GlobalIcon} size={14} />
+                                                <span>流量统计</span>
                                             </div>
-                                            <div className="grid gap-5">
-                                                <UsageProgress
-                                                    label="月活用户 (MAU)"
-                                                    used={stats.data.mau.used}
-                                                    limit={stats.data.mau.limit}
-                                                    percentage={stats.data.mau.percentage}
-                                                />
+                                            <div className="grid gap-2">
                                                 <UsageProgress
                                                     label="网络流出 (Egress)"
                                                     used={stats.data.egress.used}
@@ -204,42 +202,19 @@ export function UsageModal({ trigger }: UsageModalProps) {
                                                 />
                                             </div>
                                         </section>
-
-                                        {stats.isFullIndicator && (
-                                            <section className="space-y-4">
-                                                <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground/50 uppercase tracking-widest">
-                                                    <HugeiconsIcon icon={FlashIcon} size={12} />
-                                                    <span>高级特性 (Management API 独占)</span>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    <div className="bg-muted/30 p-3 rounded-2xl border border-border/50">
-                                                        <div className="text-[10px] text-muted-foreground mb-1">Realtime 连接</div>
-                                                        <div className="text-sm font-bold flex items-center gap-1.5">
-                                                            <HugeiconsIcon icon={GlobalIcon} size={14} className="text-blue-500" />
-                                                            {stats.data.realtime.connections}
-                                                        </div>
-                                                    </div>
-                                                    <div className="bg-muted/30 p-3 rounded-2xl border border-border/50">
-                                                        <div className="text-[10px] text-muted-foreground mb-1">Edge Functions</div>
-                                                        <div className="text-sm font-bold flex items-center gap-1.5">
-                                                            <HugeiconsIcon icon={CheckListIcon} size={14} className="text-purple-500" />
-                                                            {stats.data.functions.invocations}次调用
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </section>
-                                        )}
                                     </div>
                                 </motion.div>
                             ) : null}
                         </AnimatePresence>
                     </div>
 
-                    <div className="p-5 pt-3 bg-muted/20 border-t border-border/40 text-[10px] text-muted-foreground/60 leading-relaxed">
-                        <div className="flex items-start gap-2">
-                            <HugeiconsIcon icon={ApiIcon} size={12} className="shrink-0 mt-0.5" />
+                    <div className="p-6 py-5 bg-white border-t border-gray-100">
+                        <div className="flex items-start gap-2.5 text-[11px] text-gray-400 leading-relaxed font-medium">
+                            <div className="bg-gray-100 p-1 rounded-md mt-0.5">
+                                <HugeiconsIcon icon={ApiIcon} size={10} className="text-gray-400" />
+                            </div>
                             <p>
-                                数据{loading ? "更新中..." : "每分钟同步一次"}。完整指标需正确配置 `SUPABASE_PROJECT_REF` 与 `MANAGEMENT_API_KEY`。配额基于 Supabase 免费层级 (Free Plan) 标准。
+                                数据{loading ? "更新中..." : "每分钟同步一次"}。配额基于 Supabase 免费层级 (Free Plan) 标准。
                             </p>
                         </div>
                     </div>

@@ -6,7 +6,7 @@ import { env } from "@/lib/env";
 const DB_LIMIT = 500 * 1024 * 1024; // 500MB (Bytes)
 const STORAGE_LIMIT = 1024 * 1024 * 1024; // 1GB (Bytes)
 const MAU_LIMIT = 50000;
-const EGRESS_LIMIT = 2 * 1024 * 1024 * 1024; // 2GB (Bytes)
+const EGRESS_LIMIT = 5 * 1024 * 1024 * 1024; // 5GB (Bytes)
 
 const bytesToMB = (bytes: number) => Math.round(bytes / (1024 * 1024));
 const bytesToGB = (bytes: number) => Number((bytes / (1024 * 1024 * 1024)).toFixed(2));
@@ -58,7 +58,7 @@ export async function getSupabaseUsageStats() {
                         },
                         egress: {
                             used: bytesToGB(egressUsed),
-                            limit: 2,
+                            limit: 5,
                             percentage: Math.min(Math.round((egressUsed / EGRESS_LIMIT) * 100), 100),
                             unit: 'GB'
                         },
@@ -135,7 +135,7 @@ export async function getSupabaseUsageStats() {
                     percentage: Math.min(Math.round(((userCount || 0) / MAU_LIMIT) * 100), 100)
                 },
                 storage: { used: 0, limit: 1024, percentage: 0, unit: 'MB' },
-                egress: { used: 0, limit: 2, percentage: 0, unit: 'GB' },
+                egress: { used: 0, limit: 5, percentage: 0, unit: 'GB' },
                 realtime: { connections: 0, messages: 0 },
                 functions: { invocations: 0 }
             }

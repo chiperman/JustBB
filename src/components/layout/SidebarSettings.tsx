@@ -14,7 +14,8 @@ import {
     Loading01Icon as Loader2,
     ShieldCheck,
     UserCircleIcon as UserCircle,
-    CheckListIcon
+    CheckListIcon,
+    FlashIcon
 } from '@hugeicons/core-free-icons';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
@@ -224,7 +225,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                             <UsageModal
                                 trigger={
                                     <DropdownMenuItem className="rounded-md" onSelect={(e) => e.preventDefault()}>
-                                        <HugeiconsIcon icon={CheckListIcon} size={16} className="mr-2" />
+                                        <HugeiconsIcon icon={FlashIcon} size={16} className="mr-2" />
                                         <span>服务用量监控</span>
                                     </DropdownMenuItem>
                                 }

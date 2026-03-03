@@ -54,8 +54,19 @@ export function UsageModal({ trigger }: UsageModalProps) {
     const fetchData = React.useCallback(async () => {
         setLoading(true);
         setError(null);
+
+        // 保证加载动画至少显示 800ms，提升视觉体感
+        const startTime = Date.now();
+        const MIN_LOADING_TIME = 800;
+
         try {
             const result = await getSupabaseUsageStats();
+
+            const elapsedTime = Date.now() - startTime;
+            if (elapsedTime < MIN_LOADING_TIME) {
+                await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsedTime));
+            }
+
             if (result.success && result.data) {
                 setStats(result as SuccessStats);
             } else {
@@ -83,6 +94,9 @@ export function UsageModal({ trigger }: UsageModalProps) {
                 <div className="flex flex-col h-full bg-[#fcfcfc]">
                     <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 border-b border-gray-100 bg-white">
                         <div className="flex items-center gap-3">
+                            <div className="bg-primary/10 p-2 rounded-xl">
+                                <HugeiconsIcon icon={FlashIcon} size={20} className="text-primary" />
+                            </div>
                             <DialogTitle className="text-xl font-bold text-gray-800 tracking-tight">
                                 Supabase 用量
                             </DialogTitle>
@@ -116,24 +130,21 @@ export function UsageModal({ trigger }: UsageModalProps) {
                         </DialogClose>
                     </DialogHeader>
 
-                    <div className="px-6 pb-8 space-y-7 overflow-y-auto max-h-[70vh] custom-scrollbar">
+                    <div className="px-6 pt-6 pb-6 flex flex-col overflow-y-auto max-h-[70vh] min-h-[356px] custom-scrollbar">
                         <AnimatePresence mode="wait">
                             {loading && !stats ? (
                                 <motion.div
                                     key="loading"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="flex flex-col items-center justify-center py-20 space-y-4"
+                                    className="flex-1 flex flex-col items-center justify-center py-10 space-y-4"
                                 >
                                     <div className="bg-orange-50/50 p-6 rounded-card">
                                         <HugeiconsIcon
-                                            icon={ReloadIcon} // Changed from ReloadIcon
+                                            icon={ReloadIcon}
                                             size={32}
                                             className="text-orange-500 animate-spin"
                                         />
                                     </div>
-                                    <p className="text-sm text-gray-400 font-medium animate-pulse">正在同步云端配额...</p>
+                                    <p className="text-sm text-gray-400 font-medium">正在同步云端配额...</p>
                                 </motion.div>
                             ) : error ? (
                                 <motion.div
@@ -153,10 +164,10 @@ export function UsageModal({ trigger }: UsageModalProps) {
                                     key="content"
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="space-y-7"
+                                    className="space-y-6"
                                 >
                                     {/* Status Badge - Image Style */}
-                                    <div className="flex items-center justify-between bg-orange-50/40 p-4 rounded-[20px] border border-orange-100/50">
+                                    <div className="flex items-center justify-between bg-orange-50/40 p-4 rounded-card border border-orange-100/50">
                                         <div className="flex items-center gap-2.5">
                                             <div className={cn("w-2 h-2 rounded-full", stats.isFullIndicator ? "bg-green-500" : "bg-orange-400")} />
                                             <span className="text-sm font-medium text-gray-600">数据源模式</span>
@@ -172,7 +183,7 @@ export function UsageModal({ trigger }: UsageModalProps) {
                                     </div>
 
                                     {/* Metrics Groups */}
-                                    <div className="space-y-8">
+                                    <div className="space-y-6">
                                         <section className="space-y-4">
                                             <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest pl-1">
                                                 <HugeiconsIcon icon={Database01Icon} size={14} />

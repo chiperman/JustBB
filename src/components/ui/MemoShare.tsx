@@ -65,7 +65,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
         <Dialog>
             <DialogTrigger asChild>
                 {trigger || (
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-accent" title="分享" aria-label="生成海报分享">
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-accent active:scale-95 transition-all" title="分享" aria-label="生成海报分享">
                         <HugeiconsIcon icon={Share2} size={16} className="text-muted-foreground" aria-hidden="true" />
                     </Button>
                 )}
@@ -130,14 +130,14 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                     <Button
                         onClick={handleDownload}
                         disabled={isGenerating}
-                        className="flex-1"
+                        className="flex-1 active:scale-95 transition-all"
                     >
                         {isGenerating ? <HugeiconsIcon icon={Loader2} size={16} className="mr-2 animate-spin" /> : <HugeiconsIcon icon={Download} size={16} className="mr-2" />}
                         保存图片
                     </Button>
                     <Button
                         variant="outline"
-                        className="flex-1"
+                        className="flex-1 active:scale-95 transition-all"
                         onClick={() => {
                             if (navigator.share) {
                                 navigator.share({

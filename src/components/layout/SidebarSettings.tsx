@@ -97,7 +97,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                     <Button
                         variant="ghost"
                         className={cn(
-                            "w-full flex items-center gap-3 h-9 p-2 hover:bg-accent hover:text-accent-foreground rounded-md transition-all focus-visible:ring-0 group/settings overflow-hidden",
+                            "w-full flex items-center gap-3 h-9 p-2 hover:bg-accent hover:text-accent-foreground rounded-md transition-all focus-visible:ring-0 group/settings overflow-hidden active:scale-95",
                             isCollapsed ? "justify-center" : "justify-start px-3"
                         )}
                         aria-label="账号与设置"

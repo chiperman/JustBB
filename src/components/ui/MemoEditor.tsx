@@ -1034,7 +1034,7 @@ export function MemoEditor({
                                 variant="ghost"
                                 size="sm"
                                 onClick={handleTogglePrivate}
-                                className={cn("h-8 px-2 gap-1.5", isPrivate ? "text-primary bg-primary/5" : "text-muted-foreground")}
+                                className={cn("h-8 px-2 gap-1.5 active:scale-95 transition-all text-muted-foreground", isPrivate ? "text-primary bg-primary/5 hover:text-primary/80" : "hover:text-foreground")}
                             >
                                 {isPrivate ? <HugeiconsIcon icon={Lock} size={16} /> : <HugeiconsIcon icon={LockOpen} size={16} />}
                                 <span className="text-xs font-medium">{isPrivate ? '私密' : '公开'}</span>
@@ -1044,7 +1044,7 @@ export function MemoEditor({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setIsPinned(!isPinned)}
-                                className={cn("h-8 px-2 gap-1.5", isPinned ? "text-primary bg-primary/5" : "text-muted-foreground")}
+                                className={cn("h-8 px-2 gap-1.5 active:scale-95 transition-all text-muted-foreground", isPinned ? "text-primary bg-primary/5 hover:text-primary/80" : "hover:text-foreground")}
                             >
                                 <HugeiconsIcon icon={Pin} size={16} className={cn(isPinned && "fill-current")} />
                                 <span className="text-xs font-medium">置顶</span>
@@ -1054,7 +1054,7 @@ export function MemoEditor({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setShowLocationPicker(true)}
-                                className="h-8 px-2 gap-1.5 text-muted-foreground"
+                                className="h-8 px-2 gap-1.5 text-muted-foreground active:scale-95 transition-all hover:text-foreground"
                                 aria-label="添加定位"
                             >
                                 <HugeiconsIcon icon={Location04Icon} size={16} />
@@ -1066,7 +1066,7 @@ export function MemoEditor({
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => setIsFullscreen(true)}
-                                    className="h-8 px-2 gap-1.5 text-muted-foreground"
+                                    className="h-8 px-2 gap-1.5 text-muted-foreground active:scale-95 transition-all hover:text-foreground"
                                     aria-label="放大"
                                 >
                                     <HugeiconsIcon icon={Maximize2} size={16} />
@@ -1098,7 +1098,7 @@ export function MemoEditor({
                                                 setIsPrivate(false);
                                             }
                                         }}
-                                        className="h-8 px-3 text-muted-foreground hover:text-foreground transition-colors"
+                                        className="h-8 px-3 text-muted-foreground hover:text-foreground transition-all active:scale-95"
                                     >
                                         取消
                                     </Button>
@@ -1107,7 +1107,7 @@ export function MemoEditor({
                                     size="sm"
                                     onClick={handlePublishClick}
                                     disabled={!content.trim() || isPending}
-                                    className="h-8 px-4 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all"
+                                    className="h-8 px-4 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all active:scale-95"
                                 >
                                     {isPending ? '提交中...' : mode === 'edit' ? '保存' : '发布'}
                                 </Button>

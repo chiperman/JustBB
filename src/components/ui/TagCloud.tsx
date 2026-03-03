@@ -74,7 +74,7 @@ export const TagCloud = memo(function TagCloud() {
                                 variant={isActive ? "default" : "secondary"}
                                 onClick={() => handleTagClick(tag_name)}
                                 className={cn(
-                                    "cursor-pointer px-2 py-1 text-[12px] font-normal gap-1.5 transition-all hover:opacity-80 rounded-md border-none shadow-none",
+                                    "cursor-pointer px-2 py-1 text-[12px] font-normal gap-1.5 transition-all hover:opacity-80 rounded-md border-none shadow-none active:scale-95",
                                     isActive
                                         ? "bg-primary text-primary-foreground"
                                         : "bg-stone-100 dark:bg-stone-900 text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"

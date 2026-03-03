@@ -71,7 +71,7 @@ export function FeedHeader() {
                                 // 强制重置路由以清除缓存和参数
                                 router.push('/');
                             }}
-                            className="group flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-accent transition-all mr-1 h-full"
+                            className="group flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-accent transition-all mr-1 h-full active:scale-95"
                             title="回到首页"
                         >
                             <HugeiconsIcon
@@ -99,7 +99,7 @@ export function FeedHeader() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-md transition-all focus-visible:ring-0"
+                                className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-md transition-all focus-visible:ring-0 active:scale-95"
                                 aria-label="更多选项"
                             >
                                 <HugeiconsIcon

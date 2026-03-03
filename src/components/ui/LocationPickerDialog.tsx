@@ -189,7 +189,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                                 size="sm"
                                 onClick={handleGetCurrentLocation}
                                 disabled={isGettingLocation}
-                                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground active:scale-95 transition-all"
                             >
                                 {isGettingLocation ? (
                                     <HugeiconsIcon icon={LoadingIcon} size={12} className="animate-spin mr-1" />
@@ -228,7 +228,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                                     handleSearch(name);
                                 }}
                                 disabled={isSearching || !name.trim()}
-                                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:bg-transparent hover:text-foreground active:scale-95 transition-all"
                             >
                                 {isSearching ? (
                                     <HugeiconsIcon icon={LoadingIcon} size={14} className="animate-spin" />
@@ -343,8 +343,8 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                     </div>
                 </div>
                 <DialogFooter className="mt-2">
-                    <Button variant="ghost" onClick={() => onOpenChange(false)}>取消</Button>
-                    <Button onClick={handleConfirm} disabled={!isValid}>确认</Button>
+                    <Button variant="ghost" className="active:scale-95 transition-all" onClick={() => onOpenChange(false)}>取消</Button>
+                    <Button className="active:scale-95 transition-all" onClick={handleConfirm} disabled={!isValid}>确认</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

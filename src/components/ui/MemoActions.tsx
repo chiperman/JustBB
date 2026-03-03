@@ -160,7 +160,7 @@ export function MemoActions({
                             size="icon"
                             onClick={handleRestore}
                             disabled={isPending}
-                            className="rounded-md text-green-600 hover:text-green-700 hover:bg-green-50"
+                            className="rounded-md text-green-600 hover:text-green-700 hover:bg-green-50 active:scale-95 transition-all"
                             title="恢复"
                         >
                             <HugeiconsIcon icon={RotateLeft01Icon} size={16} />
@@ -170,7 +170,7 @@ export function MemoActions({
                             size="icon"
                             onClick={() => setShowPermanentDeleteAlert(true)}
                             disabled={isPending}
-                            className="rounded-md text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="rounded-md text-red-600 hover:text-red-700 hover:bg-red-50 active:scale-95 transition-all"
                             title="彻底删除"
                         >
                             <HugeiconsIcon icon={Delete02Icon} size={16} />
@@ -200,7 +200,7 @@ export function MemoActions({
         <div className="flex items-center gap-1">
             <DropdownMenu onOpenChange={onOpenChange}>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 p-0 hover:bg-accent rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 transition-all">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 p-0 hover:bg-accent rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 transition-all active:scale-95">
                         <HugeiconsIcon icon={MoreHorizontalIcon} size={16} className="text-muted-foreground" />
                     </Button>
                 </DropdownMenuTrigger>

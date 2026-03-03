@@ -168,7 +168,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                                             size="icon"
                                             onClick={toggleBacklinks}
                                             className={cn(
-                                                "h-8 w-8 rounded-md transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
+                                                "h-8 w-8 rounded-md transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 active:scale-95",
                                                 showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground",
                                                 (showBacklinks || isMenuOpen) && "opacity-100",
                                             )}

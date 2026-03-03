@@ -96,7 +96,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                             size="sm"
                             onClick={handleAddCustomTag}
                             disabled={!inputValue.trim()}
-                            className="h-9 px-3 rounded-md"
+                            className="h-9 px-3 rounded-md active:scale-95 transition-all"
                         >
                             <HugeiconsIcon icon={Plus} size={16} />
                         </Button>
@@ -133,7 +133,7 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                                         <button
                                             key={tag.tag_name}
                                             onClick={() => toggleTag(tag.tag_name)}
-                                            className="text-xs px-3 py-1.5 rounded-md bg-accent/30 hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20 transition-all text-muted-foreground"
+                                            className="text-xs px-3 py-1.5 rounded-md bg-accent/30 hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20 transition-all text-muted-foreground active:scale-95"
                                         >
                                             {tag.tag_name}
                                             <span className="ml-1 opacity-40 font-mono">({tag.count})</span>
@@ -154,11 +154,11 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
                 </div>
 
                 <DialogFooter className="gap-2 sm:gap-0">
-                    <Button variant="ghost" onClick={onClose} className="rounded-md">取消</Button>
+                    <Button variant="ghost" onClick={onClose} className="rounded-md active:scale-95 transition-all">取消</Button>
                     <Button
                         onClick={handleConfirm}
                         disabled={selectedTags.length === 0 || isSubmitting}
-                        className="rounded-md"
+                        className="rounded-md active:scale-95 transition-all"
                     >
                         {isSubmitting && <HugeiconsIcon icon={Loader2} size={16} className="animate-spin mr-2" />}
                         确认添加

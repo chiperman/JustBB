@@ -69,7 +69,7 @@ export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { is
                         onClick={handleLogout}
                         disabled={loggingOut}
                         className={cn(
-                            "flex items-center justify-start gap-2 h-auto py-2.5 px-2.5 rounded hover:bg-accent text-muted-foreground font-normal",
+                            "flex items-center justify-start gap-2 h-auto py-2.5 px-2.5 rounded hover:bg-accent text-muted-foreground font-normal active:scale-95 transition-all",
                             isCollapsed ? "justify-center px-0 w-10 h-10" : "w-full",
                             loggingOut && "opacity-50 cursor-not-allowed"
                         )}

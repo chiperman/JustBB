@@ -184,7 +184,7 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
                     variant="ghost"
                     onClick={handleToggle}
                     className={cn(
-                        "text-muted-foreground shrink-0 rounded transition-colors",
+                        "text-muted-foreground shrink-0 rounded transition-all active:scale-95",
                         // 使用 layout 属性处理位置变化，减少 CSS 类突变
                         effectiveIsCollapsed ? "w-full justify-center h-9 p-2" : "h-8 w-8 px-0"
                     )}
@@ -244,7 +244,7 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
                             <button
                                 onClick={() => handleItemClick(item.href)}
                                 className={cn(
-                                    "flex items-center p-2 h-9 rounded transition-colors group relative hover:bg-accent w-full text-left cursor-pointer",
+                                    "flex items-center p-2 h-9 rounded transition-all group relative hover:bg-accent w-full text-left cursor-pointer active:scale-95",
                                     effectiveIsCollapsed ? "justify-center gap-0" : "px-3 gap-3",
                                     isActive
                                         ? "text-primary font-medium hover:text-primary"

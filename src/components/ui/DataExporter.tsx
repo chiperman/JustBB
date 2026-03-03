@@ -103,7 +103,7 @@ export function DataExporter() {
                 <Button
                     onClick={() => handleExport('json')}
                     disabled={loading}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 active:scale-95 transition-all"
                     aria-label="导出完整数据为 JSON 格式"
                 >
                     {loading ? <HugeiconsIcon icon={Loader2} size={16} className="animate-spin" aria-hidden="true" /> : <HugeiconsIcon icon={FileJson} size={16} aria-hidden="true" />}
@@ -113,7 +113,7 @@ export function DataExporter() {
                     variant="outline"
                     onClick={() => handleExport('csv')}
                     disabled={loading}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 active:scale-95 transition-all"
                     aria-label="导出数据为 CSV 格式"
                 >
                     {loading ? <HugeiconsIcon icon={Loader2} size={16} className="animate-spin" aria-hidden="true" /> : <HugeiconsIcon icon={FileDown} size={16} aria-hidden="true" />}

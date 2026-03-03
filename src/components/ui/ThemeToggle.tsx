@@ -41,7 +41,7 @@ export function ThemeToggle() {
             variant="outline"
             size="icon"
             onClick={cycleTheme}
-            className="rounded-full w-10 h-10"
+            className="rounded-full w-10 h-10 active:scale-95 transition-all"
             title={`当前主题: ${currentTheme.label}`}
             aria-label={`切换主题，当前: ${currentTheme.label}`}
         >

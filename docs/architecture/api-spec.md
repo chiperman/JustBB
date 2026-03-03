@@ -29,7 +29,7 @@
 ## 3. 读操作 (Queries - 双向流分页模式)
 
 ### 3.1 `getMemos` (核心分页)
-*   参数: `params: { query?, limit?, before_date?, after_date?, tag?, date?, sort? }`
+*   参数: `params: { query?, limit?, before_date?, after_date?, tag?, date?, num?, sort? }`
 *   特性: 
     - **游标分页**: 彻底弃用 Offset。通过 `before_date` (向下) 或 `after_date` (向上) 确定数据起止点。
     - **优先级逻辑**: 若 `before_date` 或 `after_date` 存在，系统将自动忽略 `date` (Calendar Date) 过滤条件，以确保双向流在跨天滚动时不会被截断。

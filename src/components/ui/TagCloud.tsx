@@ -24,10 +24,11 @@ export const TagCloud = memo(function TagCloud() {
 
     const handleTagClick = (tag: string) => {
         const params = new URLSearchParams(searchParams);
-        if (currentQuery === tag) {
-            params.delete('q'); // 再次点击取消过滤
+        const currentTag = params.get('tag');
+        if (currentTag === tag) {
+            params.delete('tag'); // 再次点击取消过滤
         } else {
-            params.set('q', tag);
+            params.set('tag', tag);
         }
         router.push(`/?${params.toString()}`);
     };

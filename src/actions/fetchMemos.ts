@@ -10,6 +10,7 @@ export async function getMemos(params: {
   limit?: number;
   offset?: number;
   tag?: string;
+  num?: string;
   date?: string;
   sort?: string;
   after_date?: string; // 游标：在此日期之后
@@ -21,6 +22,7 @@ export async function getMemos(params: {
     limit: limitSize = 20,
     offset: offsetVal = 0,
     tag = null,
+    num = null,
     date = null,
     sort = "newest",
     after_date = null,
@@ -28,7 +30,10 @@ export async function getMemos(params: {
   } = params;
 
   const supabase = await createClient();
-  const filters: Record<string, unknown> = tag ? { tag } : {};
+  const filters: Record<string, unknown> = {};
+
+  if (tag) filters.tag = tag;
+  if (num) filters.num = num;
 
   // 逻辑修正：如果存在游标（向上或向下滚动），则不应应用 calendar date 的强等过滤
   // 否则数据流会被限制在同一天内

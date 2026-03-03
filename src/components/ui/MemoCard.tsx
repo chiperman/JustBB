@@ -155,7 +155,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                                             e.stopPropagation();
                                             e.preventDefault();
                                             // 使用基础导航确保在 Leaflet Popup 中也能成功跳转
-                                            window.location.assign(`/?q=${memo.memo_number}`);
+                                            window.location.assign(`/?num=${memo.memo_number}`);
                                         }}
                                         className="h-7 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 z-10 pointer-events-auto"
                                     >
@@ -258,7 +258,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                                                             <div key={link.id} className="text-xs bg-muted/30 p-2 rounded-md flex justify-between items-center group/link hover:bg-accent transition-colors">
                                                                 <span className="text-muted-foreground truncate max-w-[200px]">{link.content.substring(0, 30)}...</span>
                                                                 <a
-                                                                    href={`/?q=${link.memo_number}`}
+                                                                    href={`/?num=${link.memo_number}`}
                                                                     className="text-primary font-mono font-medium hover:underline focus-visible:ring-1 focus-visible:ring-primary/40 rounded px-1"
                                                                 >
                                                                     #{link.memo_number}

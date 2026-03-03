@@ -54,7 +54,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                             const memoNum = token.value.slice(1);
                             const linkElement = (
                                 <Link
-                                    href={`/?q=${memoNum}`}
+                                    href={`/?num=${memoNum}`}
                                     className="text-primary hover:underline cursor-pointer font-mono bg-primary/10 px-1 rounded-md mx-0.5 inline-block focus-visible:ring-1 focus-visible:ring-primary/30 outline-none hover:bg-primary/20 transition-colors"
                                     aria-label={`查看引用记录 #${memoNum}`}
                                 >

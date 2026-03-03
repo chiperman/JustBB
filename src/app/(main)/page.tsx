@@ -18,6 +18,7 @@ export default async function MemoPage(props: {
   const yearStr = Array.isArray(searchParams?.year) ? searchParams.year[0] : (typeof searchParams?.year === 'string' ? searchParams.year : undefined);
   const monthStr = Array.isArray(searchParams?.month) ? searchParams.month[0] : (typeof searchParams?.month === 'string' ? searchParams.month : undefined);
   const tagStr = Array.isArray(searchParams?.tag) ? searchParams.tag[0] : (typeof searchParams?.tag === 'string' ? searchParams.tag : undefined);
+  const numStr = Array.isArray(searchParams?.num) ? searchParams.num[0] : (typeof searchParams?.num === 'string' ? searchParams.num : undefined);
   // 额外确保 dateStr 至少是一个非空字符串，否则不触发过滤
   let dateStr = Array.isArray(searchParams?.date) ? searchParams.date[0] : (typeof searchParams?.date === 'string' ? searchParams.date : undefined);
   if (dateStr === '') dateStr = undefined;
@@ -29,7 +30,7 @@ export default async function MemoPage(props: {
     (async () => {
       // 核心重构：如果指定了具体日期，作为硬过滤 (Hard filter)，只查这一天的数据
       if (dateStr) {
-        return (await getMemos({ limit: 20, query, adminCode, tag: tagStr, date: dateStr, sort: sortStr })) || [];
+        return (await getMemos({ limit: 20, query, adminCode, tag: tagStr, num: numStr, date: dateStr, sort: sortStr })) || [];
       }
 
       if (yearStr && monthStr) {
@@ -40,7 +41,7 @@ export default async function MemoPage(props: {
         }
         return [];
       } else {
-        return (await getMemos({ limit: 20, query, adminCode, tag: tagStr, date: dateStr, sort: sortStr })) || [];
+        return (await getMemos({ limit: 20, query, adminCode, tag: tagStr, num: numStr, date: dateStr, sort: sortStr })) || [];
       }
     })(),
     checkIsAdmin()
@@ -51,6 +52,7 @@ export default async function MemoPage(props: {
   const flattenedSearchParams = {
     query: Array.isArray(searchParams?.q) ? searchParams.q[0] : searchParams?.q,
     tag: Array.isArray(searchParams?.tag) ? searchParams.tag[0] : searchParams?.tag,
+    num: Array.isArray(searchParams?.num) ? searchParams.num[0] : searchParams?.num,
     year: Array.isArray(searchParams?.year) ? searchParams.year[0] : searchParams?.year,
     month: Array.isArray(searchParams?.month) ? searchParams.month[0] : searchParams?.month,
     date: Array.isArray(searchParams?.date) ? searchParams.date[0] : searchParams?.date,

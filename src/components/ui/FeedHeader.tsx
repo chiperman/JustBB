@@ -47,7 +47,7 @@ export function FeedHeader() {
         router.push(`?${params.toString()}`);
     };
 
-    const hasContext = !!(activeDate || searchParams.get('tag') || (searchParams.get('year') && searchParams.get('month')));
+    const hasContext = !!(activeDate || searchParams.get('tag') || searchParams.get('num') || (searchParams.get('year') && searchParams.get('month')));
 
     return (
         <div className={cn(
@@ -89,6 +89,22 @@ export function FeedHeader() {
                                 <span className="text-muted-foreground/30 text-[10px] font-light">/</span>
                                 <span className="text-xs font-mono font-medium text-primary tracking-tight tabular-nums leading-none">
                                     {activeDate}
+                                </span>
+                            </div>
+                        )}
+                        {searchParams.get('tag') && (
+                            <div className="flex items-center gap-1.5 h-full px-1">
+                                <span className="text-muted-foreground/30 text-[10px] font-light">/</span>
+                                <span className="text-xs font-medium text-primary tracking-tight leading-none">
+                                    #{searchParams.get('tag')}
+                                </span>
+                            </div>
+                        )}
+                        {searchParams.get('num') && (
+                            <div className="flex items-center gap-1.5 h-full px-1">
+                                <span className="text-muted-foreground/30 text-[10px] font-light">/</span>
+                                <span className="text-xs font-mono font-medium text-primary tracking-tight leading-none">
+                                    #{searchParams.get('num')}
                                 </span>
                             </div>
                         )}

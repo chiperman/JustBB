@@ -92,8 +92,18 @@ export function MainLayoutClient({
 
   const handleScroll = () => {
     if (scrollContainerRef.current) {
-      const top = scrollContainerRef.current.scrollTop;
-      setIsScrolled(top > 100);
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+      const scrollableHeight = scrollHeight - clientHeight;
+
+      setIsScrolled((prev) => {
+        if (prev) {
+          // 已经收缩：只有当向上滚动到 50px 以内，或者页面内容变得非常少时才展开
+          return scrollTop > 50 && scrollableHeight > 150;
+        } else {
+          // 当前展开：只有当向下滚动超过 100px 且页面有足够滚动空间（>300px）时才收缩
+          return scrollTop > 100 && scrollableHeight > 300;
+        }
+      });
     }
   };
 

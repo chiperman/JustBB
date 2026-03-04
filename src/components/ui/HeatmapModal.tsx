@@ -145,9 +145,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
             <DialogTrigger asChild>
                 {trigger}
             </DialogTrigger>
-            <DialogContent className="max-w-6xl h-[90vh] flex flex-col bg-[#F9F9F9] border-none p-0 overflow-hidden 
-                !animate-none !duration-0 !transition-none
-                [&>button]:hidden text-foreground">
+            <DialogContent className="max-w-6xl h-[90vh] flex flex-col bg-[#F9F9F9] border-none p-0 overflow-hidden text-foreground [&>button]:hidden">
 
                 <div className="flex-none sticky top-0 z-50 bg-[#F9F9F9]/80 backdrop-blur-xl px-10 py-6 flex items-center justify-between border-b border-black/5">
                     <DialogTitle className="text-lg font-bold tracking-widest font-mono z-10 uppercase">记录统计</DialogTitle>

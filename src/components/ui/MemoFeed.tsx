@@ -30,48 +30,54 @@ export function MemoFeed({
   isAdmin = false,
 }: MemoFeedProps) {
   const [memos, setMemos] = useState<Memo[]>(initialMemos);
+  const [hasMoreOlder, setHasMoreOlder] = useState(initialMemos.length >= 20);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
-
-  const [hasMoreOlder, setHasMoreOlder] = useState(
-    (!searchParams.date && initialMemos.length >= 10) ||
-    initialMemos.length === 20,
-  );
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const prevParamsRef = useRef(JSON.stringify(searchParams));
+  // 1. 派生状态同步 (Derived State Sync)
+  const [lastInitialMemos, setLastInitialMemos] = useState(initialMemos);
+  const [lastParamsStr, setLastParamsStr] = useState(JSON.stringify(searchParams));
+
+  const currentParamsStr = JSON.stringify(searchParams);
+  if (initialMemos !== lastInitialMemos || currentParamsStr !== lastParamsStr) {
+    console.log('[MemoFeed] Syncing state:', {
+      initialMemosCount: initialMemos.length,
+      currentParams: currentParamsStr,
+      hasMore: initialMemos.length >= 20
+    });
+    setLastInitialMemos(initialMemos);
+    setLastParamsStr(currentParamsStr);
+    setMemos(initialMemos);
+    const hasMore = initialMemos.length >= 20;
+    setHasMoreOlder(hasMore);
+  }
+
+  useEffect(() => {
+    console.log('[MemoFeed] Component State:', {
+      memosCount: memos.length,
+      hasMoreOlder,
+      isLoadingOlder
+    });
+  }, [memos.length, hasMoreOlder, isLoadingOlder]);
 
   const observerTargetBottom = useRef<HTMLDivElement>(null);
-
-  // 1. 外部状态同步
-  useEffect(() => {
-    const currentParamsStr = JSON.stringify(searchParams);
-    const paramsChanged = currentParamsStr !== prevParamsRef.current;
-
-    if (paramsChanged) {
-      console.log(`[Feed] Syncing props. paramsChanged: ${paramsChanged}`);
-      prevParamsRef.current = currentParamsStr;
-
-      setMemos(initialMemos);
-      // 根据新属性重置是否有更多数据
-      setHasMoreOlder(
-        (!searchParams.date && initialMemos.length >= 10) ||
-        initialMemos.length === 20,
-      );
-    } else if (initialMemos.length > 0 && memos.length === 0) {
-      setMemos(initialMemos);
-    }
-  }, [searchParams, initialMemos, memos.length]);
 
   // 2. 首页单向抓取逻辑 (无限下拉)
   const fetchMemosBatch = useCallback(
     async (direction: "older") => {
-      if (direction === "older" && (isLoadingOlder || !hasMoreOlder)) return;
+      console.log('[MemoFeed] fetchMemosBatch triggered:', { direction, isLoadingOlder, hasMoreOlder });
+      if (direction === "older" && (isLoadingOlder || !hasMoreOlder)) {
+        console.log('[MemoFeed] fetchMemosBatch skipped:', { isLoadingOlder, hasMoreOlder });
+        return;
+      }
 
       setIsLoadingOlder(true);
 
       try {
         const limit = 20;
-        const lastMemo = memos[memos.length - 1];
+        // 关键修复：游标必须使用最旧的“非置顶”记录，否则旧的置顶记录会把游标带入过去，导致中间的普通记录被跳过
+        const unpinnedMemos = memos.filter(m => !m.is_pinned);
+        const lastMemo = unpinnedMemos.length > 0 ? unpinnedMemos[unpinnedMemos.length - 1] : memos[memos.length - 1];
 
         const [nextMemos] = await Promise.all([
           getMemos({
@@ -79,9 +85,10 @@ export function MemoFeed({
             adminCode,
             limit,
             before_date: lastMemo?.created_at,
+            excludePinned: true, // 向下滚动加载更多时，排除置顶内容，避免重复和干扰游标
             sort: "newest",
           }),
-          new Promise((resolve) => setTimeout(resolve, 1000)), // 保证至少有 1000ms 的动画时间，旋转一整圈
+          new Promise((resolve) => setTimeout(resolve, 1000)), // 保证至少有 1000ms 的动画时间
         ]);
 
         // Filter to ensure we do not exceed the context boundary
@@ -128,8 +135,8 @@ export function MemoFeed({
         }
       },
       {
-        root: document.getElementById("feed-scroll-container"),
-        rootMargin: "0px 0px 1200px 0px",
+        root: null, // 默认使用 Viewport，更稳定
+        rootMargin: "0px 0px 1200px 0px", // 提前 1200px 开始加载，保证无感过度
         threshold: 0
       },
     );

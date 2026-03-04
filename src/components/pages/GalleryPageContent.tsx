@@ -5,7 +5,8 @@ import { GalleryGrid } from '@/components/gallery/GalleryGrid';
 import { Memo } from '@/types/memo';
 import { getGalleryMemos } from '@/actions/fetchMemos';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Loading01Icon as Loader2 } from '@hugeicons/core-free-icons';
+import { Loading03Icon as Loader2 } from '@hugeicons/core-free-icons';
+import { motion } from 'framer-motion';
 
 interface GalleryPageContentProps {
     memos?: Memo[];
@@ -18,12 +19,24 @@ export function GalleryPageContent({ memos: initialMemos = [] }: GalleryPageCont
     const [offset, setOffset] = useState(initialMemos.length);
     const observerTarget = useRef<HTMLDivElement>(null);
 
+    // Derived state sync
+    const [lastInitialMemos, setLastInitialMemos] = useState(initialMemos);
+    if (initialMemos !== lastInitialMemos) {
+        setLastInitialMemos(initialMemos);
+        setMemos(initialMemos);
+        setHasMore(initialMemos.length >= 20);
+        setOffset(initialMemos.length);
+    }
+
     const loadMore = useCallback(async () => {
         if (isLoading || !hasMore) return;
 
         setIsLoading(true);
         try {
-            const nextMemos = await getGalleryMemos(20, offset);
+            const [nextMemos] = await Promise.all([
+                getGalleryMemos(20, offset),
+                new Promise(resolve => setTimeout(resolve, 1000))
+            ]);
 
             if (nextMemos.length < 20) {
                 setHasMore(false);
@@ -81,7 +94,13 @@ export function GalleryPageContent({ memos: initialMemos = [] }: GalleryPageCont
                         <div ref={observerTarget} className="py-12 flex flex-col items-center justify-center min-h-[100px]">
                             {isLoading ? (
                                 <div className="flex items-center">
-                                    <HugeiconsIcon icon={Loader2} size={24} className="animate-spin text-muted-foreground/50" />
+                                    <motion.div
+                                        animate={{ rotate: 360 }}
+                                        transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                                        className="flex items-center justify-center"
+                                    >
+                                        <HugeiconsIcon icon={Loader2} size={24} className="text-muted-foreground/50 transform-gpu will-change-transform" />
+                                    </motion.div>
                                     <span className="ml-2 text-xs text-muted-foreground/60 tracking-widest uppercase">Fetching...</span>
                                 </div>
                             ) : !hasMore && memos.length > 0 ? (

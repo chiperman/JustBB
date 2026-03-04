@@ -69,6 +69,11 @@ BEGIN
     AND (filters->>'tag' IS NULL OR filters->>'tag' = ANY(m.tags))
     AND (filters->>'num' IS NULL OR m.memo_number = (filters->>'num')::int)
     AND (filters->>'date' IS NULL OR (m.created_at AT TIME ZONE 'Asia/Shanghai')::DATE = (filters->>'date')::DATE)
+    AND (filters->>'year' IS NULL OR EXTRACT(YEAR FROM m.created_at AT TIME ZONE 'Asia/Shanghai') = (filters->>'year')::int)
+    AND (filters->>'month' IS NULL OR EXTRACT(MONTH FROM m.created_at AT TIME ZONE 'Asia/Shanghai') = (filters->>'month')::int)
+    AND (filters->>'before_date' IS NULL OR m.created_at < (filters->>'before_date')::timestamptz)
+    AND (filters->>'after_date' IS NULL OR m.created_at > (filters->>'after_date')::timestamptz)
+    AND (filters->>'exclude_pinned' IS NULL OR m.is_pinned = FALSE)
   ORDER BY 
     CASE WHEN sort_order = 'oldest' THEN m.created_at END ASC,
     CASE WHEN sort_order = 'newest' OR sort_order IS NULL THEN m.is_pinned END DESC,

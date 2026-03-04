@@ -14,7 +14,6 @@ import {
     Loading01Icon as Loader2,
     ShieldCheck,
     UserCircleIcon as UserCircle,
-    CheckListIcon,
     FlashIcon
 } from '@hugeicons/core-free-icons';
 import { useRouter } from 'next/navigation';

@@ -11,11 +11,9 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
     Database01Icon,
-    UserGroupIcon,
     GlobalIcon,
     FlashIcon,
     ApiIcon,
-    CheckListIcon,
     ReloadIcon,
     Cancel01Icon as CloseIcon,
 } from '@hugeicons/core-free-icons';

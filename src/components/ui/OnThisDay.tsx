@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, memo } from 'react';
+import { useHasMounted } from '@/hooks/useHasMounted';
 import { getOnThisDayMemos } from '@/actions/history';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Clock01Icon as History } from '@hugeicons/core-free-icons';
@@ -18,12 +19,7 @@ export const OnThisDay = memo(function OnThisDay({ initialMemos }: { initialMemo
 
     const shouldReduceMotion = useReducedMotion();
 
-    const [hasMounted, setHasMounted] = useState(false);
-
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setHasMounted(true);
-    }, []);
+    const hasMounted = useHasMounted();
 
     useEffect(() => {
         if (!isInitialLoaded) {

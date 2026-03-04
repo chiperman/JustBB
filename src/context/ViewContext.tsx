@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useCallback, ReactNode, useSyncExternalStore } from 'react';
 
 interface ViewContextType {
     /** 当前视图路径 */
@@ -18,34 +18,35 @@ export function useView() {
     return useContext(ViewContext);
 }
 
+/**
+ * 自定义事件名称，用于在 pushState 后通知 useSyncExternalStore 更新
+ */
+const NAVIGATE_EVENT = 'view-context-navigate';
+
 export function ViewProvider({ children }: { children: ReactNode }) {
-    // 初始值全系统统一为 '/'，确保水合阶段 Server/Client 树完全一致
-    // 实际路径会在 mount 后的 useEffect 中同步
-    const [currentView, setCurrentView] = useState('/');
+    // 使用 useSyncExternalStore 同步浏览器地址栏状态
+    // 这是 React 18 推荐的同步外部状态（如 window.location）的方式
+    // 它可以天然避免 Hydration Mismatch 和 set-state-in-effect 警告
+    const currentView = useSyncExternalStore(
+        (callback) => {
+            window.addEventListener('popstate', callback);
+            window.addEventListener(NAVIGATE_EVENT, callback);
+            return () => {
+                window.removeEventListener('popstate', callback);
+                window.removeEventListener(NAVIGATE_EVENT, callback);
+            };
+        },
+        // Client getSnapshot
+        () => window.location.pathname,
+        // Server getSnapshot (Hydration initial value)
+        () => '/'
+    );
 
     const navigate = useCallback((path: string) => {
-        if (path === currentView) return;
+        if (path === window.location.pathname) return;
         window.history.pushState(null, '', path);
-        setCurrentView(path);
-    }, [currentView]);
-
-    // Hydrate 后同步：SSR 时 useState 初始化为 '/'，
-    // React 18 hydration 不会重新运行初始化函数，所以需要在 mount 后手动校正
-    useEffect(() => {
-        const actualPath = window.location.pathname;
-        if (actualPath !== currentView) {
-            setCurrentView(actualPath);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // 浏览器前进/后退按钮支持
-    useEffect(() => {
-        const handlePopState = () => {
-            setCurrentView(window.location.pathname);
-        };
-        window.addEventListener('popstate', handlePopState);
-        return () => window.removeEventListener('popstate', handlePopState);
+        // 使用自定义事件触发 useSyncExternalStore 的重新订阅逻辑
+        window.dispatchEvent(new Event(NAVIGATE_EVENT));
     }, []);
 
     return (

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getMemos } from '@/actions/fetchMemos';
 import { Memo } from '@/types/memo';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { Timeline, TimelineItem, TimelineLine, TimelineDot, TimelineHeading, TimelineContent } from '@/components/ui/timeline';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
@@ -98,13 +98,7 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
                         ) : (
                             <div className="flex flex-col gap-1.5">
                                 {memos.map((memo) => {
-                                    const dateObj = new Date(memo.created_at);
-                                    const timeStr = dateObj.toLocaleString('zh-CN', {
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        hour12: false,
-                                        timeZone: 'Asia/Shanghai'
-                                    });
+                                    const timeStr = formatDate(memo.created_at, 'HH:mm');
                                     const isActive = activeMemoId === memo.id;
 
                                     return (

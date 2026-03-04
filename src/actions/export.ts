@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { Memo } from '@/types/memo';
+import { formatDate } from '@/lib/utils';
 
 export async function exportAllMemos(): Promise<{ data: Memo[] | null; error: string | null }> {
     const supabase = await createClient();
@@ -30,7 +31,7 @@ export async function exportMemos(format: 'json' | 'markdown'): Promise<string> 
         return JSON.stringify(data, null, 2);
     } else {
         return data.map(memo => {
-            const date = new Date(memo.created_at).toLocaleString();
+            const date = formatDate(memo.created_at);
             return `---
 id: ${memo.id}
 date: ${date}

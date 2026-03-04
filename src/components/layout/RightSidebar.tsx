@@ -15,22 +15,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTimeline } from "@/context/TimelineContext";
 import { TimelineStats } from "@/types/stats";
+import { useHasMounted } from "@/hooks/useHasMounted";
 import { cn } from "@/lib/utils";
 
 export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
   const [allDays] = useState<Record<string, { count: number }>>(
     initialData?.days || {},
   );
-  const [isMounted, setIsMounted] = useState(false);
+  const isMounted = useHasMounted();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // 关键修复：确保在挂载后才开启客户端特有逻辑
-  useEffect(() => {
-    // eslint-disable-next-line
-    setIsMounted(true);
-  }, []);
 
   // Only display on homepage
   const isHomePage = pathname === "/";

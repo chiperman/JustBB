@@ -5,18 +5,12 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { MoonIcon as Moon, Sun01Icon as Sun, ComputerIcon as Monitor } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
-
 import { Skeleton } from './skeleton';
+import { useHasMounted } from '@/hooks/useHasMounted';
 
 export function ThemeToggle() {
     const { theme, setTheme } = useTheme();
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setMounted(true);
-    }, []);
+    const mounted = useHasMounted();
 
     if (!mounted) {
         return <Skeleton className="w-10 h-10 rounded-full" />;

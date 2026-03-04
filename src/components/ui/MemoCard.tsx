@@ -5,8 +5,9 @@ import { MemoActions } from './MemoActions';
 import { MemoEditor } from './MemoEditor';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { PinIcon, ChatLock01Icon as LockIcon, Link02Icon } from '@hugeicons/core-free-icons';
-import { memo, useState, useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { memo, useState, useEffect } from "react";
+import { useHasMounted } from "@/hooks/useHasMounted";
+import { cn, formatDate } from '@/lib/utils';
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -30,11 +31,7 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
     const { isSelectionMode, selectedIds, toggleId } = useSelection();
     const isSelected = selectedIds.has(memo.id);
     const [showBacklinks, setShowBacklinks] = useState(false);
-    const [hasMounted, setHasMounted] = useState(false);
-
-    useEffect(() => {
-        setHasMounted(true);
-    }, []);
+    const hasMounted = useHasMounted();
 
     // 当切换编辑模式时，重置可能导致图标常显的状态
     useEffect(() => {
@@ -126,21 +123,10 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                             </span>
                             <time className="text-xs text-muted-foreground font-sans">
                                 {hasMounted ? (
-                                    memo.is_locked ? (
-                                        `${new Date(memo.created_at).toLocaleString('zh-CN', {
-                                            year: 'numeric',
-                                            month: '2-digit',
-                                            day: '2-digit',
-                                            hour12: false
-                                        }).replace(/\//g, '-')} **:**`
-                                    ) : new Date(memo.created_at).toLocaleString('zh-CN', {
-                                        year: 'numeric',
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        hour12: false
-                                    }).replace(/\//g, '-')) : (
+                                    memo.is_locked
+                                        ? `${formatDate(memo.created_at, 'yyyy-MM-dd HH:mm')} **:**`
+                                        : formatDate(memo.created_at, 'yyyy-MM-dd HH:mm')
+                                ) : (
                                     '--:--'
                                 )}
                             </time>

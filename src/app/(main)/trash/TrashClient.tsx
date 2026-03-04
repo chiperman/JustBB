@@ -47,8 +47,7 @@ export default function TrashClient() {
         };
         load();
         return () => { isMounted = false; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [setCache]);
 
 
     const handleEmptyTrash = () => {

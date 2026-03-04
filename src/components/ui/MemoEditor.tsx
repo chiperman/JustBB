@@ -13,7 +13,7 @@ import {
     Minimize01Icon as Minimize2,
     Location04Icon,
 } from '@hugeicons/core-free-icons';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { Button } from './button';
 import { Input } from './input';
 import { updateMemoContent } from '@/actions/update';
@@ -953,15 +953,7 @@ export function MemoEditor({
                                                     <>
                                                         <div className="flex justify-between items-center w-full">
                                                             <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
-                                                                {item.created_at ? new Date(item.created_at).toLocaleString('zh-CN', {
-                                                                    year: 'numeric',
-                                                                    month: '2-digit',
-                                                                    day: '2-digit',
-                                                                    hour: '2-digit',
-                                                                    minute: '2-digit',
-                                                                    second: '2-digit',
-                                                                    hour12: false
-                                                                }).replace(/\//g, '-') : ''}
+                                                                {item.created_at ? formatDate(item.created_at, 'yyyy-MM-dd HH:mm:ss') : ''}
                                                             </span>
                                                             {item.memo_number !== undefined && (
                                                                 <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">

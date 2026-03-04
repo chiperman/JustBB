@@ -45,8 +45,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
             }
         })();
         return () => { cancelled = true; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [initialTags, setCache]);
 
     // Group tags by initial letter (A-Z)
     const groupedTags = tags.reduce((acc, tag) => {

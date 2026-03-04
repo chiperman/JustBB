@@ -18,6 +18,13 @@ export const OnThisDay = memo(function OnThisDay({ initialMemos }: { initialMemo
 
     const shouldReduceMotion = useReducedMotion();
 
+    const [hasMounted, setHasMounted] = useState(false);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setHasMounted(true);
+    }, []);
+
     useEffect(() => {
         if (!isInitialLoaded) {
             getOnThisDayMemos().then((data: Memo[]) => {
@@ -27,6 +34,7 @@ export const OnThisDay = memo(function OnThisDay({ initialMemos }: { initialMemo
         }
     }, [isInitialLoaded]);
 
+    if (!hasMounted) return null;
     if ((!isInitialLoaded && loading) || memos.length === 0) return null;
 
     return (

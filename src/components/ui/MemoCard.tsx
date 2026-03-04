@@ -30,6 +30,11 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
     const { isSelectionMode, selectedIds, toggleId } = useSelection();
     const isSelected = selectedIds.has(memo.id);
     const [showBacklinks, setShowBacklinks] = useState(false);
+    const [hasMounted, setHasMounted] = useState(false);
+
+    useEffect(() => {
+        setHasMounted(true);
+    }, []);
 
     // 当切换编辑模式时，重置可能导致图标常显的状态
     useEffect(() => {
@@ -81,7 +86,6 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                     <MemoEditor
                         mode="edit"
                         memo={memo}
-                        contextMemos={[memo]}
                         onCancel={() => onEditChange?.(false)}
                         onSuccess={(updatedMemo) => onEditChange?.(false, updatedMemo)}
                     />
@@ -121,21 +125,24 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
                                 #{memo.memo_number}
                             </span>
                             <time className="text-xs text-muted-foreground font-sans">
-                                {memo.is_locked ? (
-                                    `${new Date(memo.created_at).toLocaleString('zh-CN', {
+                                {hasMounted ? (
+                                    memo.is_locked ? (
+                                        `${new Date(memo.created_at).toLocaleString('zh-CN', {
+                                            year: 'numeric',
+                                            month: '2-digit',
+                                            day: '2-digit',
+                                            hour12: false
+                                        }).replace(/\//g, '-')} **:**`
+                                    ) : new Date(memo.created_at).toLocaleString('zh-CN', {
                                         year: 'numeric',
                                         month: '2-digit',
                                         day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
                                         hour12: false
-                                    }).replace(/\//g, '-')} **:**`
-                                ) : new Date(memo.created_at).toLocaleString('zh-CN', {
-                                    year: 'numeric',
-                                    month: '2-digit',
-                                    day: '2-digit',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    hour12: false
-                                }).replace(/\//g, '-')}
+                                    }).replace(/\//g, '-')) : (
+                                    '--:--'
+                                )}
                             </time>
                             {memo.is_pinned && <HugeiconsIcon icon={PinIcon} size={14} className="text-primary fill-current" aria-hidden="true" />}
                             {memo.is_private && <HugeiconsIcon icon={LockIcon} size={14} className="text-muted-foreground" aria-hidden="true" />}

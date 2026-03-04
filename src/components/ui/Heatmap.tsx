@@ -177,6 +177,26 @@ export const Heatmap = memo(function Heatmap() {
         </div>
     );
 
+    if (!isMounted) {
+        return (
+            <div className="w-full space-y-4 px-1 relative overflow-visible h-[240px] flex flex-col items-center justify-center bg-muted/5 rounded-card border border-border/50">
+                <div className="grid grid-cols-3 gap-8 w-full max-w-sm px-4">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="flex flex-col items-center gap-2">
+                            <div className="h-8 w-12 bg-muted/40 rounded animate-pulse" />
+                            <div className="h-3 w-8 bg-muted/20 rounded animate-pulse" />
+                        </div>
+                    ))}
+                </div>
+                <div className="mt-8 grid grid-rows-7 grid-flow-col gap-[4px] opacity-20">
+                    {Array.from({ length: 84 }).map((_, i) => (
+                        <div key={i} className="w-[14px] h-[14px] bg-muted rounded" />
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="w-full space-y-4 px-1 relative overflow-visible">
             {/* 顶栏统计 - 加载时不响应点击 */}

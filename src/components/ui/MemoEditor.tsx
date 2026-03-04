@@ -92,7 +92,6 @@ interface MemoEditorProps {
     isCollapsed?: boolean;
     hideFullscreen?: boolean;
     className?: string;
-    contextMemos?: Memo[];
 }
 
 // 辅助函数，将纯文本转换为 Tiptap 能识别的 HTML 格式
@@ -134,7 +133,6 @@ export function MemoEditor({
     isCollapsed: isPropCollapsed = false,
     hideFullscreen = false,
     className,
-    contextMemos,
 }: MemoEditorProps) {
     const { refreshTags } = useTags();
     const { refreshStats } = useStats();
@@ -1121,7 +1119,6 @@ export function MemoEditor({
                 <DialogContent
                     className="max-w-5xl h-[92vh] flex flex-col p-0 gap-0 overflow-hidden bg-background"
                     closeIcon={<HugeiconsIcon icon={Minimize2} size={16} />}
-                    animateOffset={false}
                 >
                     <DialogTitle className="sr-only">全屏编辑内容</DialogTitle>
                     <div className="flex-1 overflow-visible flex items-stretch justify-center px-6 py-10 bg-black/5">
@@ -1207,6 +1204,6 @@ export function MemoEditor({
                     editor.chain().focus().insertContent(locationText + ' ').run();
                 }}
             />
-        </motion.section>
+        </motion.section >
     );
 }

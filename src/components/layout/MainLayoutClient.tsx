@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { MemoEditor } from "@/components/ui/MemoEditor";
@@ -34,7 +34,7 @@ export function MainLayoutClient({
   const headerRef = useRef<HTMLDivElement>(null);
   const { getCache, setCache } = usePageDataCache();
 
-  const { setActiveId, setManualClick } = useTimeline();
+  const { /* setActiveId, setManualClick */ } = useTimeline();
 
   // 构建动态缓存键
   const cacheKey = useMemo(() => {
@@ -137,7 +137,6 @@ export function MainLayoutClient({
                 <MemoEditor
                   key="editor"
                   isCollapsed={isScrolled}
-                  contextMemos={memos}
                   className={isSelectionMode ? "hidden" : ""}
                 />
               )}

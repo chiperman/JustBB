@@ -23,6 +23,8 @@ import { TagSelectDialog } from './TagSelectDialog';
 import { useTags } from '@/context/TagsContext';
 import { useStats } from '@/context/StatsContext';
 
+import { useHasMounted } from '@/hooks/useHasMounted';
+
 export function SelectionToolbar() {
     const { currentView } = useView();
     const router = useRouter();
@@ -30,14 +32,14 @@ export function SelectionToolbar() {
     const { refreshTags } = useTags();
     const { refreshStats } = useStats();
     const { toast } = useToast();
-
     const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
     const [isPending, setIsPending] = useState(false);
+    const hasMounted = useHasMounted();
 
     const isTrashPage = currentView === '/trash';
     const hasSelection = selectedIds.size > 0;
 
-    if (!isSelectionMode) return null;
+    if (!hasMounted || !isSelectionMode) return null;
 
     const handleBatchDelete = async () => {
         if (!hasSelection) return;

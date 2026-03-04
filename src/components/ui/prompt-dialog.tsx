@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ViewIcon as Eye, ViewOffSlashIcon as EyeOff } from "@hugeicons/core-free-icons"
+import { useHasMounted } from '@/hooks/useHasMounted';
 
 interface PromptDialogProps {
     open: boolean
@@ -49,6 +50,8 @@ export function PromptDialog({
     const [secondValue, setSecondValue] = React.useState(secondDefaultValue)
     const [showPassword, setShowPassword] = React.useState(false)
 
+    const hasMounted = useHasMounted();
+
     React.useEffect(() => {
         if (open) {
             setValue(defaultValue)
@@ -56,6 +59,8 @@ export function PromptDialog({
             setShowPassword(false)
         }
     }, [open, defaultValue, secondDefaultValue])
+
+    if (!hasMounted) return null;
 
     const handleValueChange = (v: string) => {
         if (isPassword) {

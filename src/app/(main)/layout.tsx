@@ -7,6 +7,7 @@ import { getAllTags } from "@/actions/tags";
 import { getTimelineStats, getMemoStats } from "@/actions/stats";
 import { getOnThisDayMemos } from "@/actions/history";
 
+import { headers } from "next/headers";
 import { getCurrentUser } from "@/actions/auth";
 
 export default async function MainLayout({
@@ -14,6 +15,10 @@ export default async function MainLayout({
 }: {
     children: React.ReactNode;
 }) {
+    const headersList = await headers();
+    const url = headersList.get('x-url') || '';
+    const initialPath = url ? new URL(url).pathname : '/';
+
     // 在服务端预拉取数据
     const [initialTags, initialTimeline, initialStats, user, onThisDayMemos] = await Promise.all([
         getAllTags(),
@@ -24,7 +29,12 @@ export default async function MainLayout({
     ]);
 
     return (
-        <ClientLayoutProviders initialTags={initialTags} initialStats={initialStats} initialUser={user}>
+        <ClientLayoutProviders
+            initialTags={initialTags}
+            initialStats={initialStats}
+            initialUser={user}
+            initialPath={initialPath}
+        >
             <div className="flex h-screen w-full overflow-hidden">
                 <div className="flex w-full h-full">
                     {/* 左侧导航 - 移动端隐藏 */}

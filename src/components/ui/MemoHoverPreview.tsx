@@ -31,9 +31,14 @@ interface MemoHoverPreviewProps {
     children: React.ReactNode;
 }
 
+import { useHasMounted } from '@/hooks/useHasMounted';
+
 export function MemoHoverPreview({ memoNumber, children }: MemoHoverPreviewProps) {
     const [previewContent, setPreviewContent] = React.useState<string | null>(null);
     const [loading, setLoading] = React.useState(false);
+    const hasMounted = useHasMounted();
+
+    if (!hasMounted) return <>{children}</>;
 
     const handleOpenOption = async (open: boolean) => {
         if (open && !previewContent) {

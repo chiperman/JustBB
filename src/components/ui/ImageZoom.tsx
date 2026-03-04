@@ -187,9 +187,12 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
     );
 }
 
+import { useHasMounted } from '@/hooks/useHasMounted';
+
 export function ImageZoom({ src, alt, className, children }: ImageZoomProps) {
     const [isOpen, setIsOpen] = React.useState(false);
     const [openCount, setOpenCount] = React.useState(0);
+    const hasMounted = useHasMounted();
 
     const handleClose = () => setIsOpen(false);
 
@@ -197,6 +200,23 @@ export function ImageZoom({ src, alt, className, children }: ImageZoomProps) {
         setOpenCount(c => c + 1);
         setIsOpen(true);
     };
+
+    if (!hasMounted) {
+        return (
+            <div className={cn("relative overflow-hidden rounded-inner shadow-sm ring-1 ring-black/5", className)}>
+                {children || (
+                    <div className="relative aspect-square w-full">
+                        <Image
+                            src={src}
+                            alt={alt || "图片预览"}
+                            fill
+                            className="object-cover"
+                        />
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => {

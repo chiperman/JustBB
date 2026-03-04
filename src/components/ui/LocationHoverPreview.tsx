@@ -33,7 +33,11 @@ interface LocationHoverPreviewProps {
     children: React.ReactNode;
 }
 
-export function LocationHoverPreview({ name, lat, lng, children }: LocationHoverPreviewProps) {
+import { useHasMounted } from '@/hooks/useHasMounted';
+
+export function LocationHoverPreview({ lat, lng, name, children }: LocationHoverPreviewProps) {
+    const hasMounted = useHasMounted();
+
     const [MapView, setMapView] = React.useState<typeof MapViewType | null>(null);
 
     const handleOpenChange = React.useCallback(async (open: boolean) => {
@@ -43,6 +47,8 @@ export function LocationHoverPreview({ name, lat, lng, children }: LocationHover
             setMapView(() => mod.MapView);
         }
     }, [MapView]);
+
+    if (!hasMounted) return <>{children}</>;
 
     return (
         <HoverCard onOpenChange={handleOpenChange} openDelay={300} closeDelay={100}>

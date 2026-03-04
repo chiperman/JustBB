@@ -17,18 +17,20 @@ interface ClientLayoutProvidersProps {
     children: React.ReactNode;
     initialTags?: { tag_name: string; count: number }[];
     initialStats?: HeatmapStats | null;
+    initialPath?: string;
 }
 
 export function ClientLayoutProviders({
     children,
     initialTags = [],
     initialStats,
-    initialUser
+    initialUser,
+    initialPath = '/'
 }: ClientLayoutProvidersProps & { initialUser?: UserInfo | null }) {
     return (
         <UserProvider initialUser={initialUser}>
             <PageDataCacheProvider>
-                <ViewProvider>
+                <ViewProvider initialPath={initialPath}>
                     <StatsProvider initialData={initialStats}>
                         <LoginModeProvider>
                             <TagsProvider initialData={initialTags}>

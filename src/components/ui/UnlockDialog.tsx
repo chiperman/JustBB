@@ -14,6 +14,8 @@ import { unlockWithCode } from '@/actions/unlock';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { CircleLock01Icon as Lock } from '@hugeicons/core-free-icons';
 
+import { useHasMounted } from '@/hooks/useHasMounted';
+
 interface UnlockDialogProps {
     isOpen: boolean;
     onClose: () => void;
@@ -24,6 +26,9 @@ export function UnlockDialog({ isOpen, onClose, hint }: UnlockDialogProps) {
     const [code, setCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const hasMounted = useHasMounted();
+
+    if (!hasMounted) return null;
 
     const handleUnlock = async () => {
         setLoading(true);

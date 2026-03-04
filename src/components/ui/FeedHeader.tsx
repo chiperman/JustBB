@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import {
     DropdownMenu,
@@ -29,7 +30,7 @@ import {
     Sorting05Icon,
     Home01Icon,
 } from '@hugeicons/core-free-icons';
-
+import { useHasMounted } from '@/hooks/useHasMounted';
 
 export function FeedHeader() {
     const router = useRouter();
@@ -40,6 +41,7 @@ export function FeedHeader() {
 
     const { isSelectionMode, toggleSelectionMode, selectedIds } = useSelection();
     const { isAdmin } = useUser();
+    const hasMounted = useHasMounted();
 
     const handleSortChange = (value: string) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -110,50 +112,64 @@ export function FeedHeader() {
                         )}
                     </div>
 
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-md transition-all focus-visible:ring-0 active:scale-95"
-                                aria-label="更多选项"
-                            >
-                                <HugeiconsIcon
-                                    icon={ArrowDown01Icon}
-                                    size={14}
-                                    className="transition-transform group-data-[state=open]:rotate-180"
-                                />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" side="bottom" className="w-48">
-                            {isAdmin && (
-                                <>
-                                    <DropdownMenuItem
-                                        className="cursor-pointer gap-2"
-                                        onClick={() => toggleSelectionMode(true)}
-                                    >
-                                        <HugeiconsIcon icon={CheckmarkSquare02Icon} size={16} />
-                                        <span>选择笔记</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                </>
-                            )}
-                            <DropdownMenuSub>
-                                <DropdownMenuSubTrigger className="cursor-pointer gap-2">
-                                    <HugeiconsIcon icon={Sorting05Icon} size={16} />
-                                    <span>排序方式</span>
-                                </DropdownMenuSubTrigger>
-                                <DropdownMenuPortal>
-                                    <DropdownMenuSubContent>
-                                        <DropdownMenuRadioGroup value={currentSort} onValueChange={handleSortChange}>
-                                            <DropdownMenuRadioItem value="newest" className="cursor-pointer">创建时间，从新到旧</DropdownMenuRadioItem>
-                                            <DropdownMenuRadioItem value="oldest" className="cursor-pointer">创建时间，从旧到新</DropdownMenuRadioItem>
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuPortal>
-                            </DropdownMenuSub>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    {hasMounted ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-md transition-all focus-visible:ring-0 active:scale-95"
+                                    aria-label="更多选项"
+                                >
+                                    <HugeiconsIcon
+                                        icon={ArrowDown01Icon}
+                                        size={14}
+                                        className="transition-transform group-data-[state=open]:rotate-180"
+                                    />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" side="bottom" className="w-48">
+                                {isAdmin && (
+                                    <>
+                                        <DropdownMenuItem
+                                            className="cursor-pointer gap-2"
+                                            onClick={() => toggleSelectionMode(true)}
+                                        >
+                                            <HugeiconsIcon icon={CheckmarkSquare02Icon} size={16} />
+                                            <span>选择笔记</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                    </>
+                                )}
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger className="cursor-pointer gap-2">
+                                        <HugeiconsIcon icon={Sorting05Icon} size={16} />
+                                        <span>排序方式</span>
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuPortal>
+                                        <DropdownMenuSubContent>
+                                            <DropdownMenuRadioGroup value={currentSort} onValueChange={handleSortChange}>
+                                                <DropdownMenuRadioItem value="newest" className="cursor-pointer">创建时间，从新到旧</DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="oldest" className="cursor-pointer">创建时间，从旧到新</DropdownMenuRadioItem>
+                                            </DropdownMenuRadioGroup>
+                                        </DropdownMenuSubContent>
+                                    </DropdownMenuPortal>
+                                </DropdownMenuSub>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-md transition-all focus-visible:ring-0 active:scale-95 invisible"
+                            aria-label="更多选项"
+                        >
+                            <HugeiconsIcon
+                                icon={ArrowDown01Icon}
+                                size={14}
+                            />
+                        </Button>
+                    )}
                 </div>
             )}
 

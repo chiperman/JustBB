@@ -14,6 +14,7 @@ import { Search01Icon as SearchIcon, Loading03Icon as LoadingIcon, Location04Ico
 import { HugeiconsIcon } from '@hugeicons/react';
 import { useToast } from '@/hooks/use-toast';
 import type { MapView as MapViewType } from './MapView';
+import { useHasMounted } from '@/hooks/useHasMounted';
 
 interface NominatimResult {
     display_name: string;
@@ -30,17 +31,16 @@ interface LocationPickerDialogProps {
 
 export function LocationPickerDialog({ open, onOpenChange, onConfirm }: LocationPickerDialogProps) {
     const { toast } = useToast();
+    const hasMounted = useHasMounted();
     const [name, setName] = React.useState('');
     const [lat, setLat] = React.useState('');
     const [lng, setLng] = React.useState('');
-    const [isSearching, setIsSearching] = React.useState(false);
     const [suggestions, setSuggestions] = React.useState<NominatimResult[]>([]);
     const [showSuggestions, setShowSuggestions] = React.useState(false);
     const [isGettingLocation, setIsGettingLocation] = React.useState(false);
+    const [isSearching, setIsSearching] = React.useState(false);
     const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const isSelectingRef = React.useRef<boolean>(false);
-
-
 
     const [MapView, setMapView] = React.useState<typeof MapViewType | null>(null);
 
@@ -54,20 +54,34 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
     const isValid = name.trim() && lat.trim() && lng.trim() &&
         !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng));
 
-    const handleSearch = async (searchQuery: string) => {
-        if (!searchQuery.trim()) return;
+    const handleSearch = React.useCallback(async () => {
+        if (!name.trim()) {
+            setSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+
         setIsSearching(true);
+        setShowSuggestions(true);
+
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery.trim())}&limit=5`);
-            const data = await res.json();
+            const res = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}&limit=5`
+            );
+            const data: NominatimResult[] = await res.json();
             setSuggestions(data);
-            setShowSuggestions(true);
         } catch (error) {
             console.error('Nominatim search error:', error);
+            setSuggestions([]);
+            toast({
+                title: '搜索失败',
+                description: '无法连接到地图服务，请稍后再试。',
+                variant: 'destructive',
+            });
         } finally {
             setIsSearching(false);
         }
-    };
+    }, [name, toast]);
 
     // 自动防抖搜索 useEffect
     React.useEffect(() => {
@@ -82,14 +96,15 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
         }
 
         searchTimeoutRef.current = setTimeout(() => {
-            // 仅在建议面板原本应该是收起，或者正处于输入状态时触发
-            handleSearch(name);
+            handleSearch();
         }, 600);
 
         return () => {
             if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
         };
-    }, [name]);
+    }, [name, handleSearch]);
+
+    if (!hasMounted) return null;
 
     const handleGetCurrentLocation = () => {
         if (!navigator.geolocation) {
@@ -213,7 +228,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                                     if (e.key === 'Enter') {
                                         e.preventDefault();
                                         if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-                                        handleSearch(name);
+                                        handleSearch();
                                     }
                                 }}
                                 placeholder="输入地名搜索或直接输入"
@@ -225,7 +240,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                                 size="icon"
                                 onClick={() => {
                                     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-                                    handleSearch(name);
+                                    handleSearch();
                                 }}
                                 disabled={isSearching || !name.trim()}
                                 className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:bg-transparent hover:text-foreground active:scale-95 transition-all"
@@ -293,8 +308,6 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                         <div className="absolute top-2 left-2 z-[10] bg-background/90 backdrop-blur-md px-2 py-1 rounded text-[10px] text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-border/50">
                             滚轮缩放 • 可拖移点
                         </div>
-
-
 
                         {MapView ? (
                             <MapView

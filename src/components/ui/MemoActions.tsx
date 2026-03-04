@@ -29,6 +29,8 @@ import { useToast } from '@/hooks/use-toast';
 import { MemoShare } from './MemoShare';
 import { Memo } from '@/types/memo';
 
+import { useHasMounted } from '@/hooks/useHasMounted';
+
 interface MemoActionsProps {
     id: string;
     isDeleted: boolean;
@@ -60,6 +62,11 @@ export function MemoActions({
     const [showPublicConfirm, setShowPublicConfirm] = useState(false);
     const [showPrompt, setShowPrompt] = useState(false);
     const { toast } = useToast();
+    const hasMounted = useHasMounted();
+
+    if (!hasMounted) {
+        return <div className="w-8 h-8" />; // Placeholder for the button
+    }
 
     const handleDelete = async () => {
         setIsPending(true);

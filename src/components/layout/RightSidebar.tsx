@@ -340,7 +340,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
                                         handleDayClick(e, dateStr)
                                       }
                                     >
-                                      {day}号
+                                      {`${day}号`}
                                     </button>
                                   </div>
                                 );

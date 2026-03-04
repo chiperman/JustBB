@@ -21,11 +21,14 @@ interface TagSelectDialogProps {
     onConfirm: (tags: string[]) => void;
 }
 
+import { useHasMounted } from '@/hooks/useHasMounted';
+
 export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogProps) {
     const { tags: allTags, isLoading } = useTags();
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const hasMounted = useHasMounted();
 
     useEffect(() => {
         if (isOpen) {
@@ -33,6 +36,8 @@ export function TagSelectDialog({ isOpen, onClose, onConfirm }: TagSelectDialogP
             setInputValue('');
         }
     }, [isOpen]);
+
+    if (!hasMounted) return null;
 
     const toggleTag = (tagName: string) => {
         setSelectedTags(prev =>

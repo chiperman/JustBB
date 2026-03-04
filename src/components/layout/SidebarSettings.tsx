@@ -60,6 +60,11 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     const { setTheme } = useTheme();
     const router = useRouter();
     const [loggingOut, setLoggingOut] = React.useState(false);
+    const [hasMounted, setHasMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setHasMounted(true);
+    }, []);
 
     const handleLogout = async () => {
         setLoggingOut(true);
@@ -89,6 +94,30 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
         if (loading && !user) return <HugeiconsIcon icon={Loader2} size={16} className="animate-spin text-muted-foreground" />;
         return <HugeiconsIcon icon={UserCircle} size={16} className="text-muted-foreground" />;
     };
+
+    if (!hasMounted) {
+        return (
+            <Button
+                variant="ghost"
+                className={cn(
+                    "w-full flex items-center gap-3 h-9 p-2 hover:bg-accent hover:text-accent-foreground rounded-md transition-all focus-visible:ring-0 group/settings overflow-hidden active:scale-95",
+                    isCollapsed ? "justify-center" : "justify-start px-3"
+                )}
+                aria-label="账号与设置"
+            >
+                <div className="relative shrink-0">
+                    <HugeiconsIcon icon={Settings} size={16} className="text-muted-foreground transition-colors" />
+                </div>
+                {!isCollapsed && (
+                    <div className="flex flex-col items-start overflow-hidden whitespace-nowrap flex-1">
+                        <span className="text-[14px] font-normal text-foreground truncate w-full flex items-center gap-1">
+                            {user ? user.email : (loading ? '加载中...' : '未登录')}
+                        </span>
+                    </div>
+                )}
+            </Button>
+        );
+    }
 
     return (
         <>

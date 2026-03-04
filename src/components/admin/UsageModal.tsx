@@ -23,6 +23,7 @@ import { UsageProgress } from "./UsageProgress";
 import { getSupabaseUsageStats } from "@/actions/usage";
 import { motion, AnimatePresence } from 'framer-motion';
 import { DialogClose } from "@/components/ui/dialog";
+import { useHasMounted } from '@/hooks/useHasMounted';
 
 interface UsageModalProps {
     trigger: React.ReactNode;
@@ -48,6 +49,7 @@ export function UsageModal({ trigger }: UsageModalProps) {
     const [loading, setLoading] = React.useState(false);
     const [stats, setStats] = React.useState<SuccessStats | null>(null);
     const [error, setError] = React.useState<string | null>(null);
+    const hasMounted = useHasMounted();
 
     const fetchData = React.useCallback(async () => {
         setLoading(true);
@@ -82,6 +84,8 @@ export function UsageModal({ trigger }: UsageModalProps) {
             fetchData();
         }
     }, [isOpen, stats, fetchData]);
+
+    if (!hasMounted) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>

@@ -23,7 +23,7 @@ export function useView() {
  */
 const NAVIGATE_EVENT = 'view-context-navigate';
 
-export function ViewProvider({ children }: { children: ReactNode }) {
+export function ViewProvider({ children, initialPath = '/' }: { children: ReactNode; initialPath?: string }) {
     // 使用 useSyncExternalStore 同步浏览器地址栏状态
     // 这是 React 18 推荐的同步外部状态（如 window.location）的方式
     // 它可以天然避免 Hydration Mismatch 和 set-state-in-effect 警告
@@ -39,7 +39,7 @@ export function ViewProvider({ children }: { children: ReactNode }) {
         // Client getSnapshot
         () => window.location.pathname,
         // Server getSnapshot (Hydration initial value)
-        () => '/'
+        () => initialPath
     );
 
     const navigate = useCallback((path: string) => {

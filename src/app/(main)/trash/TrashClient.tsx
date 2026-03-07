@@ -1,7 +1,7 @@
 'use client';
 
-import { getTrashMemos } from "@/actions/fetchTrash";
-import { emptyTrash } from "@/actions/delete";
+import { getTrashMemos } from "@/actions/memos/trash";
+import { emptyTrash } from "@/actions/memos/trash";
 import { MemoCard } from "@/components/ui/MemoCard";
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Delete02Icon as Trash2, Archive02Icon as Archive, Loading01Icon as Loader2, SparklesIcon as Sparkles } from '@hugeicons/core-free-icons';

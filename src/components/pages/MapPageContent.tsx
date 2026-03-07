@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getMemosWithLocations } from '@/actions/locations';
+import { getMemosWithLocations } from '@/actions/memos/query';
 import { Location04Icon, Cancel01Icon as CloseIcon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { locationCache, type MapMarker } from '@/lib/location-cache';

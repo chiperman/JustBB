@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getSupabaseUsageStats } from './usage';
+import { getSupabaseUsageStats } from './memos/analytics';
 
 // Mock getSupabaseAdmin
 const mockSupabase = {
@@ -15,7 +15,7 @@ let mockEnv = {
 };
 
 vi.mock('@/lib/supabase', () => ({
-    getSupabaseAdmin: vi.fn(() => mockSupabase)
+    getAdminClient: vi.fn(() => mockSupabase)
 }));
 
 vi.mock('@/lib/env', () => ({

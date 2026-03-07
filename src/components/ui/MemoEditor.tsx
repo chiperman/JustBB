@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { createMemo } from '@/actions/memos';
+import { createMemo } from '@/actions/memos/mutate';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
     PinIcon as Pin,
@@ -16,8 +16,8 @@ import {
 import { cn, formatDate } from '@/lib/utils';
 import { Button } from './button';
 import { Input } from './input';
-import { updateMemoContent } from '@/actions/update';
-import { searchMemosForMention } from '@/actions/search';
+import { updateMemoContent } from '@/actions/memos/mutate';
+import { searchMemosForMention } from '@/actions/memos/query';
 import { useTags } from '@/context/TagsContext';
 import { useStats } from '@/context/StatsContext';
 import { memoCache } from '@/lib/memo-cache';

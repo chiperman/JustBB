@@ -1,4 +1,4 @@
-import { getGalleryMemos } from "@/actions/fetchMemos";
+import { getGalleryMemos } from "@/actions/memos/query";
 import { GalleryPageContent } from "@/components/pages/GalleryPageContent";
 
 export default async function GalleryPage() {

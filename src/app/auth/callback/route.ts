@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 // 使用我们定义的 server client
-import { createClient } from '@/utils/supabase/server'
+import { getClient } from '@/lib/supabase'
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     const next = searchParams.get('next') ?? '/'
 
     if (code) {
-        const supabase = await createClient()
+        const supabase = await getClient()
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
             // 登录成功后直接跳转，权限由中间件在路由级别控制

@@ -20,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { UsageProgress } from "./UsageProgress";
-import { getSupabaseUsageStats } from "@/actions/usage";
+import { getSupabaseUsageStats } from "@/actions/memos/analytics";
 import { motion, AnimatePresence } from 'framer-motion';
 import { DialogClose } from "@/components/ui/dialog";
 import { useHasMounted } from '@/hooks/useHasMounted';

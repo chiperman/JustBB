@@ -45,7 +45,7 @@ export function MemoHoverPreview({ memoNumber, children }: MemoHoverPreviewProps
             setLoading(true);
             try {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { getMemoByNumber } = (await import('@/actions/preview')) as any;
+                const { getMemoByNumber } = (await import('@/actions/memos/query')) as any;
                 const memo = await getMemoByNumber(parseInt(memoNumber));
                 if (memo) {
                     setPreviewContent(memo.content);

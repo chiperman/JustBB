@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { getMemoStats } from '@/actions/stats';
+import { getMemoStats } from '@/actions/memos/analytics';
 import { HeatmapStats } from '@/types/stats';
 
 interface StatsContextType {

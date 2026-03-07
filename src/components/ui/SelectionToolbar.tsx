@@ -17,8 +17,8 @@ import {
     AlertCircleIcon as ShieldAlert
 } from '@hugeicons/core-free-icons';
 import { useToast } from '@/hooks/use-toast';
-import { batchDeleteMemos, batchRestoreMemos, batchPermanentDeleteMemos } from '@/actions/delete';
-import { batchAddTagsToMemos } from '@/actions/update';
+import { batchDeleteMemos, batchRestoreMemos, batchPermanentDeleteMemos } from '@/actions/memos/trash';
+import { batchAddTagsToMemos } from '@/actions/memos/mutate';
 import { TagSelectDialog } from './TagSelectDialog';
 import { useTags } from '@/context/TagsContext';
 import { useStats } from '@/context/StatsContext';

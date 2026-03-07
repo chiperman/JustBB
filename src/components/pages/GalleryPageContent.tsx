@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { GalleryGrid } from '@/components/gallery/GalleryGrid';
 import { Memo } from '@/types/memo';
-import { getGalleryMemos } from '@/actions/fetchMemos';
+import { getGalleryMemos } from '@/actions/memos/query';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Loading03Icon as Loader2 } from '@hugeicons/core-free-icons';
 import { motion } from 'framer-motion';

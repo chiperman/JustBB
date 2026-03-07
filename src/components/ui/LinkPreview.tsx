@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { fetchLinkMetadata, LinkMetadata } from '@/actions/link-preview';
+import { fetchLinkMetadata, LinkMetadata } from '@/lib/link-preview';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Link01Icon } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';

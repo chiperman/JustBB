@@ -1,7 +1,6 @@
 'use server';
 
-import { createClient } from '@/utils/supabase/server';
-import { createAdminClient } from '@/utils/supabase/admin';
+import { getClient, getAdminClient } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Provider } from '@supabase/supabase-js';
@@ -15,7 +14,7 @@ export async function login(formData: FormData): Promise<{ success: boolean; err
         return { success: false, error: '请输入邮箱和密码' };
     }
 
-    const supabase = await createClient();
+    const supabase = await getClient();
 
     const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -44,7 +43,7 @@ export async function signup(formData: FormData): Promise<{ success: boolean; er
         return { success: false, error: '请输入邮箱和密码' };
     }
 
-    const supabase = await createClient();
+    const supabase = await getClient();
 
     const { error } = await supabase.auth.signUp({
         email,
@@ -65,7 +64,7 @@ export async function signup(formData: FormData): Promise<{ success: boolean; er
 }
 
 export async function verifyOtp(email: string, code: string): Promise<{ success: boolean; error?: string }> {
-    const supabase = await createClient();
+    const supabase = await getClient();
 
     const { error } = await supabase.auth.verifyOtp({
         email,
@@ -86,7 +85,7 @@ export async function verifyOtp(email: string, code: string): Promise<{ success:
 }
 
 export async function checkUserExists(email: string) {
-    const supabase = createAdminClient();
+    const supabase = getAdminClient();
     const { data, error } = await supabase.auth.admin.listUsers();
 
     if (error) {
@@ -131,7 +130,7 @@ export async function checkUserExists(email: string) {
 }
 
 export async function signInWithOAuth(provider: Provider) {
-    const supabase = await createClient();
+    const supabase = await getClient();
 
     // 获取当前请求的域名
     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -155,14 +154,14 @@ export async function signInWithOAuth(provider: Provider) {
 }
 
 export async function logout(): Promise<{ success: boolean }> {
-    const supabase = await createClient();
+    const supabase = await getClient();
     await supabase.auth.signOut();
     revalidatePath('/', 'layout');
     return { success: true };
 }
 
 export async function getCurrentUser() {
-    const supabase = await createClient();
+    const supabase = await getClient();
 
     const { data: { user }, error } = await supabase.auth.getUser();
 
@@ -188,7 +187,7 @@ export async function isAdmin() {
  * 发送密码重置邮件
  */
 export async function sendPasswordResetEmail(email: string): Promise<{ success: boolean; error?: string }> {
-    const supabase = await createClient();
+    const supabase = await getClient();
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password`,
@@ -206,7 +205,7 @@ export async function sendPasswordResetEmail(email: string): Promise<{ success: 
  * 更新密码
  */
 export async function updatePassword(password: string): Promise<{ success: boolean; error?: string }> {
-    const supabase = await createClient();
+    const supabase = await getClient();
 
     const { error } = await supabase.auth.updateUser({
         password: password,

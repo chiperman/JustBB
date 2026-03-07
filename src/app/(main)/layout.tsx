@@ -3,9 +3,9 @@ import { RightSidebar } from "@/components/layout/RightSidebar";
 import { Suspense } from "react";
 import { ClientLayoutProviders } from "@/components/layout/ClientLayoutProviders";
 import { ClientRouter } from "@/components/layout/ClientRouter";
-import { getAllTags } from "@/actions/tags";
-import { getTimelineStats, getMemoStats } from "@/actions/stats";
-import { getOnThisDayMemos } from "@/actions/history";
+import { getAllTags } from "@/actions/memos/analytics";
+import { getTimelineStats, getMemoStats } from "@/actions/memos/analytics";
+import { getOnThisDayMemos } from "@/actions/memos/query";
 
 import { headers } from "next/headers";
 import { getCurrentUser } from "@/actions/auth";

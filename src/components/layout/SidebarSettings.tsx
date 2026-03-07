@@ -76,7 +76,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
 
 
     const handleExport = async () => {
-        const { exportMemos } = await import('@/actions/export');
+        const { exportMemos } = await import('@/actions/memos/analytics');
         const data = await exportMemos('markdown');
         const blob = new Blob([data], { type: 'text/markdown' });
         const url = URL.createObjectURL(blob);

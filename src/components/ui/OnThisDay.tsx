@@ -2,7 +2,7 @@
 
 import { useEffect, useState, memo } from 'react';
 import { useHasMounted } from '@/hooks/useHasMounted';
-import { getOnThisDayMemos } from '@/actions/history';
+import { getOnThisDayMemos } from '@/actions/memos/query';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Clock01Icon as History } from '@hugeicons/core-free-icons';
 import { Memo } from '@/types/memo';

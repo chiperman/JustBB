@@ -6,7 +6,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Tag01Icon as TagIcon } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
 import { usePageDataCache } from '@/context/PageDataCache';
-import { getAllTags } from '@/actions/tags';
+import { getAllTags } from '@/actions/memos/analytics';
 
 interface TagData {
     tag_name: string;

@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getMemos } from './fetchMemos';
-import { createClient } from '@/utils/supabase/server';
+import { getMemos } from './memos/query';
+import { getClient } from '@/lib/supabase';
 
 // Mock Supabase client
-vi.mock('@/utils/supabase/server', () => ({
-    createClient: vi.fn(),
+vi.mock('@/lib/supabase', () => ({
+    getClient: vi.fn(),
+    getAdminClient: vi.fn(),
 }));
 
 describe('getMemos TDD', () => {
@@ -16,7 +17,7 @@ describe('getMemos TDD', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        vi.mocked(createClient).mockResolvedValue(mockSupabase as any);
+        vi.mocked(getClient).mockResolvedValue(mockSupabase as any);
     });
 
     it('should call search_memos_secure with default parameters', async () => {

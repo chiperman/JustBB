@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { exportAllMemos } from '@/actions/export';
+import { exportAllMemos } from '@/actions/memos/analytics';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { FileDownloadIcon as FileDown, File02Icon as FileJson, Loading01Icon as Loader2 } from '@hugeicons/core-free-icons';
 import { Memo } from '@/types/memo';

@@ -1,4 +1,4 @@
-import { getAllTags } from "@/actions/tags";
+import { getAllTags } from "@/actions/memos/analytics";
 import { TagsPageContent } from "@/components/pages/TagsPageContent";
 
 export default async function TagsPage() {

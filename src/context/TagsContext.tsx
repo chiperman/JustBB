@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { getAllTags as fetchAllTagsAction } from '@/actions/tags';
+import { getAllTags as fetchAllTagsAction } from '@/actions/memos/analytics';
 
 interface TagData {
     tag_name: string;

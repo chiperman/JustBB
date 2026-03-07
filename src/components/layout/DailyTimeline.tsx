@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getMemos } from '@/actions/fetchMemos';
+import { getMemos } from '@/actions/memos/query';
 import { Memo } from '@/types/memo';
 import { cn, formatDate } from '@/lib/utils';
 import { Timeline, TimelineItem, TimelineLine, TimelineDot, TimelineHeading, TimelineContent } from '@/components/ui/timeline';

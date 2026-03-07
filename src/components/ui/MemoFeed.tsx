@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, Variants, AnimatePresence } from "framer-motion";
 import { MemoCard } from "./MemoCard";
 import { MemoCardSkeleton } from "./MemoCardSkeleton";
-import { getMemos } from "@/actions/fetchMemos";
+import { getMemos } from "@/actions/memos/query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Loading03Icon as Loader2 } from "@hugeicons/core-free-icons";
 import { Memo } from "@/types/memo";

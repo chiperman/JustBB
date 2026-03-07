@@ -5,18 +5,9 @@ export async function middleware(request: NextRequest) {
     const requestHeaders = new Headers(request.headers)
     requestHeaders.set('x-url', request.url)
 
-    return await updateSession(new NextRequest(request.url, {
+    // 简化：利用 NextRequest 构造函数自动复制原始请求的所有属性并合并 headers
+    return await updateSession(new NextRequest(request, {
         headers: requestHeaders,
-        method: request.method,
-        body: request.body,
-        credentials: request.credentials,
-        cache: request.cache,
-        redirect: request.redirect,
-        referrer: request.referrer,
-        referrerPolicy: request.referrerPolicy,
-        integrity: request.integrity,
-        keepalive: request.keepalive,
-        mode: request.mode,
     }))
 }
 

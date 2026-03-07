@@ -52,8 +52,9 @@ export function MapPageContent() {
             if (result.success && isMounted) {
                 // 按坐标 [lat, lng] 聚合同一地点的多个记录
                 const groupedMap = new Map<string, MapMarker>();
+                const data = result.data || [];
 
-                result.data.forEach(memo => {
+                data.forEach(memo => {
                     memo.locations.forEach(loc => {
                         const key = `${loc.lat.toFixed(6)},${loc.lng.toFixed(6)}`;
 

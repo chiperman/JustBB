@@ -31,8 +31,10 @@ export function TagsProvider({
     const refreshTags = useCallback(async () => {
         setIsLoading(true);
         try {
-            const data = await fetchAllTagsAction();
-            setTags(data);
+            const res = await fetchAllTagsAction();
+            if (res.success && res.data) {
+                setTags(res.data);
+            }
         } catch (error) {
             console.error('Failed to refresh tags:', error);
         } finally {

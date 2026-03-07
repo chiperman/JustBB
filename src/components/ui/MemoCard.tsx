@@ -63,8 +63,8 @@ export const MemoCard = memo(function MemoCard({ memo, isAdmin = false, isEditin
             setShowBacklinks(true); // Open immediately to start height animation
             try {
                 const { getBacklinks } = await import('@/actions/memos/query');
-                const data = await getBacklinks(memo.memo_number);
-                setBacklinks(data);
+                const res = await getBacklinks(memo.memo_number);
+                setBacklinks(res.success ? (res.data || []) : []);
             } finally {
                 setLoadingBacklinks(false);
             }

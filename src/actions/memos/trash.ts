@@ -94,8 +94,8 @@ export async function emptyTrash(): Promise<ActionResponse> {
 /**
  * 获取回收站内容
  */
-export async function getTrashMemos(): Promise<Memo[]> {
-    if (!(await isAdmin())) return [];
+export async function getTrashMemos(): Promise<ActionResponse<Memo[]>> {
+    if (!(await isAdmin())) return { success: false, error: '权限不足', data: [] };
 
     const supabase = await getClient();
     const { data, error } = await supabase
@@ -106,13 +106,15 @@ export async function getTrashMemos(): Promise<Memo[]> {
 
     if (error) {
         console.error('Error fetching trash memos:', error);
-        return [];
+        return { success: false, error: '获取回收站数据失败', data: [] };
     }
 
-    return (data || []).map((memo) => ({
+    const memos = (data || []).map((memo) => ({
         ...memo,
         is_locked: memo.is_private
     })) as Memo[];
+
+    return { success: true, error: null, data: memos };
 }
 
 /**

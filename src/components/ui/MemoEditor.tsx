@@ -232,7 +232,8 @@ export function MemoEditor({
         const performFetch = async () => {
             setIsLoading(true);
             try {
-                const results = await searchMemosForMention(query, offset, 20);
+                const res = await searchMemosForMention(query, offset, 20);
+                const results = res.success ? (res.data || []) : [];
                 const items: SuggestionItem[] = results.map((m) => ({
                     id: m.id!,
                     label: `@${m.memo_number}`,

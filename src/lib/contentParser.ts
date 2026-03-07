@@ -22,7 +22,23 @@ export function parseContentTokens(text: string): ContentToken[] {
     // 这些可能是历史数据中混入的 React/DevTools 调试残留
     const cleanText = text.replace(/<\s*(?:a|span)\s+id=\d+\s*>/g, '').replace(/<\s*\/\s*(?:a|span)\s*>/g, '');
 
-    const regex = /```(\w*)\n?([\s\S]*?)```|📍\[([^\]]+)\]\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)|!\[.*?\]\((https?:\/\/[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+\.(?:jpg|jpeg|png|gif|webp))\)|(@\d+)|(?<=^|\s|[^a-zA-Z0-9])(#[\w\u4e00-\u9fa5]+)|([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)|(https?:\/\/[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+\.(?:jpg|jpeg|png|gif|webp))|(https?:\/\/[^\s\u4e00-\u9fa5<]+[^\s\u4e00-\u9fa5<.,;:!?'"”’。，！？）】])/g;
+    // ─── 子模式定义 ────────────────────────────
+    const PATTERNS = {
+        codeBlock: /```(\w*)\n?([\s\S]*?)```/,
+        location: /📍\[([^\]]+)\]\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)/,
+        mdImage: /!\[.*?\]\((https?:\/\/[a-zA-Z0-9\-._~:\/?#\[\]@!$&'()*+,;=%]+\.(?:jpg|jpeg|png|gif|webp))\)/,
+        ref: /(@\d+)/,
+        tag: /(?<=^|\s|[^a-zA-Z0-9])(#[\w\u4e00-\u9fa5]+)/,
+        email: /([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)/,
+        rawImage: /(https?:\/\/[a-zA-Z0-9\-._~:\/?#\[\]@!$&'()*+,;=%]+\.(?:jpg|jpeg|png|gif|webp))/,
+        link: /(https?:\/\/[^\s\u4e00-\u9fa5<]+[^\s\u4e00-\u9fa5<.,;:!?'"”’。，！？）】])/,
+    } as const;
+
+    // 按优先级组合（代码块 > 定位 > 图片 > 引用 > 标签 > 邮件 > 链接）
+    const regex = new RegExp(
+        Object.values(PATTERNS).map(p => p.source).join('|'),
+        'g'
+    );
 
     const tokens: ContentToken[] = [];
     let lastIndex = 0;

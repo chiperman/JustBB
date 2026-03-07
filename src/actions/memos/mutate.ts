@@ -7,7 +7,11 @@ import { getClient } from '@/lib/supabase';
 import { ActionResponse } from '../shared/types';
 import { Memo } from '@/types/memo';
 import { isAdmin } from '../auth';
-import { calculateWordCount, extractLocations, extractTags } from '@/lib/memos/parser';
+import { buildMemoPayload } from './helpers';
+import { calculateWordCount, extractLocations } from '@/lib/memos/parser';
+import { Database } from '@/types/database';
+
+type MemoInsert = Database['public']['Tables']['memos']['Insert'];
 
 /**
  * 创建笔记
@@ -19,26 +23,17 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
     if (!content) return { success: false, error: '内容不能为空' };
 
     const access_code = formData.get('access_code') as string || undefined;
+    const isPinned = formData.get('is_pinned') === 'true';
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const insertData: any = {
-        content,
-        tags: extractTags(content),
+    const insertData = {
+        ...buildMemoPayload(content, { isPinned }),
         is_private: formData.get('is_private') === 'true',
-        is_pinned: formData.get('is_pinned') === 'true',
         access_code_hint: formData.get('access_code_hint') as string || undefined,
-        word_count: calculateWordCount(content),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        locations: extractLocations(content) as any,
-    };
+    } satisfies Partial<MemoInsert> as MemoInsert;
 
     if (access_code) {
         const salt = await bcrypt.genSalt(10);
         insertData.access_code = await bcrypt.hash(access_code, salt);
-    }
-
-    if (insertData.is_pinned) {
-        insertData.pinned_at = new Date().toISOString();
     }
 
     const supabase = await getClient();
@@ -67,19 +62,15 @@ export async function updateMemoContent(formData: FormData): Promise<ActionRespo
     const content = formData.get('content') as string;
     if (!id || !content) return { success: false, error: '参数缺失' };
 
+    const isPinned = formData.get('is_pinned') === 'true';
+
     const supabase = await getClient();
     const { data, error } = await supabase
         .from('memos')
         .update({
-            content,
-            tags: extractTags(content),
+            ...buildMemoPayload(content, { isPinned }),
             is_private: formData.get('is_private') === 'true',
-            is_pinned: formData.get('is_pinned') === 'true',
-            pinned_at: formData.get('is_pinned') === 'true' ? new Date().toISOString() : null,
             updated_at: new Date().toISOString(),
-            word_count: calculateWordCount(content),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            locations: extractLocations(content) as any,
         })
         .eq('id', id)
         .select()
@@ -103,8 +94,7 @@ export async function updateMemoState(formData: FormData): Promise<ActionRespons
     const id = formData.get('id') as string;
     if (!id) return { success: false, error: 'ID 缺失' };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (formData.has('is_private')) updateData.is_private = formData.get('is_private') === 'true';
     if (formData.has('is_pinned')) {
         const isPinned = formData.get('is_pinned') === 'true';
@@ -167,8 +157,7 @@ export async function batchAddTagsToMemos(ids: string[], tags: string[]): Promis
                 content: newContent,
                 updated_at: new Date().toISOString(),
                 word_count: calculateWordCount(newContent),
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                locations: extractLocations(newContent) as any,
+                locations: extractLocations(newContent) as unknown as MemoInsert['locations'],
             })
             .eq('id', memo.id);
     }));
@@ -182,7 +171,7 @@ export async function batchAddTagsToMemos(ids: string[], tags: string[]): Promis
 /**
  * 使用口令解锁
  */
-export async function unlockWithCode(code: string): Promise<{ success: boolean; error?: string }> {
+export async function unlockWithCode(code: string): Promise<ActionResponse> {
     if (!code) return { success: false, error: '请输入口令' };
 
     const cookieStore = await cookies();
@@ -194,13 +183,15 @@ export async function unlockWithCode(code: string): Promise<{ success: boolean; 
         path: '/',
     });
 
-    return { success: true };
+    return { success: true, error: null };
 }
+
 
 /**
  * 清除解锁口令
  */
-export async function clearUnlockCode() {
+export async function clearUnlockCode(): Promise<ActionResponse> {
     const cookieStore = await cookies();
     cookieStore.delete('memo_access_code');
+    return { success: true, error: null };
 }

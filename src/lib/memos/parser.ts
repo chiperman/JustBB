@@ -3,11 +3,11 @@
  * 负责从 Markdown 文本中提取标签、定位信息及统计字数
  */
 
-export interface Location {
-    name: string;
-    lat: number;
-    lng: number;
-}
+import { Location } from '@/types/memo';
+
+// Re-export for convenience
+export type { Location };
+
 
 /**
  * 从文本中提取 #标签

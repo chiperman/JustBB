@@ -37,9 +37,9 @@ export default function TrashClient() {
         // stale-while-revalidate：缓存命中也后台刷新
         let isMounted = true;
         const load = async () => {
-            const data = await getTrashMemos();
+            const res = await getTrashMemos();
             if (isMounted) {
-                const result = data || [];
+                const result = res.success ? (res.data || []) : [];
                 setMemos(result);
                 setCache('/trash', { memos: result });
                 setIsLoading(false);

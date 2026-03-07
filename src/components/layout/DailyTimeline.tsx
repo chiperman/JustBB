@@ -21,8 +21,8 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
         const fetchDailyMemos = async () => {
             setLoading(true);
             try {
-                const data = await getMemos({ date, limit: 100 });
-                setMemos(data || []);
+                const res = await getMemos({ date, limit: 100 });
+                setMemos(res.data || []);
             } catch (error) {
                 console.error('Failed to fetch daily memos:', error);
             } finally {

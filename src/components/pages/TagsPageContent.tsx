@@ -37,8 +37,9 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
         // stale-while-revalidate：缓存命中也后台刷新
         let cancelled = false;
         (async () => {
-            const result = await getAllTags();
+            const res = await getAllTags();
             if (!cancelled) {
+                const result = res.success ? (res.data || []) : [];
                 setTags(result);
                 setCache('/tags', { tags: result });
                 setIsLoading(false);

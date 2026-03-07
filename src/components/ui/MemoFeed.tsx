@@ -79,7 +79,7 @@ export function MemoFeed({
         const unpinnedMemos = memos.filter(m => !m.is_pinned);
         const lastMemo = unpinnedMemos.length > 0 ? unpinnedMemos[unpinnedMemos.length - 1] : memos[memos.length - 1];
 
-        const [nextMemos] = await Promise.all([
+        const [nextMemosResponse] = await Promise.all([
           getMemos({
             ...searchParams,
             adminCode,
@@ -90,6 +90,8 @@ export function MemoFeed({
           }),
           new Promise((resolve) => setTimeout(resolve, 1000)), // 保证至少有 1000ms 的动画时间
         ]);
+
+        const nextMemos = nextMemosResponse.data || [];
 
         // Filter to ensure we do not exceed the context boundary
         let validNewMemos = nextMemos.filter(

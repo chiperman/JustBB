@@ -23,8 +23,8 @@ export const OnThisDay = memo(function OnThisDay({ initialMemos }: { initialMemo
 
     useEffect(() => {
         if (!isInitialLoaded) {
-            getOnThisDayMemos().then((data: Memo[]) => {
-                setMemos(data);
+            getOnThisDayMemos().then((res) => {
+                setMemos(res.success ? (res.data || []) : []);
                 setLoading(false);
             });
         }

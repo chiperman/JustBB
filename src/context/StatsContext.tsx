@@ -34,8 +34,10 @@ export function StatsProvider({
     const refreshStats = useCallback(async () => {
         setIsLoading(true);
         try {
-            const data = await getMemoStats();
-            setStats(data as HeatmapStats);
+            const res = await getMemoStats();
+            if (res.success && res.data) {
+                setStats(res.data);
+            }
         } catch (error) {
             console.error('Failed to refresh stats:', error);
         } finally {

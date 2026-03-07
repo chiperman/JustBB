@@ -30,8 +30,8 @@ export default async function MainLayout({
 
     return (
         <ClientLayoutProviders
-            initialTags={initialTags}
-            initialStats={initialStats}
+            initialTags={initialTags.success ? initialTags.data : []}
+            initialStats={initialStats.success ? initialStats.data : null}
             initialUser={user}
             initialPath={initialPath}
         >
@@ -40,7 +40,7 @@ export default async function MainLayout({
                     {/* 左侧导航 - 移动端隐藏 */}
                     <div className="hidden lg:block h-full overflow-y-auto scrollbar-hide border-r border-border/40">
                         <Suspense fallback={<div className="w-64" />}>
-                            <LeftSidebar initialOnThisDay={onThisDayMemos} />
+                            <LeftSidebar initialOnThisDay={onThisDayMemos.success ? onThisDayMemos.data : []} />
                         </Suspense>
                     </div>
 
@@ -53,7 +53,7 @@ export default async function MainLayout({
 
                     {/* 右侧边栏 - 内部自控显示状态 */}
                     <Suspense fallback={null}>
-                        <RightSidebar initialData={initialTimeline} />
+                        <RightSidebar initialData={initialTimeline.success ? initialTimeline.data : { days: {} }} />
                     </Suspense>
                 </div>
             </div>

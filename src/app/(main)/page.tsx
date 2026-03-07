@@ -30,24 +30,25 @@ export default async function MemoPage(props: {
     (async () => {
       // 核心重构：如果指定了具体日期，作为硬过滤 (Hard filter)，只查这一天的数据
       if (dateStr) {
-        return (await getMemos({ limit: 20, query, adminCode, tag: tagStr, num: numStr, date: dateStr, sort: sortStr })) || [];
+        return await getMemos({ limit: 20, query, adminCode, tag: tagStr, num: numStr, date: dateStr, sort: sortStr });
       }
 
       if (yearStr && monthStr) {
         const year = parseInt(yearStr);
         const month = parseInt(monthStr);
         if (!isNaN(year) && !isNaN(month)) {
-          return (await getArchivedMemos(year, month)) || [];
+          return await getArchivedMemos(year, month);
         }
-        return [];
+        return { success: true, data: [] as Memo[], error: null };
       } else {
-        return (await getMemos({ limit: 20, query, adminCode, tag: tagStr, num: numStr, date: dateStr, sort: sortStr })) || [];
+        return await getMemos({ limit: 20, query, adminCode, tag: tagStr, num: numStr, date: dateStr, sort: sortStr });
       }
     })(),
     checkIsAdmin()
   ]);
 
-  const memos = memosResult as Memo[];
+  const memos = (memosResult.success ? memosResult.data : []) as Memo[];
+
 
   const flattenedSearchParams = {
     query: Array.isArray(searchParams?.q) ? searchParams.q[0] : searchParams?.q,

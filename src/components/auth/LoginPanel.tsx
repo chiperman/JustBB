@@ -150,14 +150,14 @@ export function LoginPanel() {
         setError(null);
 
         try {
-            const { exists, error: checkError } = await checkUserExists(email);
-            if (checkError) {
-                setError(checkError);
+            const res = await checkUserExists(email);
+            if (!res.success) {
+                setError(res.error || '检查用户状态失败');
                 setLoading(false);
                 return;
             }
 
-            setAuthMode(exists ? 'LOGIN' : 'REGISTER');
+            setAuthMode(res.data?.exists ? 'LOGIN' : 'REGISTER');
             setStep('AUTH');
         } catch {
             setError('检查用户状态失败，请重试');

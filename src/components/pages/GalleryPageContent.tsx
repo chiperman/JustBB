@@ -33,10 +33,12 @@ export function GalleryPageContent({ memos: initialMemos = [] }: GalleryPageCont
 
         setIsLoading(true);
         try {
-            const [nextMemos] = await Promise.all([
+            const [res] = await Promise.all([
                 getGalleryMemos(20, offset),
                 new Promise(resolve => setTimeout(resolve, 1000))
             ]);
+
+            const nextMemos = res.success ? (res.data || []) : [];
 
             if (nextMemos.length < 20) {
                 setHasMore(false);

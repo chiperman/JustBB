@@ -7,15 +7,12 @@ import {
     PinIcon as Pin,
     LockIcon as Lock,
     CircleUnlock01Icon as LockOpen,
-    ViewIcon as Eye,
-    ViewOffSlashIcon as EyeOff,
     Maximize01Icon as Maximize2,
     Minimize01Icon as Minimize2,
     Location04Icon,
 } from '@hugeicons/core-free-icons';
-import { cn, formatDate } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { Button } from './button';
-import { Input } from './input';
 import { updateMemoContent } from '@/actions/memos/mutate';
 import { searchMemosForMention } from '@/actions/memos/query';
 import { useTags } from '@/context/TagsContext';
@@ -56,11 +53,11 @@ import { motion } from 'framer-motion';
 import {
     Dialog,
     DialogContent,
-    DialogHeader,
     DialogTitle,
-    DialogFooter,
 } from "@/components/ui/dialog";
 import { spring, ease, duration } from '@/lib/animation';
+import { EditorSuggestionMenu } from './EditorSuggestionMenu';
+import { MemoPrivateDialog } from './MemoPrivateDialog';
 
 
 // Helper to generate smart snippet (Simplified for index-only mode)
@@ -144,7 +141,6 @@ export function MemoEditor({
     const [isPinned, setIsPinned] = useState(memo?.is_pinned || false);
     const [error, setError] = useState<string | null>(null);
     const [showPrivateDialog, setShowPrivateDialog] = useState(false);
-    const [showAccessCode, setShowAccessCode] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
     const [showLocationPicker, setShowLocationPicker] = useState(false);
@@ -178,7 +174,6 @@ export function MemoEditor({
     const suggestionPropsRef = useRef<CustomSuggestionProps | null>(null);
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isFetchingMoreRef = useRef(false);
-    const hasMoreMentionsRef = useRef(true);
     const mentionQueryRef = useRef('');
 
     useEffect(() => {
@@ -188,10 +183,6 @@ export function MemoEditor({
     useEffect(() => {
         selectedIndexRef.current = selectedIndex;
     }, [selectedIndex]);
-
-    useEffect(() => {
-        hasMoreMentionsRef.current = hasMoreMentions;
-    }, [hasMoreMentions]);
 
     useEffect(() => {
         mentionQueryRef.current = mentionQuery;
@@ -206,16 +197,6 @@ export function MemoEditor({
         mentionQueryRef.current = mentionQuery;
     }, [mentionQuery]);
 
-    /**
-     * 实现双路径并行搜索：
-     * 1. 瞬间从本地索引匹配 memo_number
-     * 2. 防抖后发起远程 API 搜索内容
-     */
-    /**
-     * 实现纯远端分页搜索：
-     * 1. 如果 query 为空，拉取最新记录。
-     * 2. 如果有 query，防抖后拉取匹配记录。
-     */
     const fetchMentionSuggestions = async (query: string, offset: number = 0) => {
         setMentionQuery(query);
         const isInitial = offset === 0;
@@ -633,7 +614,6 @@ export function MemoEditor({
         }
     }, [isActuallyCollapsed]);
 
-    const suggestionListRef = useRef<HTMLUListElement>(null);
 
     const handleSuggestionScroll = async (e: React.UIEvent<HTMLUListElement>) => {
         const target = e.currentTarget;
@@ -644,19 +624,6 @@ export function MemoEditor({
             fetchMentionSuggestions(mentionQueryRef.current, suggestions.length);
         }
     };
-
-    useLayoutEffect(() => {
-        if (showSuggestions && suggestionListRef.current) {
-            const selectedItem = suggestionListRef.current.children[selectedIndex] as HTMLElement;
-            if (selectedItem) {
-                selectedItem.scrollIntoView({
-                    block: 'nearest',
-                    behavior: 'instant'
-                });
-            }
-        }
-    }, [selectedIndex, showSuggestions]);
-
 
 
     const handleSelectSuggestion = (item: SuggestionItem) => {
@@ -681,22 +648,6 @@ export function MemoEditor({
     };
 
 
-
-    const renderHighlightedText = (text: string, query: string) => {
-        if (!query.trim()) return text;
-        const parts = text.split(new RegExp(`(${query})`, 'gi'));
-        return (
-            <>
-                {parts.map((part, i) => (
-                    part.toLowerCase() === query.toLowerCase() ? (
-                        <mark key={i} className="bg-primary/20 text-primary px-0.5 rounded-md font-medium">{part}</mark>
-                    ) : (
-                        part
-                    )
-                ))}
-            </>
-        );
-    };
 
     const handleTogglePrivate = () => {
         const newState = !isPrivate;
@@ -898,100 +849,17 @@ export function MemoEditor({
                         )}
                     </motion.div>
 
-                    {showSuggestions && suggestionPosition && (suggestions.length > 0 || isLoading) && (
-                        <div
-                            className="absolute z-50 w-full max-w-[350px]"
-                            style={{
-                                top: suggestionPosition.top,
-                                left: suggestionPosition.left,
-                            }}
-                            onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                            }}
-                        >
-                            <div className="bg-background border border-border rounded-md shadow-xl overflow-hidden flex flex-col max-h-[450px]">
-                                {isLoading && suggestions.length === 0 ? (
-                                    <div className="px-3 py-10 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight flex flex-col items-center gap-2">
-                                        <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                                        正在拉取建议...
-                                    </div>
-                                ) : null}
-                                {suggestions.length > 0 ? (
-                                    <ul
-                                        ref={suggestionListRef}
-                                        className="divide-y divide-border/40 overflow-y-auto scrollbar-hover flex-1 min-h-0"
-                                        onScroll={handleSuggestionScroll}
-                                    >
-                                        {suggestions.map((item, index) => (
-                                            <li
-                                                key={item.id}
-                                                onClick={() => handleSelectSuggestion(item)}
-                                                className={cn(
-                                                    "flex flex-col gap-1.5 px-3 py-2.5 cursor-pointer outline-none transition-colors relative",
-                                                    index === selectedIndex
-                                                        ? "bg-accent text-accent-foreground"
-                                                        : "hover:bg-accent/50 text-foreground"
-                                                )}
-                                            >
-                                                {item.label.startsWith('#') ? (
-                                                    <div className="flex justify-between items-center w-full">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-xs text-foreground/80">{item.label}</span>
-                                                            {item.subLabel && (
-                                                                <span className="text-[10px] text-muted-foreground/60 italic font-mono tracking-tight">
-                                                                    {item.subLabel}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        {item.count !== undefined && (
-                                                            <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">
-                                                                {item.count}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <>
-                                                        <div className="flex justify-between items-center w-full">
-                                                            <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
-                                                                {item.created_at ? formatDate(item.created_at, 'yyyy-MM-dd HH:mm:ss') : ''}
-                                                            </span>
-                                                            {item.memo_number !== undefined && (
-                                                                <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">
-                                                                    #{item.memo_number}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <div className="text-xs leading-relaxed text-foreground/80 break-words pr-2">
-                                                            {item.subLabel && renderHighlightedText(item.subLabel, mentionQuery)}
-                                                        </div>
-                                                    </>
-                                                )}
-                                            </li>
-                                        ))}
-
-                                        {(isLoading || hasMoreMentions) && (
-                                            <div className="px-3 py-3 border-t border-border/10">
-                                                {isLoading ? (
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <div className="w-3 h-3 border border-primary/30 border-t-primary rounded-full animate-spin" />
-                                                        <span className="text-[10px] text-muted-foreground/50 font-mono uppercase tracking-widest">
-                                                            Loading...
-                                                        </span>
-                                                    </div>
-                                                ) : hasMoreMentions && (
-                                                    <div className="text-center">
-                                                        <span className="text-[10px] text-muted-foreground/20 font-mono uppercase tracking-widest">
-                                                            Scroll for more
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </ul>
-                                ) : null}
-                            </div>
-                        </div>
+                    {showSuggestions && (
+                        <EditorSuggestionMenu
+                            suggestions={suggestions}
+                            selectedIndex={selectedIndex}
+                            isLoading={isLoading}
+                            hasMore={hasMoreMentions}
+                            query={mentionQuery}
+                            position={suggestionPosition}
+                            onSelect={handleSelectSuggestion}
+                            onScroll={handleSuggestionScroll}
+                        />
                     )}
                 </div>
 
@@ -1135,59 +1003,15 @@ export function MemoEditor({
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={showPrivateDialog} onOpenChange={setShowPrivateDialog}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>设置访问口令</DialogTitle>
-                    </DialogHeader>
-                    <div className="flex flex-col gap-4 py-4">
-                        <div className="space-y-2">
-                            <label htmlFor="access-code" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 after:content-['*'] after:ml-0.5 after:text-red-500">
-                                访问口令
-                            </label>
-                            <div className="relative">
-                                <Input
-                                    id="access-code"
-                                    type={showAccessCode ? "text" : "password"}
-                                    value={accessCode}
-                                    onChange={(e) => setAccessCode(e.target.value)}
-                                    placeholder="请输入访问口令"
-                                    className="pr-10"
-                                />
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setShowAccessCode(!showAccessCode)}
-                                    className="absolute right-0 top-0 h-full"
-                                    aria-label={showAccessCode ? "隐藏口令" : "显示口令"}
-                                >
-                                    {showAccessCode ? (
-                                        <HugeiconsIcon icon={EyeOff} size={16} className="text-muted-foreground" aria-hidden="true" />
-                                    ) : (
-                                        <HugeiconsIcon icon={Eye} size={16} className="text-muted-foreground" aria-hidden="true" />
-                                    )}
-                                </Button>
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <label htmlFor="access-hint" className="text-sm font-medium leading-none">
-                                口令提示 (选填)
-                            </label>
-                            <Input
-                                id="access-hint"
-                                value={accessHint}
-                                onChange={(e) => setAccessHint(e.target.value)}
-                                placeholder="例如：我的生日"
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setShowPrivateDialog(false)}>取消</Button>
-                        <Button onClick={performPublish} disabled={!accessCode}>发布</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <MemoPrivateDialog
+                open={showPrivateDialog}
+                onOpenChange={setShowPrivateDialog}
+                accessCode={accessCode}
+                setAccessCode={setAccessCode}
+                accessHint={accessHint}
+                setAccessHint={setAccessHint}
+                onConfirm={performPublish}
+            />
 
             <LocationPickerDialog
                 open={showLocationPicker}

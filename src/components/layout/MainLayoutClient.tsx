@@ -8,8 +8,8 @@ import { MemoFeed } from "@/components/ui/MemoFeed";
 import { FeedHeader } from "@/components/ui/FeedHeader";
 import { MemoCardSkeleton } from "@/components/ui/MemoCardSkeleton";
 import { Memo } from "@/types/memo";
+import { useSelection } from "@/context/UIContext";
 import { useUser } from "@/context/UserContext";
-import { useSelection } from "@/context/SelectionContext";
 import { usePageDataCache } from "@/context/PageDataCache";
 
 interface MainLayoutClientProps {

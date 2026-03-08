@@ -1,9 +1,15 @@
 'use client';
 
 import { createContext, useContext, useCallback, useRef, ReactNode } from 'react';
+import { Memo } from '@/types/memo';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type PageData = Record<string, any>;
+interface PageData {
+    memos?: Memo[];
+    total?: number;
+    tags?: { tag_name: string; count: number }[];
+    searchParams?: Record<string, string | string[] | undefined>;
+    [key: string]: unknown;
+}
 
 interface PageDataCacheContextType {
     /** 获取指定路径的缓存数据 */

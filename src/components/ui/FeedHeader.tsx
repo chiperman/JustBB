@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import {
     DropdownMenu,
@@ -19,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { SearchInput } from './SearchInput';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useSelection } from '@/context/SelectionContext';
+import { useSelection } from '@/context/UIContext';
 import { useUser } from '@/context/UserContext';
 import {
     HugeiconsIcon,

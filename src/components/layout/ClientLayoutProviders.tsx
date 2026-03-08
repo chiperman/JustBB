@@ -7,7 +7,6 @@ import { MobileLayoutWrapper } from "@/components/layout/MobileLayoutWrapper";
 import { TagsProvider } from "@/context/TagsContext";
 import { StatsProvider } from "@/context/StatsContext";
 import { HeatmapStats } from "@/types/stats";
-import { SelectionProvider } from "@/context/SelectionContext";
 import { SelectionToolbar } from "@/components/ui/SelectionToolbar";
 import { ViewProvider } from "@/context/ViewContext";
 import { PageDataCacheProvider } from "@/context/PageDataCache";
@@ -33,14 +32,12 @@ export function ClientLayoutProviders({
                     <StatsProvider initialData={initialStats}>
                         <UIProvider>
                             <TagsProvider initialData={initialTags}>
-                                <SelectionProvider>
-                                    <LoginTransitionWrapper>
-                                        <MobileLayoutWrapper>
-                                            {children}
-                                            <SelectionToolbar />
-                                        </MobileLayoutWrapper>
-                                    </LoginTransitionWrapper>
-                                </SelectionProvider>
+                                <LoginTransitionWrapper>
+                                    <MobileLayoutWrapper>
+                                        {children}
+                                        <SelectionToolbar />
+                                    </MobileLayoutWrapper>
+                                </LoginTransitionWrapper>
                             </TagsProvider>
                         </UIProvider>
                     </StatsProvider>

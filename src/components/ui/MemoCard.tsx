@@ -11,7 +11,7 @@ import { cn, formatDate } from '@/lib/utils';
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useSelection } from '@/context/SelectionContext';
+import { useSelection } from '@/context/UIContext';
 
 import { Memo } from '@/types/memo';
 import { UnlockDialog } from './UnlockDialog';

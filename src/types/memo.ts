@@ -1,27 +1,37 @@
-export interface Location {
+import { Database } from './database';
+
+export type Location = {
     name: string;
     lat: number;
     lng: number;
-}
+};
 
-export interface Memo {
-    id: string;
-    memo_number: number; // 全局自增编号，用于 @引用
-    content: string;     // 包含 Markdown、#标签、@编号、📍定位 的原文本
-    created_at: string;
-    tags: string[] | null; // 从正文正则提取出的标签数组
-    is_private: boolean;
-    is_pinned: boolean;
-    pinned_at?: string | null;
+// 从数据库生成的类型中提取 Row 类型
+type DBRow = Database['public']['Tables']['memos']['Row'];
+
+/**
+ * 业务层 Memo 类型
+ * 
+ * 我们基于数据库生成的 Row 类型进行扩展，
+ * 并对部分 JSON 类型进行具体化定义（如 locations）。
+ */
+export interface Memo extends Omit<DBRow, 'locations'> {
+    /** 
+     * 从正文解析出的定位数组 
+     * 在数据库中以 JSON 存储，业务层需要明确其结构
+     */
+    locations?: Location[] | null;
+    
+    /**
+     * 临时状态：是否已被锁定（用于口令检查逻辑）
+     * 注意：这个属性不在数据库中存储，但在 search_memos_secure 等 RPC 中返回
+     */
     is_locked?: boolean;
-    access_code_hint?: string | null;
-    updated_at?: string;
-    deleted_at?: string | null;
-    word_count?: number;
-    access_code?: string | null;
-    locations?: Location[] | null; // 从正文解析出的定位数组
 }
 
+/**
+ * 标签统计类型
+ */
 export interface TagStat {
     tag_name: string;
     count: number;

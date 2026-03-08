@@ -10,6 +10,7 @@ import { isAdmin } from '../auth';
 import { buildMemoPayload } from './helpers';
 import { calculateWordCount, extractLocations } from '@/lib/memos/parser';
 import { Database } from '@/types/database';
+import { createMemoSchema, updateMemoContentSchema, updateMemoStateSchema, batchAddTagsSchema } from '@/lib/memos/schemas';
 
 type MemoInsert = Database['public']['Tables']['memos']['Insert'];
 
@@ -19,17 +20,26 @@ type MemoInsert = Database['public']['Tables']['memos']['Insert'];
 export async function createMemo(formData: FormData): Promise<ActionResponse<Memo>> {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
 
-    const content = formData.get('content') as string;
-    if (!content) return { success: false, error: '内容不能为空' };
-
-    const access_code = formData.get('access_code') as string || undefined;
-    const isPinned = formData.get('is_pinned') === 'true';
-
-    const insertData = {
-        ...buildMemoPayload(content, { isPinned }),
+    // 数据提取与校验
+    const validation = createMemoSchema.safeParse({
+        content: formData.get('content'),
+        is_pinned: formData.get('is_pinned') === 'true',
         is_private: formData.get('is_private') === 'true',
-        access_code_hint: formData.get('access_code_hint') as string || undefined,
-    } satisfies Partial<MemoInsert> as MemoInsert;
+        access_code_hint: formData.get('access_code_hint'),
+        access_code: formData.get('access_code'),
+    });
+
+    if (!validation.success) {
+        return { success: false, error: validation.error.issues[0].message };
+    }
+
+    const { content, is_pinned, is_private, access_code_hint, access_code } = validation.data;
+
+    const insertData: MemoInsert = {
+        ...buildMemoPayload(content, { isPinned: is_pinned }),
+        is_private,
+        access_code_hint,
+    };
 
     if (access_code) {
         const salt = await bcrypt.genSalt(10);
@@ -58,18 +68,28 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
 export async function updateMemoContent(formData: FormData): Promise<ActionResponse<Memo>> {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
 
-    const id = formData.get('id') as string;
-    const content = formData.get('content') as string;
-    if (!id || !content) return { success: false, error: '参数缺失' };
+    // 数据提取与校验
+    const validation = updateMemoContentSchema.safeParse({
+        id: formData.get('id'),
+        content: formData.get('content'),
+        is_pinned: formData.get('is_pinned') === 'true',
+        is_private: formData.get('is_private') === 'true',
+        access_code_hint: formData.get('access_code_hint'),
+    });
 
-    const isPinned = formData.get('is_pinned') === 'true';
+    if (!validation.success) {
+        return { success: false, error: validation.error.issues[0].message };
+    }
+
+    const { id, content, is_pinned, is_private, access_code_hint } = validation.data;
 
     const supabase = await getClient();
     const { data, error } = await supabase
         .from('memos')
         .update({
-            ...buildMemoPayload(content, { isPinned }),
-            is_private: formData.get('is_private') === 'true',
+            ...buildMemoPayload(content, { isPinned: is_pinned }),
+            is_private,
+            access_code_hint,
             updated_at: new Date().toISOString(),
         })
         .eq('id', id)
@@ -91,19 +111,29 @@ export async function updateMemoContent(formData: FormData): Promise<ActionRespo
 export async function updateMemoState(formData: FormData): Promise<ActionResponse> {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
 
-    const id = formData.get('id') as string;
-    if (!id) return { success: false, error: 'ID 缺失' };
+    // 数据提取与校验
+    const validation = updateMemoStateSchema.safeParse({
+        id: formData.get('id'),
+        is_pinned: formData.has('is_pinned') ? formData.get('is_pinned') === 'true' : undefined,
+        is_private: formData.has('is_private') ? formData.get('is_private') === 'true' : undefined,
+        access_code_hint: formData.has('access_code_hint') ? formData.get('access_code_hint') : undefined,
+        access_code: formData.get('access_code'),
+    });
+
+    if (!validation.success) {
+        return { success: false, error: validation.error.issues[0].message };
+    }
+
+    const { id, is_pinned, is_private, access_code_hint, access_code } = validation.data;
 
     const updateData: Record<string, unknown> = {};
-    if (formData.has('is_private')) updateData.is_private = formData.get('is_private') === 'true';
-    if (formData.has('is_pinned')) {
-        const isPinned = formData.get('is_pinned') === 'true';
-        updateData.is_pinned = isPinned;
-        updateData.pinned_at = isPinned ? new Date().toISOString() : null;
+    if (is_private !== undefined) updateData.is_private = is_private;
+    if (is_pinned !== undefined) {
+        updateData.is_pinned = is_pinned;
+        updateData.pinned_at = is_pinned ? new Date().toISOString() : null;
     }
-    if (formData.has('access_code_hint')) updateData.access_code_hint = formData.get('access_code_hint');
+    if (access_code_hint !== undefined) updateData.access_code_hint = access_code_hint;
 
-    const access_code = formData.get('access_code') as string | null;
     if (access_code) {
         const salt = await bcrypt.genSalt(10);
         updateData.access_code = await bcrypt.hash(access_code, salt);
@@ -129,22 +159,29 @@ export async function updateMemoState(formData: FormData): Promise<ActionRespons
  */
 export async function batchAddTagsToMemos(ids: string[], tags: string[]): Promise<ActionResponse> {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
-    if (ids.length === 0 || tags.length === 0) return { success: true, error: null };
+
+    // 数据校验
+    const validation = batchAddTagsSchema.safeParse({ ids, tags });
+    if (!validation.success) {
+        return { success: false, error: validation.error.issues[0].message };
+    }
+
+    const { ids: validIds, tags: validTags } = validation.data;
 
     const supabase = await getClient();
     const { data: memos, error: fetchError } = await supabase
         .from('memos')
         .select('id, tags, content')
-        .in('id', ids);
+        .in('id', validIds);
 
     if (fetchError) return { success: false, error: '获取笔记失败' };
 
     const results = await Promise.all(memos.map(memo => {
         const existingTags = memo.tags || [];
-        const combinedTags = Array.from(new Set([...existingTags, ...tags]));
+        const combinedTags = Array.from(new Set([...existingTags, ...validTags]));
 
         let newContent = memo.content || '';
-        const tagsToAppend = tags.filter(tag => !new RegExp(`#${tag}\\b`).test(newContent));
+        const tagsToAppend = validTags.filter(tag => !new RegExp(`#${tag}\\b`).test(newContent));
 
         if (tagsToAppend.length > 0) {
             newContent = newContent.trimEnd() + ' ' + tagsToAppend.map(t => `#${t}`).join(' ');

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSelection } from '@/context/SelectionContext';
+import { useSelection } from '@/context/UIContext';
 import { useRouter } from 'next/navigation';
 import { useView } from '@/context/ViewContext';
 import { motion, AnimatePresence } from 'framer-motion';

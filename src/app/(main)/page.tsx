@@ -28,7 +28,7 @@ export default async function MemoPage(props: {
     (async () => {
       // 核心重构：如果指定了具体日期，作为硬过滤 (Hard filter)，只查这一天的数据
       if (dateStr) {
-        return await getMemos({ limit: 20, query, adminCode, tag: tagStr, num: numStr, date: dateStr, sort: sortStr });
+        return await getMemos({ limit: 20, query, adminCode, tag: tagStr, num: numStr, date: dateStr, sort: sortStr === 'oldest' ? 'oldest' : 'newest' });
       }
 
       if (yearStr && monthStr) {
@@ -39,7 +39,7 @@ export default async function MemoPage(props: {
         }
         return { success: true, data: [] as Memo[], error: null };
       } else {
-        return await getMemos({ limit: 20, query, adminCode, tag: tagStr, num: numStr, date: dateStr, sort: sortStr });
+        return await getMemos({ limit: 20, query, adminCode, tag: tagStr, num: numStr, date: dateStr, sort: sortStr === 'oldest' ? 'oldest' : 'newest' });
       }
     })(),
     checkIsAdmin()
@@ -55,7 +55,7 @@ export default async function MemoPage(props: {
     month: monthStr,
     date: dateStr,
     code: urlCode,
-    sort: sortStr
+    sort: sortStr === 'oldest' ? 'oldest' : 'newest'
   };
 
   const cacheKey = generateCacheKey(flattenedSearchParams);

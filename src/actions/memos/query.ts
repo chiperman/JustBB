@@ -5,45 +5,33 @@ import { Json } from '@/types/database';
 import { Memo, Location } from '@/types/memo';
 import { cookies } from 'next/headers';
 import { ActionResponse } from '../shared/types';
-
-/**
- * 基础查询接口参数
- */
-export interface FetchMemosParams {
-    query?: string;
-    adminCode?: string;
-    limit?: number;
-    offset?: number;
-    tag?: string;
-    num?: string;
-    date?: string;
-    year?: string;
-    month?: string;
-    sort?: string;
-    after_date?: string;
-    before_date?: string;
-    excludePinned?: boolean;
-}
+import { fetchMemosSchema, FetchMemosInput } from '@/lib/memos/schemas';
 
 /**
  * 核心安全查询方法 (RPC 驱动)
+ * 现在支持更严格的类型校验
  */
-export async function getMemos(params: FetchMemosParams = {}): Promise<ActionResponse<Memo[]>> {
+export async function getMemos(params: Partial<FetchMemosInput> = {}): Promise<ActionResponse<Memo[]>> {
+    const validation = fetchMemosSchema.safeParse(params);
+    if (!validation.success) {
+        return { success: false, error: '查询参数无效', data: [] };
+    }
+
     const {
-        query = "",
-        adminCode = "",
-        limit = 20,
-        offset = 0,
-        tag = null,
-        num = null,
-        date = null,
-        year = null,
-        month = null,
-        sort = "newest",
-        after_date = null,
-        before_date = null,
-        excludePinned = false,
-    } = params;
+        query,
+        adminCode,
+        limit,
+        offset,
+        tag,
+        num,
+        date,
+        year,
+        month,
+        sort,
+        after_date,
+        before_date,
+        excludePinned,
+    } = validation.data;
 
     const supabase = await getClient();
     const filters: Record<string, unknown> = {};
@@ -71,6 +59,7 @@ export async function getMemos(params: FetchMemosParams = {}): Promise<ActionRes
         return { success: false, error: '查询失败', data: [] };
     }
 
+    // 此时 data 已经是正确格式，由于 Memo 继承自数据库 Row，类型更安全
     return { success: true, error: null, data: (data as unknown as Memo[]) || [] };
 }
 
@@ -217,9 +206,10 @@ export async function getBacklinks(memoNumber: number): Promise<ActionResponse<M
 
     if (error || !data) return { success: false, error: error?.message || '未知错误', data: [] };
 
-    const filteredMemos = (data as Memo[]).filter(m => {
+    // 过滤逻辑保持，由于类型继承，m.content 类型已自动正确推断
+    const filteredMemos = (data as unknown as Memo[]).filter(m => {
         const regex = new RegExp(`@${memoNumber}(?!\\d)`);
-        return regex.test(m.content);
+        return regex.test(m.content || '');
     });
 
     return { success: true, error: null, data: filteredMemos };
@@ -260,7 +250,6 @@ const ON_THIS_DAY_LOOKBACK_YEARS = 5;
 
 /**
  * 获取“那年今日”笔记
- * 使用单次单次范围查询替代多重并行查询，并通过客户端过滤月和日
  */
 export async function getOnThisDayMemos(): Promise<ActionResponse<Memo[]>> {
     const supabase = await getClient();
@@ -269,8 +258,6 @@ export async function getOnThisDayMemos(): Promise<ActionResponse<Memo[]>> {
     const day = today.getDate();
     const currentYear = today.getFullYear();
 
-    // 构建查询时间范围：从当前年份减去回溯年数的今天 00:00:00
-    // 到去年的今天 23:59:59
     const startDate = new Date(currentYear - ON_THIS_DAY_LOOKBACK_YEARS, month - 1, day, 0, 0, 0).toISOString();
     const endDate = new Date(currentYear - 1, month - 1, day, 23, 59, 59).toISOString();
 
@@ -285,12 +272,10 @@ export async function getOnThisDayMemos(): Promise<ActionResponse<Memo[]>> {
 
     if (error || !data) return { success: false, error: error?.message || '查询失败', data: [] };
 
-    // 在客户端过滤出月份和日期完全吻合的记录
-    const filteredMemos = (data as Memo[]).filter(memo => {
+    const filteredMemos = (data as unknown as Memo[]).filter(memo => {
         const d = new Date(memo.created_at);
         return d.getMonth() + 1 === month && d.getDate() === day;
     });
 
     return { success: true, error: null, data: filteredMemos };
 }
-

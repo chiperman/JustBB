@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useMemo } from "react";
-import { cn } from "@/lib/utils";
+import { cn, generateCacheKey } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { MemoEditor } from "@/components/ui/MemoEditor";
 import { MemoFeed } from "@/components/ui/MemoFeed";
@@ -11,7 +11,6 @@ import { Memo } from "@/types/memo";
 import { useUser } from "@/context/UserContext";
 import { useSelection } from "@/context/SelectionContext";
 import { usePageDataCache } from "@/context/PageDataCache";
-import { useTimeline } from "@/context/TimelineContext";
 
 interface MainLayoutClientProps {
   memos?: Memo[];
@@ -34,52 +33,17 @@ export function MainLayoutClient({
   const headerRef = useRef<HTMLDivElement>(null);
   const { getCache, setCache } = usePageDataCache();
 
-  const { /* setActiveId, setManualClick */ } = useTimeline();
-
-  // 构建动态缓存键
-  const cacheKey = useMemo(() => {
-    const params = new URLSearchParams();
-    const getV = (val: string | string[] | undefined) =>
-      Array.isArray(val) ? val[0] : (val ?? "");
-    const q = getV(searchParams.query);
-    const tag = getV(searchParams.tag);
-    const year = getV(searchParams.year);
-    const month = getV(searchParams.month);
-    if (q) params.set("q", q);
-    if (tag) params.set("tag", tag);
-    if (year) params.set("year", year);
-    if (month) params.set("month", month);
-    return params.toString() ? `/?${params.toString()}` : "/";
-  }, [
-    searchParams.query,
-    searchParams.tag,
-    searchParams.year,
-    searchParams.month,
-  ]);
+  // 构建动态缓存键 (客户端保持一致)
+  const cacheKey = useMemo(() => generateCacheKey(searchParams), [searchParams]);
 
   const cached = getCache(cacheKey);
-  const [memos, setMemos] = useState<Memo[]>(
+  const [memos] = useState<Memo[]>(
     initialMemos ?? cached?.memos ?? [],
   );
-  const [lastInitialMemos, setLastInitialMemos] = useState(initialMemos);
-
-
 
   const [isLoading, setIsLoading] = useState(!initialMemos && !cached);
 
-  // 派生状态同步
-  const [prevCacheKey, setPrevCacheKey] = useState(cacheKey);
-  if (prevCacheKey !== cacheKey) {
-    setPrevCacheKey(cacheKey);
-    setLastInitialMemos(initialMemos);
-    if (initialMemos) setMemos(initialMemos);
-    else if (cached) setMemos(cached.memos);
-    if (!initialMemos && !cached) setIsLoading(true);
-  } else if (initialMemos && initialMemos !== lastInitialMemos) {
-    setLastInitialMemos(initialMemos);
-    setMemos(initialMemos);
-  }
-
+  // 如果有 initialMemos，更新缓存
   if (initialMemos) {
     setCache(cacheKey, {
       memos: initialMemos,
@@ -94,23 +58,17 @@ export function MainLayoutClient({
     if (scrollContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
       const scrollableHeight = scrollHeight - clientHeight;
-
-      setIsScrolled((prev) => {
-        if (prev) {
-          // 已经收缩：只有当向上滚动到 50px 以内，或者页面内容变得非常少时才展开
-          return scrollTop > 50 && scrollableHeight > 150;
-        } else {
-          // 当前展开：只有当向下滚动超过 100px 且页面有足够滚动空间（>300px）时才收缩
-          return scrollTop > 100 && scrollableHeight > 300;
-        }
-      });
+      const shouldCollapse = scrollTop > 100 && scrollableHeight > 300;
+      if (shouldCollapse !== isScrolled) {
+        setIsScrolled(shouldCollapse);
+      }
     }
   };
 
   const teleportVariants = {
-    initial: { y: 100, opacity: 0, filter: "blur(10px)" },
+    initial: { y: 20, opacity: 0, filter: "blur(10px)" },
     animate: { y: 0, opacity: 1, filter: "blur(0px)" },
-    exit: { y: -100, opacity: 0, filter: "blur(10px)" },
+    exit: { y: -20, opacity: 0, filter: "blur(10px)" },
   };
 
   const feedKey = useMemo(

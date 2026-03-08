@@ -1,7 +1,6 @@
 'use client';
 
-import { TimelineProvider } from "@/context/TimelineContext";
-import { LoginModeProvider } from "@/context/LoginModeContext";
+import { UIProvider } from "@/context/UIContext";
 import { UserProvider, UserInfo } from "@/context/UserContext";
 import { LoginTransitionWrapper } from "@/components/layout/LoginTransitionWrapper";
 import { MobileLayoutWrapper } from "@/components/layout/MobileLayoutWrapper";
@@ -32,20 +31,18 @@ export function ClientLayoutProviders({
             <PageDataCacheProvider>
                 <ViewProvider initialPath={initialPath}>
                     <StatsProvider initialData={initialStats}>
-                        <LoginModeProvider>
+                        <UIProvider>
                             <TagsProvider initialData={initialTags}>
                                 <SelectionProvider>
-                                    <TimelineProvider>
-                                        <LoginTransitionWrapper>
-                                            <MobileLayoutWrapper>
-                                                {children}
-                                                <SelectionToolbar />
-                                            </MobileLayoutWrapper>
-                                        </LoginTransitionWrapper>
-                                    </TimelineProvider>
+                                    <LoginTransitionWrapper>
+                                        <MobileLayoutWrapper>
+                                            {children}
+                                            <SelectionToolbar />
+                                        </MobileLayoutWrapper>
+                                    </LoginTransitionWrapper>
                                 </SelectionProvider>
                             </TagsProvider>
-                        </LoginModeProvider>
+                        </UIProvider>
                     </StatsProvider>
                 </ViewProvider>
             </PageDataCacheProvider>

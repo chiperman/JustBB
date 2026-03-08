@@ -20,7 +20,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { logout } from '@/actions/auth';
 import { cn } from '@/lib/utils';
-import { useLoginMode } from '@/context/LoginModeContext';
+import { useUI } from '@/context/UIContext';
 import { useUser } from '@/context/UserContext';
 import {
     DropdownMenu,
@@ -56,7 +56,7 @@ interface SidebarSettingsProps {
 
 export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     const { user, loading, refreshUser } = useUser();
-    const { setViewMode } = useLoginMode();
+    const { setViewMode } = useUI();
     const { setTheme } = useTheme();
     const router = useRouter();
     const [loggingOut, setLoggingOut] = React.useState(false);

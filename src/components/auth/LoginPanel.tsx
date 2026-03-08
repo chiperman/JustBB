@@ -20,11 +20,11 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
-import { useLoginMode } from '@/context/LoginModeContext';
+import { useUI } from '@/context/UIContext';
 // import './themes.css'; // Assuming themes.css is global or handled via import in layout
 
 export function LoginPanel() {
-    const { viewMode, setViewMode } = useLoginMode();
+    const { viewMode, setViewMode } = useUI();
     const router = useRouter();
 
     const [showPassword, setShowPassword] = useState(false);

@@ -13,7 +13,7 @@ import {
 import { DailyTimeline } from "./DailyTimeline";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTimeline } from "@/context/TimelineContext";
+import { useUI } from "@/context/UIContext";
 import { TimelineStats } from "@/types/stats";
 import { useHasMounted } from "@/hooks/useHasMounted";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
   const yearFilter = searchParams.get("year");
   const monthFilter = searchParams.get("month");
 
-  const { activeId, setActiveId, setManualClick } = useTimeline();
+  const { activeId, setActiveId, setManualClick } = useUI();
 
   // 自动滚动侧边栏以确保选中项可见
   useEffect(() => {

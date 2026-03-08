@@ -3,27 +3,25 @@ import { Memo } from "@/types/memo";
 import { cookies } from 'next/headers';
 import { MainLayoutClient } from "@/components/layout/MainLayoutClient";
 import { isAdmin as checkIsAdmin } from "@/actions/auth";
+import { getSingleParam, generateCacheKey } from "@/lib/utils";
 
 export default async function MemoPage(props: {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const searchParams = await props.searchParams;
+  const searchParams = (await props.searchParams) || {};
   const cookieStore = await cookies();
 
-  const query = Array.isArray(searchParams?.q) ? searchParams.q[0] : (typeof searchParams?.q === 'string' ? searchParams.q : undefined);
+  const query = getSingleParam(searchParams.q);
   const cookieCode = cookieStore.get('memo_access_code')?.value;
-  const urlCode = Array.isArray(searchParams?.code) ? searchParams.code[0] : (typeof searchParams?.code === 'string' ? searchParams.code : undefined);
+  const urlCode = getSingleParam(searchParams.code);
   const adminCode = urlCode || cookieCode;
 
-  const yearStr = Array.isArray(searchParams?.year) ? searchParams.year[0] : (typeof searchParams?.year === 'string' ? searchParams.year : undefined);
-  const monthStr = Array.isArray(searchParams?.month) ? searchParams.month[0] : (typeof searchParams?.month === 'string' ? searchParams.month : undefined);
-  const tagStr = Array.isArray(searchParams?.tag) ? searchParams.tag[0] : (typeof searchParams?.tag === 'string' ? searchParams.tag : undefined);
-  const numStr = Array.isArray(searchParams?.num) ? searchParams.num[0] : (typeof searchParams?.num === 'string' ? searchParams.num : undefined);
-  // 额外确保 dateStr 至少是一个非空字符串，否则不触发过滤
-  let dateStr = Array.isArray(searchParams?.date) ? searchParams.date[0] : (typeof searchParams?.date === 'string' ? searchParams.date : undefined);
-  if (dateStr === '') dateStr = undefined;
-
-  const sortStr = Array.isArray(searchParams?.sort) ? searchParams.sort[0] : (typeof searchParams?.sort === 'string' ? searchParams.sort : 'newest');
+  const yearStr = getSingleParam(searchParams.year);
+  const monthStr = getSingleParam(searchParams.month);
+  const tagStr = getSingleParam(searchParams.tag);
+  const numStr = getSingleParam(searchParams.num);
+  const dateStr = getSingleParam(searchParams.date);
+  const sortStr = getSingleParam(searchParams.sort) || 'newest';
 
   // 同时获取 Memos 和管理权限（并行执行）
   const [memosResult, isAdmin] = await Promise.all([
@@ -49,20 +47,22 @@ export default async function MemoPage(props: {
 
   const memos = (memosResult.success ? memosResult.data : []) as Memo[];
 
-
   const flattenedSearchParams = {
-    query: Array.isArray(searchParams?.q) ? searchParams.q[0] : searchParams?.q,
-    tag: Array.isArray(searchParams?.tag) ? searchParams.tag[0] : searchParams?.tag,
-    num: Array.isArray(searchParams?.num) ? searchParams.num[0] : searchParams?.num,
-    year: Array.isArray(searchParams?.year) ? searchParams.year[0] : searchParams?.year,
-    month: Array.isArray(searchParams?.month) ? searchParams.month[0] : searchParams?.month,
-    date: Array.isArray(searchParams?.date) ? searchParams.date[0] : searchParams?.date,
-    code: Array.isArray(searchParams?.code) ? searchParams.code[0] : searchParams?.code,
+    query,
+    tag: tagStr,
+    num: numStr,
+    year: yearStr,
+    month: monthStr,
+    date: dateStr,
+    code: urlCode,
     sort: sortStr
   };
 
+  const cacheKey = generateCacheKey(flattenedSearchParams);
+
   return (
     <MainLayoutClient
+      key={cacheKey}
       memos={memos}
       searchParams={flattenedSearchParams}
       adminCode={adminCode}

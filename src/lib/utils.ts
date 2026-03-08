@@ -17,3 +17,28 @@ export function formatDate(date: string | Date, formatStr: string = 'yyyy-MM-dd 
   const dateObj = typeof date === 'string' ? parseISO(date) : date;
   return format(dateObj, formatStr, { locale: zhCN });
 }
+
+/**
+ * 获取单个搜索参数值的安全工具函数
+ */
+export function getSingleParam(param: string | string[] | undefined): string | undefined {
+  if (Array.isArray(param)) return param[0];
+  if (typeof param === 'string') return param === '' ? undefined : param;
+  return undefined;
+}
+
+/**
+ * 根据搜索参数生成唯一的缓存键
+ */
+export function generateCacheKey(params: Record<string, string | string[] | undefined>): string {
+  const searchParams = new URLSearchParams();
+  const keys = ['q', 'tag', 'num', 'year', 'month', 'date', 'sort'];
+
+  keys.forEach(key => {
+    const val = getSingleParam(params[key === 'q' ? 'query' : key] ?? params[key]);
+    if (val) searchParams.set(key, val);
+  });
+
+  const queryStr = searchParams.toString();
+  return queryStr ? `/?${queryStr}` : "/";
+}

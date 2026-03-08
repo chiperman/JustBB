@@ -62,7 +62,7 @@ JustMemo 采用 **"SSR + 客户端分页"** 的混合渲染模式，确保极致
 | **PageDataCache** | 页面数据缓存 | 实现“一次加载，会话级复用”，支持**路径+参数级**的缓存自动隔离 |
 | **UserContext** | 用户身份与权限 | SSR 注入初始状态，确保存并鉴权 |
 | **SelectionContext** | 多选模式状态 | 跨页面（如 /trash）自动激活/重置选择模式 |
-| **TimelineContext** | 时间轴状态 | 独立于路由，但在不同 View 下可能有不同表现（如只在首页显示） |
+| **UIContext** | 全局 UI 状态 | 整合了 `viewMode` (登录/视图切换) 和 `Timeline` (活动 ID、手动点击状态) |
 
 ---
 

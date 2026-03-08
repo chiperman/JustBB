@@ -6,7 +6,7 @@ import { getMemos } from "@/actions/memos/query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Loading03Icon as Loader2 } from "@hugeicons/core-free-icons";
 import { Memo } from "@/types/memo";
-import { useTimeline } from "@/context/TimelineContext";
+import { useUI } from "@/context/UIContext";
 import { mergeMemos } from "@/lib/streamUtils";
 
 interface MemoFeedProps {
@@ -33,32 +33,6 @@ export function MemoFeed({
   const [hasMoreOlder, setHasMoreOlder] = useState(initialMemos.length >= 20);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-
-  // 1. 派生状态同步 (Derived State Sync)
-  const [lastInitialMemos, setLastInitialMemos] = useState(initialMemos);
-  const [lastParamsStr, setLastParamsStr] = useState(JSON.stringify(searchParams));
-
-  const currentParamsStr = JSON.stringify(searchParams);
-  if (initialMemos !== lastInitialMemos || currentParamsStr !== lastParamsStr) {
-    console.log('[MemoFeed] Syncing state:', {
-      initialMemosCount: initialMemos.length,
-      currentParams: currentParamsStr,
-      hasMore: initialMemos.length >= 20
-    });
-    setLastInitialMemos(initialMemos);
-    setLastParamsStr(currentParamsStr);
-    setMemos(initialMemos);
-    const hasMore = initialMemos.length >= 20;
-    setHasMoreOlder(hasMore);
-  }
-
-  useEffect(() => {
-    console.log('[MemoFeed] Component State:', {
-      memosCount: memos.length,
-      hasMoreOlder,
-      isLoadingOlder
-    });
-  }, [memos.length, hasMoreOlder, isLoadingOlder]);
 
   const observerTargetBottom = useRef<HTMLDivElement>(null);
 
@@ -150,7 +124,7 @@ export function MemoFeed({
   }, [fetchMemosBatch, isLoadingOlder, hasMoreOlder]);
 
   // 4. Scroll Spy
-  const { setActiveId, isManualClick } = useTimeline();
+  const { setActiveId, isManualClick } = useUI();
   useEffect(() => {
     if (isManualClick || memos.length === 0) return;
     const observer = new IntersectionObserver(

@@ -20,6 +20,7 @@
 
 ## 4. 鉴权逻辑 (Authentication)
 *   管理员: 使用 Supabase Auth (Email/Login) 管理发布、编辑与删除权限。前端通过 `UserContext` 维护全局 `isAdmin` 状态，实现极致的 UI 响应性能，避免重复的 Server Action 调用。
+*   **服务端校验 (Zod Protection)**: 所有的 Auth Actions (Login, Signup, OTP) 均在 `src/lib/auth/schemas.ts` 中定义了严格的校验模式。Server Action 在执行前会进行 Zod 强校验，拦截不符合格式的异常请求。
 *   写操作保护: 开启数据库 RLS (Row Level Security)，物理级限制 `UPDATE` 和 `DELETE` 操作仅限认证的管理员。
 *   访客: 基于 RPC 函数的口令匹配获取内容。在非搜索模式下仅能看到加密占位。
 *   按需脱敏 (Just-in-Time Redaction): 远端分页 RPC 对私密记录执行物理级元数据脱敏：

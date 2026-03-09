@@ -29,6 +29,8 @@
     **[整合]** 业务模块手册：涵盖画廊、地图定位、链接预览及多选批量操作。
 
 ### 🧪 质量与工程 (Engineering)
+*   [Engineering Standards](./quality/engineering-standards.md)  
+    **[新增]** 开发 SOP、代码质量规范（Hooks 驱动、原子化设计）及 Git 提交准则。
 *   [Tech Stack](./project/tech-stack.md)  
     技术栈（Hugeicons, Framer Motion 等）版本说明及目录结构。
 *   [Testing Strategy](./quality/testing-strategy.md)  

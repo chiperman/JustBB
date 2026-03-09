@@ -1,6 +1,6 @@
 # JustMemo 接口设计规范 (API Spec)
 
-> 最后更新：2026-02-28 (单日日历翻页与单向瀑布流模式)
+> 最后更新：2026-03-10 (全面引入 Zod 校验与统一 DAL 查询层)
 
 ## 1. 通用响应契约
 所有接口遵循以下统一返回格式：
@@ -8,54 +8,46 @@
 {
   success: boolean;    // 操作是否成功
   data?: T;           // 成功时返回的数据
-  error?: string;      // 失败时的错误信息/代码
-  message?: string;    // 可选的提示信息
+  error?: string;      // 失败时的具体错误描述
 }
 ```
 
-## 2. Server Actions (Mutations - 仅管理员)
+## 2. Server Actions (Mutations)
 
-### 2.1 `createMemo` / `updateMemo` 系列
-*   功能: 发布、编辑、状态切换。
-*   输入: `formData` 或具体参数。
-*   安全: 经过 Zod 强校验与 Supabase Auth 鉴权。
+### 2.1 鉴权系列 (`auth.ts`)
+*   **Actions**: `login`, `signup`, `verifyOtp`, `updatePassword`
+*   **校验**: 强制通过 `src/lib/auth/schemas.ts` 中的 Zod 模式校验。
+*   **安全**: 统一错误处理，避免在前端暴露敏感的数据库或 Auth 引擎错误细节。
 
-### 2.2 `deleteMemo` / `restoreMemo`
-*   功能: 软删除（进入/移出垃圾箱）。
+### 2.2 笔记操作系列 (`mutate.ts`)
+*   **Actions**: `createMemo`, `updateMemoContent`, `updateMemoState`, `batchAddTagsToMemos`
+*   **校验**: 经过 `src/lib/memos/schemas.ts` 强校验。
+*   **特性**: 自动触发标签解析、定位提取及字数统计。
 
-### 2.3 `batchDeleteMemos` / `batchAddTagsToMemos`
-*   功能: 批量管理记录。
+### 2.3 回收站系列 (`trash.ts`)
+*   **Actions**: `deleteMemo`, `restoreMemo`, `permanentDeleteMemo`, `emptyTrash`
+*   **权限**: 仅限管理员。
 
-## 3. 读操作 (Queries - 双向流分页模式)
+## 3. 读操作 (Queries - 统一 DAL 架构)
 
-### 3.1 `getMemos` (核心分页)
-*   参数: `params: { query?, limit?, before_date?, after_date?, tag?, date?, num?, sort? }`
-*   特性: 
-    - **游标分页**: 彻底弃用 Offset。通过 `before_date` (向下) 或 `after_date` (向上) 确定数据起止点。
-    - **优先级逻辑**: 若 `before_date` 或 `after_date` 存在，系统将自动忽略 `date` (Calendar Date) 过滤条件，以确保双向流在跨天滚动时不会被截断。
-    - **智能脱敏**: 私密内容在物理层进行元数据抹除。
+为了保证查询字段的一致性与安全性，所有读操作均应通过 `src/lib/memos/query-builder.ts` 构建。
 
-### 3.2 `getSingleDayMemosWithNeighbors` (单日翻页查询)
-*   功能: 获取指定单日的日记内容，并探测存在日记的上一个/下一个日期。用于驱动 Calendar Pager 翻页模式。
-*   参数: `params: { targetDate: string, adminCode?: string, tag?: string, query?: string }`
-*   逻辑: 
-    - 并发拉取 `targetDate` 当天的所有日记。
-    - 利用 `limit(1)` 向前探测最近的一个 `prevDate`。
-    - 利用 `limit(1)` 向后探测最近的一个 `nextDate`。
-    - 返回 `{ memos, prevDate, nextDate }` 给前端渲染 "View Older" / "View Newer" 导航器。
+### 3.1 核心分页查询 (`query.ts`)
+*   **`getMemos`**: RPC 驱动的高性能安全分页查询（支持搜索与多维过滤）。
+*   **`searchMemosForMention`**: 为编辑器设计的增量搜索接口。
 
-### 3.3 `getArchivedMemos` / `getGalleryMemos` / `getTrashMemos`
-*   功能: 特定维度的聚合过滤查询。
+### 3.2 聚合与归档
+*   **`getGalleryMemos`**: 自动应用 `withImages` 过滤器。
+*   **`getArchivedMemos`**: 按年月进行物理日期范围过滤。
+*   **`getMemosWithLocations`**: 自动应用 `withLocations` 过滤器，供地图组件使用。
 
-## 4. 统计与辅助 (Stats & Auth)
+## 4. 统计与辅助 (Stats)
 
-### 4.1 `getMemoStats_V2`
-*   功能: 获取全量热力图及基础统计。
-*   健壮性: 在无数据状态下返回合法的零值 JSON。
+### 4.1 业务统计
+*   **`getMemoStats`**: 获取全量热力图及基础统计数据。
+*   **`getAllTags`**: 获取全站标签云数据及其热度计数。
 
-### 4.2 `getTimelineStats`
-*   功能: 驱动侧边栏时间轴。
-*   特性: 仅返回公开内容的统计分布。
+### 4.2 权限辅助
+*   **`getCurrentUser`**: 返回当前已登录用户的公开 Profile。
+*   **`isAdmin`**: 判定当前会话是否具备管理权限。
 
-### 4.3 `getCurrentUser` / `isAdmin`
-*   功能: 身份与权限校验。

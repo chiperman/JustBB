@@ -61,8 +61,10 @@ JustMemo 采用 **"SSR + 客户端分页"** 的混合渲染模式，确保极致
 | **ViewContext** | 客户端路由核心 | 管理 `currentView`，拦截浏览器历史记录，提供 `navigate()` 方法 |
 | **PageDataCache** | 页面数据缓存 | 实现“一次加载，会话级复用”，支持**路径+参数级**的缓存自动隔离 |
 | **UserContext** | 用户身份与权限 | SSR 注入初始状态，确保存并鉴权 |
-| **SelectionContext** | 多选模式状态 | 跨页面（如 /trash）自动激活/重置选择模式 |
-| **UIContext** | 全局 UI 状态 | 整合了 `viewMode` (登录/视图切换) 和 `Timeline` (活动 ID、手动点击状态) |
+| **SelectionContext** | 多选模式状态 | 专注于管理选中项（Set<string>）与批量操作模式 |
+| **LayoutContext** | 布局与交互状态 | 管理 `viewMode` (登录/视图切换)、活动 ID (`activeId`) 及手动滚动同步状态 |
+| **StatsContext** | 全局统计数据 | 维护热力图与基础计数，支持精细化记忆化以减少重渲染 |
+| **TagsContext** | 标签全集管理 | 维护全站标签列表及其计数，支持按需刷新 |
 
 ---
 
@@ -147,6 +149,25 @@ JustMemo 采用 **"SSR + 客户端分页"** 的混合渲染模式，确保极致
    - `?date=`: 特定日期筛选。
    - **组合查询**: 支持多个参数共存（例如：`?tag=生活&q=北京`）。
 
-3. **数据库级支持**:
-   - 更新了 `search_memos_secure` RPC。新增对 `num` (编号) 的过滤分支，并采用 JSONB 传递复合过滤条件，确保查询性能与安全性（Security Definer）。
+## 8. 数据访问层与重构模式 (DAL & Hooks)
+
+### 8.1 统一查询构建器 (Query Builder)
+系统在 `src/lib/memos/query-builder.ts` 中封装了统一的查询层：
+- **BASE_MEMO_SELECT**: 集中定义所有查询共享的字段集，确保类型一致性。
+- **MemoFilters**: 将常用的业务逻辑（如 `active`, `publicOnly`, `paginate`）转化为可复用的组合算子，消除了 Server Actions 中的重复代码。
+
+### 8.2 Hooks 驱动的逻辑解耦
+为了解决巨型组件维护难题，我们将核心业务逻辑从 UI 中剥离：
+- **useMemoEditor**: 封装内容发布、私密性切换、草稿持久化及动画锁定状态。
+- **useEditorSuggestions**: 专门处理 Tiptap 的 @引用与 #标签建议系统的搜索与分页。
+- **useMemoBacklinks**: 负责反向引用的异步动态加载。
+- **useSidebarNavigation**: 解耦侧边栏的物理动效与路由同步逻辑。
+
+### 8.3 原子化组件设计 (Atomic Components)
+复杂组件（如 `MemoEditor`, `MemoCard`, `LeftSidebar`）已按职责拆分为原子级子组件：
+- **editor/**: 包含 `EditorToolbar`, `extensions.ts`。
+- **memo-card/**: 包含 `MemoCardHeader`, `MemoCardBacklinks`, `MemoCardLockOverlay`。
+- **sidebar/**: 包含 `SidebarNavItem`。
+这种结构确保了 UI 层的极简与逻辑的高内聚。
+
 

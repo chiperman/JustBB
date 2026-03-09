@@ -2,11 +2,11 @@
 
 import { useEffect, useRef } from 'react';
 import { motion, Variants } from 'framer-motion';
-import { useUI } from '@/context/UIContext';
+import { useLayout } from '@/context/LayoutContext';
 import { LoginPanel } from '@/components/auth/LoginPanel';
 
 export function LoginTransitionWrapper({ children }: { children: React.ReactNode }) {
-    const { viewMode, setViewMode } = useUI();
+    const { viewMode, setViewMode } = useLayout();
     const prevViewModeRef = useRef(viewMode);
 
     // Automatic transition logic

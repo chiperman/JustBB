@@ -7,10 +7,10 @@
 
 ## 核心任务列表
 
-### 1. 数据访问层 (DAL) 统一重构 ⏳
-- [ ] 提取 `BASE_MEMO_SELECT` 常量，统一字段选择逻辑。
-- [ ] 在 `src/lib/memos/query-builder.ts` 中封装通用过滤器（隐私、回收站、标签）。
-- [ ] 重构 `src/actions/memos/query.ts` 和 `trash.ts` 调用统一查询接口。
+### 1. 数据访问层 (DAL) 统一重构 ✅
+- [x] 提取 `BASE_MEMO_SELECT` 常量，统一字段选择逻辑。
+- [x] 在 `src/lib/memos/query-builder.ts` 中封装通用过滤器（隐私、回收站、标签）。
+- [x] 重构 `src/actions/memos/query.ts` 和 `trash.ts` 调用统一查询接口。
 
 ### 2. Context 状态管理优化 ⏳
 - [ ] 拆分过于臃肿的 `UIContext`（分离弹窗状态与全局交互状态）。

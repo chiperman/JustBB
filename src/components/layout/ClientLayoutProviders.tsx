@@ -1,6 +1,7 @@
 'use client';
 
 import { UIProvider } from "@/context/UIContext";
+import { LayoutProvider } from "@/context/LayoutContext";
 import { UserProvider, UserInfo } from "@/context/UserContext";
 import { LoginTransitionWrapper } from "@/components/layout/LoginTransitionWrapper";
 import { MobileLayoutWrapper } from "@/components/layout/MobileLayoutWrapper";
@@ -30,16 +31,18 @@ export function ClientLayoutProviders({
             <PageDataCacheProvider>
                 <ViewProvider initialPath={initialPath}>
                     <StatsProvider initialData={initialStats}>
-                        <UIProvider>
-                            <TagsProvider initialData={initialTags}>
-                                <LoginTransitionWrapper>
-                                    <MobileLayoutWrapper>
-                                        {children}
-                                        <SelectionToolbar />
-                                    </MobileLayoutWrapper>
-                                </LoginTransitionWrapper>
-                            </TagsProvider>
-                        </UIProvider>
+                        <LayoutProvider>
+                            <UIProvider>
+                                <TagsProvider initialData={initialTags}>
+                                    <LoginTransitionWrapper>
+                                        <MobileLayoutWrapper>
+                                            {children}
+                                            <SelectionToolbar />
+                                        </MobileLayoutWrapper>
+                                    </LoginTransitionWrapper>
+                                </TagsProvider>
+                            </UIProvider>
+                        </LayoutProvider>
                     </StatsProvider>
                 </ViewProvider>
             </PageDataCacheProvider>

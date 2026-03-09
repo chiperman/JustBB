@@ -1,9 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import { getAllTags as fetchAllTagsAction } from '@/actions/memos/analytics';
 
-interface TagData {
+export interface TagData {
     tag_name: string;
     count: number;
 }
@@ -47,8 +47,15 @@ export function TagsProvider({
         refreshTags();
     }, [refreshTags]);
 
+    const contextValue = useMemo(() => ({ 
+        tags, 
+        refreshTags, 
+        isLoading, 
+        isMounted 
+    }), [tags, refreshTags, isLoading, isMounted]);
+
     return (
-        <TagsContext.Provider value={{ tags, refreshTags, isLoading, isMounted }}>
+        <TagsContext.Provider value={contextValue}>
             {children}
         </TagsContext.Provider>
     );

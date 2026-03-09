@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import { getMemoStats } from '@/actions/memos/analytics';
 import { HeatmapStats } from '@/types/stats';
 
@@ -53,8 +53,15 @@ export function StatsProvider({
         }
     }, [initialData, refreshStats]);
 
+    const contextValue = useMemo(() => ({ 
+        stats, 
+        isLoading, 
+        isMounted, 
+        refreshStats 
+    }), [stats, isLoading, isMounted, refreshStats]);
+
     return (
-        <StatsContext.Provider value={{ stats, isLoading, isMounted, refreshStats }}>
+        <StatsContext.Provider value={contextValue}>
             {children}
         </StatsContext.Provider>
     );

@@ -6,7 +6,7 @@ import { getMemos } from "@/actions/memos/query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Loading03Icon as Loader2 } from "@hugeicons/core-free-icons";
 import { Memo } from "@/types/memo";
-import { useUI } from "@/context/UIContext";
+import { useLayout } from "@/context/LayoutContext";
 import { mergeMemos } from "@/lib/streamUtils";
 
 interface MemoFeedProps {
@@ -124,7 +124,7 @@ export function MemoFeed({
   }, [fetchMemosBatch, isLoadingOlder, hasMoreOlder]);
 
   // 4. Scroll Spy
-  const { setActiveId, isManualClick } = useUI();
+  const { setActiveId, isManualClick } = useLayout();
   useEffect(() => {
     if (isManualClick || memos.length === 0) return;
     const observer = new IntersectionObserver(

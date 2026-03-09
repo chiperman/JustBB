@@ -19,12 +19,12 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
-import { useUI } from '@/context/UIContext';
+import { useLayout } from '@/context/LayoutContext';
 import { OtpInput } from './OtpInput';
 import { PasswordStrength } from './PasswordStrength';
 
 export function LoginPanel() {
-    const { viewMode, setViewMode } = useUI();
+    const { viewMode, setViewMode } = useLayout();
     const router = useRouter();
 
     const [showPassword, setShowPassword] = useState(false);

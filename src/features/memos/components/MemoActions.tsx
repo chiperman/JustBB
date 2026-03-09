@@ -26,9 +26,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { PromptDialog } from '@/components/ui/prompt-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { MemoShare } from './MemoShare';
+import { MemoShare } from '@/features/memos/components/MemoShare';
 import { Memo } from '@/types/memo';
-
 import { useHasMounted } from '@/hooks/useHasMounted';
 
 interface MemoActionsProps {
@@ -65,7 +64,7 @@ export function MemoActions({
     const hasMounted = useHasMounted();
 
     if (!hasMounted) {
-        return <div className="w-8 h-8" />; // Placeholder for the button
+        return <div className="w-8 h-8" />; 
     }
 
     const handleDelete = async () => {
@@ -86,7 +85,6 @@ export function MemoActions({
         toast({
             title: "已恢复",
             description: "记录已恢复至首页",
-            variant: "success"
         });
     };
 
@@ -131,7 +129,6 @@ export function MemoActions({
         if (isPrivate) {
             setShowPublicConfirm(true);
         } else {
-            // 直接弹出口令询问
             setShowPrompt(true);
         }
     };
@@ -260,7 +257,6 @@ export function MemoActions({
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Delete Alert */}
             <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -276,7 +272,6 @@ export function MemoActions({
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* Public Confirm Alert */}
             <AlertDialog open={showPublicConfirm} onOpenChange={setShowPublicConfirm}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -292,7 +287,6 @@ export function MemoActions({
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* Private Prompt Dialog */}
             <PromptDialog
                 open={showPrompt}
                 onOpenChange={setShowPrompt}

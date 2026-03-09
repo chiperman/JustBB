@@ -40,7 +40,6 @@ export function MemoCardHeader({
     return (
         <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-                {/* 选择模式下的多选框 */}
                 {isSelectionMode && (
                     <div
                         className="flex items-center justify-center cursor-pointer"

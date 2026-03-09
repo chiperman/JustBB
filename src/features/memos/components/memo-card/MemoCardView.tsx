@@ -9,7 +9,7 @@ import { UnlockDialog } from '../UnlockDialog';
 import { MemoCardHeader } from './MemoCardHeader';
 import { MemoCardBacklinks } from './MemoCardBacklinks';
 import { MemoCardLockOverlay } from './MemoCardLockOverlay';
-import { useMemoBacklinks } from '@/hooks/useMemoBacklinks';
+import { useMemoBacklinks } from '../../hooks/useMemoBacklinks';
 
 interface MemoCardViewProps {
     memo: Memo;

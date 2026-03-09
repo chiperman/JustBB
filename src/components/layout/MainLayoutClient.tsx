@@ -1,142 +1,124 @@
-"use client";
+'use client';
 
-import { useState, useRef, useMemo } from "react";
-import { cn, generateCacheKey } from "@/lib/utils";
+import React, { useEffect, useState, useCallback } from "react";
+import { generateCacheKey } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
-import { MemoEditor } from "@/components/ui/MemoEditor";
-import { MemoFeed } from "@/components/ui/MemoFeed";
+import { MemoEditor, MemoFeed } from "@/features/memos";
 import { FeedHeader } from "@/components/ui/FeedHeader";
 import { MemoCardSkeleton } from "@/components/ui/MemoCardSkeleton";
 import { Memo } from "@/types/memo";
-import { useSelection } from "@/context/UIContext";
-import { useUser } from "@/context/UserContext";
 import { usePageDataCache } from "@/context/PageDataCache";
+import { getMemos } from "@/actions/memos/query";
+import { useSearchParams } from "next/navigation";
+import { useLayout } from "@/context/LayoutContext";
+import { useUser } from "@/context/UserContext";
 
-interface MainLayoutClientProps {
-  memos?: Memo[];
-  searchParams?: Record<string, string | string[] | undefined>;
-  adminCode?: string;
-  initialIsAdmin?: boolean;
-}
+export function MainLayoutClient() {
+    const searchParams = useSearchParams();
+    const { getCache, setCache } = usePageDataCache();
+    const { setViewMode } = useLayout();
+    const { isAdmin } = useUser();
 
-export function MainLayoutClient({
-  memos: initialMemos,
-  searchParams = {},
-  adminCode,
-  initialIsAdmin = false,
-}: MainLayoutClientProps) {
-  const { isAdmin, loading } = useUser();
-  const effectiveIsAdmin = loading ? (initialIsAdmin ?? false) : isAdmin;
-  const [isScrolled, setIsScrolled] = useState(false);
-  const { isSelectionMode } = useSelection();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const { getCache, setCache } = usePageDataCache();
+    // 1. 初始化数据：优先从缓存中获取，确保 SPA 切换瞬间完成
+    const flattenedParams = Object.fromEntries(searchParams?.entries() || []);
+    const cacheKey = generateCacheKey(flattenedParams);
+    const cachedData = getCache(cacheKey);
 
-  // 构建动态缓存键 (客户端保持一致)
-  const cacheKey = useMemo(() => generateCacheKey(searchParams), [searchParams]);
+    const [memos, setMemos] = useState<Memo[]>(cachedData?.memos || []);
+    const [isLoading, setIsLoading] = useState(!cachedData);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const cached = getCache(cacheKey);
-  const [memos] = useState<Memo[]>(
-    initialMemos ?? cached?.memos ?? [],
-  );
+    // 2. 数据加载逻辑 (含 SWR 策略)
+    const fetchMemosBatch = useCallback(async (isInitial = true) => {
+        if (isInitial) {
+            setIsRefreshing(true);
+        }
 
-  const [isLoading, setIsLoading] = useState(!initialMemos && !cached);
+        const params: Record<string, string> = {};
+        searchParams?.forEach((value, key) => {
+            params[key] = value;
+        });
 
-  // 如果有 initialMemos，更新缓存
-  if (initialMemos) {
-    setCache(cacheKey, {
-      memos: initialMemos,
-      searchParams,
-      adminCode,
-      initialIsAdmin,
-    });
-    if (isLoading) setIsLoading(false);
-  }
+        try {
+            const res = await getMemos({ ...params, limit: 20 });
+            if (res.success) {
+                const fetchedMemos = res.data || [];
+                setMemos(fetchedMemos);
+                setCache(cacheKey, { memos: fetchedMemos });
+            }
+        } catch (error) {
+            console.error("Fetch memos failed:", error);
+        } finally {
+            setIsLoading(false);
+            setIsRefreshing(false);
+        }
+    }, [searchParams, cacheKey, setCache]);
 
-  const handleScroll = () => {
-    if (scrollContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
-      const scrollableHeight = scrollHeight - clientHeight;
-      const shouldCollapse = scrollTop > 100 && scrollableHeight > 300;
-      if (shouldCollapse !== isScrolled) {
-        setIsScrolled(shouldCollapse);
-      }
-    }
-  };
+    // 3. 路由/搜索变动时，重置并刷新
+    useEffect(() => {
+        // 如果没有缓存，立即显示加载状态
+        if (!cachedData) {
+            setIsLoading(true);
+            setMemos([]);
+        } else {
+            setMemos(cachedData.memos || []);
+            setIsLoading(false);
+        }
+        fetchMemosBatch(true);
+    }, [cacheKey, cachedData, fetchMemosBatch]);
 
-  const teleportVariants = {
-    initial: { y: 20, opacity: 0, filter: "blur(10px)" },
-    animate: { y: 0, opacity: 1, filter: "blur(0px)" },
-    exit: { y: -20, opacity: 0, filter: "blur(10px)" },
-  };
+    // 4. 强制重置模式 (回到首页视图)
+    useEffect(() => {
+        setViewMode('CARD_VIEW');
+    }, [setViewMode]);
 
-  const feedKey = useMemo(
-    () => (memos.length > 0 ? memos[0].id : "empty"),
-    [memos],
-  );
+    return (
+        <div className="flex flex-col h-full overflow-hidden">
+            <div className="flex-1 overflow-y-auto scrollbar-hide px-6 py-10">
+                <div className="max-w-screen-md mx-auto space-y-8">
+                    {/* 发布区域 */}
+                    {isAdmin && (
+                        <div className="mb-12">
+                            <MemoEditor mode="create" isCollapsed={true} />
+                        </div>
+                    )}
 
-  return (
-    <div className="flex flex-col h-screen overflow-hidden bg-accent/20 relative">
-      <div
-        ref={headerRef}
-        className={cn(
-          "flex-none z-30 px-4 md:px-10 sticky top-0 pt-8 pb-4 transition-all duration-300 scrollbar-stable overflow-y-auto",
-          isScrolled
-            ? "bg-background/80 backdrop-blur-2xl border-b border-border/40"
-            : "bg-background/0",
-        )}
-      >
-        <div className="max-w-4xl mx-auto w-full">
-          <div className="space-y-4">
-            <FeedHeader />
-            <AnimatePresence mode="wait">
-              {effectiveIsAdmin && (
-                <MemoEditor
-                  key="editor"
-                  isCollapsed={isScrolled}
-                  className={isSelectionMode ? "hidden" : ""}
-                />
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
+                    {/* Feed 标题与过滤显示 */}
+                    <FeedHeader isRefreshing={isRefreshing} />
 
-      <div
-        id="feed-scroll-container"
-        ref={scrollContainerRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto scrollbar-hover p-4 md:px-10 md:pt-0 md:pb-8 scrollbar-stable scroll-smooth"
-      >
-        <div className="max-w-4xl mx-auto w-full pb-20">
-          {isLoading ? (
-            <div className="space-y-6">
-              <MemoCardSkeleton />
-              <MemoCardSkeleton />
+                    {/* 内容展示区 */}
+                    <div className="relative min-h-[400px]">
+                        <AnimatePresence mode="wait">
+                            {isLoading ? (
+                                <motion.div
+                                    key="skeleton"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="space-y-6"
+                                >
+                                    {[1, 2, 3].map((i) => (
+                                        <MemoCardSkeleton key={i} />
+                                    ))}
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="feed"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="w-full"
+                                >
+                                    <MemoFeed
+                                        initialMemos={memos}
+                                        searchParams={Object.fromEntries(searchParams?.entries() || [])}
+                                        isAdmin={isAdmin}
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </div>
             </div>
-          ) : (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={feedKey}
-                variants={teleportVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ type: "spring", stiffness: 200, damping: 25 }}
-              >
-                <MemoFeed
-                  initialMemos={memos}
-                  searchParams={searchParams}
-                  adminCode={adminCode}
-                  isAdmin={effectiveIsAdmin}
-                />
-              </motion.div>
-            </AnimatePresence>
-          )}
         </div>
-      </div>
-
-    </div>
-  );
+    );
 }

@@ -6,7 +6,7 @@ import LinkExtension from '@tiptap/extension-link';
 import Mention from '@tiptap/extension-mention';
 import { PluginKey } from '@tiptap/pm/state';
 import { parseContentTokens } from '@/lib/contentParser';
-import { CustomSuggestionProps } from '@/hooks/useEditorSuggestions';
+import { CustomSuggestionProps } from '../../hooks/useEditorSuggestions';
 
 export const mentionPluginKey = new PluginKey('mention');
 export const hashtagPluginKey = new PluginKey('hashtag');

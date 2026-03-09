@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Loading03Icon as Loader2 } from "@hugeicons/core-free-icons";
-import { MemoCardSkeleton } from "../MemoCardSkeleton";
+import { MemoCardSkeleton } from "@/components/ui/MemoCardSkeleton";
 
 interface FeedStatusProps {
     isLoadingOlder: boolean;

@@ -6,8 +6,8 @@ import { MemoCard } from "./MemoCard";
 import { Memo } from "@/types/memo";
 
 // Custom Hooks
-import { useMemoFeed } from "@/hooks/useMemoFeed";
-import { useFeedScrollSpy } from "@/hooks/useFeedScrollSpy";
+import { useMemoFeed } from "../hooks/useMemoFeed";
+import { useFeedScrollSpy } from "../hooks/useFeedScrollSpy";
 
 // Sub-components
 import { FeedItemWrapper } from "./memo-feed/FeedItemWrapper";

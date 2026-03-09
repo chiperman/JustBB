@@ -4,12 +4,12 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { parseContentTokens } from '@/lib/contentParser';
-import { CodeBlock } from './CodeBlock';
+import { CodeBlock } from '@/components/ui/CodeBlock';
 import { MemoHoverPreview } from './MemoHoverPreview';
-import { LocationHoverPreview } from './LocationHoverPreview';
+import { LocationHoverPreview } from '@/components/ui/LocationHoverPreview';
 import { useSearchParams } from 'next/navigation';
-import { ImageZoom } from './ImageZoom';
-import { LinkPreview } from './LinkPreview';
+import { ImageZoom } from '@/components/ui/ImageZoom';
+import { LinkPreview } from '@/components/ui/LinkPreview';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { CheckmarkCircle01Icon as Check, Copy01Icon as Copy } from '@hugeicons/core-free-icons';
 import { toast } from '@/hooks/use-toast';
@@ -25,7 +25,6 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
     const searchParams = useSearchParams();
     const searchQuery = searchParams?.get('q') || '';
 
-    // 解析并高亮文本
     const highlightText = (text: string, highlight: string) => {
         if (!highlight || !text) return text;
         const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
@@ -42,7 +41,6 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
         );
     };
 
-    // 正则解析逻辑
     const renderContent = (text: string) => {
         const tokens = parseContentTokens(text);
 
@@ -56,7 +54,6 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                                 <Link
                                     href={`/?num=${memoNum}`}
                                     className="text-primary hover:underline cursor-pointer font-mono bg-primary/10 px-1 rounded-md mx-0.5 inline-block focus-visible:ring-1 focus-visible:ring-primary/30 outline-none hover:bg-primary/20 transition-colors"
-                                    aria-label={`查看引用记录 #${memoNum}`}
                                 >
                                     {token.value}
                                 </Link>
@@ -75,25 +72,20 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                                     key={`tag-${index}`}
                                     href={`/?tag=${encodeURIComponent(token.value.slice(1))}`}
                                     className="text-primary hover:underline mx-0.5 focus-visible:ring-1 focus-visible:ring-primary/30 outline-none rounded-md transition-colors font-mono font-medium"
-                                    aria-label={`查看包含 #${token.value.slice(1)} 标签的记录`}
                                 >
                                     {token.value}
                                 </Link>
                             );
                         case 'image':
                             return (
-                                <span
-                                    key={`img-${index}`}
-                                    className="block my-5 group relative max-w-full overflow-hidden"
-                                >
+                                <span key={`img-${index}`} className="block my-5 group relative max-w-full overflow-hidden">
                                     <div className="flex justify-center items-center">
-                                        <div className="relative rounded-md overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-[0_2px_12px_-3px_rgba(0,0,0,0.1),0_4px_6px_-2px_rgba(0,0,0,0.05)] transition-all duration-500 group-hover:shadow-[0_8px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-2px_rgba(0,0,0,0.04)] group-hover:scale-[1.01]">
-                                            { }
-                                            <ImageZoom src={token.value} alt="记录中的图片附件">
+                                        <div className="relative rounded-md overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-sm transition-all duration-500 hover:scale-[1.01]">
+                                            <ImageZoom src={token.value}>
                                                 <div className="relative max-h-[550px] w-full aspect-auto h-[300px]">
                                                     <Image
                                                         src={token.value}
-                                                        alt="记录中的图片附件"
+                                                        alt="Memo attachment"
                                                         fill
                                                         className="object-contain select-none"
                                                         sizes="(max-width: 768px) 100vw, 800px"
@@ -112,10 +104,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                             );
                         case 'location':
                             const locElement = (
-                                <span
-                                    className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer bg-primary/10 px-1.5 py-0.5 rounded mx-0.5 hover:bg-primary/20 transition-colors"
-                                    aria-label={`查看定位: ${token.name}`}
-                                >
+                                <span className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer bg-primary/10 px-1.5 py-0.5 rounded mx-0.5 hover:bg-primary/20 transition-colors">
                                     <span className="text-sm">📍</span>
                                     <span className="text-[13px] font-medium">{token.name}</span>
                                 </span>
@@ -134,13 +123,9 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                                 </LocationHoverPreview>
                             );
                         case 'link':
-                            return (
-                                <LinkPreview key={`link-${index}`} url={token.value} />
-                            );
+                            return <LinkPreview key={`link-${index}`} url={token.value} />;
                         case 'email':
-                            return (
-                                <EmailComponent key={`email-${index}`} email={token.value} />
-                            );
+                            return <EmailComponent key={`email-${index}`} email={token.value} />;
                         case 'text':
                         default:
                             return <span key={`text-${index}`} className="text-foreground/90">{highlightText(token.value, searchQuery)}</span>;
@@ -166,7 +151,7 @@ function EmailComponent({ email }: { email: string }) {
         navigator.clipboard.writeText(email).then(() => {
             setCopied(true);
             toast({
-                description: "邮件地址已复制到剪贴板",
+                description: "邮件地址已复制",
                 duration: 2000,
             });
             setTimeout(() => setCopied(false), 2000);
@@ -175,26 +160,15 @@ function EmailComponent({ email }: { email: string }) {
 
     return (
         <span className="group/email inline">
-            <span className="inline-flex w-0 group-hover/email:w-6 overflow-hidden transition-all duration-300 ease-in-out items-center align-middle shrink-0">
+            <span className="inline-flex w-0 group-hover/email:w-6 overflow-hidden transition-all duration-300 items-center align-middle shrink-0">
                 <button
                     onClick={handleCopy}
-                    className="p-1 rounded-md bg-primary/5 hover:bg-primary/10 text-primary transition-all focus:outline-none focus:ring-1 focus:ring-primary/30 mr-1 opacity-0 group-hover/email:opacity-100 border border-primary/10"
-                    title="复制邮件地址"
+                    className="p-1 rounded-md bg-primary/5 hover:bg-primary/10 text-primary opacity-0 group-hover/email:opacity-100 border border-primary/10"
                 >
-                    {copied ? (
-                        <HugeiconsIcon icon={Check} size={14} />
-                    ) : (
-                        <HugeiconsIcon icon={Copy} size={14} />
-                    )}
+                    {copied ? <HugeiconsIcon icon={Check} size={14} /> : <HugeiconsIcon icon={Copy} size={14} />}
                 </button>
             </span>
-            <a
-                href={`mailto:${email}`}
-                className="text-primary transition-colors inline align-baseline"
-                aria-label={`发送邮件至 ${email}`}
-            >
-                {email}
-            </a>
+            <a href={`mailto:${email}`} className="text-primary transition-colors inline align-baseline">{email}</a>
         </span>
     );
 }

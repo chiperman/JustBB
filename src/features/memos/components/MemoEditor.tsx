@@ -14,14 +14,14 @@ import {
 } from "@/components/ui/dialog";
 import { spring, ease, duration } from '@/lib/animation';
 
-import { EditorSuggestionMenu } from './EditorSuggestionMenu';
-import { MemoPrivateDialog } from './MemoPrivateDialog';
-import { LocationPickerDialog } from './LocationPickerDialog';
-import { EditorToolbar } from './editor/EditorToolbar';
-import { getExtensions, textToTiptapHtml } from './editor/extensions';
+import { EditorSuggestionMenu } from '@/features/memos/components/EditorSuggestionMenu';
+import { MemoPrivateDialog } from '@/features/memos/components/MemoPrivateDialog';
+import { LocationPickerDialog } from '@/features/memos/components/LocationPickerDialog';
+import { EditorToolbar } from '@/features/memos/components/editor/EditorToolbar';
+import { getExtensions, textToTiptapHtml } from '@/features/memos/components/editor/extensions';
 
-import { useMemoEditor, DRAFT_CONTENT_KEY } from '@/hooks/useMemoEditor';
-import { useEditorSuggestions, CustomSuggestionProps } from '@/hooks/useEditorSuggestions';
+import { useMemoEditor, DRAFT_CONTENT_KEY } from '@/features/memos/hooks/useMemoEditor';
+import { useEditorSuggestions, CustomSuggestionProps } from '@/features/memos/hooks/useEditorSuggestions';
 import { Memo } from '@/types/memo';
 
 interface MemoEditorProps {
@@ -82,7 +82,6 @@ export function MemoEditor({
         handleSuggestionScroll
     } = useEditorSuggestions();
 
-    // 计算最终是否收缩
     const isActuallyCollapsed = isPropCollapsed && !isFocused && mode === 'create';
 
     const extensions = useMemo(() => 

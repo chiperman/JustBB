@@ -3,10 +3,10 @@
 import { ReactNode, useState } from 'react';
 import { useView } from '@/context/ViewContext';
 import { MainLayoutClient } from '@/components/layout/MainLayoutClient';
-import { GalleryPageContent } from '@/components/pages/GalleryPageContent';
-import { TagsPageContent } from '@/components/pages/TagsPageContent';
-import { MapPageContent } from '@/components/pages/MapPageContent';
-import TrashClient from '@/app/(main)/trash/TrashClient';
+import { GalleryPageContent } from '@/features/gallery';
+import { TagsPageContent } from '@/features/tags';
+import { MapPageContent } from '@/features/map';
+import { TrashClient } from '@/features/trash';
 
 /**
  * 客户端路由器

@@ -8,7 +8,7 @@ import { ActionResponse } from '../shared/types';
 import { Memo } from '@/types/memo';
 import { isAdmin } from '../auth';
 import { buildMemoPayload } from './helpers';
-import { calculateWordCount, extractLocations } from '@/lib/memos/parser';
+import { calculateWordCount, extractLocations, mergeTagsIntoContent } from '@/lib/memos/parser';
 import { Database } from '@/types/database';
 import { createMemoSchema, updateMemoContentSchema, updateMemoStateSchema, batchAddTagsSchema } from '@/lib/memos/schemas';
 
@@ -177,15 +177,11 @@ export async function batchAddTagsToMemos(ids: string[], tags: string[]): Promis
     if (fetchError) return { success: false, error: '获取笔记失败' };
 
     const results = await Promise.all(memos.map(memo => {
-        const existingTags = memo.tags || [];
-        const combinedTags = Array.from(new Set([...existingTags, ...validTags]));
-
-        let newContent = memo.content || '';
-        const tagsToAppend = validTags.filter(tag => !new RegExp(`#${tag}\\b`).test(newContent));
-
-        if (tagsToAppend.length > 0) {
-            newContent = newContent.trimEnd() + ' ' + tagsToAppend.map(t => `#${t}`).join(' ');
-        }
+        const { content: newContent, tags: combinedTags } = mergeTagsIntoContent(
+            memo.content || '',
+            memo.tags || [],
+            validTags
+        );
 
         return supabase
             .from('memos')

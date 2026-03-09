@@ -2,7 +2,6 @@
 
 import React, { useRef, useLayoutEffect } from 'react';
 import { cn, formatDate } from '@/lib/utils';
-import { HugeiconsIcon } from '@hugeicons/react';
 
 interface SuggestionItem {
     id: string;

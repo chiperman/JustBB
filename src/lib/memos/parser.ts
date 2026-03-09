@@ -45,3 +45,29 @@ export function extractLocations(content: string): Location[] {
 export function calculateWordCount(content: string): number {
     return content.trim().length;
 }
+
+/**
+ * 将新的标签合并到现有的内容和标签数组中
+ */
+export function mergeTagsIntoContent(
+    content: string,
+    existingTags: string[],
+    newTags: string[]
+): { content: string; tags: string[] } {
+    const combinedTags = Array.from(new Set([...(existingTags || []), ...newTags]));
+    
+    let updatedContent = content || '';
+    const currentTagsInContent = new Set(extractTags(updatedContent));
+    
+    const tagsToAppend = newTags.filter(tag => !currentTagsInContent.has(tag));
+
+    if (tagsToAppend.length > 0) {
+        const suffix = tagsToAppend.map(t => `#${t}`).join(' ');
+        updatedContent = updatedContent.trimEnd() + (updatedContent.trim() ? ' ' : '') + suffix;
+    }
+
+    return {
+        content: updatedContent,
+        tags: combinedTags
+    };
+}

@@ -1,85 +1,28 @@
 'use client';
 
-import { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { createMemo } from '@/actions/memos/mutate';
+import { useRef, useEffect, useMemo } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import {
-    PinIcon as Pin,
-    LockIcon as Lock,
-    CircleUnlock01Icon as LockOpen,
-    Maximize01Icon as Maximize2,
-    Minimize01Icon as Minimize2,
-    Location04Icon,
-} from '@hugeicons/core-free-icons';
+import { Minimize01Icon as Minimize2 } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
-import { Button } from './button';
-import { updateMemoContent } from '@/actions/memos/mutate';
-import { searchMemosForMention } from '@/actions/memos/query';
-import { useTags } from '@/context/TagsContext';
-import { useStats } from '@/context/StatsContext';
-import { memoCache } from '@/lib/memo-cache';
-import { LocationPickerDialog } from './LocationPickerDialog';
-import { parseContentTokens } from '@/lib/contentParser';
-
-// Tiptap imports
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
-import LinkExtension from '@tiptap/extension-link';
-import Mention from '@tiptap/extension-mention';
-
-import { PluginKey } from '@tiptap/pm/state';
-
-// 为建议插件定义独立的 Key，防止冲突
-const mentionPluginKey = new PluginKey('mention');
-const hashtagPluginKey = new PluginKey('hashtag');
-
-// 建议项类型
-import { Memo } from '@/types/memo';
-import { SuggestionProps } from '@tiptap/suggestion';
-
-interface SuggestionItem {
-    id: string;
-    label: string;
-    subLabel?: string;
-    count?: number;
-    memo_number?: number;
-    created_at?: string;
-}
-
-type CustomSuggestionProps = SuggestionProps<SuggestionItem>;
-
+import { EditorContent, useEditor } from '@tiptap/react';
 import { motion } from 'framer-motion';
+
 import {
     Dialog,
     DialogContent,
     DialogTitle,
 } from "@/components/ui/dialog";
 import { spring, ease, duration } from '@/lib/animation';
+
 import { EditorSuggestionMenu } from './EditorSuggestionMenu';
 import { MemoPrivateDialog } from './MemoPrivateDialog';
+import { LocationPickerDialog } from './LocationPickerDialog';
+import { EditorToolbar } from './editor/EditorToolbar';
+import { getExtensions, textToTiptapHtml } from './editor/extensions';
 
-
-// Helper to generate smart snippet (Simplified for index-only mode)
-const generateSnippet = (content?: string, query?: string): string => {
-    if (!content) return '';
-    // 1. Replace Markdown images with [图片]
-    const text = content.replace(/!\[.*?\]\(.*?\)/g, '[图片]');
-
-    // 2. Initial toggle if no query
-    if (!query || !query.trim()) return text.substring(0, 100);
-
-    const lowerText = text.toLowerCase();
-    const lowerQuery = query.toLowerCase();
-    const index = lowerText.indexOf(lowerQuery);
-
-    if (index === -1) return text.substring(0, 100);
-    if (index < 40) return text.substring(0, 100);
-
-    const start = Math.max(0, index - 20);
-    const end = Math.min(text.length, index + 80);
-    return '...' + text.substring(start, end);
-};
+import { useMemoEditor, DRAFT_CONTENT_KEY } from '@/hooks/useMemoEditor';
+import { useEditorSuggestions, CustomSuggestionProps } from '@/hooks/useEditorSuggestions';
+import { Memo } from '@/types/memo';
 
 interface MemoEditorProps {
     mode?: 'create' | 'edit';
@@ -91,37 +34,6 @@ interface MemoEditorProps {
     className?: string;
 }
 
-// 辅助函数，将纯文本转换为 Tiptap 能识别的 HTML 格式
-function textToTiptapHtml(text: string): string {
-    if (!text) return '';
-
-    return text.split('\n').map(line => {
-        if (!line.trim()) return '<p></p>';
-
-        const tokens = parseContentTokens(line);
-        const html = tokens.map(token => {
-            switch (token.type) {
-                case 'tag':
-                    const tagName = token.value.slice(1);
-                    return `<span data-type="hashtag" data-id="${tagName}" data-label="${tagName}">#${tagName}</span>`;
-                case 'ref':
-                    const memoNum = token.value.slice(1);
-                    return `<span data-type="mention" data-id="${memoNum}" data-label="${memoNum}">@${memoNum}</span>`;
-                case 'text':
-                    return token.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                default:
-                    return token.value;
-            }
-        }).join('');
-
-        return `<p>${html}</p>`;
-    }).join('');
-}
-
-// Draft Persistence Keys
-const DRAFT_CONTENT_KEY = 'memo_editor_draft_content';
-const DRAFT_IS_PRIVATE_KEY = 'memo_editor_draft_is_private';
-
 export function MemoEditor({
     mode = 'create',
     memo,
@@ -131,414 +43,208 @@ export function MemoEditor({
     hideFullscreen = false,
     className,
 }: MemoEditorProps) {
-    const { refreshTags } = useTags();
-    const { refreshStats } = useStats();
-    const [content, setContent] = useState(memo?.content || '');
-    const [isPending, setIsPending] = useState(false);
-    const [isPrivate, setIsPrivate] = useState(memo?.is_private || false);
-    const [accessCode, setAccessCode] = useState('');
-    const [accessHint, setAccessHint] = useState('');
-    const [isPinned, setIsPinned] = useState(memo?.is_pinned || false);
-    const [error, setError] = useState<string | null>(null);
-    const [showPrivateDialog, setShowPrivateDialog] = useState(false);
-    const [isFocused, setIsFocused] = useState(false);
-    const [isAnimating, setIsAnimating] = useState(false);
-    const [showLocationPicker, setShowLocationPicker] = useState(false);
-
-    // Draft Loading Effect
-    useEffect(() => {
-        if (mode === 'create' && !memo && typeof window !== 'undefined') {
-            const draftIsPrivate = localStorage.getItem(DRAFT_IS_PRIVATE_KEY);
-
-            if (draftIsPrivate) {
-                setIsPrivate(draftIsPrivate === 'true');
-            }
-        }
-    }, [mode, memo]);
-
-    // 计算最终是否收缩：属性要求收缩 且 未获得焦点 且 为创建模式
-    const isActuallyCollapsed = isPropCollapsed && !isFocused && mode === 'create';
-
-    // Suggestion system states
-    const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
-    const [showSuggestions, setShowSuggestions] = useState(false);
-    const [selectedIndex, setSelectedIndex] = useState(0);
-    const [mentionQuery, setMentionQuery] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [isFullscreen, setIsFullscreen] = useState(false);
-    const [hasMoreMentions, setHasMoreMentions] = useState(true);
-
-    // Refs for Tiptap closures
-    const suggestionsRef = useRef<SuggestionItem[]>([]);
-    const selectedIndexRef = useRef(0);
-    const suggestionPropsRef = useRef<CustomSuggestionProps | null>(null);
-    const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const isFetchingMoreRef = useRef(false);
-    const mentionQueryRef = useRef('');
-
-    useEffect(() => {
-        suggestionsRef.current = suggestions;
-    }, [suggestions]);
-
-    useEffect(() => {
-        selectedIndexRef.current = selectedIndex;
-    }, [selectedIndex]);
-
-    useEffect(() => {
-        mentionQueryRef.current = mentionQuery;
-    }, [mentionQuery]);
-
-
-    const [suggestionPosition, setSuggestionPosition] = useState<{ top: number; left: number } | null>(null);
     const editorContainerRef = useRef<HTMLDivElement>(null);
     const relativeGroupRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        mentionQueryRef.current = mentionQuery;
-    }, [mentionQuery]);
+    const {
+        content, setContent,
+        isPending,
+        isPrivate,
+        accessCode, setAccessCode,
+        accessHint, setAccessHint,
+        isPinned, setIsPinned,
+        error, setError,
+        showPrivateDialog, setShowPrivateDialog,
+        isFocused, setIsFocused,
+        isFullscreen, setIsFullscreen,
+        isAnimating, setIsAnimating,
+        showLocationPicker, setShowLocationPicker,
+        handleTogglePrivate,
+        performPublish,
+        handleCancel
+    } = useMemoEditor({ mode, initialMemo: memo, onSuccess, onCancel });
 
-    const fetchMentionSuggestions = async (query: string, offset: number = 0) => {
-        setMentionQuery(query);
-        const isInitial = offset === 0;
-        if (isInitial) {
-            setSelectedIndex(0);
-            setHasMoreMentions(true); // 重置状态
-        }
+    const {
+        suggestions,
+        showSuggestions, setShowSuggestions,
+        selectedIndex, setSelectedIndex,
+        mentionQuery,
+        isLoading,
+        hasMoreMentions,
+        suggestionPosition,
+        suggestionsRef,
+        selectedIndexRef,
+        suggestionPropsRef,
+        fetchMentionSuggestions,
+        fetchHashtagSuggestions,
+        updateSuggestionPosition,
+        handleSelectSuggestion,
+        handleSuggestionScroll
+    } = useEditorSuggestions();
 
-        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    // 计算最终是否收缩
+    const isActuallyCollapsed = isPropCollapsed && !isFocused && mode === 'create';
 
-        // 如果是初始加载且 query 不为空，我们希望防抖以避免过多无效请求
-        const shouldDebounce = isInitial && query.trim().length > 0;
-
-        const performFetch = async () => {
-            setIsLoading(true);
-            try {
-                const res = await searchMemosForMention(query, offset, 20);
-                const results = res.success ? (res.data || []) : [];
-                const items: SuggestionItem[] = results.map((m) => ({
-                    id: m.id!,
-                    label: `@${m.memo_number}`,
-                    subLabel: generateSnippet(m.content, query),
-                    memo_number: m.memo_number,
-                    created_at: m.created_at
-                }));
-
-                setSuggestions(prev => {
-                    if (isInitial) return items;
-                    // 分页追加时去重
-                    const existingIds = new Set(prev.map(p => p.id));
-                    return [...prev, ...items.filter(it => !existingIds.has(it.id))];
-                });
-
-                setHasMoreMentions(items.length === 20); // 如果返回了满额，说明可能还有更多
-            } catch (_e) {
-                console.error("Remote mention search failed", _e);
-            } finally {
-                setIsLoading(false);
-                isFetchingMoreRef.current = false;
+    const extensions = useMemo(() => 
+        // eslint-disable-next-line react-hooks/refs
+        getExtensions({
+        onMentionStart: (props) => {
+            suggestionPropsRef.current = props;
+            setShowSuggestions(true);
+            fetchMentionSuggestions(props.query, 0);
+            updateSuggestionPosition(props, relativeGroupRef);
+        },
+        onMentionUpdate: (props) => {
+            suggestionPropsRef.current = props;
+            fetchMentionSuggestions(props.query, 0);
+            updateSuggestionPosition(props, relativeGroupRef);
+        },
+        onMentionExit: () => {
+            setShowSuggestions(false);
+            suggestionPropsRef.current = null;
+        },
+        onMentionKeyDown: (props) => {
+            if (props.event.key === 'Escape') {
+                setShowSuggestions(false);
+                return true;
             }
-        };
-
-        if (shouldDebounce) {
-            debounceTimerRef.current = setTimeout(performFetch, 300);
-        } else {
-            performFetch();
+            if (props.event.key === ' ' && suggestionPropsRef.current) {
+                const query = suggestionPropsRef.current.query;
+                if (/^\d+$/.test(query)) {
+                    suggestionPropsRef.current.command({ id: query, label: query });
+                    props.event.preventDefault();
+                    return true;
+                }
+            }
+            if (props.event.key === 'ArrowUp') {
+                const len = suggestionsRef.current?.length || 0;
+                setSelectedIndex((prev) => (prev + len - 1) % (len || 1));
+                props.event.preventDefault();
+                return true;
+            }
+            if (props.event.key === 'ArrowDown') {
+                const len = suggestionsRef.current?.length || 0;
+                setSelectedIndex((prev) => (prev + 1) % (len || 1));
+                props.event.preventDefault();
+                return true;
+            }
+            if (props.event.key === 'Enter') {
+                const item = suggestionsRef.current?.[selectedIndexRef.current];
+                if (item && suggestionPropsRef.current) {
+                    const label = item.label.startsWith('@') ? item.label.slice(1) : item.label;
+                    suggestionPropsRef.current.command({ id: label, label: label });
+                    props.event.preventDefault();
+                    props.event.stopPropagation();
+                    return true;
+                }
+            }
+            return false;
+        },
+        onHashtagStart: (props) => {
+            suggestionPropsRef.current = props;
+            setShowSuggestions(true);
+            fetchHashtagSuggestions(props.query);
+            updateSuggestionPosition(props, relativeGroupRef);
+        },
+        onHashtagUpdate: (props) => {
+            suggestionPropsRef.current = props;
+            fetchHashtagSuggestions(props.query);
+            updateSuggestionPosition(props, relativeGroupRef);
+        },
+        onHashtagExit: () => {
+            setShowSuggestions(false);
+            suggestionPropsRef.current = null;
+        },
+        onHashtagKeyDown: (props) => {
+            if (props.event.key === 'Escape') {
+                setShowSuggestions(false);
+                return true;
+            }
+            if (props.event.key === ' ' && suggestionPropsRef.current) {
+                const query = suggestionPropsRef.current.query;
+                if (/^[\w\u4e00-\u9fa5]+$/.test(query)) {
+                    suggestionPropsRef.current.command({ id: query, label: query });
+                    props.event.preventDefault();
+                    return true;
+                }
+            }
+            if (props.event.key === 'ArrowUp') {
+                const len = suggestionsRef.current?.length || 0;
+                setSelectedIndex((prev) => (prev + len - 1) % (len || 1));
+                props.event.preventDefault();
+                return true;
+            }
+            if (props.event.key === 'ArrowDown') {
+                const len = suggestionsRef.current?.length || 0;
+                setSelectedIndex((prev) => (prev + 1) % (len || 1));
+                props.event.preventDefault();
+                return true;
+            }
+            if (props.event.key === 'Enter') {
+                const item = suggestionsRef.current?.[selectedIndexRef.current];
+                if (suggestionPropsRef.current && item) {
+                    const rawLabel = item.label;
+                    const label = rawLabel.startsWith('#') ? rawLabel.slice(1) : rawLabel;
+                    suggestionPropsRef.current.command({ id: label, label: label });
+                    props.event.preventDefault();
+                    props.event.stopPropagation();
+                    return true;
+                }
+            }
+            return false;
         }
-    };
-
-    const fetchHashtagSuggestions = (query: string) => {
-        setMentionQuery(query);
-        setSelectedIndex(0);
-        // Implement hashtag search logic if needed
-    };
+    }), [
+        fetchHashtagSuggestions,
+        fetchMentionSuggestions,
+        setSelectedIndex,
+        setShowSuggestions,
+        updateSuggestionPosition,
+        relativeGroupRef,
+        selectedIndexRef,
+        suggestionPropsRef,
+        suggestionsRef
+    ]);
 
     const editor = useEditor({
         immediatelyRender: false,
-        extensions: [
-            StarterKit.configure({
-                heading: false,
-                codeBlock: false,
-                bold: false,
-                italic: false,
-            }),
-            Mention.extend({
-                name: 'mention',
-                parseHTML() {
-                    return [
-                        {
-                            tag: 'span[data-type="mention"]',
-                        },
-                    ]
-                },
-                renderHTML({ node }) {
-                    return [
-                        'span',
-                        this.options.HTMLAttributes,
-                        `@${node.attrs.label ?? node.attrs.id}`,
-                    ]
-                },
-            }).configure({
-                HTMLAttributes: {
-                    class: 'text-primary font-mono bg-primary/10 px-1 rounded-md mx-0.5 inline-block decoration-none',
-                },
-                suggestion: {
-                    char: '@',
-                    pluginKey: mentionPluginKey,
-                    render: () => {
-                        const updatePosition = (props: CustomSuggestionProps) => {
-                            const rect = props.clientRect?.();
-                            if (rect && relativeGroupRef.current) {
-                                const parentRect = relativeGroupRef.current.getBoundingClientRect();
-
-                                // Calculate top/left relative to our outer relative container
-                                // Use rect.bottom (viewport bottom) - parentRect.top (viewport top)
-                                let left = rect.left - parentRect.left;
-                                const top = rect.bottom - parentRect.top + 8; // Added 8px offset
-
-                                // Prevent overflow on the right
-                                const maxLeft = parentRect.width - 370; // 350px width + buffer
-                                if (left > maxLeft) left = maxLeft;
-                                if (left < 0) left = 10;
-
-                                setSuggestionPosition({ top, left });
-                            }
-                        };
-
-                        return {
-                            onStart: (props: CustomSuggestionProps) => {
-                                suggestionPropsRef.current = props;
-                                setShowSuggestions(true);
-                                fetchMentionSuggestions(props.query, 0);
-                                updatePosition(props);
-                            },
-                            onUpdate: (props: CustomSuggestionProps) => {
-                                suggestionPropsRef.current = props;
-                                fetchMentionSuggestions(props.query, 0);
-                                updatePosition(props);
-                            },
-                            onExit: () => {
-                                setShowSuggestions(false);
-                                suggestionPropsRef.current = null;
-                            },
-                            onKeyDown: (props) => {
-                                if (props.event.key === 'Escape') {
-                                    setShowSuggestions(false);
-                                    return true;
-                                }
-
-                                if (props.event.key === ' ' && suggestionPropsRef.current) {
-                                    // 按下空格，若查询符合 @\d+ 格式，直接创建
-                                    const query = suggestionPropsRef.current.query;
-                                    if (/^\d+$/.test(query)) {
-                                        suggestionPropsRef.current.command({ id: query, label: query });
-                                        props.event.preventDefault();
-                                        return true;
-                                    }
-                                }
-
-                                if (props.event.key === 'ArrowUp') {
-                                    setSelectedIndex((prev) => (prev + suggestionsRef.current.length - 1) % suggestionsRef.current.length);
-                                    props.event.preventDefault();
-                                    return true;
-                                }
-
-                                if (props.event.key === 'ArrowDown') {
-                                    setSelectedIndex((prev) => (prev + 1) % suggestionsRef.current.length);
-                                    props.event.preventDefault();
-                                    return true;
-                                }
-
-                                if (props.event.key === 'Enter') {
-                                    const item = suggestionsRef.current[selectedIndexRef.current];
-                                    if (item && suggestionPropsRef.current) {
-                                        // 移除 @ 前缀再插入，避免 renderHTML 重复添加
-                                        const label = item.label.startsWith('@') ? item.label.slice(1) : item.label;
-                                        suggestionPropsRef.current.command({ id: label, label: label });
-                                        props.event.preventDefault();
-                                        props.event.stopPropagation();
-                                        return true;
-                                    }
-                                }
-
-                                return false;
-                            },
-                        };
-                    },
-                },
-            }),
-            Mention.extend({
-                name: 'hashtag',
-                parseHTML() {
-                    return [
-                        {
-                            tag: 'span[data-type="hashtag"]',
-                        },
-                    ]
-                },
-                renderHTML({ node }) {
-                    return [
-                        'span',
-                        this.options.HTMLAttributes,
-                        `#${node.attrs.label ?? node.attrs.id}`,
-                    ]
-                },
-            }).configure({
-                HTMLAttributes: {
-                    class: 'font-mono mx-0.5 inline-block decoration-none font-medium',
-                    style: 'color: #5783f7',
-                },
-                suggestion: {
-                    char: '#',
-                    pluginKey: hashtagPluginKey,
-                    allowSpaces: false,
-                    // 自定义匹配规则以支持中文等非 ASCII 字符
-                    // 这里允许 # 后跟任意非空格字符
-                    allow: () => {
-                        return true;
-                    },
-                    render: () => {
-                        const updatePosition = (props: CustomSuggestionProps) => {
-                            const rect = props.clientRect?.();
-                            if (rect && relativeGroupRef.current) {
-                                const parentRect = relativeGroupRef.current.getBoundingClientRect();
-
-                                // Calculate top/left relative to our outer relative container
-                                let left = rect.left - parentRect.left;
-                                const top = rect.bottom - parentRect.top + 8; // Added 8px offset
-
-                                // Prevent overflow on the right
-                                const maxLeft = parentRect.width - 370; // 350px width + buffer
-                                if (left > maxLeft) left = maxLeft;
-                                if (left < 0) left = 10;
-
-                                setSuggestionPosition({ top, left });
-                            }
-                        };
-
-                        return {
-                            onStart: (props: CustomSuggestionProps) => {
-                                suggestionPropsRef.current = props;
-                                setShowSuggestions(true);
-                                fetchHashtagSuggestions(props.query);
-                                updatePosition(props);
-                            },
-                            onUpdate: (props: CustomSuggestionProps) => {
-                                suggestionPropsRef.current = props;
-                                fetchHashtagSuggestions(props.query);
-                                updatePosition(props);
-                            }, onExit: () => {
-                                setShowSuggestions(false);
-                                suggestionPropsRef.current = null;
-                            },
-                            onKeyDown: (props) => {
-                                if (props.event.key === 'Escape') {
-                                    setShowSuggestions(false);
-                                    return true;
-                                }
-
-                                if (props.event.key === ' ' && suggestionPropsRef.current) {
-                                    // 按下空格，若查询符合标签格式，直接创建
-                                    const query = suggestionPropsRef.current.query;
-                                    if (/^[\w\u4e00-\u9fa5]+$/.test(query)) {
-                                        suggestionPropsRef.current.command({ id: query, label: query });
-                                        props.event.preventDefault();
-                                        return true;
-                                    }
-                                }
-
-                                if (props.event.key === 'ArrowUp') {
-                                    setSelectedIndex((prev) => (prev + suggestionsRef.current.length - 1) % suggestionsRef.current.length);
-                                    props.event.preventDefault();
-                                    return true;
-                                }
-
-                                if (props.event.key === 'ArrowDown') {
-                                    setSelectedIndex((prev) => (prev + 1) % suggestionsRef.current.length);
-                                    props.event.preventDefault();
-                                    return true;
-                                }
-
-                                if (props.event.key === 'Enter') {
-                                    const item = suggestionsRef.current[selectedIndexRef.current];
-                                    if (suggestionPropsRef.current && item) {
-                                        const rawLabel = item ? item.label : `#${suggestionPropsRef.current.query}`;
-                                        // 移除 # 前缀
-                                        const label = rawLabel.startsWith('#') ? rawLabel.slice(1) : rawLabel;
-                                        suggestionPropsRef.current.command({ id: label, label: label });
-                                        props.event.preventDefault();
-                                        props.event.stopPropagation();
-                                        return true;
-                                    }
-                                }
-
-                                return false;
-                            },
-                        };
-                    },
-                },
-            }),
-            Placeholder.configure({
-                placeholder: 'Wanna memo something? JustMemo it!',
-                emptyEditorClass: 'is-editor-empty',
-            }),
-            LinkExtension.configure({
-                openOnClick: false,
-            }),
-
-        ],
+        extensions,
         content: memo?.content || '',
         onUpdate: ({ editor }) => {
             const text = editor.getText({ blockSeparator: '\n' });
-
             setContent(text);
             setError(null);
-
-            // Save Draft
             if (mode === 'create') {
                 localStorage.setItem(DRAFT_CONTENT_KEY, JSON.stringify(editor.getJSON()));
             }
         },
         onFocus: () => {
             setIsFocused(true);
-            // 重新进入编辑器时，检查是否需要重新弹出建议
             setTimeout(() => {
                 if (!editor) return;
                 const { from } = editor.state.selection;
-                // 获取光标前后的文本进行判断
                 const textBefore = editor.state.doc.textBetween(Math.max(0, from - 20), from);
                 const mentionMatch = textBefore.match(/(?:^|\s)(@|#)(\w*)$/);
-
                 if (mentionMatch) {
                     const char = mentionMatch[1];
                     const query = mentionMatch[2];
                     const startPos = from - mentionMatch[2].length - 1;
-
-                    // 手动计算 range 并模拟 props 供 handleSelectSuggestion 使用
                     suggestionPropsRef.current = {
                         editor,
                         query,
                         range: { from: startPos, to: from },
                         command: (props: { label: string }) => {
-                            // 手动实现插入逻辑
                             editor.chain().focus().deleteRange({ from: startPos, to: from }).insertContent([
                                 {
                                     type: char === '@' ? 'mention' : 'hashtag',
                                     attrs: { id: props.label, label: props.label }
                                 },
-                                {
-                                    type: 'text',
-                                    text: ' '
-                                }
+                                { type: 'text', text: ' ' }
                             ]).run();
                         }
-                    } as unknown as CustomSuggestionProps;
-
+                    } as CustomSuggestionProps;
                     setShowSuggestions(true);
-                    if (char === '@') {
-                        fetchMentionSuggestions(query, 0);
-                    } else {
-                        fetchHashtagSuggestions(query);
-                    }
+                    if (char === '@') fetchMentionSuggestions(query, 0);
+                    else fetchHashtagSuggestions(query);
                 }
             }, 100);
         },
@@ -562,214 +268,52 @@ export function MemoEditor({
             if (mode === 'edit' && memo?.content) {
                 editor.commands.setContent(textToTiptapHtml(memo.content));
             } else if (mode === 'create') {
-                // Restore draft if exists
                 const draftContent = localStorage.getItem(DRAFT_CONTENT_KEY);
-                if (draftContent && draftContent.trim()) {
-                    // Check if editor is empty to avoid overwriting user input if race condition?
-                    if (editor.getText().trim() === '') {
-                        try {
-                            const json = JSON.parse(draftContent);
-                            editor.commands.setContent(json);
-                        } catch {
-                            // Fallback to plain text for legacy drafts or if JSON fails
-                            editor.commands.setContent(textToTiptapHtml(draftContent));
-                        }
-
-                        // Trigger onUpdate logic manually for initial load
-                        const text = editor.getText();
-                        setContent(text);
+                if (draftContent && draftContent.trim() && editor.getText().trim() === '') {
+                    try {
+                        const json = JSON.parse(draftContent);
+                        editor.commands.setContent(json);
+                    } catch {
+                        editor.commands.setContent(textToTiptapHtml(draftContent));
                     }
+                    setContent(editor.getText());
                 }
             }
         }
-    }, [editor, memo, mode]);
+    }, [editor, memo, mode, setContent]);
 
-    // Fullscreen Sync Effect: 当从全屏切回普通模式时，强制同步最新的 Draft 到首页编辑器
+    // Fullscreen Sync Effect
     useEffect(() => {
-        if (typeof window === 'undefined') return;
-
-        // 仅在主视图模式下监听全屏状态的“消失”动作
         if (!hideFullscreen && !isFullscreen && mode === 'create' && editor) {
             const draftContent = localStorage.getItem(DRAFT_CONTENT_KEY);
-
             if (draftContent !== null) {
                 try {
-                    const json = JSON.parse(draftContent);
-                    editor.commands.setContent(json);
+                    editor.commands.setContent(JSON.parse(draftContent));
                 } catch {
-                    // Legacy plain text sync
                     editor.commands.setContent(draftContent);
                 }
-
-                console.log('[Sync] Pulling structured content from draft after fullscreen close');
-                const text = editor.getText();
-                setContent(text);
+                setContent(editor.getText());
             }
         }
-    }, [isFullscreen, hideFullscreen, mode, editor]);
-
-    useEffect(() => {
-        if (isActuallyCollapsed && editorContainerRef.current) {
-            editorContainerRef.current.scrollTop = 0;
-        }
-    }, [isActuallyCollapsed]);
-
-
-    const handleSuggestionScroll = async (e: React.UIEvent<HTMLUListElement>) => {
-        const target = e.currentTarget;
-        const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 150;
-
-        if (isNearBottom && !isLoading && hasMoreMentions && !isFetchingMoreRef.current) {
-            isFetchingMoreRef.current = true;
-            fetchMentionSuggestions(mentionQueryRef.current, suggestions.length);
-        }
-    };
-
-
-    const handleSelectSuggestion = (item: SuggestionItem) => {
-        if (!editor) return;
-
-        if (suggestionPropsRef.current) {
-            const rawLabel = item.label;
-            let label = rawLabel;
-            if (rawLabel.startsWith('@') || rawLabel.startsWith('#')) {
-                label = rawLabel.slice(1);
-            }
-
-            suggestionPropsRef.current.command({
-                id: label,
-                label: label,
-            });
-        }
-
-        setShowSuggestions(false);
-        setSelectedIndex(0);
-        setMentionQuery('');
-    };
-
-
-
-    const handleTogglePrivate = () => {
-        const newState = !isPrivate;
-        setIsPrivate(newState);
-        if (mode === 'create') {
-            localStorage.setItem(DRAFT_IS_PRIVATE_KEY, String(newState));
-        }
-
-        if (!newState) {
-            setAccessCode('');
-            setAccessHint('');
-        }
-    };
-
-    const handlePublishClick = () => {
-        if (!content.trim() || isPending) return;
-
-        if (isPrivate) {
-            setShowPrivateDialog(true);
-        } else {
-            performPublish();
-        }
-    };
-
-    const performPublish = async () => {
-        const textContent = editor?.getText({ blockSeparator: '\n' }) || content;
-        if (!textContent.trim() || isPending) return;
-
-        setIsPending(true);
-        setError(null);
-        setShowPrivateDialog(false);
-
-        const formData = new FormData();
-        formData.append('content', textContent);
-        formData.append('is_private', String(isPrivate));
-        formData.append('is_pinned', String(isPinned));
-
-        if (isPrivate && accessCode) {
-            formData.append('access_code', accessCode);
-            formData.append('access_code_hint', accessHint);
-        }
-
-        try {
-            let result;
-            if (mode === 'edit' && memo) {
-                formData.append('id', memo.id);
-                result = await updateMemoContent(formData);
-            } else {
-                result = await createMemo(formData);
-            }
-
-            if (result.success) {
-                const newMemo = result.data as Memo | undefined;
-                if (newMemo) {
-                    memoCache.addItem({
-                        id: newMemo.id,
-                        memo_number: newMemo.memo_number || 0,
-                        content: newMemo.content,
-                        created_at: newMemo.created_at
-                    });
-
-                    Promise.all([
-                        refreshTags?.(),
-                        refreshStats?.()
-                    ]).catch(err => console.error('[Sync] Stats refresh failed:', err));
-                }
-
-                if (mode === 'create') {
-                    localStorage.removeItem(DRAFT_CONTENT_KEY);
-                    localStorage.removeItem(DRAFT_IS_PRIVATE_KEY);
-
-                    editor?.commands.setContent('');
-                    setContent('');
-                    setIsPrivate(false);
-                    setAccessCode('');
-                    setAccessHint('');
-                    setIsPinned(false);
-                } else {
-                    onSuccess?.(newMemo);
-                }
-            } else {
-                setError(typeof result.error === 'string' ? result.error : '操作失败，请稍后重试');
-            }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : '服务器连接失败');
-        } finally {
-            setIsPending(false);
-        }
-    };
-
+    }, [isFullscreen, hideFullscreen, mode, editor, setContent]);
 
     return (
         <motion.section
-
             initial={false}
             animate={{
                 opacity: 1,
                 height: isActuallyCollapsed ? "auto" : (hideFullscreen ? "100%" : "auto"),
                 minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? "100%" : 120),
-                paddingTop: 24,
-                paddingBottom: 24,
-                paddingLeft: 24,
-                paddingRight: 24,
+                padding: 24,
                 boxShadow: isActuallyCollapsed ? "none" : "0 1px 2px 0 rgb(0 0 0 / 0.05)",
             }}
             exit={{
                 opacity: 0,
                 height: 0,
-                marginBottom: 0,
-                overflow: 'hidden',
-                transition: {
-                    opacity: { duration: 0.2 },
-                    height: { duration: 0.3, ease: [0.64, 0, 0.78, 0] }
-                }
+                transition: { opacity: { duration: 0.2 }, height: { duration: 0.3 } }
             }}
             transition={{
                 height: isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out },
-                minHeight: isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out },
-                boxShadow: {
-                    duration: 0.3,
-                    ease: "easeInOut"
-                },
                 opacity: { duration: duration.fast }
             }}
             onAnimationStart={() => setIsAnimating(true)}
@@ -778,75 +322,48 @@ export function MemoEditor({
                 willChange: "transform, height, opacity",
                 overflow: (isActuallyCollapsed || isAnimating) ? 'hidden' : 'visible'
             }}
+            className={cn(
+                "border border-border rounded-inner relative flex flex-col items-stretch selection:bg-primary/30",
+                isActuallyCollapsed ? "shadow-none cursor-pointer hover:bg-accent/5" : (hideFullscreen ? "h-full" : ""),
+                className
+            )}
             onClick={() => {
                 if ((isActuallyCollapsed || hideFullscreen) && editor) {
                     const selection = window.getSelection();
-                    if (selection && selection.toString().length > 0) {
-                        return;
+                    if (!selection || selection.toString().length === 0) {
+                        editor.commands.focus('end');
                     }
-                    editor.commands.focus('end');
                 }
             }}
-            className={cn(
-                "border border-border rounded-inner relative",
-                "flex flex-col items-stretch",
-                "selection:bg-primary/30",
-                isActuallyCollapsed ? "shadow-none cursor-pointer hover:bg-accent/5" : (hideFullscreen ? "h-full" : ""),
-                className
-            )}>
+        >
             <motion.div
                 className="absolute inset-0 bg-card rounded-inner pointer-events-none"
-                initial={false}
                 animate={{ opacity: isActuallyCollapsed ? 0 : 1 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
             />
-            <motion.div
-                className="w-full flex-1 flex flex-col min-h-0"
-            >
-                <div ref={relativeGroupRef} className="relative group w-full flex-1 flex flex-col min-h-0">
-                    <label htmlFor="memo-content" className="sr-only">Memo内容</label>
 
+            <div className="w-full flex-1 flex flex-col min-h-0">
+                <div ref={relativeGroupRef} className="relative group w-full flex-1 flex flex-col min-h-0">
                     <motion.div
                         ref={editorContainerRef}
                         animate={{
                             height: isActuallyCollapsed ? 26 : (hideFullscreen ? "100%" : "auto"),
                             minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? "100%" : 120),
-                            opacity: 1,
-                            overflow: (isActuallyCollapsed || isAnimating) ? "hidden" : "visible"
-                        }}
-                        transition={{
-                            height: isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out },
-                            minHeight: isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out },
-                            opacity: { duration: duration.fast }
-                        }}
-                        style={{
-                            minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? 0 : 120),
-                            willChange: "transform, height, min-height",
-                            maxHeight: hideFullscreen ? 'none' : 500,
-                            maskImage: isActuallyCollapsed && !isAnimating
-                                ? 'linear-gradient(to bottom, black 90%, transparent 100%)'
-                                : 'none',
-                            WebkitMaskImage: isActuallyCollapsed && !isAnimating
-                                ? 'linear-gradient(to bottom, black 90%, transparent 100%)'
-                                : 'none',
                         }}
                         className={cn(
                             "relative",
                             isActuallyCollapsed ? "min-h-0 scrollbar-hide overflow-hidden" : (hideFullscreen ? "overflow-y-auto scrollbar-hover flex-1" : "overflow-visible")
                         )}
-
+                        style={{
+                            maxHeight: hideFullscreen ? 'none' : 500,
+                            maskImage: isActuallyCollapsed ? 'linear-gradient(to bottom, black 90%, transparent 100%)' : 'none',
+                        }}
                     >
-
                         {!editor && (
-                            <div className="tiptap prose prose-sm max-w-none text-muted-foreground/50 leading-relaxed tracking-normal text-base absolute inset-0 pointer-events-none">
+                            <div className="tiptap prose prose-sm max-w-none text-muted-foreground/50 absolute inset-0 pointer-events-none">
                                 <p>Wanna memo something? JustMemo it!</p>
                             </div>
                         )}
                         <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "h-full")} />
-
-                        {isActuallyCollapsed && (
-                            <div className="absolute inset-0 z-10 cursor-pointer editor-full-height-trigger" />
-                        )}
                     </motion.div>
 
                     {showSuggestions && (
@@ -857,124 +374,34 @@ export function MemoEditor({
                             hasMore={hasMoreMentions}
                             query={mentionQuery}
                             position={suggestionPosition}
-                            onSelect={handleSelectSuggestion}
+                            onSelect={(item) => handleSelectSuggestion(item, editor)}
                             onScroll={handleSuggestionScroll}
                         />
                     )}
                 </div>
 
-
-
-                {
-                    error && (
-                        <div className="mt-3 text-xs text-red-500 bg-red-500/5 px-3 py-2 rounded-lg border border-red-500/10 animate-in fade-in slide-in-from-top-1">
-                            {error}
-                        </div>
-                    )
-                }
-
-                <motion.div
-                    initial={false}
-                    animate={{
-                        height: isActuallyCollapsed ? 0 : "auto",
-                        opacity: isActuallyCollapsed ? 0 : 1,
-                    }}
-                    transition={{
-                        height: isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out },
-                        opacity: { duration: duration.fast }
-                    }}
-                    style={{ willChange: "opacity, height" }}
-                    className="overflow-hidden bg-transparent"
-                    onMouseDown={(e) => e.preventDefault()}
-                >
-                    <div className="pt-5 mt-4 border-t border-border/50 flex justify-between items-center">
-                        <div className="flex items-center gap-1">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={handleTogglePrivate}
-                                className={cn("h-8 px-2 gap-1.5 active:scale-95 transition-all text-muted-foreground", isPrivate ? "text-primary bg-primary/5 hover:text-primary/80" : "hover:text-foreground")}
-                            >
-                                {isPrivate ? <HugeiconsIcon icon={Lock} size={16} /> : <HugeiconsIcon icon={LockOpen} size={16} />}
-                                <span className="text-xs font-medium">{isPrivate ? '私密' : '公开'}</span>
-                            </Button>
-
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setIsPinned(!isPinned)}
-                                className={cn("h-8 px-2 gap-1.5 active:scale-95 transition-all text-muted-foreground", isPinned ? "text-primary bg-primary/5 hover:text-primary/80" : "hover:text-foreground")}
-                            >
-                                <HugeiconsIcon icon={Pin} size={16} className={cn(isPinned && "fill-current")} />
-                                <span className="text-xs font-medium">置顶</span>
-                            </Button>
-
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowLocationPicker(true)}
-                                className="h-8 px-2 gap-1.5 text-muted-foreground active:scale-95 transition-all hover:text-foreground"
-                                aria-label="添加定位"
-                            >
-                                <HugeiconsIcon icon={Location04Icon} size={16} />
-                                <span className="text-xs font-medium">定位</span>
-                            </Button>
-
-                            {!hideFullscreen && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setIsFullscreen(true)}
-                                    className="h-8 px-2 gap-1.5 text-muted-foreground active:scale-95 transition-all hover:text-foreground"
-                                    aria-label="放大"
-                                >
-                                    <HugeiconsIcon icon={Maximize2} size={16} />
-                                    <span className="text-xs font-medium">放大</span>
-                                </Button>
-                            )}
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            {content.trim().length > 0 && (
-                                <span className="text-[10px] text-muted-foreground/40 tabular-nums ml-1">
-                                    {content.trim().length} 字
-                                </span>
-                            )}
-                            <div className="flex items-center gap-2">
-                                {(mode === 'edit' || content.trim()) && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => {
-                                            if (mode === 'edit') {
-                                                onCancel?.();
-                                            } else {
-                                                localStorage.removeItem(DRAFT_CONTENT_KEY);
-                                                localStorage.removeItem(DRAFT_IS_PRIVATE_KEY);
-
-                                                editor?.commands.setContent('');
-                                                setContent('');
-                                                setIsPrivate(false);
-                                            }
-                                        }}
-                                        className="h-8 px-3 text-muted-foreground hover:text-foreground transition-all active:scale-95"
-                                    >
-                                        取消
-                                    </Button>
-                                )}
-                                <Button
-                                    size="sm"
-                                    onClick={handlePublishClick}
-                                    disabled={!content.trim() || isPending}
-                                    className="h-8 px-4 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all active:scale-95"
-                                >
-                                    {isPending ? '提交中...' : mode === 'edit' ? '保存' : '发布'}
-                                </Button>
-                            </div>
-                        </div>
+                {error && (
+                    <div className="mt-3 text-xs text-red-500 bg-red-500/5 px-3 py-2 rounded-lg border border-red-500/10">
+                        {error}
                     </div>
-                </motion.div>
-            </motion.div>
+                )}
+
+                <EditorToolbar
+                    isActuallyCollapsed={isActuallyCollapsed}
+                    isPrivate={isPrivate}
+                    isPinned={isPinned}
+                    isPending={isPending}
+                    isFullscreenAvailable={!hideFullscreen}
+                    content={content}
+                    mode={mode}
+                    onTogglePrivate={handleTogglePrivate}
+                    onTogglePinned={() => setIsPinned(!isPinned)}
+                    onShowLocationPicker={() => setShowLocationPicker(true)}
+                    onShowFullscreen={() => setIsFullscreen(true)}
+                    onCancel={handleCancel}
+                    onPublish={() => isPrivate ? setShowPrivateDialog(true) : performPublish(editor)}
+                />
+            </div>
 
             <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
                 <DialogContent
@@ -989,14 +416,8 @@ export function MemoEditor({
                                 memo={memo}
                                 isCollapsed={false}
                                 hideFullscreen={true}
-                                onCancel={() => {
-                                    setIsFullscreen(false);
-                                    onCancel?.();
-                                }}
-                                onSuccess={() => {
-                                    setIsFullscreen(false);
-                                    onSuccess?.();
-                                }}
+                                onCancel={() => setIsFullscreen(false)}
+                                onSuccess={() => setIsFullscreen(false)}
                             />
                         </div>
                     </div>
@@ -1010,17 +431,14 @@ export function MemoEditor({
                 setAccessCode={setAccessCode}
                 accessHint={accessHint}
                 setAccessHint={setAccessHint}
-                onConfirm={performPublish}
+                onConfirm={() => performPublish(editor)}
             />
 
             <LocationPickerDialog
                 open={showLocationPicker}
                 onOpenChange={setShowLocationPicker}
-                onConfirm={(locationText) => {
-                    if (!editor) return;
-                    editor.chain().focus().insertContent(locationText + ' ').run();
-                }}
+                onConfirm={(loc) => editor?.chain().focus().insertContent(loc + ' ').run()}
             />
-        </motion.section >
+        </motion.section>
     );
 }

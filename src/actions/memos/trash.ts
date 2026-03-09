@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { getClient } from '@/lib/supabase';
 import { ActionResponse } from '../shared/types';
-import { isAdmin } from '../auth';
+import { isAdmin } from '@/features/auth/actions';
 import { Memo } from '@/types/memo';
 import { getMemosQuery, MemoFilters } from '@/lib/memos/query-builder';
 

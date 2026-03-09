@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { exportAllMemos } from '@/actions/memos/analytics';
+import { exportMemos } from '@/actions/memos/analytics';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { FileDownloadIcon as FileDown, File02Icon as FileJson, Loading01Icon as Loader2 } from '@hugeicons/core-free-icons';
-import { Memo } from '@/types/memo';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -12,81 +11,40 @@ export function DataExporter() {
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
 
-    const handleExport = async (format: 'json' | 'csv') => {
+    const handleExport = async (format: 'markdown' | 'json') => {
         try {
             setLoading(true);
-            const { data, error } = await exportAllMemos();
+            const data = await exportMemos(format);
 
-            if (error || !data) {
+            if (!data) {
                 toast({
                     title: "导出失败",
-                    description: error || "未获取到数据",
-                    variant: "destructive"
+                    description: "没有可导出的数据",
+                    variant: "destructive",
                 });
                 return;
             }
 
-            let blob: Blob;
-            let filename = `JustMemo-Backup-${new Date().toISOString().slice(0, 10)}`;
-
-            if (format === 'json') {
-                blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                filename += '.json';
-            } else {
-                // Generate CSV
-                try {
-                    // Simple CSV conversion
-                    const headers: (keyof Memo)[] = ['id', 'memo_number', 'content', 'created_at', 'tags', 'is_private', 'deleted_at'];
-                    const csvContent = [
-                        headers.join(','),
-                        ...data.map((item: Memo) => {
-                            return headers.map(key => {
-                                let val = item[key];
-                                if (Array.isArray(val)) val = val.join(';');
-                                if (typeof val === 'string') {
-                                    // Escape quotes and newlines
-                                    val = `"${val.replace(/"/g, '""')}"`;
-                                }
-                                return val ?? '';
-                            }).join(',');
-                        })
-                    ].join('\n');
-
-                    // Add BOM for Excel compatibility
-                    blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-                    filename += '.csv';
-                } catch (e) {
-                    console.error('CSV Generation Error', e);
-                    toast({
-                        title: "导出失败",
-                        description: "生成 CSV 时发生错误",
-                        variant: "destructive"
-                    });
-                    return;
-                }
-            }
-
-            // Trigger Download
+            const blob = new Blob([data], { type: format === 'json' ? 'application/json' : 'text/markdown' });
             const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', filename);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `memos-export-${new Date().toISOString().split('T')[0]}.${format === 'json' ? 'json' : 'md'}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
             toast({
                 title: "导出成功",
-                description: `已生成 ${filename}`,
-                variant: "success"
+                description: `数据已导出为 ${format.toUpperCase()} 格式`,
             });
-        } catch (e) {
-            console.error(e);
+        } catch (err) {
+            console.error('[Export] Failed:', err);
             toast({
-                title: "导出错误",
-                description: "系统内部错误",
-                variant: "destructive"
+                title: "操作失败",
+                description: "导出过程中发生错误",
+                variant: "destructive",
             });
         } finally {
             setLoading(false);
@@ -107,17 +65,17 @@ export function DataExporter() {
                     aria-label="导出完整数据为 JSON 格式"
                 >
                     {loading ? <HugeiconsIcon icon={Loader2} size={16} className="animate-spin" aria-hidden="true" /> : <HugeiconsIcon icon={FileJson} size={16} aria-hidden="true" />}
-                    导出 JSON (完整)
+                    导出 JSON
                 </Button>
                 <Button
                     variant="outline"
-                    onClick={() => handleExport('csv')}
+                    onClick={() => handleExport('markdown')}
                     disabled={loading}
                     className="flex items-center gap-2 active:scale-95 transition-all"
-                    aria-label="导出数据为 CSV 格式"
+                    aria-label="导出数据为 Markdown 格式"
                 >
                     {loading ? <HugeiconsIcon icon={Loader2} size={16} className="animate-spin" aria-hidden="true" /> : <HugeiconsIcon icon={FileDown} size={16} aria-hidden="true" />}
-                    导出 CSV
+                    导出 Markdown
                 </Button>
             </div>
         </section>

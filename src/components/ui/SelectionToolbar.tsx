@@ -104,9 +104,13 @@ export function SelectionToolbar() {
     };
 
     const handleBatchAddTags = async (tags: string[]) => {
+        const formData = new FormData();
+        formData.append('ids', Array.from(selectedIds).join(','));
+        formData.append('tags', tags.join(','));
+
         setIsPending(true);
         try {
-            const res = await batchAddTagsToMemos(Array.from(selectedIds), tags);
+            const res = await batchAddTagsToMemos(formData);
             if (res.success) {
                 toast({ title: '已批量添加标签', description: `成功为 ${selectedIds.size} 条笔记添加了标签` });
                 clearSelection();

@@ -20,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { UsageProgress } from "./UsageProgress";
-import { getSupabaseUsageStats } from "@/actions/memos/analytics";
+import { getMemoStats } from "@/actions/memos/analytics";
 import { motion, AnimatePresence } from 'framer-motion';
 import { DialogClose } from "@/components/ui/dialog";
 import { useHasMounted } from '@/hooks/useHasMounted';
@@ -60,7 +60,7 @@ export function UsageModal({ trigger }: UsageModalProps) {
         const MIN_LOADING_TIME = 800;
 
         try {
-            const result = await getSupabaseUsageStats();
+            const result = await getMemoStats();
 
             const elapsedTime = Date.now() - startTime;
             if (elapsedTime < MIN_LOADING_TIME) {
@@ -68,7 +68,7 @@ export function UsageModal({ trigger }: UsageModalProps) {
             }
 
             if (result.success && result.data) {
-                setStats(result as SuccessStats);
+                setStats(result as unknown as SuccessStats);
             } else {
                 setError(result.error || "获取数据失败");
             }

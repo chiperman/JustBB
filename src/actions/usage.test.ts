@@ -1,11 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getSupabaseUsageStats } from './memos/analytics';
+import { getMemoStats } from './memos/analytics';
 
-// Mock getSupabaseAdmin
+// Mock Supabase Instance
 const mockSupabase = {
-    rpc: vi.fn().mockResolvedValue({ data: 0, error: null }),
+    rpc: vi.fn().mockResolvedValue({ 
+        data: { 
+            totalMemos: 100, 
+            totalTags: 50, 
+            firstMemoDate: '2024-01-01', 
+            days: {} 
+        }, 
+        error: null 
+    }),
     from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockResolvedValue({ count: 100, error: null })
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue({ data: null, error: null })
 };
 
 // 预定义 Mock 环境变量
@@ -15,7 +25,8 @@ let mockEnv = {
 };
 
 vi.mock('@/lib/supabase', () => ({
-    getAdminClient: vi.fn(() => mockSupabase)
+    getAdminClient: vi.fn(() => mockSupabase),
+    getClient: vi.fn(async () => mockSupabase)
 }));
 
 vi.mock('@/lib/env', () => ({
@@ -25,7 +36,7 @@ vi.mock('@/lib/env', () => ({
     }
 }));
 
-describe('getSupabaseUsageStats', () => {
+describe('getMemoStats', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         // Reset mock environment
@@ -35,49 +46,24 @@ describe('getSupabaseUsageStats', () => {
         };
     });
 
-    it('should calculate correct percentages and format units', async () => {
-        // Mock global fetch for Management API
-        const mockResponse = {
-            db_size: { usage: 250 * 1024 * 1024 }, // 250MB
-            storage_size: { usage: 500 * 1024 * 1024 }, // 500MB
-            monthly_active_users: { usage: 10000 },
-            db_egress: { usage: 1 * 1024 * 1024 * 1024 }, // 1GB
-        };
-
-        global.fetch = vi.fn().mockResolvedValue({
-            ok: true,
-            json: () => Promise.resolve(mockResponse)
-        });
-
-        const result = await getSupabaseUsageStats();
+    it('应该能正确获取基础统计数据', async () => {
+        const result = await getMemoStats();
 
         expect(result.success).toBe(true);
-        expect(result.isFullIndicator).toBe(true);
-        expect(result.data!.db.used).toBe(250);
-        expect(result.data!.db.percentage).toBe(50); // 250/500
-        expect(result.data!.mau.used).toBe(10000);
-        expect(result.data!.mau.percentage).toBe(20); // 10000/50000
+        expect(result.data?.totalMemos).toBe(100);
+        expect(result.data?.totalTags).toBe(50);
     });
 
-    it('should fallback to SQL mode when API key is missing', async () => {
-        mockEnv.SUPABASE_MANAGEMENT_API_KEY = undefined as unknown as string;
-
-        const result = await getSupabaseUsageStats();
-
-        expect(result.success).toBe(true);
-        expect(result.isFullIndicator).toBe(false);
-    });
-
-    it('should fallback to SQL mode when Management API fails', async () => {
-        global.fetch = vi.fn().mockResolvedValue({
-            ok: false,
-            status: 500
+    it('当数据库报错时应该返回零值对象', async () => {
+        mockSupabase.rpc.mockResolvedValueOnce({
+            data: null,
+            error: { message: 'Database failure' }
         });
 
-        const result = await getSupabaseUsageStats();
+        const result = await getMemoStats();
 
-        // 虽然 API 失败，但因为有 SQL 回退，整体依然返回成功，但 isFullIndicator 为 false
-        expect(result.success).toBe(true);
-        expect(result.isFullIndicator).toBe(false);
+        expect(result.success).toBe(false);
+        expect(result.data?.totalMemos).toBe(0);
+        expect(result.error).toBe('Database failure');
     });
 });

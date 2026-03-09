@@ -1,5 +1,4 @@
 import { createBrowserClient, createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { Database } from '@/types/database';
 import { env } from './env';
 
@@ -17,6 +16,8 @@ export const supabase = typeof window !== 'undefined'
  * 服务端使用的匿名实例 (Server Components/Actions)
  */
 export async function getClient() {
+    // 动态导入，避免在客户端捆绑包中引发 next/headers 错误
+    const { cookies } = await import('next/headers');
     const cookieStore = await cookies();
 
     return createServerClient<Database>(
@@ -43,7 +44,6 @@ export async function getClient() {
 
 /**
  * 服务端使用的管理实例 (绕过 RLS)
- * 仅在具有管理员身份校验的 Server Actions/API 中使用
  */
 export const getAdminClient = () => {
     const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;

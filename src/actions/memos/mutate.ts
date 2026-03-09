@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs';
 import { getClient } from '@/lib/supabase';
 import { ActionResponse } from '../shared/types';
 import { Memo } from '@/types/memo';
-import { isAdmin } from '../auth';
+import { isAdmin } from '@/features/auth/actions';
 import { buildMemoPayload } from './helpers';
 import { calculateWordCount, extractLocations, mergeTagsIntoContent } from '@/lib/memos/parser';
 import { Database } from '@/types/database';
@@ -15,81 +15,72 @@ import { createMemoSchema, updateMemoContentSchema, updateMemoStateSchema, batch
 type MemoInsert = Database['public']['Tables']['memos']['Insert'];
 
 /**
- * 创建笔记
+ * 创建新笔记
  */
 export async function createMemo(formData: FormData): Promise<ActionResponse<Memo>> {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
 
-    // 数据提取与校验
-    const validation = createMemoSchema.safeParse({
-        content: formData.get('content'),
-        is_pinned: formData.get('is_pinned') === 'true',
-        is_private: formData.get('is_private') === 'true',
-        access_code_hint: formData.get('access_code_hint'),
-        access_code: formData.get('access_code'),
-    });
+    const rawData = Object.fromEntries(formData.entries());
+    const validation = createMemoSchema.safeParse(rawData);
 
     if (!validation.success) {
         return { success: false, error: validation.error.issues[0].message };
     }
 
-    const { content, is_pinned, is_private, access_code_hint, access_code } = validation.data;
+    const { content, is_private, is_pinned, access_code, access_code_hint } = validation.data;
+    const supabase = await getClient();
 
-    const insertData: MemoInsert = {
-        ...buildMemoPayload(content, { isPinned: is_pinned }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const payload: any = {
+        content,
         is_private,
-        access_code_hint,
+        is_pinned,
+        word_count: calculateWordCount(content),
+        locations: extractLocations(content),
     };
 
-    if (access_code) {
-        const salt = await bcrypt.genSalt(10);
-        insertData.access_code = await bcrypt.hash(access_code, salt);
+    if (is_private && access_code) {
+        payload.access_code_hash = bcrypt.hashSync(access_code, 10);
+        payload.access_code_hint = access_code_hint || null;
     }
 
-    const supabase = await getClient();
     const { data, error } = await supabase
         .from('memos')
-        .insert([insertData])
+        .insert(payload)
         .select()
         .single();
 
     if (error) {
         console.error('Error creating memo:', error);
-        return { success: false, error: '创建失败' };
+        return { success: false, error: '发布失败' };
     }
 
     revalidatePath('/');
-    return { success: true, error: null, data: data as unknown as Memo };
+    return { success: true, error: null, data: data as Memo };
 }
 
 /**
- * 更新笔记内容
+ * 更新笔记内容 (含内容解析)
  */
 export async function updateMemoContent(formData: FormData): Promise<ActionResponse<Memo>> {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
 
-    // 数据提取与校验
-    const validation = updateMemoContentSchema.safeParse({
-        id: formData.get('id'),
-        content: formData.get('content'),
-        is_pinned: formData.get('is_pinned') === 'true',
-        is_private: formData.get('is_private') === 'true',
-        access_code_hint: formData.get('access_code_hint'),
-    });
+    const rawData = Object.fromEntries(formData.entries());
+    const validation = updateMemoContentSchema.safeParse(rawData);
 
     if (!validation.success) {
         return { success: false, error: validation.error.issues[0].message };
     }
 
-    const { id, content, is_pinned, is_private, access_code_hint } = validation.data;
-
+    const { id, content } = validation.data;
     const supabase = await getClient();
+
     const { data, error } = await supabase
         .from('memos')
         .update({
-            ...buildMemoPayload(content, { isPinned: is_pinned }),
-            is_private,
-            access_code_hint,
+            content,
+            word_count: calculateWordCount(content),
+            locations: extractLocations(content) as unknown as MemoInsert['locations'],
             updated_at: new Date().toISOString(),
         })
         .eq('id', id)
@@ -97,81 +88,88 @@ export async function updateMemoContent(formData: FormData): Promise<ActionRespo
         .single();
 
     if (error) {
-        console.error('Error updating memo:', error);
-        return { success: false, error: '更新失败' };
+        console.error('Error updating memo content:', error);
+        return { success: false, error: '保存失败' };
     }
 
     revalidatePath('/');
-    return { success: true, error: null, data: data as unknown as Memo };
+    return { success: true, error: null, data: data as Memo };
 }
 
 /**
- * 更新笔记状态（仅开关量）
+ * 更新笔记状态 (置顶、私密等)
  */
-export async function updateMemoState(formData: FormData): Promise<ActionResponse> {
+export async function updateMemoState(formData: FormData): Promise<ActionResponse<Memo>> {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
 
-    // 数据提取与校验
-    const validation = updateMemoStateSchema.safeParse({
-        id: formData.get('id'),
-        is_pinned: formData.has('is_pinned') ? formData.get('is_pinned') === 'true' : undefined,
-        is_private: formData.has('is_private') ? formData.get('is_private') === 'true' : undefined,
-        access_code_hint: formData.has('access_code_hint') ? formData.get('access_code_hint') : undefined,
-        access_code: formData.get('access_code'),
-    });
+    const rawData = Object.fromEntries(formData.entries());
+    const validation = updateMemoStateSchema.safeParse(rawData);
 
     if (!validation.success) {
         return { success: false, error: validation.error.issues[0].message };
     }
 
-    const { id, is_pinned, is_private, access_code_hint, access_code } = validation.data;
-
-    const updateData: Record<string, unknown> = {};
-    if (is_private !== undefined) updateData.is_private = is_private;
-    if (is_pinned !== undefined) {
-        updateData.is_pinned = is_pinned;
-        updateData.pinned_at = is_pinned ? new Date().toISOString() : null;
-    }
-    if (access_code_hint !== undefined) updateData.access_code_hint = access_code_hint;
-
-    if (access_code) {
-        const salt = await bcrypt.genSalt(10);
-        updateData.access_code = await bcrypt.hash(access_code, salt);
-    }
-
+    const { id, is_pinned, is_private, access_code, access_code_hint } = validation.data;
     const supabase = await getClient();
-    const { error } = await supabase
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updatePayload: any = {};
+    if (is_pinned !== undefined) updatePayload.is_pinned = is_pinned;
+    
+    if (is_private !== undefined) {
+        updatePayload.is_private = is_private;
+        if (is_private && access_code) {
+            updatePayload.access_code_hash = bcrypt.hashSync(access_code, 10);
+            updatePayload.access_code_hint = access_code_hint || null;
+        } else if (!is_private) {
+            updatePayload.access_code_hash = null;
+            updatePayload.access_code_hint = null;
+        }
+    }
+
+    const { data, error } = await supabase
         .from('memos')
-        .update(updateData)
-        .eq('id', id);
+        .update(updatePayload)
+        .eq('id', id)
+        .select()
+        .single();
 
     if (error) {
-        console.error('Error updating state:', error);
-        return { success: false, error: '状态更新失败' };
+        console.error('Error updating memo state:', error);
+        return { success: false, error: '更新失败' };
     }
 
     revalidatePath('/');
-    return { success: true, error: null };
+    return { success: true, error: null, data: data as Memo };
 }
 
 /**
  * 批量为笔记添加标签
  */
-export async function batchAddTagsToMemos(ids: string[], tags: string[]): Promise<ActionResponse> {
+export async function batchAddTagsToMemos(formData: FormData): Promise<ActionResponse> {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
 
-    // 数据校验
-    const validation = batchAddTagsSchema.safeParse({ ids, tags });
+    const rawData = Object.fromEntries(formData.entries());
+    const validation = batchAddTagsSchema.safeParse(rawData);
+
     if (!validation.success) {
         return { success: false, error: validation.error.issues[0].message };
     }
 
-    const { ids: validIds, tags: validTags } = validation.data;
-
+    const { ids, tags } = validation.data;
     const supabase = await getClient();
+
+    const validIds = ids.filter(Boolean);
+    const validTags = tags.map(t => t.trim()).filter(Boolean);
+
+    if (validIds.length === 0 || validTags.length === 0) {
+        return { success: true, error: null };
+    }
+
+    // 先拉取当前内容
     const { data: memos, error: fetchError } = await supabase
         .from('memos')
-        .select('id, tags, content')
+        .select('id, content, tags')
         .in('id', validIds);
 
     if (fetchError) return { success: false, error: '获取笔记失败' };
@@ -195,30 +193,50 @@ export async function batchAddTagsToMemos(ids: string[], tags: string[]): Promis
             .eq('id', memo.id);
     }));
 
-    if (results.some(r => r.error)) return { success: false, error: '部分操作失败' };
+    const hasError = results.some(r => r.error);
+    if (hasError) return { success: false, error: '部分更新失败' };
 
     revalidatePath('/');
     return { success: true, error: null };
 }
 
 /**
- * 使用口令解锁
+ * 验证解锁口令
  */
-export async function unlockWithCode(code: string): Promise<ActionResponse> {
-    if (!code) return { success: false, error: '请输入口令' };
+export async function verifyUnlockCode(memoId: string, code: string): Promise<ActionResponse> {
+    const supabase = await getClient();
+    const { data, error } = await supabase
+        .from('memos')
+        .select('*')
+        .eq('id', memoId)
+        .single();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const memoData = data as any;
+
+    if (error || !memoData?.access_code_hash) {
+        return { success: false, error: '未设置访问口令' };
+    }
+
+    const isValid = bcrypt.compareSync(code, memoData.access_code_hash);
+    if (!isValid) {
+        return { success: false, error: '口令错误' };
+    }
+
+    // 设置 HttpOnly Cookie 授权访问
     const cookieStore = await cookies();
     cookieStore.set('memo_access_code', code, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 7, // 1 week
-        path: '/',
     });
 
     return { success: true, error: null };
 }
 
+// Alias for legacy usage
+export const unlockWithCode = verifyUnlockCode;
 
 /**
  * 清除解锁口令

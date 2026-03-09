@@ -12,10 +12,10 @@
 - [x] 在 `src/lib/memos/query-builder.ts` 中封装通用过滤器（隐私、回收站、标签）。
 - [x] 重构 `src/actions/memos/query.ts` 和 `trash.ts` 调用统一查询接口。
 
-### 2. Context 状态管理优化 ⏳
-- [ ] 拆分过于臃肿的 `UIContext`（分离弹窗状态与全局交互状态）。
-- [ ] 对所有 Context Provider 的 `value` 进行精细的 `useMemo` 记忆化。
-- [ ] 优化 `StatsContext` 的刷新频率，引入局部防抖。
+### 2. Context 状态管理优化 ✅
+- [x] 拆分过于臃肿的 `UIContext`（分离布局状态与选择状态）。
+- [x] 对所有 Context Provider 的 `value` 进行精细的 `useMemo` 记忆化。
+- [ ] 优化 `StatsContext` 的刷新频率，引入局部防抖（可选）。
 
 ### 3. 页面聚合组件瘦身 ⏳
 - [ ] 从 `src/components/pages/MapPageContent.tsx` 提取 `useMapInteraction` 逻辑钩子。

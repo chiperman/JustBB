@@ -1,67 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Tag01Icon as TagIcon } from '@hugeicons/core-free-icons';
-import { cn } from '@/lib/utils';
-import { usePageDataCache } from '@/context/PageDataCache';
-import { getAllTags } from '@/actions/memos/analytics';
-
-interface TagData {
-    tag_name: string;
-    count: number;
-}
+import { useTagGroups, TagData } from '@/hooks/useTagGroups';
+import { TagCard } from './tags/TagCard';
 
 interface TagsPageContentProps {
     tags?: TagData[];
 }
 
-/**
- * 标签页客户端内容组件
- * 支持两种模式：
- * 1. SSR：从 Server Component 接收 tags
- * 2. SPA：无 tags 时客户端自行获取
- */
 export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
-    const { getCache, setCache } = usePageDataCache();
-    const cached = getCache('/tags');
-    const [tags, setTags] = useState<TagData[]>(initialTags ?? cached?.tags ?? []);
-    const [isLoading, setIsLoading] = useState(!initialTags && !cached);
-
-    useEffect(() => {
-        if (initialTags) {
-            setCache('/tags', { tags: initialTags });
-            return;
-        }
-        // stale-while-revalidate：缓存命中也后台刷新
-        let cancelled = false;
-        (async () => {
-            const res = await getAllTags();
-            if (!cancelled) {
-                const result = res.success ? (res.data || []) : [];
-                setTags(result);
-                setCache('/tags', { tags: result });
-                setIsLoading(false);
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [initialTags, setCache]);
-
-    // Group tags by initial letter (A-Z)
-    const groupedTags = tags.reduce((acc, tag) => {
-        const firstChar = tag.tag_name.charAt(0).toUpperCase();
-        const group = /^[A-Z]$/.test(firstChar) ? firstChar : "#";
-        if (!acc[group]) acc[group] = [];
-        acc[group].push(tag);
-        return acc;
-    }, {} as Record<string, typeof tags>);
-
-    const groups = Object.keys(groupedTags).sort((a, b) => {
-        if (a === "#") return 1;
-        if (b === "#") return -1;
-        return a.localeCompare(b);
-    });
+    const { tags, groupedTags, groups, isLoading } = useTagGroups(initialTags);
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -110,27 +59,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                             {groupedTags[group].map((tag) => (
-                                                <Link
-                                                    key={tag.tag_name}
-                                                    href={`/?q=${encodeURIComponent(tag.tag_name)}`}
-                                                    className={cn(
-                                                        "group flex flex-col justify-between p-4 bg-white dark:bg-black/20 border border-border/40 rounded-md hover:border-primary/40 hover:shadow-md transition-all duration-300 relative overflow-hidden",
-                                                        "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary/5 before:transition-all group-hover:before:bg-primary/40"
-                                                    )}
-                                                >
-                                                    <div className="flex items-start justify-between mb-2">
-                                                        <span className="text-lg font-bold text-foreground group-hover:text-primary transition-colors leading-tight">
-                                                            {tag.tag_name}
-                                                        </span>
-                                                        <HugeiconsIcon icon={TagIcon} size={12} className="text-muted-foreground/30 group-hover:text-primary/40 transition-colors" />
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest opacity-50">Count</span>
-                                                        <span className="text-xs font-mono font-medium text-primary/60 tabular-nums">
-                                                            {tag.count.toString().padStart(2, '0')}
-                                                        </span>
-                                                    </div>
-                                                </Link>
+                                                <TagCard key={tag.tag_name} tag={tag} />
                                             ))}
                                         </div>
                                     </div>

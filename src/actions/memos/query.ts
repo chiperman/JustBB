@@ -6,6 +6,7 @@ import { Memo, Location } from '@/types/memo';
 import { cookies } from 'next/headers';
 import { ActionResponse } from '../shared/types';
 import { fetchMemosSchema, FetchMemosInput } from '@/lib/memos/schemas';
+import { getMemosQuery, MemoFilters } from '@/lib/memos/query-builder';
 
 /**
  * 核心安全查询方法 (RPC 驱动)
@@ -72,13 +73,11 @@ export async function searchMemosForMention(query: string, offset: number = 0, l
     const adminCode = cookieStore.get('memo_access_code')?.value || '';
 
     if (!query.trim()) {
-        const { data, error } = await supabase
-            .from('memos')
-            .select('id, memo_number, created_at, content')
-            .is('deleted_at', null)
-            .order('created_at', { ascending: false })
-            .range(offset, offset + limit - 1);
-
+        const { query: qBuilder } = await getMemosQuery();
+        let q = MemoFilters.active(qBuilder);
+        q = MemoFilters.paginate(q, offset, limit);
+        
+        const { data, error } = await q;
         if (error) return { success: false, error: error.message, data: [] };
         return { success: true, error: null, data: (data || []) as unknown as Memo[] };
     }
@@ -97,11 +96,11 @@ export async function searchMemosForMention(query: string, offset: number = 0, l
 
     // 补丁：纯数字精确匹配
     if (offset === 0 && /^\d+$/.test(query)) {
-        const { data: numMatches } = await supabase
-            .from('memos')
-            .select('id, memo_number, created_at, content, is_private')
-            .eq('memo_number', parseInt(query))
-            .is('deleted_at', null);
+        const { query: qBuilder } = await getMemosQuery();
+        let q = qBuilder.eq('memo_number', parseInt(query));
+        q = MemoFilters.active(q);
+        
+        const { data: numMatches } = await q;
 
         if (numMatches?.[0] && !results.some(r => r.id === numMatches[0].id)) {
             results = [numMatches[0] as unknown as Memo, ...results];
@@ -115,13 +114,10 @@ export async function searchMemosForMention(query: string, offset: number = 0, l
  * 获取笔记轻量索引
  */
 export async function getMemoIndex(): Promise<ActionResponse<Partial<Memo>[]>> {
-    const supabase = await getClient();
-    const { data, error } = await supabase
-        .from('memos')
-        .select('id, memo_number, created_at, content')
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false });
+    const { query: qBuilder } = await getMemosQuery();
+    const q = MemoFilters.active(qBuilder).order('created_at', { ascending: false });
 
+    const { data, error } = await q;
     if (error) return { success: false, error: error.message, data: [] };
     return { success: true, error: null, data: (data || []) as unknown as Partial<Memo>[] };
 }
@@ -130,16 +126,13 @@ export async function getMemoIndex(): Promise<ActionResponse<Partial<Memo>[]>> {
  * 获取画廊笔记 (带图片的)
  */
 export async function getGalleryMemos(limit: number = 20, offset: number = 0): Promise<ActionResponse<Memo[]>> {
-    const supabase = await getClient();
-    const { data, error } = await supabase
-        .from("memos")
-        .select("*")
-        .eq("is_private", false)
-        .is("deleted_at", null)
-        .ilike("content", "%![%](%)%")
-        .order("created_at", { ascending: false })
-        .range(offset, offset + limit - 1);
+    const { query: qBuilder } = await getMemosQuery();
+    let q = MemoFilters.active(qBuilder);
+    q = MemoFilters.publicOnly(q);
+    q = MemoFilters.withImages(q);
+    q = MemoFilters.paginate(q, offset, limit);
 
+    const { data, error } = await q;
     if (error) return { success: false, error: error.message, data: [] };
     return { success: true, error: null, data: (data as unknown as Memo[]) || [] };
 }
@@ -148,19 +141,16 @@ export async function getGalleryMemos(limit: number = 20, offset: number = 0): P
  * 获取归档笔记 (按年月)
  */
 export async function getArchivedMemos(year: number, month: number): Promise<ActionResponse<Memo[]>> {
-    const supabase = await getClient();
     const startDate = new Date(year, month - 1, 1, 0, 0, 0).toISOString();
     const endDate = new Date(year, month, 0, 23, 59, 59).toISOString();
 
-    const { data, error } = await supabase
-        .from('memos')
-        .select('*')
-        .eq('is_private', false)
-        .is('deleted_at', null)
-        .gte('created_at', startDate)
-        .lte('created_at', endDate)
-        .order('created_at', { ascending: false });
+    const { query: qBuilder } = await getMemosQuery();
+    let q = MemoFilters.active(qBuilder);
+    q = MemoFilters.publicOnly(q);
+    q = MemoFilters.dateRange(q, startDate, endDate);
+    q = q.order('created_at', { ascending: false });
 
+    const { data, error } = await q;
     if (error) {
         console.error('Error fetching archived memos:', error);
         return { success: false, error: error.message, data: [] };
@@ -173,14 +163,12 @@ export async function getArchivedMemos(year: number, month: number): Promise<Act
  * 根据编号获取笔记 (用于预览/引用)
  */
 export async function getMemoByNumber(memoNumber: number): Promise<ActionResponse<Memo | null>> {
-    const supabase = await getClient();
-    const { data, error } = await supabase
-        .from('memos')
-        .select('*')
-        .eq('memo_number', memoNumber)
-        .eq('is_private', false)
-        .is('deleted_at', null)
-        .single();
+    const { query: qBuilder } = await getMemosQuery();
+    let q = qBuilder.eq('memo_number', memoNumber);
+    q = MemoFilters.active(q);
+    q = MemoFilters.publicOnly(q);
+    
+    const { data, error } = await q.single();
 
     if (error) {
         if (error.code === 'PGRST116') return { success: true, error: null, data: null };
@@ -195,18 +183,14 @@ export async function getMemoByNumber(memoNumber: number): Promise<ActionRespons
 export async function getBacklinks(memoNumber: number): Promise<ActionResponse<Memo[]>> {
     if (!memoNumber) return { success: true, error: null, data: [] };
 
-    const supabase = await getClient();
-    const { data, error } = await supabase
-        .from('memos')
-        .select('id, memo_number, content, created_at')
-        .eq('is_private', false)
-        .is('deleted_at', null)
-        .ilike('content', `%@${memoNumber}%`)
-        .order('created_at', { ascending: false });
+    const { query: qBuilder } = await getMemosQuery();
+    let q = MemoFilters.active(qBuilder);
+    q = MemoFilters.publicOnly(q);
+    q = q.ilike('content', `%@${memoNumber}%`).order('created_at', { ascending: false });
 
+    const { data, error } = await q;
     if (error || !data) return { success: false, error: error?.message || '未知错误', data: [] };
 
-    // 过滤逻辑保持，由于类型继承，m.content 类型已自动正确推断
     const filteredMemos = (data as unknown as Memo[]).filter(m => {
         const regex = new RegExp(`@${memoNumber}(?!\\d)`);
         return regex.test(m.content || '');
@@ -219,23 +203,20 @@ export async function getBacklinks(memoNumber: number): Promise<ActionResponse<M
  * 获取所有包含定位信息的笔记 (用于地图)
  */
 export async function getMemosWithLocations(): Promise<ActionResponse<(Memo & { locations: Location[] })[]>> {
-    const supabase = await getClient();
-    const { data, error } = await supabase
-        .from('memos')
-        .select('*')
-        .is('deleted_at', null)
-        .not('locations', 'eq', '[]')
-        .not('locations', 'is', null)
-        .order('created_at', { ascending: false });
+    const { query: qBuilder } = await getMemosQuery();
+    let q = MemoFilters.active(qBuilder);
+    q = MemoFilters.withLocations(q);
+    q = q.order('created_at', { ascending: false });
 
+    const { data, error } = await q;
     if (error) {
         console.error('Error fetching memos with locations:', error);
         return { success: false, error: '获取定位数据失败', data: [] };
     }
 
     const memosWithLocations = (data || [])
-        .filter(memo => Array.isArray(memo.locations) && memo.locations.length > 0)
-        .map((memo) => ({
+        .filter((memo: Memo) => Array.isArray(memo.locations) && memo.locations.length > 0)
+        .map((memo: Memo) => ({
             ...memo,
             locations: memo.locations as unknown as Location[],
         })) as (Memo & { locations: Location[] })[];
@@ -252,7 +233,6 @@ const ON_THIS_DAY_LOOKBACK_YEARS = 5;
  * 获取“那年今日”笔记
  */
 export async function getOnThisDayMemos(): Promise<ActionResponse<Memo[]>> {
-    const supabase = await getClient();
     const today = new Date();
     const month = today.getMonth() + 1;
     const day = today.getDate();
@@ -261,15 +241,13 @@ export async function getOnThisDayMemos(): Promise<ActionResponse<Memo[]>> {
     const startDate = new Date(currentYear - ON_THIS_DAY_LOOKBACK_YEARS, month - 1, day, 0, 0, 0).toISOString();
     const endDate = new Date(currentYear - 1, month - 1, day, 23, 59, 59).toISOString();
 
-    const { data, error } = await supabase
-        .from('memos')
-        .select('*')
-        .eq('is_private', false)
-        .is('deleted_at', null)
-        .gte('created_at', startDate)
-        .lte('created_at', endDate)
-        .order('created_at', { ascending: false });
+    const { query: qBuilder } = await getMemosQuery();
+    let q = MemoFilters.active(qBuilder);
+    q = MemoFilters.publicOnly(q);
+    q = MemoFilters.dateRange(q, startDate, endDate);
+    q = q.order('created_at', { ascending: false });
 
+    const { data, error } = await q;
     if (error || !data) return { success: false, error: error?.message || '查询失败', data: [] };
 
     const filteredMemos = (data as unknown as Memo[]).filter(memo => {

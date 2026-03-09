@@ -5,6 +5,7 @@ import { getClient } from '@/lib/supabase';
 import { ActionResponse } from '../shared/types';
 import { isAdmin } from '../auth';
 import { Memo } from '@/types/memo';
+import { getMemosQuery, MemoFilters } from '@/lib/memos/query-builder';
 
 /**
  * 软删除笔记
@@ -77,10 +78,7 @@ export async function emptyTrash(): Promise<ActionResponse> {
     if (!await isAdmin()) return { success: false, error: '权限不足' };
 
     const supabase = await getClient();
-    const { error } = await supabase
-        .from('memos')
-        .delete()
-        .not('deleted_at', 'is', null);
+    const { error } = await MemoFilters.trashedOnly(supabase.from('memos').delete());
 
     if (error) {
         console.error('Error emptying trash:', error);
@@ -97,19 +95,17 @@ export async function emptyTrash(): Promise<ActionResponse> {
 export async function getTrashMemos(): Promise<ActionResponse<Memo[]>> {
     if (!(await isAdmin())) return { success: false, error: '权限不足', data: [] };
 
-    const supabase = await getClient();
-    const { data, error } = await supabase
-        .from('memos')
-        .select('*')
-        .not('deleted_at', 'is', null)
-        .order('deleted_at', { ascending: false });
+    const { query: qBuilder } = await getMemosQuery();
+    const q = MemoFilters.trashedOnly(qBuilder).order('deleted_at', { ascending: false });
+
+    const { data, error } = await q;
 
     if (error) {
         console.error('Error fetching trash memos:', error);
         return { success: false, error: '获取回收站数据失败', data: [] };
     }
 
-    const memos = (data || []).map((memo) => ({
+    const memos = (data as unknown as Memo[] || []).map((memo) => ({
         ...memo,
         is_locked: memo.is_private
     })) as Memo[];

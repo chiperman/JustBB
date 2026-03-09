@@ -1,19 +1,20 @@
 'use client';
 
-import { Suspense, useState, useEffect, useMemo } from 'react';
+import { Suspense, useState } from 'react';
 import { TagCloud } from '../ui/TagCloud';
 import { Heatmap } from '../ui/Heatmap';
 import { OnThisDay } from '../ui/OnThisDay';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Home01Icon, Tag01Icon, Delete02Icon, Image01Icon as GalleryIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, Location04Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
+import { PanelLeftCloseIcon, PanelLeftOpenIcon, Cancel01Icon } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { SidebarSettings } from "./SidebarSettings";
-import { motion, useMotionValue, useSpring, useTransform, useVelocity } from 'framer-motion';
-import { useUser } from '@/context/UserContext';
-import { useView } from '@/context/ViewContext';
+import { motion, Variants } from 'framer-motion';
 
 import { Memo } from '@/types/memo';
+import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
+import { SidebarNavItem } from './sidebar/SidebarNavItem';
+import { useHasMounted } from '@/hooks/useHasMounted';
 
 export interface LeftSidebarProps {
     onClose?: () => void;
@@ -22,137 +23,42 @@ export interface LeftSidebarProps {
 
 export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const [hasMounted, setHasMounted] = useState(false);
-    const { currentView, navigate } = useView();
-    // Optimistic UI: 立即响应点击，不等待路由跳转
-    const [optimisticPath, setOptimisticPath] = useState(currentView);
-
-    useEffect(() => {
-        setOptimisticPath(currentView);
-    }, [currentView]);
-
-    // SSR hydrate 完成后启用指示条
-    useEffect(() => {
-        setHasMounted(true);
-    }, []);
-
-    const { isAdmin } = useUser();
-
     const isMobile = !!onClose;
     const effectiveIsCollapsed = isMobile ? false : isCollapsed;
+    const hasMounted = useHasMounted();
 
-    const navItems = useMemo(() => {
-        const items = [
-            { icon: <HugeiconsIcon icon={Home01Icon} size={14} />, label: '首页', href: '/' },
-            { icon: <HugeiconsIcon icon={GalleryIcon} size={14} />, label: '画廊', href: '/gallery' },
-            { icon: <HugeiconsIcon icon={Tag01Icon} size={14} />, label: '标签', href: '/tags' },
-            { icon: <HugeiconsIcon icon={Location04Icon} size={14} />, label: '地图', href: '/map' },
-        ];
+    const {
+        navItems,
+        currentView,
+        springY,
+        scaleY,
+        scaleX,
+        handleNavigate
+    } = useSidebarNavigation();
 
-        if (isAdmin) {
-            items.push({ icon: <HugeiconsIcon icon={Delete02Icon} size={14} />, label: '回收站', href: '/trash' });
-        }
-
-        return items;
-    }, [isAdmin]);
-
-    const springConfig = {
-        stiffness: 350,
-        damping: 35,
-        mass: 1
+    const sidebarVariants: Variants = {
+        expanded: { width: "18rem" },
+        collapsed: { width: "5rem" }
     };
 
-    // 同步计算初始位移，避免首屏位移闪变
-    // Use optimisticPath for calculation
-    const currentPath = optimisticPath;
-    const initialIndex = navItems.findIndex(item =>
-        item.href === '/' ? currentPath === '/' : currentPath.startsWith(item.href)
-    );
-    const initialY = initialIndex !== -1 ? initialIndex * 40 + 8 : 0;
-
-    // 雅致流动模型 (Refined Liquid Model) - Activity Indicator
-    const y = useMotionValue(initialY);
-    const springY = useSpring(y, springConfig);
-
-    // 捕获速度并映射为克制的形变比例
-    const velocity = useVelocity(springY);
-    const scaleY = useTransform(velocity, [-1200, 0, 1200], [1.3, 1, 1.3]);
-    const scaleX = useTransform(velocity, [-1200, 0, 1200], [0.9, 1, 0.9]);
-
-    // 同步外部路由变化到物理引擎
-    useEffect(() => {
-        const index = navItems.findIndex(item =>
-            item.href === '/' ? currentPath === '/' : currentPath.startsWith(item.href)
-        );
-        if (index !== -1) {
-            y.set(index * 40 + 8);
-        }
-    }, [currentPath, navItems, y]);
-
-    const handleItemClick = (href: string) => {
-        setOptimisticPath(href);
-        navigate(href);  // pushState + 客户端切换，零服务器往返
-        const index = navItems.findIndex(item => item.href === href);
-        if (index !== -1) {
-            y.set(index * 40 + 8);
-        }
-        if (isMobile) onClose();
+    const labelVariants: Variants = {
+        expanded: { opacity: 1, width: "auto", x: 0, transition: { duration: 0.2 } },
+        collapsed: { opacity: 0, width: 0, x: -10, transition: { duration: 0.1 } }
     };
 
-    const handleToggle = () => {
-        if (isMobile) {
-            onClose();
-        } else {
-            setIsCollapsed(!isCollapsed);
-        }
+    const navVariants: Variants = {
+        expanded: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } },
+        collapsed: { transition: { staggerChildren: 0.05, staggerDirection: -1 } }
     };
 
-    // 动画变体配置
-    const sidebarVariants = {
-        expanded: { width: "18rem" }, // w-72
-        collapsed: { width: "5rem" }  // w-20
-    };
-
-    const labelVariants = {
-        expanded: {
-            opacity: 1,
-            width: "auto",
-            x: 0,
-            transition: { duration: 0.2 }
-        },
-        collapsed: {
-            opacity: 0,
-            width: 0,
-            x: -10,
-            transition: { duration: 0.1 }
-        }
-    };
-
-    const navVariants = {
-        expanded: {
-            transition: { staggerChildren: 0.07, delayChildren: 0.1 }
-        },
-        collapsed: {
-            transition: { staggerChildren: 0.05, staggerDirection: -1 }
-        }
-    };
-
-    const navItemVariants = {
+    const navItemVariants: Variants = {
         expanded: { opacity: 1, x: 0 },
         collapsed: { opacity: 1, x: 0 }
     };
 
-    const sectionVariants = {
-        expanded: {
-            opacity: 1,
-            height: "auto",
-            transition: { delay: 0.1, duration: 0.3 }
-        },
-        collapsed: {
-            opacity: 0,
-            height: 0,
-            transition: { duration: 0.2 }
-        }
+    const sectionVariants: Variants = {
+        expanded: { opacity: 1, height: "auto", transition: { delay: 0.1, duration: 0.3 } },
+        collapsed: { opacity: 0, height: 0, transition: { duration: 0.2 } }
     };
 
     return (
@@ -160,35 +66,19 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
             initial={effectiveIsCollapsed ? "collapsed" : "expanded"}
             animate={effectiveIsCollapsed ? "collapsed" : "expanded"}
             variants={sidebarVariants}
-            transition={springConfig}
+            transition={{ stiffness: 350, damping: 35, mass: 1 }}
             style={{ willChange: "width" }}
-            className={cn(
-                "h-full flex flex-col border-r border-border bg-background/50 backdrop-blur-md overflow-hidden group/sidebar relative",
-                // 移除 CSS transition 类，移除 w- 类（由 motion 控制）
-                // 保持 padding
-                effectiveIsCollapsed ? "p-2" : "p-2"
-            )}
+            className="h-full flex flex-col border-r border-border bg-background/50 backdrop-blur-md overflow-hidden group/sidebar relative p-2"
         >
-
-            {/* Top Area: Settings + Toggle */}
-            <div className={cn(
-                "mb-[24px]",
-                !effectiveIsCollapsed ? "flex items-center gap-1 pr-1" : "pb-2 flex flex-col gap-4"
-            )}>
+            {/* Top Area */}
+            <div className={cn("mb-[24px]", !effectiveIsCollapsed ? "flex items-center gap-1 pr-1" : "pb-2 flex flex-col gap-4")}>
                 <div className="flex-1 min-w-0 h-9 overflow-hidden">
-                    <SidebarSettings
-                        isCollapsed={effectiveIsCollapsed}
-                    />
+                    <SidebarSettings isCollapsed={effectiveIsCollapsed} />
                 </div>
                 <Button
                     variant="ghost"
-                    onClick={handleToggle}
-                    className={cn(
-                        "text-muted-foreground shrink-0 rounded transition-all active:scale-95",
-                        // 使用 layout 属性处理位置变化，减少 CSS 类突变
-                        effectiveIsCollapsed ? "w-full justify-center h-9 p-2" : "h-8 w-8 px-0"
-                    )}
-                    aria-label={isMobile ? "关闭侧边栏" : (effectiveIsCollapsed ? "展开侧边栏" : "收起侧边栏")}
+                    onClick={() => isMobile ? onClose() : setIsCollapsed(!isCollapsed)}
+                    className={cn("text-muted-foreground shrink-0 rounded transition-all active:scale-95", effectiveIsCollapsed ? "w-full justify-center h-9 p-2" : "h-8 w-8 px-0")}
                     asChild
                 >
                     <motion.button>
@@ -202,12 +92,8 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
             </div>
 
             {/* Heatmap Area */}
-            <motion.div
-                variants={sectionVariants}
-                className="overflow-hidden mb-[24px] px-1 min-w-[17rem]"
-            >
+            <motion.div variants={sectionVariants} className="overflow-hidden mb-[24px] px-1 min-w-[17rem]">
                 <Suspense fallback={<div className="h-40 w-full animate-pulse bg-muted/20 rounded" />}>
-                    {/* 使用 key 强制重新渲染或保持状态，视需求而定。这里直接渲染 */}
                     <div className={effectiveIsCollapsed ? "pointer-events-none" : ""}>
                         <Heatmap />
                     </div>
@@ -215,89 +101,39 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
             </motion.div>
 
             {/* Navigation */}
-            <motion.nav
-                variants={navVariants}
-                className="flex-1 px-1 space-y-1 overflow-y-auto overflow-x-hidden custom-scrollbar mb-[24px] relative"
-            >
-                {/* Active Indicator - 彻底在 hydrate 完成后才注入 DOM，消除 SSR/Client 属性不匹配 */}
+            <motion.nav variants={navVariants} className="flex-1 px-1 space-y-1 overflow-y-auto overflow-x-hidden custom-scrollbar mb-[24px] relative">
                 {hasMounted && (
                     <motion.div
-                        style={{
-                            y: springY,
-                            scaleY,
-                            scaleX,
-                            opacity: 1, // 既然已经挂载，直接显示
-                            originY: 0.5
-                        }}
+                        style={{ y: springY, scaleY, scaleX, opacity: 1, originY: 0.5 }}
                         className="absolute left-0 w-1 h-5 bg-primary rounded-full z-10"
                     />
                 )}
 
-                {navItems.map((item) => {
-                    // hasMounted 为 false 时不高亮任何项，避免 SSR 阶段首页被错误高亮
-                    const isActive = hasMounted && (item.href === '/'
-                        ? currentPath === '/'
-                        : currentPath.startsWith(item.href));
-
-                    return (
-                        <motion.div variants={navItemVariants} key={item.label}>
-                            <button
-                                onClick={() => handleItemClick(item.href)}
-                                className={cn(
-                                    "flex items-center p-2 h-9 rounded transition-all group relative hover:bg-accent w-full text-left cursor-pointer active:scale-95",
-                                    effectiveIsCollapsed ? "justify-center gap-0" : "px-3 gap-3",
-                                    isActive
-                                        ? "text-primary font-medium hover:text-primary"
-                                        : "text-muted-foreground hover:text-accent-foreground"
-                                )}
-                                title={item.label}
-                            >
-                                <span className={cn(
-                                    "transition-colors shrink-0 flex items-center justify-center",
-                                    isActive ? "text-primary" : "text-muted-foreground"
-                                )}>
-                                    {item.icon}
-                                </span>
-
-                                <motion.span
-                                    variants={labelVariants}
-                                    className="text-[14px] font-normal whitespace-nowrap flex items-center"
-                                >
-                                    {item.label}
-                                </motion.span>
-                            </button>
-                        </motion.div>
-                    );
-                })}
+                {navItems.map((item) => (
+                    <SidebarNavItem
+                        key={item.id}
+                        item={item}
+                        isActive={hasMounted && (item.href === '/' ? currentView === '/' : currentView.startsWith(item.href))}
+                        isCollapsed={effectiveIsCollapsed}
+                        onClick={(href) => handleNavigate(href, isMobile, onClose)}
+                        labelVariants={labelVariants}
+                        navItemVariants={navItemVariants}
+                    />
+                ))}
             </motion.nav>
 
             {/* Popular Tags */}
-            <motion.div
-                variants={sectionVariants}
-                className="overflow-hidden mb-[24px] px-1 min-w-[17rem]"
-            >
-                <h3 className="text-[24px] font-bold text-foreground leading-tight tracking-tight mb-4 flex items-center gap-2">
-                    热门标签
-                </h3>
-                <Suspense fallback={<div className="space-y-2">
-                    <div className="flex flex-wrap gap-2">
-                        {[1, 2, 3, 4, 5].map(i => (
-                            <div key={i} className="h-6 w-12 bg-muted/20 rounded-full animate-pulse" />
-                        ))}
-                    </div>
-                </div>}>
+            <motion.div variants={sectionVariants} className="overflow-hidden mb-[24px] px-1 min-w-[17rem]">
+                <h3 className="text-[24px] font-bold text-foreground leading-tight tracking-tight mb-4 flex items-center gap-2">热门标签</h3>
+                <Suspense fallback={<div className="space-y-2"><div className="flex flex-wrap gap-2">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-6 w-12 bg-muted/20 rounded-full animate-pulse" />)}</div></div>}>
                     <TagCloud />
                 </Suspense>
             </motion.div>
 
             {/* On This Day */}
-            <motion.div
-                variants={sectionVariants}
-                className="overflow-hidden mb-[24px] px-1 min-w-[17rem]"
-            >
+            <motion.div variants={sectionVariants} className="overflow-hidden mb-[24px] px-1 min-w-[17rem]">
                 <OnThisDay initialMemos={initialOnThisDay} />
             </motion.div>
-
         </motion.aside>
     );
 }

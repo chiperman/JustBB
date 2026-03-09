@@ -5,17 +5,18 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Provider } from '@supabase/supabase-js';
 import { env } from '@/lib/env';
-
 import { ActionResponse } from './shared/types';
+import { loginSchema, signupSchema, verifyOtpSchema } from '@/lib/auth/schemas';
 
 export async function login(formData: FormData): Promise<ActionResponse> {
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
+    const rawData = Object.fromEntries(formData.entries());
+    const validation = loginSchema.safeParse(rawData);
 
-    if (!email || !password) {
-        return { success: false, error: '请输入邮箱和密码' };
+    if (!validation.success) {
+        return { success: false, error: validation.error.issues[0].message };
     }
 
+    const { email, password } = validation.data;
     const supabase = await getClient();
 
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -24,11 +25,10 @@ export async function login(formData: FormData): Promise<ActionResponse> {
     });
 
     if (error) {
-        console.error('Login error:', error);
-        return { success: false, error: error.message };
+        console.error('[Auth] Login failed:', error.message);
+        return { success: false, error: '邮箱或密码错误' };
     }
 
-    // 允许所有人登录，只需确认为已验证用户
     if (!data.user) {
         return { success: false, error: '登录失败' };
     }
@@ -38,27 +38,23 @@ export async function login(formData: FormData): Promise<ActionResponse> {
 }
 
 export async function signup(formData: FormData): Promise<ActionResponse> {
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
+    const rawData = Object.fromEntries(formData.entries());
+    const validation = signupSchema.safeParse(rawData);
 
-    if (!email || !password) {
-        return { success: false, error: '请输入邮箱和密码' };
+    if (!validation.success) {
+        return { success: false, error: validation.error.issues[0].message };
     }
 
+    const { email, password } = validation.data;
     const supabase = await getClient();
 
     const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-            data: {
-                // 不再在此处设置权限相关的 role，仅保留基础信息
-            },
-        },
     });
 
     if (error) {
-        console.error('Signup error:', error);
+        console.error('[Auth] Signup failed:', error.message);
         return { success: false, error: error.message };
     }
 
@@ -66,8 +62,12 @@ export async function signup(formData: FormData): Promise<ActionResponse> {
 }
 
 export async function verifyOtp(email: string, code: string): Promise<ActionResponse> {
-    const supabase = await getClient();
+    const validation = verifyOtpSchema.safeParse({ email, code });
+    if (!validation.success) {
+        return { success: false, error: validation.error.issues[0].message };
+    }
 
+    const supabase = await getClient();
     const { error } = await supabase.auth.verifyOtp({
         email,
         token: code,
@@ -75,30 +75,26 @@ export async function verifyOtp(email: string, code: string): Promise<ActionResp
     });
 
     if (error) {
-        console.error('Verify OTP error:', error);
-        return { success: false, error: error.message };
+        console.error('[Auth] OTP Verification failed:', error.message);
+        return { success: false, error: '验证码错误或已过期' };
     }
-
-    // Verification successful, session is established.
-    // Ensure role is present if needed, but handled by metadata in signup.
 
     revalidatePath('/', 'layout');
     return { success: true, error: null };
 }
 
 export async function checkUserExists(email: string): Promise<ActionResponse<{ exists: boolean }>> {
+    if (!email) return { success: false, error: '邮箱不能为空' };
+    
     const supabase = getAdminClient();
-
-    // Supabase Admin SDK 不提供 getUserByEmail，使用 listUsers 并扩大 perPage 避免默认 50 的上限
-    // 对于用户量较大的场景(>1000)，应改为自定义 RPC 查询 auth.users
     const { data, error } = await supabase.auth.admin.listUsers({
         page: 1,
         perPage: 1000,
     });
 
     if (error) {
-        console.error('Check user error:', error);
-        return { success: false, error: error.message };
+        console.error('[Auth] User existence check failed:', error.message);
+        return { success: false, error: '系统繁忙，请稍后再试' };
     }
 
     const user = data.users.find(u => u.email === email);
@@ -107,25 +103,19 @@ export async function checkUserExists(email: string): Promise<ActionResponse<{ e
 
 export async function signInWithOAuth(provider: Provider): Promise<ActionResponse> {
     const supabase = await getClient();
-
-    // 获取当前请求的域名
     const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-            redirectTo: `${env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback`,
-            // 提醒：第三方登录后，仍然需要在 callback 中检查 admin 权限，或者由系统管理员预先设置角色
+            redirectTo: `${env.NEXT_PUBLIC_APP_URL}/auth/callback`,
         },
     });
 
     if (error) {
-        console.error('OAuth error:', error);
-        return { success: false, error: error.message };
+        console.error('[Auth] OAuth failed:', error.message);
+        return { success: false, error: '三方登录初始化失败' };
     }
 
-    if (data.url) {
-        redirect(data.url);
-    }
-
+    if (data.url) redirect(data.url);
     return { success: true, error: null };
 }
 
@@ -138,14 +128,10 @@ export async function logout(): Promise<ActionResponse> {
 
 export async function getCurrentUser() {
     const supabase = await getClient();
-
     const { data: { user }, error } = await supabase.auth.getUser();
 
-    if (error || !user) {
-        return null;
-    }
+    if (error || !user) return null;
 
-    // 只返回公开信息，并包含角色
     return {
         id: user.id,
         email: user.email,
@@ -159,39 +145,32 @@ export async function isAdmin() {
     return user?.role === 'admin';
 }
 
-/**
- * 发送密码重置邮件
- */
 export async function sendPasswordResetEmail(email: string): Promise<ActionResponse> {
     const supabase = await getClient();
-
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password`,
+        redirectTo: `${env.NEXT_PUBLIC_APP_URL}/reset-password`,
     });
 
     if (error) {
-        console.error('Reset password email error:', error);
-        return { success: false, error: error.message };
+        console.error('[Auth] Reset email failed:', error.message);
+        return { success: false, error: '发送重置邮件失败' };
     }
 
     return { success: true, error: null };
 }
 
-/**
- * 更新密码
- */
 export async function updatePassword(password: string): Promise<ActionResponse> {
-    const supabase = await getClient();
+    if (!password || password.length < 6) {
+        return { success: false, error: '新密码长度至少为 6 位' };
+    }
 
-    const { error } = await supabase.auth.updateUser({
-        password: password,
-    });
+    const supabase = await getClient();
+    const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-        console.error('Update password error:', error);
-        return { success: false, error: error.message };
+        console.error('[Auth] Password update failed:', error.message);
+        return { success: false, error: '修改密码失败' };
     }
 
     return { success: true, error: null };
 }
-

@@ -4,12 +4,12 @@ import { AnimatePresence } from "framer-motion";
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Loading01Icon as Loader2 } from '@hugeicons/core-free-icons';
 
-import { useTrashMemos } from "@/hooks/useTrashMemos";
-import { TrashHeader } from "@/components/pages/trash/TrashHeader";
-import { TrashEmptyState } from "@/components/pages/trash/TrashEmptyState";
-import { TrashItem } from "@/components/pages/trash/TrashItem";
+import { useTrashMemos } from "./hooks/useTrashMemos";
+import { TrashHeader } from "./components/TrashHeader";
+import { TrashEmptyState } from "./components/TrashEmptyState";
+import { TrashItem } from "./components/TrashItem";
 
-export default function TrashClient() {
+export function TrashClient() {
     const { memos, isLoading, isPending, handleEmptyTrash } = useTrashMemos();
 
     return (

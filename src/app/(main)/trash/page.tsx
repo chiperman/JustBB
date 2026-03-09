@@ -1,6 +1,6 @@
-import { isAdmin } from "@/actions/auth";
+import { isAdmin } from "@/features/auth/actions";
 import { redirect } from "next/navigation";
-import TrashClient from "./TrashClient";
+import { TrashClient } from "@/features/trash";
 
 export default async function TrashPage() {
     if (!(await isAdmin())) {

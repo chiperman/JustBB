@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { cn } from "@/lib/utils";
-import { MemoCard } from "@/components/ui/MemoCard";
+import { MemoCard } from "@/features/memos";
 import { Memo } from "@/types/memo";
 
 interface TrashItemProps {

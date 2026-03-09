@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Key01Icon as KeyRound, Mail01Icon as Mail, ArrowLeft01Icon as ArrowLeft, Loading01Icon as Loader2, CheckmarkCircle01Icon as CheckCircle2 } from '@hugeicons/core-free-icons';
 import Link from 'next/link';
-import { sendPasswordResetEmail } from '@/actions/auth';
+import { sendPasswordResetEmail } from '@/features/auth/actions';
 import { useToast } from '@/hooks/use-toast';
 
 export default function ForgotPasswordPage() {

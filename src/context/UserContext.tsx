@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getCurrentUser } from '@/actions/auth';
+import { getCurrentUser } from '@/features/auth/actions';
 
 export interface UserInfo {
     id: string;

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { UserWarningIcon as ShieldAlert, ArrowLeft01Icon as ArrowLeft, Logout01Icon as LogOut } from '@hugeicons/core-free-icons';
 import Link from 'next/link';
-import { logout } from '@/actions/auth';
+import { logout } from '@/features/auth/actions';
 import { useRouter } from 'next/navigation';
 
 export default function UnauthorizedPage() {

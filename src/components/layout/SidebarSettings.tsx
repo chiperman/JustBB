@@ -18,7 +18,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { logout } from '@/actions/auth';
+import { logout } from '@/features/auth/actions';
 import { cn } from '@/lib/utils';
 import { useLayout } from '@/context/LayoutContext';
 import { useUser } from '@/context/UserContext';

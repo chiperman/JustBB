@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, memo } from 'react';
-import { logout } from '@/actions/auth';
+import { logout } from '@/features/auth/actions';
 import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Login03Icon as LogIn, Logout03Icon as LogOut, UserIcon as User, Loading01Icon as Loader2 } from '@hugeicons/core-free-icons';

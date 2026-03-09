@@ -5,8 +5,8 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Provider } from '@supabase/supabase-js';
 import { env } from '@/lib/env';
-import { ActionResponse } from './shared/types';
-import { loginSchema, signupSchema, verifyOtpSchema } from '@/lib/auth/schemas';
+import { ActionResponse } from '@/actions/shared/types';
+import { loginSchema, signupSchema, verifyOtpSchema } from './schemas';
 
 export async function login(formData: FormData): Promise<ActionResponse> {
     const rawData = Object.fromEntries(formData.entries());

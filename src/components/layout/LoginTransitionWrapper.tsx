@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { useLayout } from '@/context/LayoutContext';
-import { LoginPanel } from '@/components/auth/LoginPanel';
+import { LoginPanel } from '@/features/auth/components/LoginPanel';
 
 export function LoginTransitionWrapper({ children }: { children: React.ReactNode }) {
     const { viewMode, setViewMode } = useLayout();

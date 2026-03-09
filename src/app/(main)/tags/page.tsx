@@ -1,5 +1,5 @@
 import { getAllTags } from "@/actions/memos/analytics";
-import { TagsPageContent } from "@/components/pages/TagsPageContent";
+import { TagsPageContent } from "@/features/tags";
 
 export default async function TagsPage() {
     const res = await getAllTags();

@@ -2,8 +2,8 @@
 
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Tag01Icon as TagIcon } from '@hugeicons/core-free-icons';
-import { useTagGroups, TagData } from '@/hooks/useTagGroups';
-import { TagCard } from './tags/TagCard';
+import { useTagGroups, TagData } from './hooks/useTagGroups';
+import { TagCard } from './components/TagCard';
 
 interface TagsPageContentProps {
     tags?: TagData[];

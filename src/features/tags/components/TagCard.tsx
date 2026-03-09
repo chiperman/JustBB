@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Tag01Icon as TagIcon } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
-import { TagData } from '@/hooks/useTagGroups';
+import { TagData } from '../hooks/useTagGroups';
 
 export function TagCard({ tag }: { tag: TagData }) {
     return (

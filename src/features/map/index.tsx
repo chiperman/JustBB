@@ -1,9 +1,9 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { useMapMemos } from '@/hooks/useMapMemos';
-import { MapLoadingScreen } from './map/MapLoadingScreen';
-import { MapErrorScreen } from './map/MapErrorScreen';
+import { useMapMemos } from './hooks/useMapMemos';
+import { MapLoadingScreen } from './components/MapLoadingScreen';
+import { MapErrorScreen } from './components/MapErrorScreen';
 
 export function MapPageContent() {
     const { markers, isLoading, MapView } = useMapMemos();

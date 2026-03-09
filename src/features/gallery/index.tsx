@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { GalleryGrid } from '@/components/gallery/GalleryGrid';
+import { GalleryGrid } from './components/GalleryGrid';
 import { Memo } from '@/types/memo';
 import { getGalleryMemos } from '@/actions/memos/query';
 import { HugeiconsIcon } from '@hugeicons/react';

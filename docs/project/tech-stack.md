@@ -73,6 +73,10 @@ src/
 
 ### 6.2 环境变量安全
 *   **强校验机制**：基于 Zod 定义 `envSchema`。在 `next.config.ts` 中集成校验，缺失必要变量将直接中止构建，防止“带病上线”。
+*   **关键变量集**：
+    *   `NEXT_PUBLIC_SUPABASE_URL`: 数据库访问入口。
+    *   `NEXT_PUBLIC_SUPABASE_ANON_KEY`: 客户端匿名访问密钥。
+    *   **`SUPABASE_SERVICE_ROLE_KEY`**: **[强制]** 服务端管理密钥。用于执行 `verifyUnlockCode` 等需要绕过 RLS 策略的关键操作。该变量严禁泄露至前端环境变量。
 
 ---
 

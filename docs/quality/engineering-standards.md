@@ -57,3 +57,15 @@
 - **格式**：`type(scope): subject`。
 - **Subject**：中文描述，简洁明了。
 - **Body**：详细说明“为什么”改动，而非“做了什么”。
+
+## 4. UI/UX 与动画性能标准 (Animation Baseline)
+为了确保极致的用户体验与性能，所有 UI 工作必须遵循以下基准：
+- **属性限制**：严禁对 `width`, `height`, `top`, `left`, `margin`, `padding` 等触发重排 (Reflow) 的布局属性制作动画。
+- **高性能策略**：仅允许对 `transform` 和 `opacity` 等合成层属性 (Compositor Props) 进行动画处理。
+- **布局平滑化**：当需要改变布局大小时，**必须**使用 `motion/react` (Framer Motion) 的 `layoutId` 功能，通过合成变换模拟布局变化。
+- **交互反馈**：
+    - 入场动画应优先使用 `ease-out`。
+    - 交互反馈（如按钮点击）的动画持续时间严禁超过 `200ms`。
+- **无障碍与节电**：
+    - 必须适配 `prefers-reduced-motion` 媒体查询。
+    - 当元素移出视口 (Off-screen) 时，必须停止循环动画。

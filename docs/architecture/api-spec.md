@@ -20,9 +20,11 @@
 *   **安全**: 统一错误处理，避免在前端暴露敏感的数据库或 Auth 引擎错误细节。
 
 ### 2.2 笔记操作系列 (`mutate.ts`)
-*   **Actions**: `createMemo`, `updateMemoContent`, `updateMemoState`, `batchAddTagsToMemos`
+*   **Actions**: `createMemo`, `updateMemoContent`, `updateMemoState`, `batchAddTagsToMemos`, `verifyUnlockCode`
 *   **校验**: 经过 `src/lib/memos/schemas.ts` 强校验。
-*   **特性**: 自动触发标签解析、定位提取及字数统计。
+*   **特性**: 
+    *   `createMemo/updateMemoContent`: 自动触发标签解析、定位提取及字数统计。
+    *   `verifyUnlockCode`: 验证私密笔记口令，内部通过 `AdminClient` 绕过 RLS 校验哈希，成功后设置 HttpOnly Cookie。
 
 ### 2.3 回收站系列 (`trash.ts`)
 *   **Actions**: `deleteMemo`, `restoreMemo`, `permanentDeleteMemo`, `emptyTrash`
@@ -33,8 +35,11 @@
 为了保证查询字段的一致性与安全性，所有读操作均应通过 `src/lib/memos/query-builder.ts` 构建。
 
 ### 3.1 核心分页查询 (`query.ts`)
-*   **`getMemos`**: RPC 驱动的高性能安全分页查询（支持搜索与多维过滤）。
+*   **`getMemos`**: RPC 驱动的高性能安全分页查询。
+    *   **参数**: 支持 `query`, `tag`, `num` (精确匹配), `date`, `year`, `month`, `sort`, `before_date`, `after_date`, `excludePinned`。
+    *   **安全**: RPC 内部自动处理 RLS 补丁，确保私密笔记元数据对匿名用户不可见。
 *   **`searchMemosForMention`**: 为编辑器设计的增量搜索接口。
+    *   **优化**: 自动识别纯数字输入并利用 RPC 的 `num` 过滤参数进行精确匹配，显著提升 Mention 搜索性能。
 
 ### 3.2 聚合与归档
 *   **`getGalleryMemos`**: 自动应用 `withImages` 过滤器。

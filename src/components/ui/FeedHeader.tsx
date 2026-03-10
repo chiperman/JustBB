@@ -28,10 +28,15 @@ import {
     ArrowDown01Icon,
     Sorting05Icon,
     Home01Icon,
+    Loading03Icon as Loader2,
 } from '@hugeicons/core-free-icons';
 import { useHasMounted } from '@/hooks/useHasMounted';
 
-export function FeedHeader() {
+interface FeedHeaderProps {
+    isRefreshing?: boolean;
+}
+
+export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -43,17 +48,17 @@ export function FeedHeader() {
     const hasMounted = useHasMounted();
 
     const handleSortChange = (value: string) => {
-        const params = new URLSearchParams(searchParams.toString());
+        const params = new URLSearchParams(searchParams?.toString() || '');
         params.set('sort', value);
         router.push(`?${params.toString()}`);
     };
 
-    const hasContext = !!(activeDate || searchParams.get('tag') || searchParams.get('num') || (searchParams.get('year') && searchParams.get('month')));
+    const hasContext = !!(activeDate || searchParams?.get('tag') || searchParams?.get('num') || (searchParams?.get('year') && searchParams?.get('month')));
 
     return (
         <div className={cn(
             "flex items-center justify-between gap-4 py-2 h-10 transition-all duration-300",
-            hasContext && "mb-9" // 为 SearchInput 的绝对定位提示预留更多留白
+            hasContext && "mb-9"
         )}>
             {isSelectionMode ? (
                 <div className="flex items-center gap-4">
@@ -69,17 +74,24 @@ export function FeedHeader() {
                         <Link
                             href="/"
                             onClick={() => {
-                                // 强制重置路由以清除缓存和参数
                                 router.push('/');
                             }}
                             className="group flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-accent transition-all mr-1 h-full active:scale-95"
                             title="回到首页"
                         >
-                            <HugeiconsIcon
-                                icon={Home01Icon}
-                                size={14}
-                                className="text-primary/70 group-hover:text-primary transition-colors"
-                            />
+                            {isRefreshing ? (
+                                <HugeiconsIcon
+                                    icon={Loader2}
+                                    size={14}
+                                    className="text-primary animate-spin"
+                                />
+                            ) : (
+                                <HugeiconsIcon
+                                    icon={Home01Icon}
+                                    size={14}
+                                    className="text-primary/70 group-hover:text-primary transition-colors"
+                                />
+                            )}
                             <span className="text-sm font-bold tracking-tight text-primary/90 group-hover:text-primary transition-colors leading-none">
                                 JustMemo
                             </span>
@@ -93,7 +105,7 @@ export function FeedHeader() {
                                 </span>
                             </div>
                         )}
-                        {searchParams.get('tag') && (
+                        {searchParams?.get('tag') && (
                             <div className="flex items-center gap-1.5 h-full px-1">
                                 <span className="text-muted-foreground/30 text-[10px] font-light">/</span>
                                 <span className="text-xs font-medium text-primary tracking-tight leading-none">
@@ -101,7 +113,7 @@ export function FeedHeader() {
                                 </span>
                             </div>
                         )}
-                        {searchParams.get('num') && (
+                        {searchParams?.get('num') && (
                             <div className="flex items-center gap-1.5 h-full px-1">
                                 <span className="text-muted-foreground/30 text-[10px] font-light">/</span>
                                 <span className="text-xs font-mono font-medium text-primary tracking-tight leading-none">

@@ -8,7 +8,7 @@ import { getTimelineStats, getMemoStats } from "@/actions/memos/analytics";
 import { getOnThisDayMemos } from "@/actions/memos/query";
 
 import { headers } from "next/headers";
-import { getCurrentUser } from "@/actions/auth";
+import { getCurrentUser } from "@/features/auth/actions";
 
 export default async function MainLayout({
     children,

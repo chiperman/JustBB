@@ -58,7 +58,6 @@ BEGIN
       m.is_private = FALSE 
       OR (m.is_private = TRUE AND (
         (auth.uid() IS NOT NULL OR (m.access_code_hash IS NOT NULL AND input_code IS NOT NULL AND m.access_code_hash = crypt(input_code, m.access_code_hash)))
-        OR (query_text = '' AND filters->>'tag' IS NULL AND filters->>'num' IS NULL)
       ))
     )
     AND (
@@ -76,10 +75,10 @@ BEGIN
     AND (filters->>'after_date' IS NULL OR m.created_at > (filters->>'after_date')::timestamptz)
     AND (filters->>'exclude_pinned' IS NULL OR m.is_pinned = FALSE)
   ORDER BY 
-    CASE WHEN sort_order = 'oldest' THEN m.created_at END ASC,
-    CASE WHEN sort_order = 'newest' OR sort_order IS NULL THEN m.is_pinned END DESC,
+    CASE WHEN sort_order = 'oldest' THEN m.created_at END ASC NULLS LAST,
+    CASE WHEN sort_order = 'newest' OR sort_order IS NULL THEN m.is_pinned END DESC NULLS LAST,
     CASE WHEN sort_order = 'newest' OR sort_order IS NULL THEN m.pinned_at END DESC NULLS LAST,
-    CASE WHEN sort_order = 'newest' OR sort_order IS NULL THEN m.created_at END DESC
+    CASE WHEN sort_order = 'newest' OR sort_order IS NULL THEN m.created_at END DESC NULLS LAST
   LIMIT limit_val
   OFFSET offset_val;
 END;

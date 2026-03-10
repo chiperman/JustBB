@@ -40,7 +40,8 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
     };
 
     if (is_private && access_code) {
-        payload.access_code_hash = bcrypt.hashSync(access_code, 10);
+        const salt = bcrypt.genSaltSync(10);
+        payload.access_code_hash = bcrypt.hashSync(access_code, salt);
         payload.access_code_hint = access_code_hint || null;
     }
 
@@ -119,7 +120,8 @@ export async function updateMemoState(formData: FormData): Promise<ActionRespons
     if (is_private !== undefined) {
         updatePayload.is_private = is_private;
         if (is_private && access_code) {
-            updatePayload.access_code_hash = bcrypt.hashSync(access_code, 10);
+            const salt = bcrypt.genSaltSync(10);
+            updatePayload.access_code_hash = bcrypt.hashSync(access_code, salt);
             updatePayload.access_code_hint = access_code_hint || null;
         } else if (!is_private) {
             updatePayload.access_code_hash = null;

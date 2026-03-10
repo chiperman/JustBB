@@ -48,7 +48,8 @@ Enforces an opinionated UI baseline to prevent AI-generated interface slop.
 - NEVER add animation unless it is explicitly requested
 - MUST animate only compositor props (`transform`, `opacity`)
 - NEVER animate layout properties (`width`, `height`, `top`, `left`, `margin`, `padding`)
-- SHOULD avoid animating paint properties (`background`, `color`) except for small, local UI (text, icons)
+- SHOULD use `layoutId` (from `motion/react`) to animate layout changes smoothly via compositor transforms instead of re-triggering layout
+- SHOULD avoid animating paint properties (`background`, `color`) except for small, local UI feedback
 - SHOULD use `ease-out` on entrance
 - NEVER exceed `200ms` for interaction feedback
 - MUST pause looping animations when off-screen

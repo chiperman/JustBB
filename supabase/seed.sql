@@ -23,7 +23,7 @@ VALUES
 ('上海武康路，梧桐树下的老建筑非常有味道。 #上海 #CityWalk', ARRAY['上海', 'CityWalk'], '[{"name": "武康大楼", "lat": 31.2052, "lng": 121.4357}]'::jsonb, '2026-02-20 16:00:00+08', 28);
 
 -- 4. [Privacy] 隐私与口令极限测试
-INSERT INTO memos (content, tags, is_private, access_code, access_code_hint, created_at, word_count)
+INSERT INTO memos (content, tags, is_private, access_code_hash, access_code_hint, created_at, word_count)
 VALUES 
 ('我的银行卡备忘：[此处已隐藏]。', ARRAY['私密', '安全'], true, crypt('password123', gen_salt('bf')), '我最常用的基础密码', '2024-01-01 00:01:00+08', 15),
 ('明年一定要去大理开个民宿。这是具体的预算清单：1. 租金... 2. 装修...', ARRAY['私密', '梦想'], true, crypt('password123', gen_salt('bf')), 'password123', '2025-03-12 11:00:00+08', 50),

@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
-import { getClient } from '@/lib/supabase';
+import { getClient, getAdminClient } from '@/lib/supabase';
 import { ActionResponse } from '../shared/types';
 import { Memo } from '@/types/memo';
 import { isAdmin } from '@/features/auth/actions';
@@ -204,7 +204,7 @@ export async function batchAddTagsToMemos(formData: FormData): Promise<ActionRes
  * 验证解锁口令
  */
 export async function verifyUnlockCode(memoId: string, code: string): Promise<ActionResponse> {
-    const supabase = await getClient();
+    const supabase = await getAdminClient();
     const { data, error } = await supabase
         .from('memos')
         .select('*')

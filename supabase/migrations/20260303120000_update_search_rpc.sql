@@ -26,6 +26,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, extensions
 AS $$
 BEGIN
   RETURN QUERY
@@ -34,7 +35,7 @@ BEGIN
     CASE 
       WHEN m.is_private = FALSE THEN m.content
       WHEN auth.uid() IS NOT NULL THEN m.content
-      WHEN m.access_code IS NOT NULL AND m.access_code = crypt(input_code, m.access_code) THEN m.content
+      WHEN m.access_code_hash IS NOT NULL AND m.access_code_hash = crypt(input_code, m.access_code_hash) THEN m.content
       ELSE ''
     END as content,
     m.created_at, m.tags, 
@@ -43,11 +44,11 @@ BEGIN
     CASE 
       WHEN m.is_private = FALSE THEN FALSE
       WHEN auth.uid() IS NOT NULL THEN FALSE
-      WHEN m.access_code IS NOT NULL AND m.access_code = crypt(input_code, m.access_code) THEN FALSE
+      WHEN m.access_code_hash IS NOT NULL AND m.access_code_hash = crypt(input_code, m.access_code_hash) THEN FALSE
       ELSE TRUE
     END as is_locked,
     CASE 
-      WHEN (m.is_private = TRUE AND NOT (auth.uid() IS NOT NULL OR (m.access_code IS NOT NULL AND m.access_code = crypt(input_code, m.access_code)))) THEN 0
+      WHEN (m.is_private = TRUE AND NOT (auth.uid() IS NOT NULL OR (m.access_code_hash IS NOT NULL AND m.access_code_hash = crypt(input_code, m.access_code_hash)))) THEN 0
       ELSE m.word_count
     END as word_count
   FROM memos m
@@ -56,7 +57,7 @@ BEGIN
     AND (
       m.is_private = FALSE 
       OR (m.is_private = TRUE AND (
-        (auth.uid() IS NOT NULL OR (m.access_code IS NOT NULL AND input_code IS NOT NULL AND m.access_code = crypt(input_code, m.access_code)))
+        (auth.uid() IS NOT NULL OR (m.access_code_hash IS NOT NULL AND input_code IS NOT NULL AND m.access_code_hash = crypt(input_code, m.access_code_hash)))
         OR (query_text = '' AND filters->>'tag' IS NULL AND filters->>'num' IS NULL)
       ))
     )

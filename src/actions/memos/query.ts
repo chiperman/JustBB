@@ -82,31 +82,18 @@ export async function searchMemosForMention(query: string, offset: number = 0, l
         return { success: true, error: null, data: (data || []) as unknown as Memo[] };
     }
 
+    const isNum = /^\d+$/.test(query);
     const { data: rpcData, error: rpcError } = await supabase.rpc('search_memos_secure', {
-        query_text: query,
+        query_text: isNum ? '' : query,
         input_code: adminCode,
         limit_val: limit,
         offset_val: offset,
-        filters: {}
+        filters: isNum ? { num: parseInt(query) } : {}
     });
 
     if (rpcError) return { success: false, error: rpcError.message, data: [] };
 
-    let results = (rpcData || []) as unknown as Memo[];
-
-    // 补丁：纯数字精确匹配
-    if (offset === 0 && /^\d+$/.test(query)) {
-        const { query: qBuilder } = await getMemosQuery();
-        let q = qBuilder.eq('memo_number', parseInt(query));
-        q = MemoFilters.active(q);
-        
-        const { data: numMatches } = await q;
-
-        if (numMatches?.[0] && !results.some(r => r.id === numMatches[0].id)) {
-            results = [numMatches[0] as unknown as Memo, ...results];
-        }
-    }
-
+    const results = (rpcData || []) as unknown as Memo[];
     return { success: true, error: null, data: results };
 }
 

@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.memos (
     is_private BOOLEAN DEFAULT FALSE NOT NULL,
     is_pinned BOOLEAN DEFAULT FALSE NOT NULL,
     pinned_at TIMESTAMPTZ,
-    access_code TEXT,
+    access_code_hash TEXT,
     access_code_hint TEXT,
     word_count INT DEFAULT 0 NOT NULL,
     locations JSONB DEFAULT '[]'::JSONB

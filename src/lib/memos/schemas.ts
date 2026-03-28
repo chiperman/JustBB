@@ -31,7 +31,7 @@ export const updateMemoStateSchema = z.object({
     is_pinned: z.boolean().optional(),
     is_private: z.boolean().optional(),
     access_code_hint: z.string().optional().nullable(),
-    access_code: z.string().optional().nullable(),
+    access_code: z.string().optional().nullable(), // 原始口令输入，由 Action 负责哈希
 });
 
 /**

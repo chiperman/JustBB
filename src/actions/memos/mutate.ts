@@ -7,7 +7,6 @@ import { getClient, getAdminClient } from '@/lib/supabase';
 import { ActionResponse } from '../shared/types';
 import { Memo } from '@/types/memo';
 import { isAdmin } from '@/features/auth/actions';
-import { buildMemoPayload } from './helpers';
 import { calculateWordCount, extractLocations, mergeTagsIntoContent } from '@/lib/memos/parser';
 import { Database } from '@/types/database';
 import { createMemoSchema, updateMemoContentSchema, updateMemoStateSchema, batchAddTagsSchema } from '@/lib/memos/schemas';
@@ -30,13 +29,12 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
     const { content, is_private, is_pinned, access_code, access_code_hint } = validation.data;
     const supabase = await getClient();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const payload: any = {
+    const payload: Partial<MemoInsert> = {
         content,
         is_private,
         is_pinned,
         word_count: calculateWordCount(content),
-        locations: extractLocations(content),
+        locations: extractLocations(content) as unknown as MemoInsert['locations'],
     };
 
     if (is_private && access_code) {
@@ -47,7 +45,7 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
 
     const { data, error } = await supabase
         .from('memos')
-        .insert(payload)
+        .insert(payload as MemoInsert)
         .select()
         .single();
 
@@ -113,8 +111,7 @@ export async function updateMemoState(formData: FormData): Promise<ActionRespons
     const { id, is_pinned, is_private, access_code, access_code_hint } = validation.data;
     const supabase = await getClient();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updatePayload: any = {};
+    const updatePayload: Partial<MemoInsert> = {};
     if (is_pinned !== undefined) updatePayload.is_pinned = is_pinned;
     
     if (is_private !== undefined) {
@@ -213,14 +210,11 @@ export async function verifyUnlockCode(memoId: string, code: string): Promise<Ac
         .eq('id', memoId)
         .single();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const memoData = data as any;
-
-    if (error || !memoData?.access_code_hash) {
+    if (error || !data?.access_code_hash) {
         return { success: false, error: '未设置访问口令' };
     }
 
-    const isValid = bcrypt.compareSync(code, memoData.access_code_hash);
+    const isValid = bcrypt.compareSync(code, data.access_code_hash);
     if (!isValid) {
         return { success: false, error: '口令错误' };
     }

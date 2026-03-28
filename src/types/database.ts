@@ -11,7 +11,7 @@ export type Memo = {
     memo_number: number;
     content: string;
     tags: string[];
-    access_code: string | null;
+    access_code_hash: string | null;
     access_code_hint: string | null;
     is_private: boolean;
     is_pinned: boolean;
@@ -33,7 +33,7 @@ export type Database = {
                     memo_number?: number;
                     content: string;
                     tags?: string[];
-                    access_code?: string | null;
+                    access_code_hash?: string | null;
                     access_code_hint?: string | null;
                     is_private?: boolean;
                     is_pinned?: boolean;
@@ -49,7 +49,7 @@ export type Database = {
                     memo_number?: number;
                     content?: string;
                     tags?: string[];
-                    access_code?: string | null;
+                    access_code_hash?: string | null;
                     access_code_hint?: string | null;
                     is_private?: boolean;
                     is_pinned?: boolean;

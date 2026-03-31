@@ -11,7 +11,7 @@ export async function getMemoStats(): Promise<ActionResponse<HeatmapStats>> {
     const { data, error } = await supabase.rpc('get_memo_stats_v2');
 
     if (error) {
-        console.error('Error fetching memo stats:', error);
+        console.error('Error fetching memo stats:', error.message, error);
         return { 
             success: false, 
             error: error.message,
@@ -38,7 +38,7 @@ export async function getAllTags(): Promise<ActionResponse<{ tag_name: string; c
     const { data, error } = await supabase.rpc('get_distinct_tags');
 
     if (error) {
-        console.error('Error fetching tags:', error);
+        console.error('Error fetching tags:', error.message, error);
         return { success: false, error: error.message, data: [] };
     }
 
@@ -58,7 +58,7 @@ export async function getTimelineStats(): Promise<ActionResponse<TimelineStats>>
     } as any);
 
     if (error) {
-        console.error('Error fetching timeline stats:', error);
+        console.error('Error fetching timeline stats:', error.message, error);
         return { success: false, error: error.message, data: { days: {} } };
     }
 

@@ -1,4 +1,7 @@
--- 修复 get_timeline_stats 函数以匹配代码库中的调用参数
+-- 修复 get_timeline_stats 函数及其重载引起的冲突
+DROP FUNCTION IF EXISTS get_timeline_stats();
+DROP FUNCTION IF EXISTS get_timeline_stats(boolean);
+
 CREATE OR REPLACE FUNCTION get_timeline_stats(include_private BOOLEAN DEFAULT FALSE)
 RETURNS JSONB
 LANGUAGE plpgsql

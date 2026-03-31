@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
-import L from 'leaflet';
+import type * as Leaflet from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { cn } from '@/lib/utils';
 import type { MapMarker } from '@/lib/location-cache';
@@ -28,13 +28,24 @@ export function MapView({
     onMarkerDragEnd
 }: MapViewProps) {
     const mapRef = useRef<HTMLDivElement>(null);
-    const mapInstance = useRef<L.Map | null>(null);
-    const clusterLayer = useRef<L.LayerGroup | null>(null);
-    const selectionMarker = useRef<L.Marker | null>(null);
+    const mapInstance = useRef<Leaflet.Map | null>(null);
+    const clusterLayer = useRef<Leaflet.LayerGroup | null>(null);
+    const leafletRef = useRef<typeof Leaflet | null>(null);
 
     useEffect(() => {
-        if (!mapRef.current || mapInstance.current) return;
+        const initLeaflet = async () => {
+            if (!leafletRef.current) {
+                const L_mod = (await import('leaflet')).default;
+                leafletRef.current = L_mod;
+            }
+        };
+        initLeaflet();
+    }, []);
 
+    useEffect(() => {
+        if (!mapRef.current || mapInstance.current || !leafletRef.current) return;
+
+        const L = leafletRef.current;
         const map = L.map(mapRef.current, {
             center: [34.3416, 108.9398],
             zoom: mode === 'mini' ? 12 : 5,
@@ -52,7 +63,7 @@ export function MapView({
         }
 
         if (interactive) {
-            map.on('click', (e: L.LeafletMouseEvent) => {
+            map.on('click', (e: Leaflet.LeafletMouseEvent) => {
                 onMapClick?.(e.latlng.lat, e.latlng.lng);
             });
         }
@@ -68,14 +79,15 @@ export function MapView({
     }, [mode, interactive, onMapClick]);
 
     useEffect(() => {
-        if (!mapInstance.current || !clusterLayer.current) return;
+        if (!mapInstance.current || !clusterLayer.current || !leafletRef.current) return;
 
+        const L = leafletRef.current;
         clusterLayer.current.clearLayers();
 
-        const bounds: L.LatLngExpression[] = [];
+        const bounds: Leaflet.LatLngExpression[] = [];
 
         markers.forEach(marker => {
-            const pos: L.LatLngExpression = [marker.lat, marker.lng];
+            const pos: Leaflet.LatLngExpression = [marker.lat, marker.lng];
             bounds.push(pos);
 
             const isDraggable = mode === 'mini' && interactive;
@@ -130,7 +142,7 @@ export function MapView({
         });
 
         if (bounds.length > 0 && mode === 'full') {
-            mapInstance.current.fitBounds(L.latLngBounds(bounds), { padding: [50, 50] });
+            mapInstance.current.fitBounds(leafletRef.current.latLngBounds(bounds), { padding: [50, 50] });
         } else if (bounds.length > 0 && mode === 'mini') {
             mapInstance.current.setView(bounds[0], 13);
         }

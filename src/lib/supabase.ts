@@ -46,7 +46,7 @@ export async function getClient() {
  * 服务端使用的管理实例 (绕过 RLS)
  */
 export const getAdminClient = () => {
-    const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
+    const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY as string;
 
     return createServerClient<Database>(supabaseUrl, serviceRoleKey, {
         cookies: {

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+const isServer = typeof window === 'undefined';
+
 /**
  * 环境变量校验 Schema
  * 包含应用运行所需的最小关键配置集
@@ -9,8 +11,8 @@ const envSchema = z.object({
     // Supabase 基础配置
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
-    // 服务端私密配置 (Service Role)
-    SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+    // 服务端私密配置 (Service Role) 客户端验证时跳过强制
+    SUPABASE_SERVICE_ROLE_KEY: isServer ? z.string().min(1) : z.string().optional(),
 
     // --- 可选项 (有默认逻辑或回退机制) ---
     // 应用访问 URL (重定向用)
@@ -29,7 +31,17 @@ export type Env = z.infer<typeof envSchema>;
  * 失败时抛出友好错误并中止进程
  */
 export function validateEnv() {
-    const parsed = envSchema.safeParse(process.env);
+    // 显式构造对象，确保 Webpack/Turbopack 能对 NEXT_PUBLIC_ 开头的变量进行静态替换
+    const envObj = {
+        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+        SUPABASE_PROJECT_REF: process.env.SUPABASE_PROJECT_REF,
+        SUPABASE_MANAGEMENT_API_KEY: process.env.SUPABASE_MANAGEMENT_API_KEY,
+    };
+
+    const parsed = envSchema.safeParse(envObj);
 
     if (!parsed.success) {
         console.error('❌ 环境变量校验失败:');

@@ -71,10 +71,7 @@ export function MainLayoutClient() {
         fetchMemosBatch(true);
     }, [cacheKey, fetchMemosBatch, getCache]); // getCache 虽然是 context 方法，但它是稳定的，建议加入依赖项符合规范
 
-    // 4. 强制重置模式 (回到首页视图)
-    useEffect(() => {
-        setViewMode('CARD_VIEW');
-    }, [setViewMode]);
+
 
     return (
         <div className="flex flex-col h-full overflow-hidden">

@@ -268,7 +268,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         {!user && (
                             <>
                                 <DropdownMenuItem className="rounded-md" onClick={() => {
-                                    setViewMode('CARD_VIEW');
+                                    setViewMode('SPLIT_VIEW');
                                 }}>
                                     <HugeiconsIcon icon={LogIn} size={16} className="mr-2 text-primary" />
                                     <span>登录系统</span>

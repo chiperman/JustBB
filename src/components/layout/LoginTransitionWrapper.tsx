@@ -1,6 +1,7 @@
 'use client';
 
-import { motion, Variants, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef } from 'react';
+import { motion, Variants } from 'framer-motion';
 import { useLayout } from '@/context/LayoutContext';
 import { useUser } from '@/context/UserContext';
 import { LoginPanel } from '@/features/auth/components/LoginPanel';
@@ -8,6 +9,25 @@ import { LoginPanel } from '@/features/auth/components/LoginPanel';
 export function LoginTransitionWrapper({ children }: { children: React.ReactNode }) {
     const { viewMode, setViewMode } = useLayout();
     const { user, isMounted } = useUser();
+    const prevViewModeRef = useRef(viewMode);
+
+    // CARD_VIEW 自动过渡逻辑（三段式状态机心跳）
+    useEffect(() => {
+        if (viewMode === 'CARD_VIEW') {
+            const timer = setTimeout(() => {
+                // 从 HOME_FOCUS 来 → 推进到 SPLIT_VIEW（展示登录面板）
+                if (prevViewModeRef.current === 'HOME_FOCUS') {
+                    setViewMode('SPLIT_VIEW');
+                }
+                // 从 SPLIT_VIEW 来 → 回到 HOME_FOCUS（关闭登录面板）
+                else if (prevViewModeRef.current === 'SPLIT_VIEW') {
+                    setViewMode('HOME_FOCUS');
+                }
+            }, 400);
+            return () => clearTimeout(timer);
+        }
+        prevViewModeRef.current = viewMode;
+    }, [viewMode, setViewMode]);
     const homeTransitionVariants: Variants = {
         home: {
             scale: 1,
@@ -58,6 +78,52 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
         }
     };
 
+    // 登录面板动画 variants（与首页卡片镜像对称）
+    const loginPanelVariants: Variants = {
+        home: {
+            x: '-100%',
+            scale: 0.9,
+            opacity: 0,
+            borderRadius: '24px',
+            transition: {
+                type: 'spring',
+                stiffness: 260,
+                damping: 26,
+                mass: 1
+            },
+            zIndex: -1
+        },
+        card: {
+            x: '-100%',
+            scale: 0.9,
+            opacity: 0,
+            borderRadius: '24px',
+            transition: {
+                type: 'spring',
+                stiffness: 260,
+                damping: 26,
+                mass: 1
+            },
+            zIndex: -1
+        },
+        split: {
+            x: '0%',
+            scale: 0.9,
+            opacity: 1,
+            zIndex: 20,
+            borderRadius: '24px',
+            backgroundColor: 'var(--background)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            transition: {
+                type: 'spring',
+                stiffness: 200,
+                damping: 24,
+                staggerChildren: 0.05,
+                delayChildren: 0.1
+            }
+        }
+    };
+
     // Mapping viewMode to variant keys
     const getVariant = () => {
         if (viewMode === 'HOME_FOCUS') return 'home';
@@ -101,7 +167,7 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
                     style={{ 
                         borderRadius: viewMode === 'HOME_FOCUS' ? 0 : 24,
                     }}
-                    onClick={() => viewMode === 'SPLIT_VIEW' && setViewMode('HOME_FOCUS')}
+                    onClick={() => viewMode === 'SPLIT_VIEW' && setViewMode('CARD_VIEW')}
                 >
                     <div className="w-full h-full shadow-xl overflow-hidden border border-black/5 dark:border-white/5" style={{ borderRadius: 'inherit' }}>
                         {/* Actual Home Page Content */}
@@ -111,29 +177,17 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
                     </div>
                 </motion.div>
 
-                {/* Login Panel (Auth Form) - Left Panel Slide In */}
-                <AnimatePresence>
-                    {isMounted && !user && viewMode === 'SPLIT_VIEW' && (
-                        <div className="absolute inset-0 z-50 flex items-center justify-start p-4 lg:p-12 pointer-events-none">
-                            <motion.div 
-                                initial={{ opacity: 0, x: -80, filter: 'blur(10px)' }}
-                                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                                exit={{ opacity: 0, x: -80, filter: 'blur(10px)' }}
-                                transition={{ 
-                                    type: "spring",
-                                    stiffness: 200,
-                                    damping: 30,
-                                    mass: 1
-                                }}
-                                className="relative w-full max-w-[420px] pointer-events-auto"
-                            >
-                                <div className="p-8 rounded-3xl bg-white/40 backdrop-blur-md border border-white/20 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)]">
-                                    <LoginPanel />
-                                </div>
-                            </motion.div>
-                        </div>
-                    )}
-                </AnimatePresence>
+                {/* Login Panel (Auth Form) - 50% 对称卡片 */}
+                <motion.div
+                    variants={loginPanelVariants}
+                    initial="home"
+                    animate={getVariant()}
+                    className="fixed left-0 top-0 w-[50%] h-full flex items-center justify-center p-12 overflow-hidden pointer-events-none"
+                >
+                    <div className="w-full max-w-[400px] pointer-events-auto">
+                        <LoginPanel />
+                    </div>
+                </motion.div>
             </div>
         </div>
     );

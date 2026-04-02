@@ -62,7 +62,7 @@ JustMemo 采用 **"SSR + 客户端分页"** 的混合渲染模式，确保极致
 | **PageDataCache** | 页面数据缓存 | 实现“一次加载，会话级复用”，支持**路径+参数级**的缓存自动隔离 |
 | **UserContext** | 用户身份与权限 | SSR 注入初始状态，确保存并鉴权 |
 | **SelectionContext** | 多选模式状态 | 专注于管理选中项（Set<string>）与批量操作模式 |
-| **LayoutContext** | 布局与交互状态 | 管理 `viewMode` (登录/视图切换)、活动 ID (`activeId`) 及手动滚动同步状态 |
+| **LayoutContext** | 布局与交互状态 | 管理 `viewMode` (`HOME_FOCUS` \| `CARD_VIEW` \| `SPLIT_VIEW`)、活动 ID (`activeId`) |
 | **StatsContext** | 全局统计数据 | 维护热力图与基础计数，支持精细化记忆化以减少重渲染 |
 | **TagsContext** | 标签全集管理 | 维护全站标签列表及其计数，支持按需刷新 |
 

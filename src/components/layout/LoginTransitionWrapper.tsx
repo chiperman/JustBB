@@ -1,34 +1,13 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { motion, Variants } from 'framer-motion';
+import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { useLayout } from '@/context/LayoutContext';
+import { useUser } from '@/context/UserContext';
 import { LoginPanel } from '@/features/auth/components/LoginPanel';
 
 export function LoginTransitionWrapper({ children }: { children: React.ReactNode }) {
     const { viewMode, setViewMode } = useLayout();
-    const prevViewModeRef = useRef(viewMode);
-
-    // Automatic transition logic
-    useEffect(() => {
-        if (viewMode === 'CARD_VIEW') {
-            const timer = setTimeout(() => {
-                // If we came from HOME_FOCUS, go to SPLIT_VIEW
-                if (prevViewModeRef.current === 'HOME_FOCUS') {
-                    setViewMode('SPLIT_VIEW');
-                }
-                // If we came from SPLIT_VIEW, go to HOME_FOCUS
-                else if (prevViewModeRef.current === 'SPLIT_VIEW') {
-                    setViewMode('HOME_FOCUS');
-                }
-            }, 400); // Faster transition timer
-            return () => clearTimeout(timer);
-        }
-
-        // Update the ref to the current mode AFTER checking (so it's the "previous" next time)
-        prevViewModeRef.current = viewMode;
-    }, [viewMode, setViewMode]);
-
+    const { user, isMounted } = useUser();
     const homeTransitionVariants: Variants = {
         home: {
             scale: 1,
@@ -65,8 +44,8 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
             borderRadius: '24px',
             transition: {
                 type: 'spring',
-                stiffness: 200,
-                damping: 24
+                stiffness: 150,
+                damping: 25
             }
         },
         hover: {
@@ -91,13 +70,19 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
             {/* Background Decorative Text */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
                 <motion.span
-                    animate={{ opacity: 0.05, x: 0 }}
+                    animate={{ 
+                        opacity: (!user && viewMode === 'SPLIT_VIEW') ? 0.02 : 0.05, 
+                        x: (!user && viewMode === 'SPLIT_VIEW') ? 20 : 0 
+                    }}
                     className="absolute top-[10%] left-[5%] text-[10vw] font-editorial italic text-black dark:text-white"
                 >
                     JustMemo Draft
                 </motion.span>
                 <motion.span
-                    animate={{ opacity: 0.03, x: 0 }}
+                    animate={{ 
+                        opacity: (!user && viewMode === 'SPLIT_VIEW') ? 0.01 : 0.03, 
+                        x: (!user && viewMode === 'SPLIT_VIEW') ? -20 : 0 
+                    }}
                     className="absolute bottom-[15%] right-[10%] text-[4vw] font-editorial text-black dark:text-white"
                 >
                     with ❤️ by chiperman
@@ -113,21 +98,42 @@ export function LoginTransitionWrapper({ children }: { children: React.ReactNode
                     animate={getVariant()}
                     whileHover={viewMode === 'SPLIT_VIEW' ? "hover" : undefined}
                     className={`absolute inset-0 z-10 origin-center overflow-hidden bg-background ${viewMode === 'SPLIT_VIEW' ? 'cursor-pointer' : ''}`}
-                    style={{ borderRadius: viewMode === 'HOME_FOCUS' ? 0 : 24 }}
-                    onClick={() => viewMode === 'SPLIT_VIEW' && setViewMode('CARD_VIEW')}
+                    style={{ 
+                        borderRadius: viewMode === 'HOME_FOCUS' ? 0 : 24,
+                    }}
+                    onClick={() => viewMode === 'SPLIT_VIEW' && setViewMode('HOME_FOCUS')}
                 >
                     <div className="w-full h-full shadow-xl overflow-hidden border border-black/5 dark:border-white/5" style={{ borderRadius: 'inherit' }}>
                         {/* Actual Home Page Content */}
                         <div className={viewMode === 'SPLIT_VIEW' ? "pointer-events-none select-none h-full" : "h-full"}>
                             {children}
                         </div>
-
-
                     </div>
                 </motion.div>
 
-                {/* Login Panel (Auth Form) */}
-                <LoginPanel />
+                {/* Login Panel (Auth Form) - Left Panel Slide In */}
+                <AnimatePresence>
+                    {isMounted && !user && viewMode === 'SPLIT_VIEW' && (
+                        <div className="absolute inset-0 z-50 flex items-center justify-start p-4 lg:p-12 pointer-events-none">
+                            <motion.div 
+                                initial={{ opacity: 0, x: -80, filter: 'blur(10px)' }}
+                                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                                exit={{ opacity: 0, x: -80, filter: 'blur(10px)' }}
+                                transition={{ 
+                                    type: "spring",
+                                    stiffness: 200,
+                                    damping: 30,
+                                    mass: 1
+                                }}
+                                className="relative w-full max-w-[420px] pointer-events-auto"
+                            >
+                                <div className="p-8 rounded-3xl bg-white/40 backdrop-blur-md border border-white/20 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)]">
+                                    <LoginPanel />
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );

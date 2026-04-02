@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { getCurrentUser } from '@/features/auth/actions';
 
 export interface UserInfo {
@@ -49,13 +49,25 @@ export function UserProvider({ children, initialUser = null }: { children: React
 
     useEffect(() => {
         setIsMounted(true);
-        refreshUser();
-    }, [refreshUser]);
+        // 如果没有提供初始用户数据，挂载后立即刷新一次确认状态
+        if (initialUser === undefined) {
+            refreshUser();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [refreshUser]); // 移除 initialUser 依赖，防止服务端 layout 刷新导致对象引用变动触发循环
 
     const isAdmin = user?.role === 'admin';
 
+    const value = useMemo(() => ({ 
+        user, 
+        isAdmin, 
+        loading, 
+        isMounted, 
+        refreshUser 
+    }), [user, isAdmin, loading, isMounted, refreshUser]);
+
     return (
-        <UserContext.Provider value={{ user, isAdmin, loading, isMounted, refreshUser }}>
+        <UserContext.Provider value={value}>
             {children}
         </UserContext.Provider>
     );

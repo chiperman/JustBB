@@ -51,7 +51,8 @@ export function StatsProvider({
         if (!initialData) {
             refreshStats();
         }
-    }, [initialData, refreshStats]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [refreshStats]); // 移除 initialData 依赖，防止服务端重新下发对象导致触发循环
 
     const contextValue = useMemo(() => ({ 
         stats, 

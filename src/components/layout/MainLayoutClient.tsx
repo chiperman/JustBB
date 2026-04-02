@@ -54,18 +54,22 @@ export function MainLayoutClient() {
         }
     }, [searchParams, cacheKey, setCache]);
 
-    // 3. 路由/搜索变动时，重置并刷新
+    // 3. 路由/搜索变动时，重置并刷新 (核心修复：移除 cachedData 依赖，避免更新缓存导致的死循环)
     useEffect(() => {
-        // 如果没有缓存，立即显示加载状态
-        if (!cachedData) {
+        // 直接从缓存快照中获取数据以供瞬时渲染，不订阅其引用变化
+        const latestCachedData = getCache(cacheKey);
+        
+        if (!latestCachedData) {
             setIsLoading(true);
             setMemos([]);
         } else {
-            setMemos(cachedData.memos || []);
+            setMemos(latestCachedData.memos || []);
             setIsLoading(false);
         }
+        
+        // 即使有缓存，也在后台发起 SWR 刷新
         fetchMemosBatch(true);
-    }, [cacheKey, cachedData, fetchMemosBatch]);
+    }, [cacheKey, fetchMemosBatch, getCache]); // getCache 虽然是 context 方法，但它是稳定的，建议加入依赖项符合规范
 
     // 4. 强制重置模式 (回到首页视图)
     useEffect(() => {

@@ -44,8 +44,11 @@ export function TagsProvider({
 
     useEffect(() => {
         setIsMounted(true);
-        refreshTags();
-    }, [refreshTags]);
+        // 如果没有提供初始数据（长度为0），挂载后立即刷新一次
+        if (initialData.length === 0) {
+            refreshTags();
+        }
+    }, [initialData.length, refreshTags]);
 
     const contextValue = useMemo(() => ({ 
         tags, 

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { getCurrentUser } from '@/features/auth/actions';
+import { supabase } from '@/lib/supabase';
 
 export interface UserInfo {
     id: string;
@@ -53,6 +54,18 @@ export function UserProvider({ children, initialUser = null }: { children: React
         if (initialUser === undefined) {
             refreshUser();
         }
+
+        // 监听实时认证状态变化 (SIGNED_IN, SIGNED_OUT, USER_UPDATED)
+        // 这确保了在登录成功后，前端相关的 UI 能够立即更新，而不需要 F5 刷新
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+                refreshUser();
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [refreshUser]); // 移除 initialUser 依赖，防止服务端 layout 刷新导致对象引用变动触发循环
 

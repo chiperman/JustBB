@@ -1,15 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { UserInfo } from '@/types/auth';
 import { getCurrentUser } from '@/features/auth/actions';
 import { supabase } from '@/lib/supabase';
-
-export interface UserInfo {
-    id: string;
-    email?: string;
-    created_at: string;
-    role?: string;
-}
 
 interface UserContextType {
     user: UserInfo | null;

@@ -2,7 +2,8 @@
 
 import { UIProvider } from "@/context/UIContext";
 import { LayoutProvider } from "@/context/LayoutContext";
-import { UserProvider, UserInfo } from "@/context/UserContext";
+import { UserProvider } from "@/context/UserContext";
+import { UserInfo } from "@/types/auth";
 import { LoginTransitionWrapper } from "@/components/layout/LoginTransitionWrapper";
 import { MobileLayoutWrapper } from "@/components/layout/MobileLayoutWrapper";
 import { TagsProvider } from "@/context/TagsContext";

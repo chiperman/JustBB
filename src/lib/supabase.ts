@@ -1,4 +1,5 @@
 import { createBrowserClient, createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 import { env } from './env';
 
@@ -46,16 +47,19 @@ export async function getClient() {
  * 服务端使用的管理实例 (绕过 RLS)
  */
 export const getAdminClient = () => {
-    const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY as string;
+    // 强制优先从 process.env 读取，绕过可能在开发模式下校验失败的 env 代理对象
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY;
 
-    return createServerClient<Database>(supabaseUrl, serviceRoleKey, {
-        cookies: {
-            getAll() { return [] },
-            setAll() { },
-        },
+    if (!url || !key) {
+        console.error('[Supabase Admin] URL or Key is missing! Check your .env.local');
+    }
+
+    return createClient<Database>(url as string, key as string, {
         auth: {
             autoRefreshToken: false,
             persistSession: false,
         },
     });
 };
+

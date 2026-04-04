@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { Provider } from '@supabase/supabase-js';
 import { env } from '@/lib/env';
 import { ActionResponse } from '@/actions/shared/types';
+import { UserInfo, UserRole } from '@/types/auth';
 import { loginSchema, signupSchema, verifyOtpSchema } from './schemas';
 
 export async function login(formData: FormData): Promise<ActionResponse> {
@@ -84,22 +85,31 @@ export async function verifyOtp(email: string, code: string): Promise<ActionResp
 }
 
 export async function checkUserExists(email: string): Promise<ActionResponse<{ exists: boolean }>> {
-    if (!email) return { success: false, error: '邮箱不能为空' };
+    const cleanEmail = email.toLowerCase().trim();
+    if (!cleanEmail) return { success: false, error: '邮箱不能为空' };
     
-    const supabase = getAdminClient();
-    const { data, error } = await supabase.auth.admin.listUsers({
-        page: 1,
-        perPage: 1000,
-    });
+    try {
+        const supabase = getAdminClient();
+        const { data, error } = await supabase.auth.admin.listUsers();
 
-    if (error) {
-        console.error('[Auth] User existence check failed:', error.message);
-        return { success: false, error: '系统繁忙，请稍后再试' };
+        if (error) {
+            console.error('[Auth] User existence check failed:', error.message);
+            return { success: false, error: '系统繁忙，请稍后再试' };
+        }
+
+        const user = data.users.find(u => u.email?.toLowerCase() === cleanEmail);
+        return { success: true, error: null, data: { exists: !!user } };
+    } catch (err) {
+        console.error('[Auth] Unexpected error:', err);
+        return { success: false, error: '检查失败' };
     }
-
-    const user = data.users.find(u => u.email === email);
-    return { success: true, error: null, data: { exists: !!user } };
 }
+
+
+
+
+
+
 
 export async function signInWithOAuth(provider: Provider): Promise<ActionResponse> {
     const supabase = await getClient();
@@ -126,7 +136,7 @@ export async function logout(): Promise<ActionResponse> {
     return { success: true, error: null };
 }
 
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<UserInfo | null> {
     const supabase = await getClient();
     const { data: { user }, error } = await supabase.auth.getUser();
 
@@ -136,7 +146,7 @@ export async function getCurrentUser() {
         id: user.id,
         email: user.email,
         created_at: user.created_at,
-        role: user.app_metadata?.role as string | undefined,
+        role: user.app_metadata?.role as UserRole | undefined,
     };
 }
 

@@ -4,10 +4,10 @@
 
 -- 0. [Users & Identities] 基础账号初始化
 -- 管理员 (admin@example.com / admin123456)
-INSERT INTO auth.users (id, instance_id, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, role, confirmation_token, email_change, email_change_token_new, recovery_token)
+INSERT INTO auth.users (id, instance_id, aud, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, role, confirmation_token, email_change, email_change_token_new, recovery_token)
 VALUES
-('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'admin@example.com', crypt('admin123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"],"role":"admin"}', '{"name":"Admin User"}', now(), now(), 'authenticated', '', '', '', ''),
-('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'user@example.com', crypt('user123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"],"role":"user"}', '{"name":"Regular User"}', now(), now(), 'authenticated', '', '', '', '')
+('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'admin@example.com', crypt('admin123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"],"role":"admin"}', '{"name":"Admin User"}', now(), now(), 'authenticated', '', '', '', ''),
+('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'user@example.com', crypt('user123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"],"role":"user"}', '{"name":"Regular User"}', now(), now(), 'authenticated', '', '', '', '')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)

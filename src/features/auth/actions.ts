@@ -92,20 +92,18 @@ export async function checkUserExists(email: string): Promise<ActionResponse<{ e
         const supabase = getAdminClient();
         const { data, error } = await supabase.auth.admin.listUsers();
 
-        if (error) {
-            console.error('[Auth] User existence check failed:', error.message);
-            return { success: false, error: '系统繁忙，请稍后再试' };
-        }
+        if (error) return { success: false, error: '系统校验失败' };
 
-        const user = data.users.find(u => u.email?.toLowerCase() === cleanEmail);
-        return { success: true, error: null, data: { exists: !!user } };
-    } catch (err) {
-        console.error('[Auth] Unexpected error:', err);
+        const exists = !!data.users?.find(u =>
+            u.email?.toLowerCase() === cleanEmail ||
+            u.user_metadata?.email?.toLowerCase() === cleanEmail
+        );
+
+        return { success: true, error: null, data: { exists } };
+    } catch {
         return { success: false, error: '检查失败' };
     }
 }
-
-
 
 
 

@@ -111,7 +111,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                 {!isCollapsed && (
                     <div className="flex flex-col items-start overflow-hidden whitespace-nowrap flex-1">
                         <span className="text-[14px] font-normal text-foreground truncate w-full flex items-center gap-1">
-                            {user ? user.email : (loading ? '加载中...' : '未登录')}
+                            {user ? user.email : (loading ? '同步中...' : '未登录')}
                         </span>
                     </div>
                 )}
@@ -151,7 +151,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                         className="text-[14px] font-normal text-foreground truncate w-full flex items-center gap-1"
                                         suppressHydrationWarning
                                     >
-                                        {user ? user.email : (loading ? '加载中...' : '未登录')}
+                                        {user ? user.email : (loading ? '同步中...' : '未登录')}
                                     </span>
                                 </motion.div>
                             )}

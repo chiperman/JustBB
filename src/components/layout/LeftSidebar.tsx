@@ -11,17 +11,16 @@ import { Button } from '@/components/ui/button';
 import { SidebarSettings } from "./SidebarSettings";
 import { motion, Variants } from 'framer-motion';
 
-import { Memo } from '@/types/memo';
+
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
 import { SidebarNavItem } from './sidebar/SidebarNavItem';
 import { useHasMounted } from '@/hooks/useHasMounted';
 
 export interface LeftSidebarProps {
     onClose?: () => void;
-    initialOnThisDay?: Memo[];
 }
 
-export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
+export function LeftSidebar({ onClose }: LeftSidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const isMobile = !!onClose;
     const effectiveIsCollapsed = isMobile ? false : isCollapsed;
@@ -132,7 +131,7 @@ export function LeftSidebar({ onClose, initialOnThisDay }: LeftSidebarProps) {
 
             {/* On This Day */}
             <motion.div variants={sectionVariants} className="overflow-hidden mb-[24px] px-1 min-w-[17rem]">
-                <OnThisDay initialMemos={initialOnThisDay} />
+                <OnThisDay />
             </motion.div>
         </motion.aside>
     );

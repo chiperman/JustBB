@@ -72,6 +72,7 @@ export function MemoActions({
         await deleteMemo(id);
         memoCache.removeItem(id);
         setIsPending(false);
+        window.dispatchEvent(new CustomEvent('memo-deleted', { detail: { id } }));
         toast({
             title: "已删除",
             description: "记录已移至回收站",
@@ -82,6 +83,7 @@ export function MemoActions({
         setIsPending(true);
         await restoreMemo(id);
         setIsPending(false);
+        window.dispatchEvent(new CustomEvent('memo-deleted', { detail: { id } }));
         toast({
             title: "已恢复",
             description: "记录已恢复至首页",
@@ -92,6 +94,7 @@ export function MemoActions({
         setIsPending(true);
         await permanentDeleteMemo(id);
         setIsPending(false);
+        window.dispatchEvent(new CustomEvent('memo-deleted', { detail: { id } }));
         toast({
             title: "彻底销毁",
             description: "该记录已从数据库物理删除",
@@ -106,6 +109,7 @@ export function MemoActions({
         formData.append('is_pinned', String(!isPinned));
         await updateMemoState(formData);
         setIsPending(false);
+        window.dispatchEvent(new CustomEvent('memo-updated', { detail: { id, updates: { is_pinned: !isPinned } } }));
         toast({
             title: !isPinned ? "已置顶" : "已取消置顶",
         });
@@ -120,6 +124,7 @@ export function MemoActions({
         if (result?.error) {
             toast({ title: "错误", description: result.error, variant: "destructive" });
         } else {
+            window.dispatchEvent(new CustomEvent('memo-updated', { detail: { id, updates: { is_private: false } } }));
             toast({ title: "已公开", description: "该记录现在所有人可见" });
         }
         setIsPending(false);
@@ -149,6 +154,7 @@ export function MemoActions({
         if (result?.error) {
             toast({ title: "错误", description: result.error, variant: "destructive" });
         } else {
+            window.dispatchEvent(new CustomEvent('memo-updated', { detail: { id, updates: { is_private: true } } }));
             toast({ title: "已设为私密", description: code ? "已启用口令保护" : "已设为仅自己可见" });
         }
         setIsPending(false);

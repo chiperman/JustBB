@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Memo } from '@/types/memo';
 import { getMemos } from '@/actions/memos/query';
 import { mergeMemos } from '@/lib/streamUtils';
@@ -70,6 +70,30 @@ export function useMemoFeed({ initialMemos, searchParams, adminCode }: UseMemoFe
 
     const updateMemoInList = useCallback((updatedMemo: Memo) => {
         setMemos(prev => prev.map(m => m.id === updatedMemo.id ? updatedMemo : m));
+    }, []);
+
+    useEffect(() => {
+        const handleDeleted = (e: Event) => {
+            const detail = (e as CustomEvent).detail;
+            if (detail && detail.id) {
+                setMemos(prev => prev.filter(m => m.id !== detail.id));
+            }
+        };
+        
+        const handleUpdated = (e: Event) => {
+            const detail = (e as CustomEvent).detail;
+            if (detail && detail.id && detail.updates) {
+                setMemos(prev => prev.map(m => m.id === detail.id ? { ...m, ...detail.updates } : m));
+            }
+        };
+        
+        window.addEventListener('memo-deleted', handleDeleted);
+        window.addEventListener('memo-updated', handleUpdated);
+        
+        return () => {
+            window.removeEventListener('memo-deleted', handleDeleted);
+            window.removeEventListener('memo-updated', handleUpdated);
+        };
     }, []);
 
     return {

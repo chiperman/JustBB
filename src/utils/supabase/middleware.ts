@@ -29,12 +29,21 @@ export async function updateSession(request: NextRequest) {
         }
     )
 
-    // 刷新 Session (如果过期)
-    const { data: { user } } = await supabase.auth.getUser()
-
     // 保护管理员路径 /admin (排除 OAuth 回调)
     const isAuthCallback = request.nextUrl.pathname.startsWith('/auth/callback')
     const isAdminPath = request.nextUrl.pathname.startsWith('/admin')
+
+    // 性能优化：检查是否存在 auth 相关的 cookie
+    // 如果没有 cookie 且不是受保护路径，则无需刷新 session，避免冗余的网络往返
+    const allCookies = request.cookies.getAll()
+    const hasSessionCookie = allCookies.some(c => c.name.includes('auth-token') || c.name.startsWith('sb-'))
+
+    if (!hasSessionCookie && !isAdminPath && !isAuthCallback) {
+        return supabaseResponse
+    }
+
+    // 刷新 Session (如果过期) - 仅在有 cookie 或访问管理路径时执行
+    const { data: { user } } = await supabase.auth.getUser()
 
     if (isAdminPath && !isAuthCallback) {
         if (!user) {

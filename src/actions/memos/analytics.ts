@@ -1,3 +1,4 @@
+'use server';
 import { getClient } from '@/lib/supabase';
 import { TimelineStats, HeatmapStats } from '@/types/stats';
 import { isAdmin } from '@/features/auth/actions';

@@ -13,14 +13,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const UserStatus = memo(function UserStatus({ isCollapsed = false }: { isCollapsed?: boolean }) {
-    const { user, loading, refreshUser } = useUser();
+    const { user, loading, setUser } = useUser();
     const [loggingOut, setLoggingOut] = useState(false);
     const router = useRouter();
 
     const handleLogout = async () => {
         setLoggingOut(true);
+        setUser(null);
         await logout();
-        await refreshUser();
         setLoggingOut(false);
         router.refresh();
     };

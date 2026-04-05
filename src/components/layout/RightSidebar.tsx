@@ -17,9 +17,10 @@ import { useLayout } from "@/context/LayoutContext";
 import { TimelineStats } from "@/types/stats";
 import { useHasMounted } from "@/hooks/useHasMounted";
 import { cn } from "@/lib/utils";
+import { getTimelineStats } from "@/actions/memos/analytics";
 
 export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
-  const [allDays] = useState<Record<string, { count: number }>>(
+  const [allDays, setAllDays] = useState<Record<string, { count: number }>>(
     initialData?.days || {},
   );
   const isMounted = useHasMounted();
@@ -59,6 +60,17 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
       setActiveId(`year-${yearFilter}`);
     }
   }, [dateFilter, yearFilter, monthFilter, setActiveId, isMounted]);
+  
+  // 挂载后异步拉取时间轴数据 (如果服务端未提供)
+  useEffect(() => {
+    if (Object.keys(allDays).length === 0) {
+      getTimelineStats().then(res => {
+        if (res.success && res.data) {
+          setAllDays(res.data.days);
+        }
+      });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 构建时间轴数据结构（始终基于全量数据）
   const fullTimeline = useMemo(() => {
@@ -185,8 +197,8 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
     setManualClick(true);
     setActiveId(id);
 
-    console.log(`[Sidebar] Routing to ${dateStr} for caching`);
     const currentParams = new URLSearchParams(searchParams.toString());
+
     currentParams.delete("year");
     currentParams.delete("month");
     currentParams.set("date", dateStr);

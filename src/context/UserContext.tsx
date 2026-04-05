@@ -1,47 +1,41 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { getCurrentUser } from '@/features/auth/actions';
-
-export interface UserInfo {
-    id: string;
-    email?: string;
-    created_at: string;
-    role?: string;
-}
+import { UserInfo, UserRole } from '@/types/auth';
+import { supabase } from '@/lib/supabase';
 
 interface UserContextType {
     user: UserInfo | null;
+    setUser: React.Dispatch<React.SetStateAction<UserInfo | null>>;
     isAdmin: boolean;
     loading: boolean;
     isMounted: boolean;
-    refreshUser: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'justbb_user_info';
-
 export function UserProvider({ children, initialUser = null }: { children: React.ReactNode; initialUser?: UserInfo | null }) {
     const [user, setUser] = useState<UserInfo | null>(initialUser);
-    const [loading, setLoading] = useState(false); // 初始 loading 设为 false，因为我们可能有 initialUser
+    const [loading, setLoading] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
 
-    const refreshUser = useCallback(async () => {
+    const fetchUser = useCallback(async () => {
         setLoading(true);
         try {
-            const u = await getCurrentUser();
-            const userInfo = u as UserInfo | null;
-            setUser(userInfo);
-            if (userInfo) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(userInfo));
+            const { data: { user }, error } = await supabase.auth.getUser();
+            if (error || !user) {
+                setUser(null);
             } else {
-                localStorage.removeItem(STORAGE_KEY);
+                setUser({
+                    id: user.id,
+                    email: user.email,
+                    created_at: user.created_at,
+                    role: (user.app_metadata?.role as UserRole) || 'user'
+                });
             }
         } catch (error) {
             console.error('Failed to fetch user:', error);
             setUser(null);
-            localStorage.removeItem(STORAGE_KEY);
         } finally {
             setLoading(false);
         }
@@ -49,22 +43,46 @@ export function UserProvider({ children, initialUser = null }: { children: React
 
     useEffect(() => {
         setIsMounted(true);
+        
         // 如果没有提供初始用户数据，挂载后立即刷新一次确认状态
         if (initialUser === undefined) {
-            refreshUser();
+            fetchUser();
         }
+
+        // 监听实时认证状态变化 (SIGNED_IN, SIGNED_OUT, USER_UPDATED)
+        // 这确保了在登录成功后，前端相关的 UI 能够立即更新，而不需要 F5 刷新
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+                if (session?.user) {
+                    setUser({
+                        id: session.user.id,
+                        email: session.user.email,
+                        created_at: session.user.created_at,
+                        role: (session.user.app_metadata?.role as UserRole) || 'user'
+                    });
+                } else {
+                    fetchUser();
+                }
+            } else if (event === 'SIGNED_OUT') {
+                setUser(null);
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [refreshUser]); // 移除 initialUser 依赖，防止服务端 layout 刷新导致对象引用变动触发循环
+    }, [fetchUser]); // 移除 initialUser 依赖，防止服务端 layout 刷新导致对象引用变动触发循环
 
     const isAdmin = user?.role === 'admin';
 
     const value = useMemo(() => ({ 
         user, 
+        setUser,
         isAdmin, 
         loading, 
-        isMounted, 
-        refreshUser 
-    }), [user, isAdmin, loading, isMounted, refreshUser]);
+        isMounted
+    }), [user, isAdmin, loading, isMounted]);
 
     return (
         <UserContext.Provider value={value}>

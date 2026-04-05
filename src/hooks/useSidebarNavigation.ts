@@ -4,29 +4,20 @@ import { useMemo } from 'react';
 import { useMotionValue, useSpring, useVelocity, useTransform } from 'framer-motion';
 import { useView } from '@/context/ViewContext';
 import { useUser } from '@/context/UserContext';
-import { Home01Icon, Tag01Icon, Delete02Icon, Image01Icon as GalleryIcon, Location04Icon } from '@hugeicons/core-free-icons';
 
 const springConfig = {
     stiffness: 350,
     damping: 35,
     mass: 1
 };
+import { NAVIGATION_CONFIG } from '@/config/navigation';
 
 export function useSidebarNavigation() {
     const { currentView, navigate } = useView();
     const { isAdmin } = useUser();
 
     const navItems = useMemo(() => {
-        const items = [
-            { id: 'home', icon: Home01Icon, label: '首页', href: '/' },
-            { id: 'gallery', icon: GalleryIcon, label: '画廊', href: '/gallery' },
-            { id: 'tags', icon: Tag01Icon, label: '标签', href: '/tags' },
-            { id: 'map', icon: Location04Icon, label: '地图', href: '/map' },
-        ];
-        if (isAdmin) {
-            items.push({ id: 'trash', icon: Delete02Icon, label: '回收站', href: '/trash' });
-        }
-        return items;
+        return NAVIGATION_CONFIG.filter(item => !item.isAdminOnly || isAdmin);
     }, [isAdmin]);
 
     // 计算当前索引 (渲染期间计算)

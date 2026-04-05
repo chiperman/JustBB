@@ -6,9 +6,10 @@ import { redirect } from 'next/navigation';
 import { Provider } from '@supabase/supabase-js';
 import { env } from '@/lib/env';
 import { ActionResponse } from '@/actions/shared/types';
+import { UserInfo, UserRole } from '@/types/auth';
 import { loginSchema, signupSchema, verifyOtpSchema } from './schemas';
 
-export async function login(formData: FormData): Promise<ActionResponse> {
+export async function login(formData: FormData): Promise<ActionResponse<{ user: UserInfo }>> {
     const rawData = Object.fromEntries(formData.entries());
     const validation = loginSchema.safeParse(rawData);
 
@@ -33,8 +34,15 @@ export async function login(formData: FormData): Promise<ActionResponse> {
         return { success: false, error: '登录失败' };
     }
 
+    const userInfo: UserInfo = {
+        id: data.user.id,
+        email: data.user.email,
+        created_at: data.user.created_at,
+        role: (data.user.app_metadata?.role as UserRole) || 'user',
+    };
+
     revalidatePath('/', 'layout');
-    return { success: true, error: null };
+    return { success: true, error: null, data: { user: userInfo } };
 }
 
 export async function signup(formData: FormData): Promise<ActionResponse> {
@@ -61,14 +69,14 @@ export async function signup(formData: FormData): Promise<ActionResponse> {
     return { success: true, error: null };
 }
 
-export async function verifyOtp(email: string, code: string): Promise<ActionResponse> {
+export async function verifyOtp(email: string, code: string): Promise<ActionResponse<{ user: UserInfo }>> {
     const validation = verifyOtpSchema.safeParse({ email, code });
     if (!validation.success) {
         return { success: false, error: validation.error.issues[0].message };
     }
 
     const supabase = await getClient();
-    const { error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabase.auth.verifyOtp({
         email,
         token: code,
         type: 'signup',
@@ -79,27 +87,45 @@ export async function verifyOtp(email: string, code: string): Promise<ActionResp
         return { success: false, error: '验证码错误或已过期' };
     }
 
+    if (!data.user) {
+        return { success: false, error: '验证失败' };
+    }
+
+    const userInfo: UserInfo = {
+        id: data.user.id,
+        email: data.user.email,
+        created_at: data.user.created_at,
+        role: (data.user.app_metadata?.role as UserRole) || 'user',
+    };
+
     revalidatePath('/', 'layout');
-    return { success: true, error: null };
+    return { success: true, error: null, data: { user: userInfo } };
 }
 
 export async function checkUserExists(email: string): Promise<ActionResponse<{ exists: boolean }>> {
-    if (!email) return { success: false, error: '邮箱不能为空' };
+    const cleanEmail = email.toLowerCase().trim();
+    if (!cleanEmail) return { success: false, error: '邮箱不能为空' };
     
-    const supabase = getAdminClient();
-    const { data, error } = await supabase.auth.admin.listUsers({
-        page: 1,
-        perPage: 1000,
-    });
+    try {
+        const supabase = getAdminClient();
+        const { data, error } = await supabase.auth.admin.listUsers();
 
-    if (error) {
-        console.error('[Auth] User existence check failed:', error.message);
-        return { success: false, error: '系统繁忙，请稍后再试' };
+        if (error) return { success: false, error: '系统校验失败' };
+
+        const exists = !!data.users?.find(u =>
+            u.email?.toLowerCase() === cleanEmail ||
+            u.user_metadata?.email?.toLowerCase() === cleanEmail
+        );
+
+        return { success: true, error: null, data: { exists } };
+    } catch {
+        return { success: false, error: '检查失败' };
     }
-
-    const user = data.users.find(u => u.email === email);
-    return { success: true, error: null, data: { exists: !!user } };
 }
+
+
+
+
 
 export async function signInWithOAuth(provider: Provider): Promise<ActionResponse> {
     const supabase = await getClient();
@@ -126,7 +152,7 @@ export async function logout(): Promise<ActionResponse> {
     return { success: true, error: null };
 }
 
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<UserInfo | null> {
     const supabase = await getClient();
     const { data: { user }, error } = await supabase.auth.getUser();
 
@@ -136,7 +162,7 @@ export async function getCurrentUser() {
         id: user.id,
         email: user.email,
         created_at: user.created_at,
-        role: user.app_metadata?.role as string | undefined,
+        role: user.app_metadata?.role as UserRole | undefined,
     };
 }
 

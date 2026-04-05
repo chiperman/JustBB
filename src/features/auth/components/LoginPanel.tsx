@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { login, signup, verifyOtp, signInWithOAuth, checkUserExists, sendPasswordResetEmail } from '../actions';
 import { useToast } from '@/hooks/use-toast';
@@ -22,9 +22,11 @@ import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { useLayout } from '@/context/LayoutContext';
 import { OtpInput } from './OtpInput';
 import { PasswordStrength } from './PasswordStrength';
+import { useUser } from '@/context/UserContext';
 
 export function LoginPanel() {
     const { setViewMode } = useLayout();
+    const { user, setUser } = useUser();
     const router = useRouter();
 
     const [showPassword, setShowPassword] = useState(false);
@@ -35,9 +37,27 @@ export function LoginPanel() {
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
 
-    // UI Flow State: 'email' | 'login' | 'signup' | 'otp'
     const [step, setStep] = useState<'email' | 'login' | 'signup' | 'otp'>('email');
     const [otpCode, setOtpCode] = useState('');
+
+    const resetForm = () => {
+        setStep('email');
+        setEmail('');
+        setPassword('');
+        setOtpCode('');
+        setShowPassword(false);
+    };
+
+    useEffect(() => {
+        if (!user) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setStep('email');
+            setEmail('');
+            setPassword('');
+            setOtpCode('');
+            setShowPassword(false);
+        }
+    }, [user]);
 
     const handleEmailNext = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -60,8 +80,10 @@ export function LoginPanel() {
             formData.append('email', email);
             formData.append('password', password);
             const res = await login(formData);
-            if (res.success) {
+            if (res.success && res.data) {
                 toast({ title: "欢迎回来", description: "登录成功" });
+                resetForm();
+                setUser(res.data.user);
                 router.refresh();
                 setViewMode('CARD_VIEW');
             } else {
@@ -89,8 +111,10 @@ export function LoginPanel() {
         if (otpCode.length !== 6) return;
         startTransition(async () => {
             const res = await verifyOtp(email, otpCode);
-            if (res.success) {
+            if (res.success && res.data) {
                 toast({ title: "账号已激活", description: "欢迎加入 JustBB" });
+                resetForm();
+                setUser(res.data.user);
                 router.refresh();
                 setViewMode('CARD_VIEW');
             } else {

@@ -9,7 +9,7 @@ import { ActionResponse } from '@/actions/shared/types';
 import { UserInfo, UserRole } from '@/types/auth';
 import { loginSchema, signupSchema, verifyOtpSchema } from './schemas';
 
-export async function login(formData: FormData): Promise<ActionResponse> {
+export async function login(formData: FormData): Promise<ActionResponse<{ user: UserInfo }>> {
     const rawData = Object.fromEntries(formData.entries());
     const validation = loginSchema.safeParse(rawData);
 
@@ -34,8 +34,15 @@ export async function login(formData: FormData): Promise<ActionResponse> {
         return { success: false, error: '登录失败' };
     }
 
+    const userInfo: UserInfo = {
+        id: data.user.id,
+        email: data.user.email,
+        created_at: data.user.created_at,
+        role: (data.user.app_metadata?.role as UserRole) || 'user',
+    };
+
     revalidatePath('/', 'layout');
-    return { success: true, error: null };
+    return { success: true, error: null, data: { user: userInfo } };
 }
 
 export async function signup(formData: FormData): Promise<ActionResponse> {
@@ -62,14 +69,14 @@ export async function signup(formData: FormData): Promise<ActionResponse> {
     return { success: true, error: null };
 }
 
-export async function verifyOtp(email: string, code: string): Promise<ActionResponse> {
+export async function verifyOtp(email: string, code: string): Promise<ActionResponse<{ user: UserInfo }>> {
     const validation = verifyOtpSchema.safeParse({ email, code });
     if (!validation.success) {
         return { success: false, error: validation.error.issues[0].message };
     }
 
     const supabase = await getClient();
-    const { error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabase.auth.verifyOtp({
         email,
         token: code,
         type: 'signup',
@@ -80,8 +87,19 @@ export async function verifyOtp(email: string, code: string): Promise<ActionResp
         return { success: false, error: '验证码错误或已过期' };
     }
 
+    if (!data.user) {
+        return { success: false, error: '验证失败' };
+    }
+
+    const userInfo: UserInfo = {
+        id: data.user.id,
+        email: data.user.email,
+        created_at: data.user.created_at,
+        role: (data.user.app_metadata?.role as UserRole) || 'user',
+    };
+
     revalidatePath('/', 'layout');
-    return { success: true, error: null };
+    return { success: true, error: null, data: { user: userInfo } };
 }
 
 export async function checkUserExists(email: string): Promise<ActionResponse<{ exists: boolean }>> {

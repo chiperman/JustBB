@@ -19,6 +19,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { logout } from '@/features/auth/actions';
+import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { useLayout } from '@/context/LayoutContext';
 import { useUser } from '@/context/UserContext';
@@ -55,7 +56,7 @@ interface SidebarSettingsProps {
 
 
 export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
-    const { user, loading, refreshUser } = useUser();
+    const { user, loading, setUser } = useUser();
     const { setViewMode } = useLayout();
     const { setTheme } = useTheme();
     const router = useRouter();
@@ -68,10 +69,12 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
 
     const handleLogout = async () => {
         setLoggingOut(true);
+        setUser(null);
+        // 优先签出客户端获取最佳响应时间，触发 UserContext 更新
+        await supabase.auth.signOut();
+        // 通知服务端清理相关 Cookie 以及 session
         await logout();
-        await refreshUser();
         setLoggingOut(false);
-        router.refresh();
     };
 
 

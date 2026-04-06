@@ -13,8 +13,13 @@ export function mergeMemos(existing: Memo[], incoming: Memo[]): Memo[] {
     existing.forEach(m => map.set(m.id, m));
     incoming.forEach(m => map.set(m.id, m));
 
-    // 转化为数组并按创建时间降序排列
+    // 转化为数组并按优先级排列：1. 置顶优先 2. 创建时间降序
     return Array.from(map.values()).sort((a, b) => {
+        // 首先比较置顶状态
+        if (a.is_pinned !== b.is_pinned) {
+            return (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0);
+        }
+        // 置顶状态相同时，按创建时间降序
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
 }

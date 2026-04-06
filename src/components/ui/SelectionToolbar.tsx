@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useSelection } from '@/context/UIContext';
 import { useRouter } from 'next/navigation';
 import { useView } from '@/context/ViewContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
@@ -22,8 +22,8 @@ import { batchAddTagsToMemos } from '@/actions/memos/mutate';
 import { TagSelectDialog } from './TagSelectDialog';
 import { useTags } from '@/context/TagsContext';
 import { useStats } from '@/context/StatsContext';
-
 import { useHasMounted } from '@/hooks/useHasMounted';
+import { BaseFloatingCapsule } from './BaseFloatingCapsule';
 
 export function SelectionToolbar() {
     const { currentView } = useView();
@@ -130,13 +130,7 @@ export function SelectionToolbar() {
         <>
             <AnimatePresence>
                 {isSelectionMode && (
-                    <motion.div
-                        initial={{ y: 100, opacity: 0, x: '-50%' }}
-                        animate={{ y: 0, opacity: 1, x: '-50%' }}
-                        exit={{ y: 100, opacity: 0, x: '-50%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed bottom-8 left-1/2 z-50 flex items-center gap-3 px-4 py-2 bg-background/95 backdrop-blur-xl border border-border/50 shadow-xl rounded-inner min-w-[320px] max-w-[90vw]"
-                    >
+                    <BaseFloatingCapsule className="min-w-[320px]">
                         <div className="flex items-center gap-1 flex-1 px-2">
                             {isTrashPage ? (
                                 <>
@@ -207,9 +201,9 @@ export function SelectionToolbar() {
                                 <HugeiconsIcon icon={X} size={16} className="text-muted-foreground" />
                             </Button>
                         </div>
-                    </motion.div>
+                    </BaseFloatingCapsule>
                 )}
-            </AnimatePresence >
+            </AnimatePresence>
 
             {!isTrashPage && (
                 <TagSelectDialog
@@ -217,8 +211,7 @@ export function SelectionToolbar() {
                     onClose={() => setIsTagDialogOpen(false)}
                     onConfirm={handleBatchAddTags}
                 />
-            )
-            }
+            )}
         </>
     );
 }

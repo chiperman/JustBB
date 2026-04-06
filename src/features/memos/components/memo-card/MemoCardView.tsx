@@ -10,6 +10,7 @@ import { MemoCardHeader } from './MemoCardHeader';
 import { MemoCardBacklinks } from './MemoCardBacklinks';
 import { MemoCardLockOverlay } from './MemoCardLockOverlay';
 import { useMemoBacklinks } from '../../hooks/useMemoBacklinks';
+import { ExpandableContent } from '@/components/ui/expandable-content';
 
 interface MemoCardViewProps {
     memo: Memo;
@@ -71,16 +72,21 @@ export function MemoCardView({
                 hasMounted={hasMounted}
             />
 
-            <div className={cn("w-full transition-all", memo.is_locked && "blur-sm select-none")}>
+            <div className={cn("w-full transition-all mt-2", memo.is_locked && "blur-sm select-none")}>
                 {memo.is_locked ? (
                     <div className="text-base leading-relaxed text-muted-foreground italic opacity-60">
                         这一条私密记录已被锁定，输入口令后即可解锁阅读。
                     </div>
                 ) : (
-                    <MemoContent
-                        content={memo.content}
-                        disablePreview={showOriginalOnly}
-                    />
+                    <ExpandableContent
+                        needsExpansion={!showOriginalOnly && (memo.content.length > 300 || memo.content.split('\n').length > 8)}
+                        collapsedHeight={200}
+                    >
+                        <MemoContent
+                            content={memo.content}
+                            disablePreview={showOriginalOnly}
+                        />
+                    </ExpandableContent>
                 )}
             </div>
 

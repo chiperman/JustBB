@@ -2,16 +2,11 @@
 
 import { useRef, useEffect, useMemo } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Minimize01Icon as Minimize2 } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { motion } from 'framer-motion';
 
-import {
-    Dialog,
-    DialogContent,
-    DialogTitle,
-} from "@/components/ui/dialog";
+
 import { spring, ease, duration } from '@/lib/animation';
 
 import { EditorSuggestionMenu } from '@/features/memos/components/EditorSuggestionMenu';
@@ -30,7 +25,6 @@ interface MemoEditorProps {
     onCancel?: () => void;
     onSuccess?: (memo?: Memo) => void;
     isCollapsed?: boolean;
-    hideFullscreen?: boolean;
     className?: string;
 }
 
@@ -40,7 +34,6 @@ export function MemoEditor({
     onCancel,
     onSuccess,
     isCollapsed: isPropCollapsed = false,
-    hideFullscreen = false,
     className,
 }: MemoEditorProps) {
     const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -56,7 +49,6 @@ export function MemoEditor({
         error, setError,
         showPrivateDialog, setShowPrivateDialog,
         isFocused, setIsFocused,
-        isFullscreen, setIsFullscreen,
         isAnimating, setIsAnimating,
         showLocationPicker, setShowLocationPicker,
         handleTogglePrivate,
@@ -82,7 +74,7 @@ export function MemoEditor({
         handleSuggestionScroll
     } = useEditorSuggestions();
 
-    const isActuallyCollapsed = isPropCollapsed && !isFocused && mode === 'create';
+    const isActuallyCollapsed = isPropCollapsed && !isFocused && !showLocationPicker && !showPrivateDialog && mode === 'create';
 
     const extensions = useMemo(() => 
         // eslint-disable-next-line react-hooks/refs
@@ -255,8 +247,7 @@ export function MemoEditor({
             attributes: {
                 class: cn(
                     "tiptap prose prose-sm max-w-none focus:outline-none text-foreground/80 leading-relaxed tracking-normal",
-                    hideFullscreen ? "flex-1 min-h-full px-1 focus:outline-none" : "min-h-[120px]",
-                    "text-base"
+                    "min-h-[120px] text-base"
                 ),
             },
         },
@@ -281,28 +272,15 @@ export function MemoEditor({
         }
     }, [editor, memo, mode, setContent]);
 
-    // Fullscreen Sync Effect
-    useEffect(() => {
-        if (!hideFullscreen && !isFullscreen && mode === 'create' && editor) {
-            const draftContent = localStorage.getItem(DRAFT_CONTENT_KEY);
-            if (draftContent !== null) {
-                try {
-                    editor.commands.setContent(JSON.parse(draftContent));
-                } catch {
-                    editor.commands.setContent(draftContent);
-                }
-                setContent(editor.getText());
-            }
-        }
-    }, [isFullscreen, hideFullscreen, mode, editor, setContent]);
+
 
     return (
         <motion.section
             initial={false}
             animate={{
                 opacity: 1,
-                height: isActuallyCollapsed ? "auto" : (hideFullscreen ? "100%" : "auto"),
-                minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? "100%" : 120),
+                height: isActuallyCollapsed ? "auto" : "auto",
+                minHeight: isActuallyCollapsed ? 0 : 120,
                 padding: 24,
                 boxShadow: isActuallyCollapsed ? "none" : "0 1px 2px 0 rgb(0 0 0 / 0.05)",
             }}
@@ -323,11 +301,11 @@ export function MemoEditor({
             }}
             className={cn(
                 "border border-border rounded-inner relative flex flex-col items-stretch selection:bg-primary/30",
-                isActuallyCollapsed ? "shadow-none cursor-pointer hover:bg-accent/5" : (hideFullscreen ? "h-full" : ""),
+                isActuallyCollapsed && "shadow-none cursor-pointer hover:bg-accent/5",
                 className
             )}
             onClick={() => {
-                if ((isActuallyCollapsed || hideFullscreen) && editor) {
+                if (isActuallyCollapsed && editor) {
                     const selection = window.getSelection();
                     if (!selection || selection.toString().length === 0) {
                         editor.commands.focus('end');
@@ -345,15 +323,15 @@ export function MemoEditor({
                     <motion.div
                         ref={editorContainerRef}
                         animate={{
-                            height: isActuallyCollapsed ? 26 : (hideFullscreen ? "100%" : "auto"),
-                            minHeight: isActuallyCollapsed ? 0 : (hideFullscreen ? "100%" : 120),
+                            height: isActuallyCollapsed ? 26 : "auto",
+                            minHeight: isActuallyCollapsed ? 0 : 120,
                         }}
                         className={cn(
                             "relative",
-                            isActuallyCollapsed ? "min-h-0 scrollbar-hide overflow-hidden" : (hideFullscreen ? "overflow-y-auto scrollbar-hover flex-1" : "overflow-visible")
+                            isActuallyCollapsed ? "min-h-0 scrollbar-hide overflow-hidden" : "overflow-y-auto scrollbar-hover"
                         )}
                         style={{
-                            maxHeight: hideFullscreen ? 'none' : 500,
+                            maxHeight: 500,
                             maskImage: isActuallyCollapsed ? 'linear-gradient(to bottom, black 90%, transparent 100%)' : 'none',
                         }}
                     >
@@ -362,7 +340,7 @@ export function MemoEditor({
                                 <p>Wanna memo something? JustMemo it!</p>
                             </div>
                         )}
-                        <EditorContent editor={editor} className={cn("flex-1 flex flex-col min-h-0", hideFullscreen && "h-full")} />
+                        <EditorContent editor={editor} className="flex-1 flex flex-col min-h-0" />
                     </motion.div>
 
                     {showSuggestions && (
@@ -390,42 +368,23 @@ export function MemoEditor({
                     isPrivate={isPrivate}
                     isPinned={isPinned}
                     isPending={isPending}
-                    isFullscreenAvailable={!hideFullscreen}
                     content={content}
                     mode={mode}
                     onTogglePrivate={handleTogglePrivate}
                     onTogglePinned={() => setIsPinned(!isPinned)}
                     onShowLocationPicker={() => setShowLocationPicker(true)}
-                    onShowFullscreen={() => setIsFullscreen(true)}
                     onCancel={handleCancel}
                     onPublish={() => isPrivate ? setShowPrivateDialog(true) : performPublish(editor)}
                 />
             </div>
 
-            <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
-                <DialogContent
-                    className="max-w-5xl h-[92vh] flex flex-col p-0 gap-0 overflow-hidden bg-background"
-                    closeIcon={<HugeiconsIcon icon={Minimize2} size={16} />}
-                >
-                    <DialogTitle className="sr-only">全屏编辑内容</DialogTitle>
-                    <div className="flex-1 overflow-visible flex items-stretch justify-center px-6 py-10 bg-black/5">
-                        <div className="max-w-4xl w-full mx-auto flex flex-col h-full [min-height:0]">
-                            <MemoEditor
-                                mode={mode}
-                                memo={memo}
-                                isCollapsed={false}
-                                hideFullscreen={true}
-                                onCancel={() => setIsFullscreen(false)}
-                                onSuccess={() => setIsFullscreen(false)}
-                            />
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
 
             <MemoPrivateDialog
                 open={showPrivateDialog}
-                onOpenChange={setShowPrivateDialog}
+                onOpenChange={(open) => {
+                    setShowPrivateDialog(open);
+                    if (!open) { setIsFocused(true); editor?.commands.focus(); }
+                }}
                 accessCode={accessCode}
                 setAccessCode={setAccessCode}
                 accessHint={accessHint}
@@ -435,7 +394,10 @@ export function MemoEditor({
 
             <LocationPickerDialog
                 open={showLocationPicker}
-                onOpenChange={setShowLocationPicker}
+                onOpenChange={(open) => {
+                    setShowLocationPicker(open);
+                    if (!open) { setIsFocused(true); editor?.commands.focus(); }
+                }}
                 onConfirm={(loc) => editor?.chain().focus().insertContent(loc + ' ').run()}
             />
         </motion.section>

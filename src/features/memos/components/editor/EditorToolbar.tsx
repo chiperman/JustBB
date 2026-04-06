@@ -6,7 +6,6 @@ import {
     PinIcon as Pin,
     LockIcon as Lock,
     CircleUnlock01Icon as LockOpen,
-    Maximize01Icon as Maximize2,
     Location04Icon,
 } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
@@ -18,13 +17,11 @@ interface EditorToolbarProps {
     isPrivate: boolean;
     isPinned: boolean;
     isPending: boolean;
-    isFullscreenAvailable: boolean;
     content: string;
     mode: 'create' | 'edit';
     onTogglePrivate: () => void;
     onTogglePinned: () => void;
     onShowLocationPicker: () => void;
-    onShowFullscreen: () => void;
     onCancel: () => void;
     onPublish: () => void;
 }
@@ -34,13 +31,11 @@ export function EditorToolbar({
     isPrivate,
     isPinned,
     isPending,
-    isFullscreenAvailable,
     content,
     mode,
     onTogglePrivate,
     onTogglePinned,
     onShowLocationPicker,
-    onShowFullscreen,
     onCancel,
     onPublish
 }: EditorToolbarProps) {
@@ -92,18 +87,7 @@ export function EditorToolbar({
                         <span className="text-xs font-medium">定位</span>
                     </Button>
 
-                    {isFullscreenAvailable && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={onShowFullscreen}
-                            className="h-8 px-2 gap-1.5 text-muted-foreground active:scale-95 transition-all hover:text-foreground"
-                            aria-label="放大"
-                        >
-                            <HugeiconsIcon icon={Maximize2} size={16} />
-                            <span className="text-xs font-medium">放大</span>
-                        </Button>
-                    )}
+
                 </div>
 
                 <div className="flex items-center gap-3">

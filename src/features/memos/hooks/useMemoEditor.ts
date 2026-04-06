@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Memo } from '@/types/memo';
 import { createMemo, updateMemoContent } from '@/actions/memos/mutate';
+import { dispatchMemoEvent } from '@/lib/memos/events';
 import { memoCache } from '@/lib/memo-cache';
 import { useTags } from '@/context/TagsContext';
 import { useStats } from '@/context/StatsContext';
@@ -34,7 +35,6 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
     // UI States that should stay in Hook for consistency
     const [showPrivateDialog, setShowPrivateDialog] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
-    const [isFullscreen, setIsFullscreen] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
     const [showLocationPicker, setShowLocationPicker] = useState(false);
 
@@ -113,6 +113,10 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
                     setAccessCode('');
                     setAccessHint('');
                     setIsPinned(false);
+                    
+                    if (newMemo) {
+                        dispatchMemoEvent({ type: 'create', memo: newMemo });
+                    }
                 } else {
                     onSuccess?.(newMemo);
                 }
@@ -147,7 +151,6 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
         error, setError,
         showPrivateDialog, setShowPrivateDialog,
         isFocused, setIsFocused,
-        isFullscreen, setIsFullscreen,
         isAnimating, setIsAnimating,
         showLocationPicker, setShowLocationPicker,
         handleTogglePrivate,

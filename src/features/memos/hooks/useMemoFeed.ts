@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Memo } from '@/types/memo';
 import { getMemos } from '@/actions/memos/query';
 import { mergeMemos } from '@/lib/streamUtils';
+import { useMemoSync, MemoEventPayload } from '@/lib/memos/events';
 
 interface UseMemoFeedProps {
     initialMemos: Memo[];
@@ -72,29 +73,22 @@ export function useMemoFeed({ initialMemos, searchParams, adminCode }: UseMemoFe
         setMemos(prev => prev.map(m => m.id === updatedMemo.id ? updatedMemo : m));
     }, []);
 
-    useEffect(() => {
-        const handleDeleted = (e: Event) => {
-            const detail = (e as CustomEvent).detail;
-            if (detail && detail.id) {
-                setMemos(prev => prev.filter(m => m.id !== detail.id));
+    useMemoSync(useCallback((payload: MemoEventPayload) => {
+        setMemos(prev => {
+            switch (payload.type) {
+                case 'create':
+                    // Prevent duplicates if already exists
+                    if (prev.some(m => m.id === payload.memo.id)) return prev;
+                    return mergeMemos(prev, [payload.memo]);
+                case 'update':
+                    return prev.map(m => m.id === payload.id ? { ...m, ...payload.updates } : m);
+                case 'delete':
+                    return prev.filter(m => m.id !== payload.id);
+                default:
+                    return prev;
             }
-        };
-        
-        const handleUpdated = (e: Event) => {
-            const detail = (e as CustomEvent).detail;
-            if (detail && detail.id && detail.updates) {
-                setMemos(prev => prev.map(m => m.id === detail.id ? { ...m, ...detail.updates } : m));
-            }
-        };
-        
-        window.addEventListener('memo-deleted', handleDeleted);
-        window.addEventListener('memo-updated', handleUpdated);
-        
-        return () => {
-            window.removeEventListener('memo-deleted', handleDeleted);
-            window.removeEventListener('memo-updated', handleUpdated);
-        };
-    }, []);
+        });
+    }, []));
 
     return {
         memos,

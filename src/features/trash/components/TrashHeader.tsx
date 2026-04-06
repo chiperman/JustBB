@@ -26,36 +26,26 @@ export function TrashHeader({ count, isPending, onEmptyTrash }: TrashHeaderProps
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between border-b border-border/10 pb-10">
             <div className="space-y-4">
                 <div className="flex items-center gap-4">
-                    <div className="relative flex items-center justify-center">
-                        <div className="absolute inset-0 bg-primary/5 rounded-full blur-xl animate-pulse" />
-                        <div className="relative w-12 h-12 flex items-center justify-center border border-primary/10 rounded-full bg-background/50 backdrop-blur-sm">
-                            <HugeiconsIcon icon={Archive} size={22} className="text-primary/60" />
-                        </div>
+                    <div className="w-12 h-12 flex items-center justify-center border border-border/20 rounded-xl bg-muted/30">
+                        <HugeiconsIcon icon={Archive} size={22} className="text-muted-foreground" />
                     </div>
                     <div>
-                        <h2 className="text-4xl font-bold tracking-tight italic text-foreground/90 selection:bg-primary/20">
+                        <h2 className="text-3xl font-semibold tracking-tight text-foreground/90">
                             回收站
                         </h2>
-                        <div className="flex items-center gap-2 mt-1">
-                            <div className="h-px w-8 bg-primary/20" />
-                            <span className="text-[10px] uppercase font-mono tracking-[0.3em] text-muted-foreground/50">
-                                Ethereal Archive
-                            </span>
-                        </div>
                     </div>
                 </div>
-                <p className="text-muted-foreground/60 text-xs font-sans tracking-wide leading-relaxed italic max-w-sm">
-                    Fragments intended for oblivion. 
+                <p className="text-muted-foreground/60 text-sm max-w-sm">
                     被遗忘的片段，在这里等待最后的归宿。
                 </p>
             </div>
             <div className="flex flex-col items-end gap-5 mt-6 md:mt-0">
                 <div className="flex flex-col items-end">
-                    <span className="text-[9px] font-mono text-muted-foreground/30 uppercase tracking-[0.4em] mb-1">
-                        Record Sequence
+                    <span className="text-[10px] font-mono text-muted-foreground/40 uppercase tracking-widest mb-1">
+                        RECORD SEQUENCE
                     </span>
-                    <div className="text-2xl font-mono text-foreground/60 tracking-tighter">
-                        <span className="opacity-20">NO.</span>{count.toString().padStart(4, '0')}
+                    <div className="text-2xl font-mono text-foreground/70 tracking-tighter">
+                        {count.toString().padStart(4, '0')}
                     </div>
                 </div>
                 {count > 0 && (

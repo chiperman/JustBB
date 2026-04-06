@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Memo } from '@/types/memo';
 import { createMemo, updateMemoContent } from '@/actions/memos/mutate';
+import { dispatchMemoEvent } from '@/lib/memos/events';
 import { memoCache } from '@/lib/memo-cache';
 import { useTags } from '@/context/TagsContext';
 import { useStats } from '@/context/StatsContext';
@@ -113,6 +114,10 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
                     setAccessCode('');
                     setAccessHint('');
                     setIsPinned(false);
+                    
+                    if (newMemo) {
+                        dispatchMemoEvent({ type: 'create', memo: newMemo });
+                    }
                 } else {
                     onSuccess?.(newMemo);
                 }

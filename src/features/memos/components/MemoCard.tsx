@@ -20,8 +20,9 @@ export const MemoCard = memo(function MemoCard({
     isAdmin = false, 
     isEditing, 
     onEditChange, 
-    showOriginalOnly = false 
-}: MemoCardProps) {
+    showOriginalOnly = false,
+    isLastCreated = false
+}: MemoCardProps & { isLastCreated?: boolean }) {
     const shouldReduceMotion = useReducedMotion();
     const hasMounted = useHasMounted();
 
@@ -46,6 +47,7 @@ export const MemoCard = memo(function MemoCard({
             onEdit={() => onEditChange?.(true)}
             shouldReduceMotion={!!shouldReduceMotion}
             hasMounted={hasMounted}
+            isLastCreated={isLastCreated}
         />
     );
 });

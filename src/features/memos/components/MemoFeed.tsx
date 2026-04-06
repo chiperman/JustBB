@@ -12,6 +12,7 @@ import { useFeedScrollSpy } from "../hooks/useFeedScrollSpy";
 // Sub-components
 import { FeedItemWrapper } from "./memo-feed/FeedItemWrapper";
 import { FeedStatus } from "./memo-feed/FeedStatus";
+import { NewMemosIndicator } from "./memo-feed/NewMemosIndicator";
 
 interface MemoFeedProps {
     initialMemos: Memo[];
@@ -52,7 +53,9 @@ export function MemoFeed({
         editingId,
         setEditingId,
         fetchOlderMemos,
-        updateMemoInList
+        updateMemoInList,
+        lastCreatedId,
+        clearLastCreatedId
     } = useMemoFeed({ initialMemos, searchParams, adminCode });
 
     // 1. 无限滚动监听
@@ -77,7 +80,12 @@ export function MemoFeed({
     useFeedScrollSpy(memos.length);
 
     return (
-        <div className="space-y-6">
+        <div className="relative space-y-6">
+            <NewMemosIndicator 
+                lastCreatedId={lastCreatedId} 
+                clearLastCreatedId={clearLastCreatedId} 
+            />
+
             <motion.div initial={false} className="columns-1 gap-6 space-y-6">
                 <AnimatePresence mode="popLayout">
                     {memos.map((memo, index) => (
@@ -88,15 +96,18 @@ export function MemoFeed({
                             prevMemo={index > 0 ? memos[index - 1] : undefined}
                             variants={itemVariants}
                         >
-                            <MemoCard
-                                memo={memo}
-                                isAdmin={isAdmin}
-                                isEditing={editingId === memo.id}
-                                onEditChange={(editing, updatedMemo) => {
-                                    if (!editing && updatedMemo) updateMemoInList(updatedMemo);
-                                    setEditingId(editing ? memo.id : null);
-                                }}
-                            />
+                            <div id={`memo-${memo.id}`}>
+                                <MemoCard
+                                    memo={memo}
+                                    isAdmin={isAdmin}
+                                    isEditing={editingId === memo.id}
+                                    isLastCreated={lastCreatedId === memo.id}
+                                    onEditChange={(editing, updatedMemo) => {
+                                        if (!editing && updatedMemo) updateMemoInList(updatedMemo);
+                                        setEditingId(editing ? memo.id : null);
+                                    }}
+                                />
+                            </div>
                         </FeedItemWrapper>
                     ))}
                 </AnimatePresence>

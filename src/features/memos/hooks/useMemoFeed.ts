@@ -24,6 +24,7 @@ export function useMemoFeed({ initialMemos, searchParams, adminCode }: UseMemoFe
     const [hasMoreOlder, setHasMoreOlder] = useState(initialMemos.length >= 20);
     const [isLoadingOlder, setIsLoadingOlder] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [lastCreatedId, setLastCreatedId] = useState<string | null>(null);
 
     const fetchOlderMemos = useCallback(async () => {
         if (isLoadingOlder || !hasMoreOlder) return;
@@ -31,7 +32,6 @@ export function useMemoFeed({ initialMemos, searchParams, adminCode }: UseMemoFe
         setIsLoadingOlder(true);
         try {
             const limit = 20;
-            // 游标逻辑：使用最旧的非置顶记录
             const unpinnedMemos = memos.filter(m => !m.is_pinned);
             const lastMemo = unpinnedMemos.length > 0 
                 ? unpinnedMemos[unpinnedMemos.length - 1] 
@@ -46,12 +46,10 @@ export function useMemoFeed({ initialMemos, searchParams, adminCode }: UseMemoFe
                     excludePinned: true,
                     sort: "newest",
                 }),
-                new Promise(resolve => setTimeout(resolve, 1000)) // 仪式感延迟
+                new Promise(resolve => setTimeout(resolve, 1000))
             ]);
 
             const nextMemos = res.data || [];
-            
-            // 边界检查：确保不重复且符合搜索范围
             const validNewMemos = nextMemos.filter(nm => !memos.find(m => m.id === nm.id));
 
             if (nextMemos.length < limit || validNewMemos.length === 0) {
@@ -73,12 +71,16 @@ export function useMemoFeed({ initialMemos, searchParams, adminCode }: UseMemoFe
         setMemos(prev => prev.map(m => m.id === updatedMemo.id ? updatedMemo : m));
     }, []);
 
+    const clearLastCreatedId = useCallback(() => {
+        setLastCreatedId(null);
+    }, []);
+
     useMemoSync(useCallback((payload: MemoEventPayload) => {
         setMemos(prev => {
             switch (payload.type) {
                 case 'create':
-                    // Prevent duplicates if already exists
                     if (prev.some(m => m.id === payload.memo.id)) return prev;
+                    setLastCreatedId(payload.memo.id);
                     return mergeMemos(prev, [payload.memo]);
                 case 'update':
                     return prev.map(m => m.id === payload.id ? { ...m, ...payload.updates } : m);
@@ -97,6 +99,8 @@ export function useMemoFeed({ initialMemos, searchParams, adminCode }: UseMemoFe
         editingId,
         setEditingId,
         fetchOlderMemos,
-        updateMemoInList
+        updateMemoInList,
+        lastCreatedId,
+        clearLastCreatedId
     };
 }

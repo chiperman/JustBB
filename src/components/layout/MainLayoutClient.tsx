@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from "react";
-import { generateCacheKey } from "@/lib/utils";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { generateCacheKey, cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { MemoEditor, MemoFeed } from "@/features/memos";
 import { FeedHeader } from "@/components/ui/FeedHeader";
@@ -18,6 +18,44 @@ export function MainLayoutClient() {
     const { getCache, setCache } = usePageDataCache();
     const { setViewMode } = useLayout();
     const { isAdmin } = useUser();
+
+    // 滚动与吸顶状态管理
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [editorForceCollapsed, setEditorForceCollapsed] = useState(false);
+    const lastScrollTop = useRef(0);
+
+    // 监听滚动，实现迟滞触发逻辑 (Hysteresis Logic)
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const handleScroll = () => {
+            const scrollTop = container.scrollTop;
+            const scrollHeight = container.scrollHeight;
+            const clientHeight = container.clientHeight;
+            const scrollableHeight = scrollHeight - clientHeight;
+
+            // 只有内容足够丰富时 (设计稿阈值: 300px) 才触发收缩
+            if (scrollableHeight < 300) {
+                setEditorForceCollapsed(false);
+                return;
+            }
+
+            // 迟滞触发逻辑: 
+            // 1. 下滑超过 100px 强行收缩
+            // 2. 回滚到 50px 以下尝试展开
+            if (scrollTop > 100) {
+                setEditorForceCollapsed(true);
+            } else if (scrollTop < 50) {
+                setEditorForceCollapsed(false);
+            }
+
+            lastScrollTop.current = scrollTop;
+        };
+
+        container.addEventListener('scroll', handleScroll, { passive: true });
+        return () => container.removeEventListener('scroll', handleScroll);
+    }, []);
 
     // 1. 初始化数据：优先从缓存中获取，确保 SPA 切换瞬间完成
     const flattenedParams = Object.fromEntries(searchParams?.entries() || []);
@@ -74,49 +112,68 @@ export function MainLayoutClient() {
 
 
     return (
-        <div className="flex flex-col h-full overflow-hidden">
-            <div className="flex-1 overflow-y-auto scrollbar-hide px-6 py-10">
-                <div className="max-w-screen-md mx-auto space-y-8">
-                    {/* 发布区域 */}
-                    {isAdmin && (
-                        <div className="mb-12">
-                            <MemoEditor mode="create" isCollapsed={true} />
+        <div className="flex flex-col h-full overflow-hidden bg-background">
+            {/* 1. 顶部固定区域 (Fixed Top Area) */}
+            <div className={cn(
+                "flex-none z-30 transition-all duration-300 scrollbar-stable overflow-y-auto",
+                editorForceCollapsed ? "bg-background/80 backdrop-blur-md shadow-sm border-b border-border/50" : "bg-transparent"
+            )}>
+                <div className="max-w-screen-md mx-auto">
+                    {/* Level 3: Visual Padding Area */}
+                    <div className="px-6 py-6 space-y-6">
+                        {/* 编辑器区域 */}
+                        {isAdmin && (
+                            <MemoEditor 
+                                mode="create" 
+                                isCollapsed={true} 
+                                scrollCollapsed={editorForceCollapsed} 
+                            />
+                        )}
+                        
+                        {/* Feed 标题与过滤显示 (包含 Logo 和 SearchInput) */}
+                        <FeedHeader isRefreshing={isRefreshing} />
+                    </div>
+                </div>
+            </div>
+
+            {/* 2. 底部滚动区域 (Scrollable Feed Area) */}
+            <div 
+                ref={containerRef}
+                className="flex-1 overflow-y-auto scrollbar-stable"
+            >
+                <div className="max-w-screen-md mx-auto">
+                    {/* Level 3: Visual Padding Area */}
+                    <div className="px-6 pb-20">
+                        <div className="relative min-h-[400px]">
+                            <AnimatePresence mode="wait">
+                                {isLoading ? (
+                                    <motion.div
+                                        key="skeleton"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="space-y-6"
+                                    >
+                                        {[1, 2, 3].map((i) => (
+                                            <MemoCardSkeleton key={i} />
+                                        ))}
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="feed"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="w-full"
+                                    >
+                                        <MemoFeed
+                                            initialMemos={memos}
+                                            searchParams={Object.fromEntries(searchParams?.entries() || [])}
+                                            isAdmin={isAdmin}
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
-                    )}
-
-                    {/* Feed 标题与过滤显示 */}
-                    <FeedHeader isRefreshing={isRefreshing} />
-
-                    {/* 内容展示区 */}
-                    <div className="relative min-h-[400px]">
-                        <AnimatePresence mode="wait">
-                            {isLoading ? (
-                                <motion.div
-                                    key="skeleton"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="space-y-6"
-                                >
-                                    {[1, 2, 3].map((i) => (
-                                        <MemoCardSkeleton key={i} />
-                                    ))}
-                                </motion.div>
-                            ) : (
-                                <motion.div
-                                    key="feed"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    className="w-full"
-                                >
-                                    <MemoFeed
-                                        initialMemos={memos}
-                                        searchParams={Object.fromEntries(searchParams?.entries() || [])}
-                                        isAdmin={isAdmin}
-                                    />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
                     </div>
                 </div>
             </div>

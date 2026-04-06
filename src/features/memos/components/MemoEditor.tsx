@@ -25,6 +25,7 @@ interface MemoEditorProps {
     onCancel?: () => void;
     onSuccess?: (memo?: Memo) => void;
     isCollapsed?: boolean;
+    scrollCollapsed?: boolean;
     className?: string;
 }
 
@@ -34,6 +35,7 @@ export function MemoEditor({
     onCancel,
     onSuccess,
     isCollapsed: isPropCollapsed = false,
+    scrollCollapsed = false,
     className,
 }: MemoEditorProps) {
     const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -74,7 +76,7 @@ export function MemoEditor({
         handleSuggestionScroll
     } = useEditorSuggestions();
 
-    const isActuallyCollapsed = isPropCollapsed && !isFocused && !showLocationPicker && !showPrivateDialog && mode === 'create';
+    const isActuallyCollapsed = (isPropCollapsed || scrollCollapsed) && !isFocused && !showLocationPicker && !showPrivateDialog && mode === 'create';
 
     const extensions = useMemo(() => 
         // eslint-disable-next-line react-hooks/refs
@@ -253,6 +255,13 @@ export function MemoEditor({
         },
     });
 
+    // 监听滚动收缩信号，如果在聚焦状态下发生深滚，主动失焦以触发收缩
+    useEffect(() => {
+        if (scrollCollapsed && isFocused && mode === 'create' && editor) {
+            editor.commands.blur();
+        }
+    }, [scrollCollapsed, isFocused, editor, mode]);
+
     useEffect(() => {
         if (editor) {
             if (mode === 'edit' && memo?.content) {
@@ -290,8 +299,10 @@ export function MemoEditor({
                 transition: { opacity: { duration: 0.2 }, height: { duration: 0.3 } }
             }}
             transition={{
-                height: isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out },
-                opacity: { duration: duration.fast }
+                height: isActuallyCollapsed 
+                    ? { type: 'spring', stiffness: 350, damping: 40 } // 设计文档收缩参数
+                    : { duration: 0.4, ease: [0.22, 1, 0.36, 1] },   // 设计文档展开参数
+                opacity: { duration: 0.2 }
             }}
             onAnimationStart={() => setIsAnimating(true)}
             onAnimationComplete={() => setIsAnimating(false)}

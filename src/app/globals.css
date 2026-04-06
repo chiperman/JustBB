@@ -395,3 +395,17 @@ html body .cursor-pointer:not(:disabled) {
   /* 将外层的缩放过渡改加在内部盒子上 */
   transition: transform 0.2s ease, background-color 0.2s ease;
 }
+
+@keyframes low-breathing-highlight {
+  0%, 100% {
+    box-shadow: 0 0 0px 0px transparent;
+  }
+  50% {
+    box-shadow: 0 0 15px 2px var(--color-primary, #d97757);
+    border-color: var(--color-primary, #d97757);
+  }
+}
+
+.animate-new-memo-highlight {
+  animation: low-breathing-highlight 3s ease-in-out infinite;
+}

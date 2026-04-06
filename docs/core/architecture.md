@@ -39,18 +39,24 @@ JustMemo 采用 **"SSR + 客户端分页"** 的混合渲染模式，确保极致
 
 ---
 
-## 2. 布局架构 (Layout Shell)
+## 2. 布局架构 (Layout Architecture)
 
-全站采用全屏固定布局 (Fixed Layout)，各区域独立滚动：
+全站从“传统 CSS Sticky”转向 **“双容器独立滚动架构 (Dual-Container Architecture)”**，以实现极致的吸顶稳定性与像素级对齐。
 
-1. **结构**:
-   - **Main Layout**: `h-screen overflow-hidden`。
-   - **LeftSidebar**: 独立滚动，SPA 切换时不重绘，保持滚动位置。
-   - **RightSidebar**: 独立滚动，SPA 切换时不重绘，保持状态（如时间轴展开状态）。
-   - **Content Area**: 包含 `MemoEditor` (固定顶部) 和 `ClientRouter` (动态内容)。
+1. **结构分层 (Container Layering)**:
+   - **Main Layout Container**: 全局 `h-screen overflow-hidden`，禁绝原生 Body 滚动，由 `MainLayoutClient` 接管视口。
+   - **Fixed Top Area (功能定格区)**: 包含 `Logo`, `SearchInput`, `MemoEditor` 以及 `FeedHeader`。此容器在 Z 轴最高层级，不参与页面滚动。
+   - **Scrollable Content Area (内容滚动区)**: 包含核心笔记流 (`MemoFeed`)。通过独立的自滚动容器实现，确保编辑器与内容流在视觉上“合体”，物理上“解耦”。
 
-2. **组件持久化**:
-   - 侧边栏 (`LeftSidebar`, `RightSidebar`) 在路由切换时**不会卸载**。这意味着用户的交互状态（如折叠的菜单、滚动位置）在整个会话期间保持不变。
+2. **三级嵌套对齐模型 (Triple-Nesting Model)**:
+   为消除不同系统滚动条占位 (Scrollbar Gutter) 导致的 6px 水平偏移，全站执行以下对齐标准：
+   - **Level 1: Container**: 撑满可用宽度，定义滚动条显示策略 (`scrollbar-stable`)。
+   - **Level 2: Constraint**: 使用统一的最大宽度约束 (`max-w-screen-md mx-auto`)。
+   - **Level 3: Padding**: 内边距下沉 (`px-4 sm:px-6`)。此层级确保内容在滚动条出现时，视觉中心点绝对固定，不产生布局晃动 (Jank)。
+
+3. **组件持久化与通讯 (Persistence & Sync)**:
+   - **组件生存期**: 侧边栏及顶部定格区在 SPA 视图切换时不卸载，保持输入草稿与交互状态。
+   - **事件驱动同步 (Event Bus)**: 摒弃繁重的 Context 轮询，采用基于 `CustomEvent` 的解耦通讯。例如：当 `MemoActions` 执行操作后，发送 `memo:re-fetch` 或 `memo:update` 事件，驱动 `MemoFeed` 局部刷新。
 
 ---
 

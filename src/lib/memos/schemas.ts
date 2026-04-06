@@ -1,12 +1,23 @@
 import { z } from 'zod';
 
+const booleanPreprocessor = (val: unknown) => {
+    if (typeof val === 'string') return val.toLowerCase() === 'true';
+    return Boolean(val);
+};
+
+const optionalBooleanPreprocessor = (val: unknown) => {
+    if (val === undefined || val === null || val === '') return undefined;
+    if (typeof val === 'string') return val.toLowerCase() === 'true';
+    return Boolean(val);
+};
+
 /**
  * 基础 Memo 内容 Schema
  */
 export const memoContentSchema = z.object({
     content: z.string().min(1, '内容不能为空'),
-    is_pinned: z.boolean().default(false),
-    is_private: z.boolean().default(false),
+    is_pinned: z.preprocess(booleanPreprocessor, z.boolean().default(false)),
+    is_private: z.preprocess(booleanPreprocessor, z.boolean().default(false)),
     access_code_hint: z.string().optional().nullable(),
     access_code: z.string().optional().nullable(),
 });
@@ -28,8 +39,8 @@ export const updateMemoContentSchema = memoContentSchema.extend({
  */
 export const updateMemoStateSchema = z.object({
     id: z.string().uuid('无效的 ID'),
-    is_pinned: z.boolean().optional(),
-    is_private: z.boolean().optional(),
+    is_pinned: z.preprocess(optionalBooleanPreprocessor, z.boolean().optional()),
+    is_private: z.preprocess(optionalBooleanPreprocessor, z.boolean().optional()),
     access_code_hint: z.string().optional().nullable(),
     access_code: z.string().optional().nullable(), // 原始口令输入，由 Action 负责哈希
 });
@@ -58,7 +69,7 @@ export const fetchMemosSchema = z.object({
     sort: z.enum(['newest', 'oldest']).optional().default('newest'),
     after_date: z.string().nullable().optional(),
     before_date: z.string().nullable().optional(),
-    excludePinned: z.boolean().optional().default(false),
+    excludePinned: z.preprocess(optionalBooleanPreprocessor, z.boolean().optional().default(false)),
 });
 
 export type CreateMemoInput = z.infer<typeof createMemoSchema>;

@@ -35,7 +35,6 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
     // UI States that should stay in Hook for consistency
     const [showPrivateDialog, setShowPrivateDialog] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
-    const [isFullscreen, setIsFullscreen] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
     const [showLocationPicker, setShowLocationPicker] = useState(false);
 
@@ -152,7 +151,6 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
         error, setError,
         showPrivateDialog, setShowPrivateDialog,
         isFocused, setIsFocused,
-        isFullscreen, setIsFullscreen,
         isAnimating, setIsAnimating,
         showLocationPicker, setShowLocationPicker,
         handleTogglePrivate,

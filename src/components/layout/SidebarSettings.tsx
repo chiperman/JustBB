@@ -20,6 +20,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { logout } from '@/features/auth/actions';
 import { supabase } from '@/lib/supabase';
+import { DRAFT_CONTENT_KEY, DRAFT_IS_PRIVATE_KEY } from '@/features/memos/hooks/useMemoEditor';
 import { cn } from '@/lib/utils';
 import { useLayout } from '@/context/LayoutContext';
 import { useUser } from '@/context/UserContext';
@@ -74,6 +75,11 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
         await supabase.auth.signOut();
         // 通知服务端清理相关 Cookie 以及 session
         await logout();
+        // 清理编辑器草稿缓存
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem(DRAFT_CONTENT_KEY);
+            localStorage.removeItem(DRAFT_IS_PRIVATE_KEY);
+        }
         setLoggingOut(false);
     };
 

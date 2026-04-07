@@ -20,6 +20,7 @@ interface MemoCardViewProps {
     shouldReduceMotion: boolean;
     hasMounted: boolean;
     isLastCreated?: boolean;
+    showViewOriginal?: boolean;
 }
 
 export function MemoCardView({
@@ -30,6 +31,7 @@ export function MemoCardView({
     shouldReduceMotion,
     hasMounted,
     isLastCreated,
+    showViewOriginal,
 }: MemoCardViewProps) {
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -66,6 +68,7 @@ export function MemoCardView({
                 isSelected={isSelected}
                 onToggleSelection={() => toggleId(memo.id)}
                 showOriginalOnly={showOriginalOnly}
+                showViewOriginal={showViewOriginal}
                 showBacklinks={showBacklinks}
                 onToggleBacklinks={toggleBacklinks}
                 onEdit={onEdit}

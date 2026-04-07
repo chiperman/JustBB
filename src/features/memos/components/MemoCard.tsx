@@ -13,6 +13,7 @@ interface MemoCardProps {
     isEditing?: boolean;
     onEditChange?: (editing: boolean, updatedMemo?: Memo) => void;
     showOriginalOnly?: boolean;
+    showViewOriginal?: boolean;
 }
 
 export const MemoCard = memo(function MemoCard({ 
@@ -21,6 +22,7 @@ export const MemoCard = memo(function MemoCard({
     isEditing, 
     onEditChange, 
     showOriginalOnly = false,
+    showViewOriginal = false,
     isLastCreated = false
 }: MemoCardProps & { isLastCreated?: boolean }) {
     const shouldReduceMotion = useReducedMotion();
@@ -44,6 +46,7 @@ export const MemoCard = memo(function MemoCard({
             memo={memo}
             isAdmin={isAdmin}
             showOriginalOnly={showOriginalOnly}
+            showViewOriginal={showViewOriginal}
             onEdit={() => onEditChange?.(true)}
             shouldReduceMotion={!!shouldReduceMotion}
             hasMounted={hasMounted}

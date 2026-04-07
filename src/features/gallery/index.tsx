@@ -12,7 +12,9 @@ interface GalleryPageContentProps {
     memos?: Memo[];
 }
 
-export function GalleryPageContent({ memos: initialMemos = [] }: GalleryPageContentProps) {
+const EMPTY_MEMOS: Memo[] = [];
+
+export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: GalleryPageContentProps) {
     const [memos, setMemos] = useState<Memo[]>(initialMemos);
     const [isLoading, setIsLoading] = useState(false);
     const [hasMore, setHasMore] = useState(initialMemos.length >= 20);

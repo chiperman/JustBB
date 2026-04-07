@@ -9,22 +9,24 @@ import { MapPageContent } from '@/features/map';
 import { TrashClient } from '@/features/trash';
 
 /**
- * 客户端路由器
- *
- * 初次加载：显示 {children}（Next.js SSR 内容）
- * 后续导航：根据 currentView 直接渲染对应客户端组件
- * 效果：导航 = 切换组件，零服务器往返
+ * 路径标准化：移除末尾斜杠（除非是根路径）
  */
+function normalizePath(p: string) {
+    if (!p || p === '/') return p;
+    // 移除末尾斜线并去掉 query 参数进行基础匹配
+    return p.split('?')[0].replace(/\/$/, '') || '/';
+}
+
 export function ClientRouter({ children }: { children: ReactNode }) {
     const { currentView } = useView();
 
     // 是否已经发生过客户端导航
     // 初始为 false → 显示 SSR 的 {children}
-    // 首次 navigate() 后变为 true → 永远由客户端渲染
-    const [initialPath] = useState(currentView);
-
     // 只要路径变了，就永久激活客户端路由模式
-    const isRouterActive = currentView !== initialPath;
+    const [initialPath] = useState(() => normalizePath(currentView));
+
+    // 只有当路径真正由客户端路由变更时才激活
+    const isRouterActive = normalizePath(currentView) !== initialPath;
 
     // 尚未客户端导航过，显示 SSR 内容
     if (!isRouterActive) {
@@ -32,25 +34,31 @@ export function ClientRouter({ children }: { children: ReactNode }) {
     }
 
     // 客户端路由激活后，根据 currentView 渲染
-    return <>{renderView(currentView)}</>;
+    return <>{renderView(normalizePath(currentView))}</>;
 }
 
-function renderView(view: string) {
-    // 首页（可能带查询参数）
-    if (view === '/') {
+function renderView(path: string) {
+    if (path === '/') {
         return <MainLayoutClient />;
     }
-    if (view === '/gallery') {
+    if (path === '/gallery') {
         return <GalleryPageContent />;
     }
-    if (view === '/tags') {
+    if (path === '/tags') {
         return <TagsPageContent />;
     }
-    if (view === '/map') {
+    if (path === '/map') {
         return <MapPageContent />;
     }
-    if (view === '/trash') {
+    if (path === '/trash') {
         return <TrashClient />;
+    }
+    if (path === '/on-this-day') {
+        return (
+            <div className="flex items-center justify-center h-full text-muted-foreground italic">
+                「去年今日」內容開發中...
+            </div>
+        );
     }
     // 兜底：显示首页
     return <MainLayoutClient />;

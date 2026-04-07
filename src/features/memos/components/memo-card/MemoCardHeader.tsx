@@ -21,6 +21,7 @@ interface MemoCardHeaderProps {
     isAdmin: boolean;
     isMenuOpen: boolean;
     hasMounted: boolean;
+    showViewOriginal?: boolean;
 }
 
 export function MemoCardHeader({
@@ -36,6 +37,7 @@ export function MemoCardHeader({
     isAdmin,
     isMenuOpen,
     hasMounted,
+    showViewOriginal,
 }: MemoCardHeaderProps) {
     return (
         <div className="flex items-center justify-between mb-4">
@@ -78,7 +80,7 @@ export function MemoCardHeader({
             </div>
             {!memo.is_locked && !isSelectionMode && (
                 <div className="flex items-center gap-2">
-                    {showOriginalOnly ? (
+                    {showOriginalOnly || showViewOriginal ? (
                         <Button
                             variant="ghost"
                             size="sm"
@@ -87,9 +89,12 @@ export function MemoCardHeader({
                                 e.preventDefault();
                                 window.location.assign(`/?num=${memo.memo_number}`);
                             }}
-                            className="h-7 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 z-10 pointer-events-auto"
+                            className={cn(
+                                "h-7 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-all z-10 pointer-events-auto",
+                                !showViewOriginal && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                            )}
                         >
-                            查看原始数据
+                            查看原文
                         </Button>
                     ) : (
                         <>

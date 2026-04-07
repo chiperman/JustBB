@@ -3,7 +3,8 @@ import {
     Tag01Icon, 
     Delete02Icon, 
     Image01Icon as GalleryIcon, 
-    Location04Icon 
+    Location04Icon,
+    Calendar02Icon
 } from '@hugeicons/core-free-icons';
 
 /**
@@ -24,6 +25,7 @@ export const NAVIGATION_CONFIG: NavigationItem[] = [
     { id: 'home', icon: Home01Icon as unknown as IconSvgObject, label: '首页', href: '/' },
     { id: 'gallery', icon: GalleryIcon as unknown as IconSvgObject, label: '画廊', href: '/gallery' },
     { id: 'tags', icon: Tag01Icon as unknown as IconSvgObject, label: '标签', href: '/tags' },
+    { id: 'onthisday', icon: Calendar02Icon as unknown as IconSvgObject, label: '去年今日', href: '/on-this-day' },
     { id: 'map', icon: Location04Icon as unknown as IconSvgObject, label: '地图', href: '/map' },
     { id: 'trash', icon: Delete02Icon as unknown as IconSvgObject, label: '回收站', href: '/trash', isAdminOnly: true },
 ];

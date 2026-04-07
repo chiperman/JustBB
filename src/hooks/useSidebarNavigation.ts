@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useMotionValue, useSpring, useVelocity, useTransform } from 'framer-motion';
 import { useView } from '@/context/ViewContext';
 import { useUser } from '@/context/UserContext';
@@ -31,8 +31,10 @@ export function useSidebarNavigation() {
     const initialY = currentIndex * 40 + 8;
     const y = useMotionValue(initialY);
     
-    // 同步 y 值到当前索引，直接在渲染期间设置以避免 Effect 级联
-    y.set(currentIndex * 40 + 8);
+    // 同步 y 值到当前索引，通过 Effect 异步触发以避免渲染期副作用级联
+    useEffect(() => {
+        y.set(currentIndex * 40 + 8);
+    }, [currentIndex, y]);
 
     const springY = useSpring(y, springConfig);
     const velocity = useVelocity(springY);

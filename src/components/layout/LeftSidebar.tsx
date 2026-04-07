@@ -3,7 +3,6 @@
 import { Suspense, useState } from 'react';
 import { TagCloud } from '../ui/TagCloud';
 import { Heatmap } from '../ui/Heatmap';
-import { OnThisDay } from '../ui/OnThisDay';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { PanelLeftCloseIcon, PanelLeftOpenIcon, Cancel01Icon } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
@@ -127,11 +126,6 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                 <Suspense fallback={<div className="space-y-2"><div className="flex flex-wrap gap-2">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-6 w-12 bg-muted/20 rounded-full animate-pulse" />)}</div></div>}>
                     <TagCloud />
                 </Suspense>
-            </motion.div>
-
-            {/* On This Day */}
-            <motion.div variants={sectionVariants} className="overflow-hidden mb-[24px] px-1 min-w-[17rem]">
-                <OnThisDay />
             </motion.div>
         </motion.aside>
     );

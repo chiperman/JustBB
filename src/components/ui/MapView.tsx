@@ -42,6 +42,8 @@ export function MapView({
     const [showZoomIndicator, setShowZoomIndicator] = React.useState(false);
     const zoomTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const isFirstLoadRef = useRef(true);
+    // 聚合弹窗 Toggle 状态：记录上次打开弹窗的坐标 key，用于可靠的 toggle 关闭判断
+    const lastClusterPopupKeyRef = useRef<string | null>(null);
 
     // 计算分段 Tile URL
     const getTileUrl = (theme: string | undefined) => {
@@ -98,6 +100,13 @@ export function MapView({
             noWrap: true // 关键：禁止瓦片重复显示
         }).addTo(map);
 
+        // 拦截坐标图标上的双击，阻止触发地图缩放（双击空白区域仍可缩放）
+        map.getContainer().addEventListener('dblclick', (e) => {
+            if ((e.target as HTMLElement).closest('.leaflet-marker-icon')) {
+                e.stopPropagation();
+            }
+        }, true); // 捕获阶段
+
         if (mode === 'full') {
             map.on('zoomend', handleZoomChange);
             setCurrentZoom(Math.round(map.getZoom()));
@@ -152,6 +161,15 @@ export function MapView({
                 container.classList.remove('map-intro-active');
             }, 2500);
 
+            // 监听 popupclose 事件，延迟清理聚合弹窗的 toggle 状态
+            // 延迟原因：Leaflet 的 closeOnClick 会在 clusterclick 之前触发 popupclose，
+            // 如果同步清空 ref，clusterclick handler 中的 toggle 判断会失效
+            map.on('popupclose', () => {
+                setTimeout(() => {
+                    lastClusterPopupKeyRef.current = null;
+                }, 100);
+            });
+
             // 手动接管点击事件，实现 2.5s 缓慢推进，并处理重合点
             clusterGroup.on('clusterclick', (a: { layer: Leaflet.MarkerCluster }) => {
                 const cluster = a.layer;
@@ -161,6 +179,18 @@ export function MapView({
 
                 // 如果坐标重合，或者是已达最大缩放，则直接弹出该聚合下的所有 Memo 列表
                 if (isSameLocation || currentZoom >= 18) {
+                    const targetLatLng = cluster.getLatLng();
+                    const targetKey = `${targetLatLng.lat.toFixed(6)}-${targetLatLng.lng.toFixed(6)}`;
+
+                    // --- Toggle Off：基于独立 ref 判断，不依赖 map._popup ---
+                    // flyTo 会触发 markercluster 刷新导致旧 Popup 被销毁，
+                    // 因此用 ref 记录上次打开的坐标 key 来可靠判断
+                    if (lastClusterPopupKeyRef.current === targetKey) {
+                        map.closePopup();
+                        lastClusterPopupKeyRef.current = null;
+                        return; // 物理中断
+                    }
+
                     const childMarkers = cluster.getAllChildMarkers() as Leaflet.Marker[];
                     const allMemos = childMarkers.flatMap((m) => {
                         const options = m.options as Leaflet.MarkerOptions & { memos?: Memo[] };
@@ -210,14 +240,23 @@ export function MapView({
                         </ViewProvider>
                     );
 
-                    L.popup({
-                        maxWidth: 360,
-                        className: 'modern-map-popup',
-                        offset: [0, -10]
-                    })
-                    .setLatLng(cluster.getLatLng())
-                    .setContent(popupEl)
-                    .openOn(map);
+                    const openPopup = () => {
+                        L.popup({
+                            maxWidth: 360,
+                            className: 'modern-map-popup',
+                            offset: [0, -10],
+                            autoPan: true,
+                            autoPanPadding: [50, 50]
+                        })
+                        .setLatLng(targetLatLng)
+                        .setContent(popupEl)
+                        .openOn(map);
+                        // 记录当前打开的聚合坐标 key
+                        lastClusterPopupKeyRef.current = targetKey;
+                    };
+
+                    // 直接打开，autoPan 会自动平移地图确保 popup 完全可见
+                    setTimeout(openPopup, 50);
                 } else {
                     map.flyToBounds(bounds, { 
                         duration: 2.5, 
@@ -343,7 +382,8 @@ export function MapView({
                 leafMarker.bindPopup(popupEl, {
                     maxWidth: 360,
                     className: 'modern-map-popup',
-                    offset: [0, -10]
+                    offset: [0, -10],
+                    autoPanPadding: [50, 50]
                 });
             }
 

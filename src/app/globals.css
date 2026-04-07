@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "leaflet/dist/leaflet.css";
+@import "leaflet.markercluster/dist/MarkerCluster.css";
+@import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -136,7 +139,7 @@ button:focus:not(:focus-visible) {
   --shadow-md: 0 4px 12px -2px oklch(0 0 0 / 0.08), 0 2px 6px -1px oklch(0 0 0 / 0.04);
   --shadow-lg: 0 10px 25px -5px oklch(0 0 0 / 0.08), 0 8px 10px -6px oklch(0 0 0 / 0.04);
   --shadow-xl: 0 20px 40px -10px oklch(0 0 0 / 0.1), 0 10px 15px -5px oklch(0 0 0 / 0.04);
-  --destructive: oklch(0.704 0.191 22.216);
+  --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.552 0.016 285.938);
@@ -287,113 +290,136 @@ html body .cursor-pointer:not(:disabled) {
   color: inherit !important;
 }
 
-/* Leaflet Popup 现代极简样式 */
+/* Leaflet Popup 现代极简悬浮样式 (Modern Floating Popup) */
 .modern-map-popup .leaflet-popup-content-wrapper {
-  background: var(--popover) !important;
-  color: var(--popover-foreground) !important;
-  border-radius: var(--radius-card) !important;
+  background-color: var(--color-background-elevated, rgba(255, 255, 255, 0.85)) !important;
+  backdrop-filter: blur(12px) saturate(150%) !important;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.05)) !important;
+  border-radius: 20px !important; 
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15) !important;
   padding: 0 !important;
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.2) !important;
-  backdrop-filter: blur(20px) !important;
-  border: 1px solid var(--border) !important;
-  overflow: hidden;
+  overflow: hidden !important;
 }
 
 .modern-map-popup .leaflet-popup-content {
   margin: 0 !important;
-  width: 550px !important;
+  width: auto !important;
 }
 
-.modern-map-popup .leaflet-popup-tip {
-  background: var(--popover) !important;
-  border: 1px solid var(--border) !important;
+/* 彻底隐藏弹出框小三角，实现纯粹的悬浮感 */
+.modern-map-popup .leaflet-popup-tip-container {
+  display: none !important;
 }
 
-.modern-map-popup a.leaflet-popup-close-button {
-  color: var(--muted-foreground) !important;
-  padding: 8px 8px 0 0 !important;
-  width: 32px !important;
-  height: 32px !important;
-  font: 20px/24px Tahoma, Verdana, sans-serif !important;
-  z-index: 20;
+/* 关闭按钮适配现代 UI：移除原生按钮，由 React 手动渲染 Header */
+.modern-map-popup .leaflet-popup-close-button {
+  display: none !important;
 }
 
-.modern-map-popup a.leaflet-popup-close-button:hover {
-  color: var(--foreground) !important;
+/* Popup 内部卡片：采用“柔和岛屿”列表风格 */
+.modern-map-popup .rounded-card {
+  background: color-mix(in oklch, var(--color-background), transparent 40%) !important;
+  border: none !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  padding: 1.25rem 1rem !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  transition: background 0.2s ease;
 }
 
-/* Popup 内部自定义滚动条 */
-.modern-map-popup .custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
+.modern-map-popup .rounded-card:hover {
+  background: color-mix(in oklch, var(--color-background), transparent 20%) !important;
 }
 
-.modern-map-popup .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(var(--color-primary), 0.2);
-  border-radius: 10px;
+.modern-map-popup .rounded-card:last-child {
+  border-bottom: none !important;
 }
 
-.modern-map-popup .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(var(--color-primary), 0.4);
+.modern-map-popup .bg-card {
+  background: transparent !important;
+}
+
+/* 即使在 Popup 内部，由于背景半透明，ExpandableContent 的遮罩层也需要透视同步 */
+.modern-map-popup .expansion-mask {
+  background: linear-gradient(to top, color-mix(in oklch, var(--color-background), transparent 20%), transparent) !important;
+}
+
+
+/* -------------------------------------------------------------------------- */
+/* Marker Entrance Animations (Chronological staggered fade)                  */
+/* -------------------------------------------------------------------------- */
+
+@keyframes marker-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  60% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes marker-pulse-ring {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* 仅在地图处于“入场状态”时激活以下动画 */
+.map-intro-active .animate-marker-pop {
+  opacity: 0;
+  animation: marker-pop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  will-change: opacity, transform;
+}
+
+.map-intro-active .animate-marker-ring {
+  position: absolute;
+  inset: -4px;
+  border: 2px solid var(--color-primary);
+  border-radius: 9999px;
+  opacity: 0;
+  animation: marker-pulse-ring 1s cubic-bezier(0, 0, 0.2, 1) forwards;
+  pointer-events: none;
 }
 
 /* -------------------------------------------------------------------------- */
 /* Leaflet Markers & Clusters Animation & Styles                              */
 /* -------------------------------------------------------------------------- */
 
-@keyframes marker-fade-in {
-  from { opacity: 0; transform: scale(0.5); }
-  to { opacity: 1; transform: scale(1); }
+/* 聚合点基础样式覆盖：恢复 Leaflet 默认的坐标即时同步，消除缩放时的偏移感 */
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+  transition: opacity 0.2s ease-in;
 }
 
-@keyframes marker-fade-out {
-  from { opacity: 1; transform: scale(1); }
-  to { opacity: 0; transform: scale(0.5); }
+.custom-cluster-icon {
+  background: transparent !important;
+  border: none !important;
 }
 
-.marker-fade-in { 
-  animation: marker-fade-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; 
+/* 聚合点内部圆形：具体布局由 MapView.tsx 的 Tailwind 控制 */
+
+/* 移除了导致 hover 方形背景的规则，改为在 MapView.tsx 中精准控制 */
+
+/* 彻底消除蜘蛛连线，保持地图纯净 */
+.leaflet-cluster-spider-leg {
+  display: none !important;
 }
 
-.marker-fade-out { 
-  animation: marker-fade-out 0.3s ease-in forwards; 
-}
-
-/* 只包含透明度等外观过渡，坚决不能包含 transform，否则会造成缩放平移滞后漂移！ */
-.custom-map-marker { 
-  transition: opacity 0.3s ease, background-color 0.3s ease; 
-}
-
-/* 自定义聚合图标样式 */
-.custom-marker-cluster {
-  background: rgba(217, 119, 87, 0.15);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(4px);
-  /* 注意这里不能加 transition，否则地图移动会滞后 */
-}
-
-.custom-marker-cluster:hover .cluster-inner {
-  /* hover 缩放放在内层上，不干扰外层 Leaflet 自己维护的 transform 定位 */
-  transform: scale(1.1);
-}
-
-.cluster-inner {
-  width: 32px;
-  height: 32px;
-  background: var(--color-primary, #d97757);
-  border: 2px solid white;
-  border-radius: 50%;
-  color: white;
-  font-weight: bold;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(217, 119, 87, 0.4);
-  /* 将外层的缩放过渡改加在内部盒子上 */
-  transition: transform 0.2s ease, background-color 0.2s ease;
+/* 地图 Marker 基础样式 */
+.custom-div-icon {
+  background: transparent !important;
+  border: none !important;
 }
 
 @keyframes low-breathing-highlight {
@@ -408,4 +434,38 @@ html body .cursor-pointer:not(:disabled) {
 
 .animate-new-memo-highlight {
   animation: low-breathing-highlight 3s ease-in-out infinite;
+}
+/* 自定义胶囊控制 (Custom Capsule Controls) */
+.map-capsule-control {
+  background-color: var(--color-background-elevated, rgba(255, 255, 255, 0.8)) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border-subtle, rgba(0, 0, 0, 0.08));
+  border-radius: 9999px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.map-capsule-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: var(--color-foreground-muted, #666);
+}
+
+.map-capsule-btn:active {
+  transform: scale(0.9);
+}
+
+.map-capsule-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--color-primary);
+}
+
+.dark .map-capsule-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }

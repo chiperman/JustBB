@@ -9,6 +9,12 @@ import { MemoCard } from '@/features/memos';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Location04Icon } from '@hugeicons/core-free-icons';
 import { createRoot } from 'react-dom/client';
+import { useTheme } from 'next-themes';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ViewProvider } from '@/context/ViewContext';
+import { UIProvider } from '@/context/UIContext';
+import { Memo } from '@/types/memo';
+import { Add01Icon, MinusSignIcon, Cancel01Icon } from '@hugeicons/core-free-icons';
 
 export interface MapViewProps {
     markers: MapMarker[];
@@ -29,37 +35,72 @@ export function MapView({
 }: MapViewProps) {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<Leaflet.Map | null>(null);
-    const clusterLayer = useRef<Leaflet.LayerGroup | null>(null);
-    const leafletRef = useRef<typeof Leaflet | null>(null);
+    const clusterLayer = useRef<Leaflet.MarkerClusterGroup | Leaflet.LayerGroup | null>(null);
+    const [L, setL] = React.useState<typeof Leaflet | null>(null);
+    const { resolvedTheme } = useTheme();
+    const [currentZoom, setCurrentZoom] = React.useState<number>(0);
+    const [showZoomIndicator, setShowZoomIndicator] = React.useState(false);
+    const zoomTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const isFirstLoadRef = useRef(true);
+
+    // 计算分段 Tile URL
+    const getTileUrl = (theme: string | undefined) => {
+        if (theme === 'dark') return 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png';
+        if (theme === 'light') return 'https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png';
+        return 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    };
+
+    const handleZoomChange = () => {
+        if (!mapInstance.current) return;
+        const zoom = Math.round(mapInstance.current.getZoom());
+        setCurrentZoom(zoom);
+        setShowZoomIndicator(true);
+        
+        if (zoomTimeoutRef.current) clearTimeout(zoomTimeoutRef.current);
+        zoomTimeoutRef.current = setTimeout(() => setShowZoomIndicator(false), 1500);
+    };
 
     useEffect(() => {
         const initLeaflet = async () => {
-            if (!leafletRef.current) {
-                const L_mod = (await import('leaflet')).default;
-                leafletRef.current = L_mod;
+            if (!L) {
+                const Leaflet_mod = (await import('leaflet')).default;
+                // 动态导入 MarkerCluster 插件
+                await import('leaflet.markercluster');
+                // 导入样式项 (通常在 globals 导入，这里确保存在)
+                setL(Leaflet_mod);
             }
         };
         initLeaflet();
-    }, []);
+    }, [L]);
 
     useEffect(() => {
-        if (!mapRef.current || mapInstance.current || !leafletRef.current) return;
+        if (!mapRef.current || mapInstance.current || !L) return;
 
-        const L = leafletRef.current;
+        // 计算动态 MinZoom (log2(width/256))
+        const minZoom = Math.max(0, Math.floor(Math.log2(mapRef.current.clientWidth / 256)));
+
         const map = L.map(mapRef.current, {
             center: [34.3416, 108.9398],
-            zoom: mode === 'mini' ? 12 : 5,
+            zoom: mode === 'mini' ? 12 : 2, // 初始固定为广域 Level 2
+            minZoom: minZoom,
+            maxZoom: 18, 
             zoomControl: false,
             attributionControl: false,
-            scrollWheelZoom: mode === 'full' || interactive
+            scrollWheelZoom: mode === 'full' || interactive,
+            worldCopyJump: false, // 禁止副本跳转
+            maxBounds: [[-90, -180], [90, 180]], // 锁定全球边界
+            maxBoundsViscosity: 1.0 // 边界粘性设为最高，防止拖出
         });
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            maxZoom: 19,
+        L.tileLayer(getTileUrl(resolvedTheme), {
+            maxZoom: 18,
+            subdomains: 'abcd',
+            noWrap: true // 关键：禁止瓦片重复显示
         }).addTo(map);
 
         if (mode === 'full') {
-            L.control.zoom({ position: 'bottomright' }).addTo(map);
+            map.on('zoomend', handleZoomChange);
+            setCurrentZoom(Math.round(map.getZoom()));
         }
 
         if (interactive) {
@@ -69,72 +110,240 @@ export function MapView({
         }
 
         mapInstance.current = map;
-        clusterLayer.current = L.layerGroup().addTo(map);
+        
+        // 依据文档开启聚合逻辑 (MarkerCluster)
+        if (mode === 'full') {
+            const clusterGroup = (L as typeof Leaflet & { 
+                markerClusterGroup: (options?: object) => Leaflet.MarkerClusterGroup 
+            }).markerClusterGroup({
+                maxClusterRadius: 40,
+                spiderfyOnMaxZoom: false, // 彻底禁用蜘蛛展开行为，采用弹窗列表
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: false, // 禁用默认缩放，由下方手动接管
+                animate: true, // 启用内置动画，实现聚合点展开时的平滑散开效果
+                animateAddingMarkers: false, // 初始添加时不播放动画，交由自定义的“呼吸入场”逻辑通过 CSS 管理
+                iconCreateFunction: (cluster: Leaflet.MarkerCluster) => {
+                    const markers = cluster.getAllChildMarkers() as Leaflet.Marker[];
+                    const totalMemos = markers.reduce((acc, m) => {
+                        const options = m.options as Leaflet.MarkerOptions & { memos?: Memo[] };
+                        return acc + (options.memos?.length || 0);
+                    }, 0);
+                    
+                    return L.divIcon({
+                        html: `<div class="relative w-10 h-10 flex items-center justify-center shrink-0 aspect-square group">
+                                ${isFirstLoadRef.current ? `<div class="animate-marker-ring shrink-0 aspect-square"></div>` : ''}
+                                <div class="w-10 h-10 bg-primary/20 backdrop-blur-sm border-2 border-primary rounded-full flex items-center justify-center text-primary font-bold shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/30 shrink-0 aspect-square ${isFirstLoadRef.current ? 'animate-marker-pop' : ''}">
+                                    <span class="text-xs leading-none">${totalMemos}</span>
+                                </div>
+                               </div>`,
+                        className: 'custom-cluster-icon',
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 20]
+                    });
+                }
+            });
+
+            // 标记地图进入“入场动画”状态
+            const container = map.getContainer();
+            container.classList.add('map-intro-active');
+            
+            // 2.5s 后移除入场标识，防止缩放时重新触发动画 (1.5s 错峰 + 1s 动画延时/缓冲)
+            setTimeout(() => {
+                container.classList.remove('map-intro-active');
+            }, 2500);
+
+            // 手动接管点击事件，实现 2.5s 缓慢推进，并处理重合点
+            clusterGroup.on('clusterclick', (a: { layer: Leaflet.MarkerCluster }) => {
+                const cluster = a.layer;
+                const bounds = cluster.getBounds();
+                const isSameLocation = bounds.getNorthEast().equals(bounds.getSouthWest(), 0.0001);
+                const currentZoom = map.getZoom();
+
+                // 如果坐标重合，或者是已达最大缩放，则直接弹出该聚合下的所有 Memo 列表
+                if (isSameLocation || currentZoom >= 18) {
+                    const childMarkers = cluster.getAllChildMarkers() as Leaflet.Marker[];
+                    const allMemos = childMarkers.flatMap((m) => {
+                        const options = m.options as Leaflet.MarkerOptions & { memos?: Memo[] };
+                        return options.memos || [];
+                    });
+                    const firstMarkerOptions = childMarkers[0]?.options as Leaflet.MarkerOptions & { locationName?: string };
+                    const locationName = firstMarkerOptions?.locationName || "聚合地点";
+                    
+                    // 弹出聚合列表
+                    const popupEl = document.createElement('div');
+                    popupEl.className = 'w-[340px] max-h-[480px] overflow-hidden flex flex-col';
+                    
+                    const root = createRoot(popupEl);
+                    root.render(
+                        <ViewProvider>
+                            <UIProvider>
+                                <div className="flex flex-col h-full">
+                                    {/* 自定义 Header: 包含位置与关闭 */}
+                                    <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 sticky top-0 bg-background/50 backdrop-blur-md z-10">
+                                        <div className="flex items-center gap-2 text-primary font-bold">
+                                            <HugeiconsIcon icon={Location04Icon} size={16} />
+                                            <span className="text-sm truncate max-w-[200px]">{locationName}</span>
+                                        </div>
+                                        <button 
+                                            onClick={() => map.closePopup()}
+                                            className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors"
+                                        >
+                                            <HugeiconsIcon icon={Cancel01Icon} size={18} className="text-muted-foreground/60" />
+                                        </button>
+                                    </div>
+                                    {/* 滚动内容区：限高约 3 条卡片 (每条约 140px + gap) */}
+                                    <div className="flex-1 overflow-y-auto max-h-[420px]">
+                                        <div className="flex flex-col">
+                                            {allMemos.map((memo: Memo, idx: number) => (
+                                                <div key={memo.id} className={cn(idx !== 0 && "border-t border-border/40")}>
+                                                    <MemoCard 
+                                                        memo={memo} 
+                                                        showOriginalOnly={false} 
+                                                        showViewOriginal={true}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </UIProvider>
+                        </ViewProvider>
+                    );
+
+                    L.popup({
+                        maxWidth: 360,
+                        className: 'modern-map-popup',
+                        offset: [0, -10]
+                    })
+                    .setLatLng(cluster.getLatLng())
+                    .setContent(popupEl)
+                    .openOn(map);
+                } else {
+                    map.flyToBounds(bounds, { 
+                        duration: 2.5, 
+                        easeLinearity: 0.25 
+                    });
+                }
+            });
+
+            clusterGroup.addTo(map);
+            clusterLayer.current = clusterGroup;
+        } else {
+            clusterLayer.current = L.layerGroup().addTo(map);
+        }
 
         return () => {
+            if (zoomTimeoutRef.current) clearTimeout(zoomTimeoutRef.current);
             map.off();
             map.remove();
             mapInstance.current = null;
         };
-    }, [mode, interactive, onMapClick]);
+    }, [L, mode, interactive, onMapClick, resolvedTheme]); // 监听主题变化
 
     useEffect(() => {
-        if (!mapInstance.current || !clusterLayer.current || !leafletRef.current) return;
+        if (!mapInstance.current || !clusterLayer.current || !L) return;
 
-        const L = leafletRef.current;
         clusterLayer.current.clearLayers();
 
         const bounds: Leaflet.LatLngExpression[] = [];
 
-        markers.forEach(marker => {
+        // 按时间顺序（从新到旧）排序 markers，以实现有序入场
+        const sortedMarkers = [...markers].sort((a, b) => {
+            const timeA = Math.min(...a.items.map(m => {
+                const date = new Date(m.created_at);
+                return isNaN(date.getTime()) ? 0 : date.getTime();
+            }));
+            const timeB = Math.min(...b.items.map(m => {
+                const date = new Date(m.created_at);
+                return isNaN(date.getTime()) ? 0 : date.getTime();
+            }));
+            return timeB - timeA; // 逆序：从新到旧
+        });
+
+        // 动态计算错峰间隔：总时长控制在 1.5s 左右，营造一种从容的“溯源”入场感
+        const staggerDelay = Math.max(5, Math.min(50, 1500 / (sortedMarkers.length || 1)));
+
+        sortedMarkers.forEach((marker, index) => {
             const pos: Leaflet.LatLngExpression = [marker.lat, marker.lng];
             bounds.push(pos);
 
             const isDraggable = mode === 'mini' && interactive;
+            // 仅在首次加载的大图模式下应用错峰动画
+            const delay = isFirstLoadRef.current && mode === 'full' ? (index * staggerDelay) : 0;
 
             const leafMarker = L.marker(pos, {
                 draggable: isDraggable,
+                // 将数据存入 options 以备聚合后回溯
+                ...({
+                    memos: marker.items,
+                    locationName: marker.name,
+                } as Leaflet.MarkerOptions & { memos: Memo[]; locationName: string }),
                 icon: L.divIcon({
                     className: 'custom-div-icon',
-                    html: `<div class="w-8 h-8 bg-primary/20 backdrop-blur-sm border-2 border-primary rounded-full flex items-center justify-center text-primary shadow-lg hover:scale-110 transition-transform">
-                            <span class="text-[10px] font-bold">${marker.items.length || 1}</span>
+                    html: `<div class="relative w-8 h-8 flex items-center justify-center shrink-0 aspect-square group">
+                            ${isFirstLoadRef.current && mode === 'full' ? 
+                                `<div class="animate-marker-ring shrink-0 aspect-square" style="animation-delay: ${delay}ms;"></div>` : ''}
+                            <div class="w-8 h-8 bg-primary/20 backdrop-blur-sm border-2 border-primary rounded-full flex items-center justify-center text-primary shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/30 shrink-0 aspect-square ${isFirstLoadRef.current && mode === 'full' ? 'animate-marker-pop' : ''}" 
+                                style="${isFirstLoadRef.current && mode === 'full' ? `animation-delay: ${delay}ms;` : ''}">
+                                <span class="text-[10px] font-bold leading-none">${marker.items.length || 1}</span>
+                            </div>
                            </div>`,
                     iconSize: [32, 32],
-                    iconAnchor: [16, 32]
+                    iconAnchor: [16, 16]
                 })
             });
 
             if (isDraggable) {
-                leafMarker.on('dragend', (e) => {
-                    const target = e.target as L.Marker;
+                leafMarker.on('dragend', (e: Leaflet.LeafletEvent) => {
+                    const target = e.target as Leaflet.Marker;
                     const position = target.getLatLng();
                     onMarkerDragEnd?.(position.lat, position.lng);
                 });
             } else if (marker.items.length > 0) {
                 // 弹出层 (仅非编辑模式)
                 const popupEl = document.createElement('div');
-                popupEl.className = 'w-[320px] max-h-[400px] overflow-y-auto custom-scrollbar p-1';
+                popupEl.className = 'w-[340px] max-h-[480px] overflow-hidden flex flex-col';
                 
                 const root = createRoot(popupEl);
                 root.render(
-                    <div className="space-y-4">
-                        <div className="px-2 pt-2 pb-1 border-b border-border/50">
-                            <div className="flex items-center gap-2 text-primary font-bold">
-                                <HugeiconsIcon icon={Location04Icon} size={14} />
-                                <span className="text-sm truncate">{marker.name}</span>
+                    <ViewProvider>
+                        <UIProvider>
+                            <div className="flex flex-col h-full">
+                                {/* 自定义 Header */}
+                                <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 sticky top-0 bg-background/50 backdrop-blur-md z-10">
+                                    <div className="flex items-center gap-2 text-primary font-bold">
+                                        <HugeiconsIcon icon={Location04Icon} size={16} />
+                                        <span className="text-sm truncate max-w-[200px]">{marker.name}</span>
+                                    </div>
+                                    <button 
+                                        onClick={() => mapInstance.current?.closePopup()}
+                                        className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors"
+                                    >
+                                        <HugeiconsIcon icon={Cancel01Icon} size={18} className="text-muted-foreground/60" />
+                                    </button>
+                                </div>
+                                <div className="flex-1 overflow-y-auto max-h-[420px]">
+                                    <div className="flex flex-col">
+                                        {marker.items.map((memo, idx) => (
+                                            <div key={memo.id} className={cn(idx !== 0 && "border-t border-border/40")}>
+                                                <MemoCard 
+                                                    memo={memo} 
+                                                    showOriginalOnly={false} 
+                                                    showViewOriginal={true}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div className="space-y-4">
-                            {marker.items.map(memo => (
-                                <MemoCard key={memo.id} memo={memo} showOriginalOnly />
-                            ))}
-                        </div>
-                    </div>
+                        </UIProvider>
+                    </ViewProvider>
                 );
 
                 leafMarker.bindPopup(popupEl, {
-                    maxWidth: 340,
-                    className: 'modern-map-popup'
+                    maxWidth: 360,
+                    className: 'modern-map-popup',
+                    offset: [0, -10]
                 });
             }
 
@@ -142,22 +351,77 @@ export function MapView({
         });
 
         if (bounds.length > 0 && mode === 'full') {
-            mapInstance.current.fitBounds(leafletRef.current.latLngBounds(bounds), { padding: [50, 50] });
+            const latLngBounds = L.latLngBounds(bounds);
+            
+            if (isFirstLoadRef.current) {
+                // 首次加载：执行瞬时定位 (无动画)，确保初始视角在标记点中心且维持 Level 2 或自动适应
+                mapInstance.current.fitBounds(latLngBounds, { 
+                    padding: [50, 50],
+                    animate: false // 禁用入场动画
+                });
+                isFirstLoadRef.current = false;
+            } else {
+                // 后续更新：使用 flyToBounds 实现“一次性精确跳转”设计 (同步为 2.5s)
+                mapInstance.current.flyToBounds(latLngBounds, { 
+                    padding: [50, 50],
+                    maxZoom: 15,
+                    duration: 2.5
+                });
+            }
         } else if (bounds.length > 0 && mode === 'mini') {
             mapInstance.current.setView(bounds[0], 13);
         }
-    }, [markers, mode, interactive, onMarkerDragEnd]);
+    }, [L, markers, mode, interactive, onMarkerDragEnd]);
 
     return (
         <div className={cn("relative w-full h-full group", className)}>
             <div ref={mapRef} className="w-full h-full z-0" />
             {mode === 'full' && (
-                <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-                    <div className="bg-background/80 backdrop-blur-md border border-border/50 px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm pointer-events-none">
-                        <HugeiconsIcon icon={Location04Icon} size={14} className="text-primary" />
-                        <span className="text-[11px] font-medium tracking-tight">空间锚点预览</span>
+                <>
+                    <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 pointer-events-none">
+                        <div className="bg-background/80 backdrop-blur-md border border-border/50 px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
+                            <HugeiconsIcon icon={Location04Icon} size={14} className="text-primary" />
+                            <span className="text-[11px] font-medium tracking-tight">空间锚点预览</span>
+                        </div>
                     </div>
-                </div>
+
+                    {/* 缩放指示器：居中、白色、现代 */}
+                    <AnimatePresence>
+                        {showZoomIndicator && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 20, x: "-50%", scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
+                                exit={{ opacity: 0, y: 10, x: "-50%", scale: 0.95 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                className="absolute bottom-8 left-1/2 z-10"
+                            >
+                                <div className="bg-background/80 text-foreground/80 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-bold shadow-sm border border-border/50 tracking-[0.2em] uppercase">
+                                    LEVEL {currentZoom}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* 自定义胶囊缩放控件：对齐空间预览风格 */}
+                    <div className="absolute bottom-6 right-6 z-10 hidden md:block">
+                        <div className="map-capsule-control translate-y-[-10px]">
+                            <button 
+                                onClick={() => mapInstance.current?.zoomIn()}
+                                className="map-capsule-btn border-b border-border/30"
+                                title="Zoom In"
+                            >
+                                <HugeiconsIcon icon={Add01Icon} size={18} />
+                            </button>
+                            <button 
+                                onClick={() => mapInstance.current?.zoomOut()}
+                                className="map-capsule-btn"
+                                title="Zoom Out"
+                            >
+                                <HugeiconsIcon icon={MinusSignIcon} size={18} />
+                            </button>
+                        </div>
+                    </div>
+                </>
             )}
         </div>
     );

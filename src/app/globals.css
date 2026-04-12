@@ -56,8 +56,10 @@
 
 :root {
   --card: oklch(1 0 0);
-  --popover: oklch(1 0 0 / 95%);
+  --popover: oklch(1 0 0 / 88%);
   --popover-foreground: oklch(0.141 0.005 285.823);
+  --glass-bg: oklch(1 0 0 / 88%);
+  --glass-blur: 24px;
   --success: #40c463;
   --error: #ff6b6b;
 
@@ -116,8 +118,10 @@ button:focus:not(:focus-visible) {
   --background: oklch(0.12 0.003 285.823);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.18 0.004 285.885);
-  --popover: oklch(0.18 0.004 285.885 / 95%);
+  --popover: oklch(0.18 0.004 285.885 / 88%);
   --popover-foreground: oklch(0.985 0 0);
+  --glass-bg: oklch(0.18 0.004 285.885 / 85%);
+  --glass-blur: 24px;
   --success: #3fb950;
   --error: #f85149;
 
@@ -292,11 +296,11 @@ html body .cursor-pointer:not(:disabled) {
 
 /* Leaflet Popup 现代极简悬浮样式 (Modern Floating Popup) */
 .modern-map-popup .leaflet-popup-content-wrapper {
-  background-color: var(--color-background-elevated, rgba(255, 255, 255, 0.85)) !important;
-  backdrop-filter: blur(12px) saturate(150%) !important;
+  background-color: var(--glass-bg, rgba(255, 255, 255, 0.88)) !important;
+  backdrop-filter: blur(var(--glass-blur, 24px)) saturate(150%) !important;
   border: 1px solid var(--color-border, rgba(0, 0, 0, 0.05)) !important;
   border-radius: 20px !important; 
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: var(--shadow-xl) !important;
   padding: 0 !important;
   overflow: hidden !important;
 }
@@ -437,14 +441,14 @@ html body .cursor-pointer:not(:disabled) {
 }
 /* 自定义胶囊控制 (Custom Capsule Controls) */
 .map-capsule-control {
-  background-color: var(--color-background-elevated, rgba(255, 255, 255, 0.8)) !important;
-  backdrop-filter: blur(8px);
+  background-color: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--color-border-subtle, rgba(0, 0, 0, 0.08));
   border-radius: 9999px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
 }
 
 .map-capsule-btn {

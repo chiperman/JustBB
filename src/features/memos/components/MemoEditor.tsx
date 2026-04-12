@@ -85,12 +85,12 @@ export function MemoEditor({
             suggestionPropsRef.current = props;
             setShowSuggestions(true);
             fetchMentionSuggestions(props.query, 0);
-            updateSuggestionPosition(props, relativeGroupRef);
+            updateSuggestionPosition(props);
         },
         onMentionUpdate: (props) => {
             suggestionPropsRef.current = props;
             fetchMentionSuggestions(props.query, 0);
-            updateSuggestionPosition(props, relativeGroupRef);
+            updateSuggestionPosition(props);
         },
         onMentionExit: () => {
             setShowSuggestions(false);
@@ -137,12 +137,12 @@ export function MemoEditor({
             suggestionPropsRef.current = props;
             setShowSuggestions(true);
             fetchHashtagSuggestions(props.query);
-            updateSuggestionPosition(props, relativeGroupRef);
+            updateSuggestionPosition(props);
         },
         onHashtagUpdate: (props) => {
             suggestionPropsRef.current = props;
             fetchHashtagSuggestions(props.query);
-            updateSuggestionPosition(props, relativeGroupRef);
+            updateSuggestionPosition(props);
         },
         onHashtagExit: () => {
             setShowSuggestions(false);

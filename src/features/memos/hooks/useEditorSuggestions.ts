@@ -100,24 +100,70 @@ export function useEditorSuggestions() {
         }
     }, []);
 
-    const fetchHashtagSuggestions = useCallback((query: string) => {
+    const fetchHashtagSuggestions = useCallback(async (query: string) => {
         setMentionQuery(query);
         setSelectedIndex(0);
-        // Hashtag suggestions are usually simpler, often just echo the query
-        setSuggestions([{ id: query, label: `#${query}` }]);
-        setHasMoreMentions(false);
+        setIsLoading(true);
+
+        try {
+            const { getAllTags } = await import('@/actions/memos/analytics');
+            const res = await getAllTags();
+            
+            if (res.success && res.data) {
+                const lowerQuery = query.toLowerCase();
+                // 过滤并按使用次数排序
+                const filtered = res.data
+                    .filter(t => t.tag_name.toLowerCase().includes(lowerQuery))
+                    .sort((a, b) => b.count - a.count)
+                    .map(t => ({
+                        id: t.tag_name,
+                        label: `#${t.tag_name}`,
+                        count: t.count
+                    }));
+
+                // 如果当前输入的标签不在建议列表中，将其作为第一个选项
+                const exactMatch = filtered.find(f => f.id.toLowerCase() === lowerQuery);
+                if (!exactMatch && query.trim()) {
+                    filtered.unshift({
+                        id: query,
+                        label: `#${query}`,
+                        count: 0
+                    });
+                }
+                
+                setSuggestions(filtered);
+            }
+        } catch (err) {
+            console.error("Fetch hashtag suggestions failed", err);
+            setSuggestions([{ id: query, label: `#${query}` }]);
+        } finally {
+            setIsLoading(false);
+            setHasMoreMentions(false);
+        }
     }, []);
 
-    const updateSuggestionPosition = useCallback((props: CustomSuggestionProps, relativeRef: React.RefObject<HTMLDivElement | null>) => {
+    const updateSuggestionPosition = useCallback((props: CustomSuggestionProps) => {
         const rect = props.clientRect?.();
-        if (rect && relativeRef.current) {
-            const parentRect = relativeRef.current.getBoundingClientRect();
-            let left = rect.left - parentRect.left;
-            const top = rect.bottom - parentRect.top + 8;
+        if (rect) {
+            // 使用 viewport 坐标
+            let left = rect.left;
+            let top = rect.bottom + 4;
 
-            const maxLeft = parentRect.width - 370;
-            if (left > maxLeft) left = maxLeft;
-            if (left < 0) left = 10;
+            // 越界处理 (视口宽度 - 菜单宽度 - 间距)
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const menuWidth = 350;
+            const menuHeight = 400; // 预估高度
+
+            if (left + menuWidth > viewportWidth - 20) {
+                left = viewportWidth - menuWidth - 20;
+            }
+            if (left < 20) left = 20;
+
+            // 向上弹出检测 (如果下方空间不足)
+            if (top + menuHeight > viewportHeight - 20 && rect.top > menuHeight) {
+                top = rect.top - menuHeight - 4;
+            }
 
             setSuggestionPosition({ top, left });
         }

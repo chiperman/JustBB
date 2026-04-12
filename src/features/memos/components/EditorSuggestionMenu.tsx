@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { cn, formatDate } from '@/lib/utils';
+import { useHasMounted } from '@/hooks/useHasMounted';
 
 interface SuggestionItem {
     id: string;
@@ -34,6 +36,7 @@ export function EditorSuggestionMenu({
     onScroll
 }: EditorSuggestionMenuProps) {
     const listRef = useRef<HTMLUListElement>(null);
+    const hasMounted = useHasMounted();
 
     useLayoutEffect(() => {
         if (listRef.current) {
@@ -47,7 +50,7 @@ export function EditorSuggestionMenu({
         }
     }, [selectedIndex]);
 
-    if (!position || (suggestions.length === 0 && !isLoading)) return null;
+    if (!hasMounted || !position || (suggestions.length === 0 && !isLoading)) return null;
 
     const renderHighlightedText = (text: string, q: string) => {
         if (!q.trim()) return text;
@@ -65,26 +68,28 @@ export function EditorSuggestionMenu({
         );
     };
 
-    return (
+    return createPortal(
         <div
-            className="absolute z-50 w-full max-w-[350px]"
+            className="fixed z-[10000] w-[350px] pointer-events-auto"
             style={{
                 top: position.top,
                 left: position.left,
+                margin: 0,
+                transform: 'none',
             }}
             onMouseDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
             }}
         >
-            <div className="bg-background border border-border rounded-md shadow-xl overflow-hidden flex flex-col max-h-[450px]">
+            <div className="bg-popover backdrop-blur-xl border border-border/40 rounded-md shadow-2xl overflow-hidden flex flex-col max-h-[450px]">
                 {isLoading && suggestions.length === 0 ? (
                     <div className="px-3 py-10 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight flex flex-col items-center gap-2">
                         <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                        正在拉取建议...
+                        正在获取数据...
                     </div>
                 ) : null}
-                
+
                 {suggestions.length > 0 ? (
                     <ul
                         ref={listRef}
@@ -159,6 +164,7 @@ export function EditorSuggestionMenu({
                     </ul>
                 ) : null}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

@@ -26,6 +26,29 @@
 
 > 完整技术选型详见 [docs/tech-stack.md](docs/tech-stack.md)
 
+## 快速开始 🚀
+
+### 1. 环境准备
+- 安装 [Node.js](https://nodejs.org/) (建议 v20+)
+- 安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/) 并确保其正在运行
+- 安装 [Supabase CLI](https://supabase.com/docs/guides/cli)
+
+### 2. 启动开发环境
+```bash
+# 安装依赖
+npm install
+
+# 启动 Supabase 和 Next.js
+npm run dev
+```
+
+### 3. 开发环境自愈
+本项目集成了智能启动脚本。如果你遇到由于电脑关机或 Docker 异常导致的“容器已退出但 CLI 认为正在运行”的问题，`npm run dev` 会**自动识别并修复**状态，无需手动运行 `supabase stop`。
+
+---
+
+
+
 ## 参与贡献 🤝
 
 本项目严格遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范。

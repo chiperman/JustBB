@@ -12,7 +12,7 @@
     "test": "dotenv -e .env.local -- vitest run",
     "test:watch": "dotenv -e .env.local -- vitest",
     "test:prod": "dotenv -e .env.remote -- vitest run",
-    "supabase:start": "supabase start || (supabase stop && supabase start)",
+    "supabase:start": "./scripts/dev-setup.sh",
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
     "types:generate": "npx supabase gen types typescript --local > src/types/database.ts",

@@ -255,11 +255,15 @@ export function MemoEditor({
         },
     });
 
+    const prevScrollCollapsed = useRef(scrollCollapsed);
+
     // 监听滚动收缩信号，如果在聚焦状态下发生深滚，主动失焦以触发收缩
     useEffect(() => {
-        if (scrollCollapsed && isFocused && mode === 'create' && editor) {
+        // 只有当 scrollCollapsed 从 false 变为 true 的“入场瞬间”且正在聚焦时才触发 blur
+        if (scrollCollapsed && !prevScrollCollapsed.current && isFocused && mode === 'create' && editor) {
             editor.commands.blur();
         }
+        prevScrollCollapsed.current = scrollCollapsed;
     }, [scrollCollapsed, isFocused, editor, mode]);
 
     useEffect(() => {
@@ -296,7 +300,23 @@ export function MemoEditor({
             exit={{
                 opacity: 0,
                 height: 0,
-                transition: { opacity: { duration: 0.2 }, height: { duration: 0.3 } }
+                paddingTop: 0,
+                paddingBottom: 0,
+                paddingLeft: 0,
+                paddingRight: 0,
+                marginTop: -24, 
+                marginBottom: -24,
+                borderWidth: 0,
+                boxShadow: "none",
+                transition: { 
+                    opacity: { duration: 0.2 }, 
+                    height: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+                    paddingTop: { duration: 0.3 },
+                    paddingBottom: { duration: 0.3 },
+                    marginTop: { duration: 0.3 },
+                    marginBottom: { duration: 0.3 },
+                    borderWidth: { duration: 0.3 }
+                }
             }}
             transition={{
                 height: isActuallyCollapsed 

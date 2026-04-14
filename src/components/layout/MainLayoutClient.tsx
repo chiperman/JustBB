@@ -122,13 +122,15 @@ export function MainLayoutClient() {
                     {/* Level 3: Visual Padding Area */}
                     <div className="px-6 py-6 space-y-6">
                         {/* 编辑器区域 */}
-                        {isAdmin && (
-                            <MemoEditor 
-                                mode="create" 
-                                isCollapsed={true} 
-                                scrollCollapsed={editorForceCollapsed} 
-                            />
-                        )}
+                        <AnimatePresence>
+                            {isAdmin && (
+                                <MemoEditor 
+                                    mode="create" 
+                                    isCollapsed={true} 
+                                    scrollCollapsed={editorForceCollapsed} 
+                                />
+                            )}
+                        </AnimatePresence>
                         
                         {/* Feed 标题与过滤显示 (包含 Logo 和 SearchInput) */}
                         <FeedHeader isRefreshing={isRefreshing} />

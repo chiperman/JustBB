@@ -26,6 +26,7 @@ interface MemoFeedProps {
     };
     adminCode?: string;
     isAdmin?: boolean;
+    scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 const itemVariants: Variants = {
@@ -33,7 +34,7 @@ const itemVariants: Variants = {
     animate: (custom: number) => ({
         opacity: 1,
         y: 0,
-        transition: { duration: 0.3, delay: custom * 0.05 },
+        transition: { duration: 0.3, delay: custom * 0.02 },
     }),
     exit: { opacity: 0, transition: { duration: 0.2 } },
 };
@@ -43,6 +44,7 @@ export function MemoFeed({
     searchParams,
     adminCode,
     isAdmin = false,
+    scrollContainerRef,
 }: MemoFeedProps) {
     const observerTargetBottom = useRef<HTMLDivElement>(null);
 
@@ -69,12 +71,16 @@ export function MemoFeed({
                     fetchOlderMemos();
                 }
             },
-            { rootMargin: "0px 0px 1200px 0px", threshold: 0 },
+            { 
+                root: scrollContainerRef?.current || null,
+                rootMargin: "0px 0px 1200px 0px", 
+                threshold: 0 
+            },
         );
         
         observer.observe(bottom);
         return () => observer.disconnect();
-    }, [fetchOlderMemos, isLoadingOlder, hasMoreOlder]);
+    }, [fetchOlderMemos, isLoadingOlder, hasMoreOlder, scrollContainerRef]);
 
     // 2. Scroll Spy 同步
     useFeedScrollSpy(memos.length);

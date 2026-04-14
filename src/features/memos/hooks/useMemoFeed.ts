@@ -21,7 +21,7 @@ interface UseMemoFeedProps {
 
 export function useMemoFeed({ initialMemos, searchParams, adminCode }: UseMemoFeedProps) {
     const [memos, setMemos] = useState<Memo[]>(initialMemos);
-    const [hasMoreOlder, setHasMoreOlder] = useState(initialMemos.length >= 20);
+    const [hasMoreOlder, setHasMoreOlder] = useState(initialMemos.length >= 30);
     const [isLoadingOlder, setIsLoadingOlder] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [lastCreatedId, setLastCreatedId] = useState<string | null>(null);
@@ -31,23 +31,20 @@ export function useMemoFeed({ initialMemos, searchParams, adminCode }: UseMemoFe
 
         setIsLoadingOlder(true);
         try {
-            const limit = 20;
+            const limit = 30;
             const unpinnedMemos = memos.filter(m => !m.is_pinned);
             const lastMemo = unpinnedMemos.length > 0 
                 ? unpinnedMemos[unpinnedMemos.length - 1] 
                 : memos[memos.length - 1];
 
-            const [res] = await Promise.all([
-                getMemos({
-                    ...searchParams,
-                    adminCode,
-                    limit,
-                    before_date: lastMemo?.created_at,
-                    excludePinned: true,
-                    sort: "newest",
-                }),
-                new Promise(resolve => setTimeout(resolve, 1000))
-            ]);
+            const res = await getMemos({
+                ...searchParams,
+                adminCode,
+                limit,
+                before_date: lastMemo?.created_at,
+                excludePinned: true,
+                sort: "newest",
+            });
 
             const nextMemos = res.data || [];
             const validNewMemos = nextMemos.filter(nm => !memos.find(m => m.id === nm.id));

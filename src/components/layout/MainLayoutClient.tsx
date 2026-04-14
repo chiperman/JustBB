@@ -78,9 +78,8 @@ export function MainLayoutClient() {
         });
 
         try {
-            const res = await getMemos({ ...params, limit: 20 });
-            if (res.success) {
-                const fetchedMemos = res.data || [];
+            const res = await getMemos({ ...params, limit: 30 });
+            if (res.success) {                const fetchedMemos = res.data || [];
                 setMemos(fetchedMemos);
                 setCache(cacheKey, { memos: fetchedMemos });
             }
@@ -171,6 +170,7 @@ export function MainLayoutClient() {
                                             initialMemos={memos}
                                             searchParams={Object.fromEntries(searchParams?.entries() || [])}
                                             isAdmin={isAdmin}
+                                            scrollContainerRef={containerRef}
                                         />
                                     </motion.div>
                                 )}

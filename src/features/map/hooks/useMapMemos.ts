@@ -29,12 +29,9 @@ export function useMapMemos() {
                 setMarkers(locationCache.getMarkers());
             }
 
-            const minTime = hasCache ? 0 : 1500;
-
             const [result, mapModule] = await Promise.all([
                 getMemosWithLocations(),
-                mapViewPromise,
-                new Promise(resolve => setTimeout(resolve, minTime))
+                mapViewPromise
             ]);
 
             if (!isMounted) return;

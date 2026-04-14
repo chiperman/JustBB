@@ -35,14 +35,10 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
 
         setIsLoading(true);
         try {
-            const [res] = await Promise.all([
-                getGalleryMemos(20, offset),
-                new Promise(resolve => setTimeout(resolve, 1000))
-            ]);
-
+            const res = await getGalleryMemos(30, offset);
             const nextMemos = res.success ? (res.data || []) : [];
 
-            if (nextMemos.length < 20) {
+            if (nextMemos.length < 30) {
                 setHasMore(false);
             }
 
@@ -72,7 +68,7 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
                     loadMore();
                 }
             },
-            { threshold: 0.1, rootMargin: '200px' }
+            { threshold: 0, rootMargin: '600px' }
         );
 
         observer.observe(target);

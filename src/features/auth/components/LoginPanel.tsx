@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { login, signup, verifyOtp, signInWithOAuth, checkUserExists, sendPasswordResetEmail } from '../actions';
+import { login, signup, verifyOtp, signInWithOAuth, sendPasswordResetEmail } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { 
@@ -62,15 +62,9 @@ export function LoginPanel() {
     const handleEmailNext = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!email) return;
-
-        startTransition(async () => {
-            const res = await checkUserExists(email);
-            if (res.success) {
-                setStep(res.data?.exists ? 'login' : 'signup');
-            } else {
-                toast({ title: "检查失败", description: res.error, variant: "destructive" });
-            }
-        });
+        setPassword('');
+        setShowPassword(false);
+        setStep('login');
     };
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -163,7 +157,7 @@ export function LoginPanel() {
                     >
                         <div className="space-y-2">
                             <h3 className="text-xl font-bold tracking-tight">开始使用</h3>
-                            <p className="text-xs text-muted-foreground">输入您的邮箱地址以登录或创建账号</p>
+                            <p className="text-xs text-muted-foreground">输入您的邮箱地址后继续登录，需要新账号可在下一步切换注册</p>
                         </div>
                         <div className="relative">
                             <div className="absolute left-3 top-3 text-muted-foreground/50">
@@ -179,9 +173,9 @@ export function LoginPanel() {
                                 disabled={isPending}
                             />
                         </div>
-                        <Button className="w-full h-11 gap-2 group" disabled={isPending || !email}>
-                            {isPending ? <HugeiconsIcon icon={Loader2} size={18} className="animate-spin" /> : "下一步"}
-                            {!isPending && <HugeiconsIcon icon={ArrowRight} size={18} className="group-hover:translate-x-1 transition-transform" />}
+                        <Button className="w-full h-11 gap-2 group" disabled={!email}>
+                            继续
+                            <HugeiconsIcon icon={ArrowRight} size={18} className="group-hover:translate-x-1 transition-transform" />
                         </Button>
 
                         <div className="relative py-2">
@@ -244,6 +238,19 @@ export function LoginPanel() {
                             </div>
                             <Button className="w-full h-11" disabled={isPending}>
                                 {isPending ? <HugeiconsIcon icon={Loader2} size={18} className="animate-spin" /> : "登录"}
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                className="w-full text-xs text-muted-foreground"
+                                onClick={() => {
+                                    setPassword('');
+                                    setShowPassword(false);
+                                    setStep('signup');
+                                }}
+                                disabled={isPending}
+                            >
+                                还没有账号？创建账号
                             </Button>
                             <div className="text-center">
                                 <button

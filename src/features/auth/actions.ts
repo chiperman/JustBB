@@ -1,6 +1,6 @@
 'use server';
 
-import { getClient, getAdminClient } from '@/lib/supabase';
+import { getClient } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Provider } from '@supabase/supabase-js';
@@ -101,31 +101,6 @@ export async function verifyOtp(email: string, code: string): Promise<ActionResp
     revalidatePath('/', 'layout');
     return { success: true, error: null, data: { user: userInfo } };
 }
-
-export async function checkUserExists(email: string): Promise<ActionResponse<{ exists: boolean }>> {
-    const cleanEmail = email.toLowerCase().trim();
-    if (!cleanEmail) return { success: false, error: '邮箱不能为空' };
-    
-    try {
-        const supabase = getAdminClient();
-        const { data, error } = await supabase.auth.admin.listUsers();
-
-        if (error) return { success: false, error: '系统校验失败' };
-
-        const exists = !!data.users?.find(u =>
-            u.email?.toLowerCase() === cleanEmail ||
-            u.user_metadata?.email?.toLowerCase() === cleanEmail
-        );
-
-        return { success: true, error: null, data: { exists } };
-    } catch {
-        return { success: false, error: '检查失败' };
-    }
-}
-
-
-
-
 
 export async function signInWithOAuth(provider: Provider): Promise<ActionResponse> {
     const supabase = await getClient();

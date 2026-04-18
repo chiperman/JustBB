@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { generateCacheKey, cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { MemoEditor, MemoFeed } from "@/features/memos";
@@ -59,41 +59,16 @@ export function MainLayoutClient() {
     const flattenedParams = Object.fromEntries(searchParams?.entries() || []);
     const cacheKey = generateCacheKey(flattenedParams);
     const cachedData = getCache(cacheKey);
+    const latestRequestIdRef = useRef(0);
 
     const [memos, setMemos] = useState<Memo[]>(cachedData?.memos || []);
     const [isLoading, setIsLoading] = useState(!cachedData);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    // 2. 数据加载逻辑 (含 SWR 策略)
-    const fetchMemosBatch = useCallback(async (isInitial = true) => {
-        if (isInitial) {
-            setIsRefreshing(true);
-        }
-
-        const params: Record<string, string> = {};
-        searchParams?.forEach((value, key) => {
-            params[key] = value;
-        });
-
-        try {
-            const res = await getMemos({ ...params, limit: 30 });
-            if (res.success) {                const fetchedMemos = res.data || [];
-                setMemos(fetchedMemos);
-                setCache(cacheKey, { memos: fetchedMemos });
-            }
-        } catch (error) {
-            console.error("Fetch memos failed:", error);
-        } finally {
-            setIsLoading(false);
-            setIsRefreshing(false);
-        }
-    }, [searchParams, cacheKey, setCache]);
-
-    // 3. 路由/搜索变动时，重置并刷新 (核心修复：移除 cachedData 依赖，避免更新缓存导致的死循环)
+    // 2. 路由/搜索变动时重置并刷新，只接受当前 query 的最新结果
     useEffect(() => {
-        // 直接从缓存快照中获取数据以供瞬时渲染，不订阅其引用变化
         const latestCachedData = getCache(cacheKey);
-        
+
         if (!latestCachedData) {
             setIsLoading(true);
             setMemos([]);
@@ -101,12 +76,42 @@ export function MainLayoutClient() {
             setMemos(latestCachedData.memos || []);
             setIsLoading(false);
         }
-        
-        // 即使有缓存，也在后台发起 SWR 刷新
-        fetchMemosBatch(true);
-    }, [cacheKey, fetchMemosBatch, getCache]); // getCache 虽然是 context 方法，但它是稳定的，建议加入依赖项符合规范
 
+        setIsRefreshing(true);
+        const requestId = ++latestRequestIdRef.current;
+        let cancelled = false;
 
+        const refreshMemos = async () => {
+            try {
+                const res = await getMemos({ ...flattenedParams, limit: 30 });
+
+                if (cancelled || latestRequestIdRef.current !== requestId) {
+                    return;
+                }
+
+                if (res.success) {
+                    const fetchedMemos = res.data || [];
+                    setMemos(fetchedMemos);
+                    setCache(cacheKey, { memos: fetchedMemos });
+                }
+            } catch (error) {
+                if (!cancelled && latestRequestIdRef.current === requestId) {
+                    console.error("Fetch memos failed:", error);
+                }
+            } finally {
+                if (!cancelled && latestRequestIdRef.current === requestId) {
+                    setIsLoading(false);
+                    setIsRefreshing(false);
+                }
+            }
+        };
+
+        void refreshMemos();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [cacheKey, flattenedParams, getCache, setCache]);
 
     return (
         <div className="flex flex-col h-full overflow-hidden bg-background">

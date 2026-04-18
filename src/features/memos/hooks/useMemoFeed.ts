@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Memo } from '@/types/memo';
 import { getMemos } from '@/actions/memos/query';
 import { mergeMemos } from '@/lib/streamUtils';
@@ -19,19 +19,33 @@ interface UseMemoFeedProps {
     adminCode?: string;
 }
 
+const INITIAL_MEMO_PAGE_SIZE = 30;
+
+export function reconcileInitialMemoWindow(
+    currentMemos: Memo[],
+    previousInitialIds: Set<string>,
+    nextInitialMemos: Memo[],
+) {
+    const olderMemos = currentMemos.filter(memo => !previousInitialIds.has(memo.id));
+    return mergeMemos(olderMemos, nextInitialMemos);
+}
+
+export function reconcileHasMoreOlder(currentHasMoreOlder: boolean, nextInitialMemos: Memo[]) {
+    return currentHasMoreOlder && nextInitialMemos.length >= INITIAL_MEMO_PAGE_SIZE;
+}
+
 export function useMemoFeed({ initialMemos, searchParams, adminCode }: UseMemoFeedProps) {
     const [memos, setMemos] = useState<Memo[]>(initialMemos);
-    const [hasMoreOlder, setHasMoreOlder] = useState(initialMemos.length >= 30);
+    const [hasMoreOlder, setHasMoreOlder] = useState(initialMemos.length >= INITIAL_MEMO_PAGE_SIZE);
     const [isLoadingOlder, setIsLoadingOlder] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [lastCreatedId, setLastCreatedId] = useState<string | null>(null);
+    const previousInitialIdsRef = useRef(new Set(initialMemos.map(memo => memo.id)));
 
     useEffect(() => {
-        setMemos(initialMemos);
-        setHasMoreOlder(initialMemos.length >= 30);
-        setIsLoadingOlder(false);
-        setEditingId(null);
-        setLastCreatedId(null);
+        setMemos(prev => reconcileInitialMemoWindow(prev, previousInitialIdsRef.current, initialMemos));
+        setHasMoreOlder(prev => reconcileHasMoreOlder(prev, initialMemos));
+        previousInitialIdsRef.current = new Set(initialMemos.map(memo => memo.id));
     }, [initialMemos]);
 
     const fetchOlderMemos = useCallback(async () => {
@@ -39,7 +53,7 @@ export function useMemoFeed({ initialMemos, searchParams, adminCode }: UseMemoFe
 
         setIsLoadingOlder(true);
         try {
-            const limit = 30;
+            const limit = INITIAL_MEMO_PAGE_SIZE;
             const unpinnedMemos = memos.filter(m => !m.is_pinned);
             const lastMemo = unpinnedMemos.length > 0 
                 ? unpinnedMemos[unpinnedMemos.length - 1] 

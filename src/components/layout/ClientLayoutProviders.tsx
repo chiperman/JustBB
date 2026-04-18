@@ -10,42 +10,37 @@ import { TagsProvider } from "@/context/TagsContext";
 import { StatsProvider } from "@/context/StatsContext";
 import { HeatmapStats } from "@/types/stats";
 import { SelectionToolbar } from "@/components/ui/SelectionToolbar";
-import { ViewProvider } from "@/context/ViewContext";
 import { PageDataCacheProvider } from "@/context/PageDataCache";
 
 interface ClientLayoutProvidersProps {
     children: React.ReactNode;
     initialTags?: { tag_name: string; count: number }[];
     initialStats?: HeatmapStats | null;
-    initialPath?: string;
 }
 
 export function ClientLayoutProviders({
     children,
     initialTags = [],
     initialStats,
-    initialUser,
-    initialPath = '/'
+    initialUser
 }: ClientLayoutProvidersProps & { initialUser?: UserInfo | null }) {
     return (
         <UserProvider initialUser={initialUser}>
             <PageDataCacheProvider>
-                <ViewProvider initialPath={initialPath}>
-                    <StatsProvider initialData={initialStats}>
-                        <LayoutProvider>
-                            <UIProvider>
-                                <TagsProvider initialData={initialTags}>
-                                    <LoginTransitionWrapper>
-                                        <MobileLayoutWrapper>
-                                            {children}
-                                            <SelectionToolbar />
-                                        </MobileLayoutWrapper>
-                                    </LoginTransitionWrapper>
-                                </TagsProvider>
-                            </UIProvider>
-                        </LayoutProvider>
-                    </StatsProvider>
-                </ViewProvider>
+                <StatsProvider initialData={initialStats}>
+                    <LayoutProvider>
+                        <UIProvider>
+                            <TagsProvider initialData={initialTags}>
+                                <LoginTransitionWrapper>
+                                    <MobileLayoutWrapper>
+                                        {children}
+                                        <SelectionToolbar />
+                                    </MobileLayoutWrapper>
+                                </LoginTransitionWrapper>
+                            </TagsProvider>
+                        </UIProvider>
+                    </LayoutProvider>
+                </StatsProvider>
             </PageDataCacheProvider>
         </UserProvider>
     );

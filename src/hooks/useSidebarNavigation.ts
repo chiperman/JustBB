@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo, useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useMotionValue, useSpring, useVelocity, useTransform } from 'framer-motion';
-import { useView } from '@/context/ViewContext';
 import { useUser } from '@/context/UserContext';
 
 const springConfig = {
@@ -13,8 +13,10 @@ const springConfig = {
 import { NAVIGATION_CONFIG } from '@/config/navigation';
 
 export function useSidebarNavigation() {
-    const { currentView, navigate } = useView();
+    const pathname = usePathname();
+    const router = useRouter();
     const { isAdmin } = useUser();
+    const currentView = pathname || '/';
 
     const navItems = useMemo(() => {
         return NAVIGATION_CONFIG.filter(item => !item.isAdminOnly || isAdmin);
@@ -42,7 +44,9 @@ export function useSidebarNavigation() {
     const scaleX = useTransform(velocity, [-1200, 0, 1200], [0.9, 1, 0.9]);
 
     const handleNavigate = (href: string, isMobile: boolean, onClose?: () => void) => {
-        navigate(href);
+        if (href !== currentView) {
+            router.push(href);
+        }
         if (isMobile) onClose?.();
     };
 

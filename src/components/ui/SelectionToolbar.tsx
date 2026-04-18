@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useSelection } from '@/context/UIContext';
-import { useRouter } from 'next/navigation';
-import { useView } from '@/context/ViewContext';
+import { usePathname, useRouter } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -26,7 +25,7 @@ import { useHasMounted } from '@/hooks/useHasMounted';
 import { BaseFloatingCapsule } from './BaseFloatingCapsule';
 
 export function SelectionToolbar() {
-    const { currentView } = useView();
+    const pathname = usePathname();
     const router = useRouter();
     const { isSelectionMode, selectedIds, clearSelection, toggleSelectionMode } = useSelection();
     const { refreshTags } = useTags();
@@ -36,7 +35,7 @@ export function SelectionToolbar() {
     const [isPending, setIsPending] = useState(false);
     const hasMounted = useHasMounted();
 
-    const isTrashPage = currentView === '/trash';
+    const isTrashPage = pathname === '/trash';
     const hasSelection = selectedIds.size > 0;
 
     if (!hasMounted || !isSelectionMode) return null;

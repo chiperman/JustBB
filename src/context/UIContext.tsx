@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { useView } from './ViewContext';
+import { usePathname } from 'next/navigation';
 
 interface SelectionContextType {
     isSelectionMode: boolean;
@@ -14,26 +14,18 @@ interface SelectionContextType {
 
 const SelectionContext = createContext<SelectionContextType | undefined>(undefined);
 
-export function UIProvider({ children }: { children: React.ReactNode }) {
-    const { currentView } = useView();
+function UIProviderBase({
+    children,
+    currentPathname,
+}: {
+    children: React.ReactNode;
+    currentPathname: string;
+}) {
+    const isTrashPath = currentPathname === '/trash';
 
     // --- Selection State ---
-    const [isSelectionMode, setIsSelectionMode] = useState(currentView === '/trash');
+    const [isSelectionMode, setIsSelectionMode] = useState(isTrashPath);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-
-    /**
-     * React 18 推荐模式：渲染期间同步更新状态
-     */
-    const [prevView, setPrevView] = useState(currentView);
-    if (prevView !== currentView) {
-        setPrevView(currentView);
-        if (currentView === '/trash') {
-            setIsSelectionMode(true);
-        } else {
-            setIsSelectionMode(false);
-            setSelectedIds(new Set());
-        }
-    }
 
     const toggleSelectionMode = useCallback((enabled?: boolean) => {
         setIsSelectionMode(prev => {
@@ -79,6 +71,25 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
             {children}
         </SelectionContext.Provider>
     );
+}
+
+function UIProviderWithRouterPath({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname() || '/';
+    return <UIProviderBase key={pathname} currentPathname={pathname}>{children}</UIProviderBase>;
+}
+
+export function UIProvider({
+    children,
+    currentPathname,
+}: {
+    children: React.ReactNode;
+    currentPathname?: string;
+}) {
+    if (currentPathname !== undefined) {
+        return <UIProviderBase key={currentPathname} currentPathname={currentPathname}>{children}</UIProviderBase>;
+    }
+
+    return <UIProviderWithRouterPath>{children}</UIProviderWithRouterPath>;
 }
 
 export function useUI() {

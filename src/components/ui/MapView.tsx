@@ -9,9 +9,9 @@ import { MemoCard } from '@/features/memos';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Location04Icon } from '@hugeicons/core-free-icons';
 import { createRoot } from 'react-dom/client';
+import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ViewProvider } from '@/context/ViewContext';
 import { UIProvider } from '@/context/UIContext';
 import { Memo } from '@/types/memo';
 import { Add01Icon, MinusSignIcon, Cancel01Icon } from '@hugeicons/core-free-icons';
@@ -37,6 +37,7 @@ export function MapView({
     const mapInstance = useRef<Leaflet.Map | null>(null);
     const clusterLayer = useRef<Leaflet.MarkerClusterGroup | Leaflet.LayerGroup | null>(null);
     const [L, setL] = React.useState<typeof Leaflet | null>(null);
+    const pathname = usePathname() || '/';
     const { resolvedTheme } = useTheme();
     const [currentZoom, setCurrentZoom] = React.useState<number>(0);
     const [showZoomIndicator, setShowZoomIndicator] = React.useState(false);
@@ -205,39 +206,37 @@ export function MapView({
                     
                     const root = createRoot(popupEl);
                     root.render(
-                        <ViewProvider>
-                            <UIProvider>
-                                <div className="flex flex-col h-full">
-                                    {/* 自定义 Header: 包含位置与关闭 */}
-                                    <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 sticky top-0 bg-background/50 backdrop-blur-md z-10">
-                                        <div className="flex items-center gap-2 text-primary font-bold">
-                                            <HugeiconsIcon icon={Location04Icon} size={16} />
-                                            <span className="text-sm truncate max-w-[200px]">{locationName}</span>
-                                        </div>
-                                        <button 
-                                            onClick={() => map.closePopup()}
-                                            className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors"
-                                        >
-                                            <HugeiconsIcon icon={Cancel01Icon} size={18} className="text-muted-foreground/60" />
-                                        </button>
+                        <UIProvider currentPathname={pathname}>
+                            <div className="flex flex-col h-full">
+                                {/* 自定义 Header: 包含位置与关闭 */}
+                                <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 sticky top-0 bg-background/50 backdrop-blur-md z-10">
+                                    <div className="flex items-center gap-2 text-primary font-bold">
+                                        <HugeiconsIcon icon={Location04Icon} size={16} />
+                                        <span className="text-sm truncate max-w-[200px]">{locationName}</span>
                                     </div>
-                                    {/* 滚动内容区：限高约 3 条卡片 (每条约 140px + gap) */}
-                                    <div className="flex-1 overflow-y-auto max-h-[420px]">
-                                        <div className="flex flex-col">
-                                            {allMemos.map((memo: Memo, idx: number) => (
-                                                <div key={memo.id} className={cn(idx !== 0 && "border-t border-border/40")}>
-                                                    <MemoCard 
-                                                        memo={memo} 
-                                                        showOriginalOnly={false} 
-                                                        showViewOriginal={true}
-                                                    />
-                                                </div>
-                                            ))}
-                                        </div>
+                                    <button 
+                                        onClick={() => map.closePopup()}
+                                        className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors"
+                                    >
+                                        <HugeiconsIcon icon={Cancel01Icon} size={18} className="text-muted-foreground/60" />
+                                    </button>
+                                </div>
+                                {/* 滚动内容区：限高约 3 条卡片 (每条约 140px + gap) */}
+                                <div className="flex-1 overflow-y-auto max-h-[420px]">
+                                    <div className="flex flex-col">
+                                        {allMemos.map((memo: Memo, idx: number) => (
+                                            <div key={memo.id} className={cn(idx !== 0 && "border-t border-border/40")}>
+                                                <MemoCard 
+                                                    memo={memo} 
+                                                    showOriginalOnly={false} 
+                                                    showViewOriginal={true}
+                                                />
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
-                            </UIProvider>
-                        </ViewProvider>
+                            </div>
+                        </UIProvider>
                     );
 
                     const openPopup = () => {
@@ -277,7 +276,7 @@ export function MapView({
             map.remove();
             mapInstance.current = null;
         };
-    }, [L, mode, interactive, onMapClick, resolvedTheme]); // 监听主题变化
+    }, [L, mode, interactive, onMapClick, pathname, resolvedTheme]); // 监听主题变化
 
     useEffect(() => {
         if (!mapInstance.current || !clusterLayer.current || !L) return;
@@ -345,38 +344,36 @@ export function MapView({
                 
                 const root = createRoot(popupEl);
                 root.render(
-                    <ViewProvider>
-                        <UIProvider>
-                            <div className="flex flex-col h-full">
-                                {/* 自定义 Header */}
-                                <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 sticky top-0 bg-background/50 backdrop-blur-md z-10">
-                                    <div className="flex items-center gap-2 text-primary font-bold">
-                                        <HugeiconsIcon icon={Location04Icon} size={16} />
-                                        <span className="text-sm truncate max-w-[200px]">{marker.name}</span>
-                                    </div>
-                                    <button 
-                                        onClick={() => mapInstance.current?.closePopup()}
-                                        className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors"
-                                    >
-                                        <HugeiconsIcon icon={Cancel01Icon} size={18} className="text-muted-foreground/60" />
-                                    </button>
+                    <UIProvider currentPathname={pathname}>
+                        <div className="flex flex-col h-full">
+                            {/* 自定义 Header */}
+                            <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 sticky top-0 bg-background/50 backdrop-blur-md z-10">
+                                <div className="flex items-center gap-2 text-primary font-bold">
+                                    <HugeiconsIcon icon={Location04Icon} size={16} />
+                                    <span className="text-sm truncate max-w-[200px]">{marker.name}</span>
                                 </div>
-                                <div className="flex-1 overflow-y-auto max-h-[420px]">
-                                    <div className="flex flex-col">
-                                        {marker.items.map((memo, idx) => (
-                                            <div key={memo.id} className={cn(idx !== 0 && "border-t border-border/40")}>
-                                                <MemoCard 
-                                                    memo={memo} 
-                                                    showOriginalOnly={false} 
-                                                    showViewOriginal={true}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
+                                <button 
+                                    onClick={() => mapInstance.current?.closePopup()}
+                                    className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors"
+                                >
+                                    <HugeiconsIcon icon={Cancel01Icon} size={18} className="text-muted-foreground/60" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto max-h-[420px]">
+                                <div className="flex flex-col">
+                                    {marker.items.map((memo, idx) => (
+                                        <div key={memo.id} className={cn(idx !== 0 && "border-t border-border/40")}>
+                                            <MemoCard 
+                                                memo={memo} 
+                                                showOriginalOnly={false} 
+                                                showViewOriginal={true}
+                                            />
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
-                        </UIProvider>
-                    </ViewProvider>
+                        </div>
+                    </UIProvider>
                 );
 
                 leafMarker.bindPopup(popupEl, {
@@ -411,7 +408,7 @@ export function MapView({
         } else if (bounds.length > 0 && mode === 'mini') {
             mapInstance.current.setView(bounds[0], 13);
         }
-    }, [L, markers, mode, interactive, onMarkerDragEnd]);
+    }, [L, markers, mode, interactive, onMarkerDragEnd, pathname]);
 
     return (
         <div className={cn("relative w-full h-full group", className)}>

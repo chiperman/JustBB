@@ -13,19 +13,56 @@ interface GalleryPageContentProps {
 }
 
 const EMPTY_MEMOS: Memo[] = [];
+const INITIAL_PAGE_SIZE = 20;
+const LOAD_MORE_PAGE_SIZE = 30;
 
 export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: GalleryPageContentProps) {
     const [memos, setMemos] = useState<Memo[]>(initialMemos);
     const [isLoading, setIsLoading] = useState(false);
-    const [hasMore, setHasMore] = useState(initialMemos.length >= 20);
+    const [hasMore, setHasMore] = useState(initialMemos.length >= INITIAL_PAGE_SIZE);
     const [offset, setOffset] = useState(initialMemos.length);
     const observerTarget = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         setMemos(initialMemos);
-        setHasMore(initialMemos.length >= 20);
+        setHasMore(initialMemos.length >= INITIAL_PAGE_SIZE);
         setOffset(initialMemos.length);
         setIsLoading(false);
+    }, [initialMemos]);
+
+    useEffect(() => {
+        if (initialMemos.length > 0) return;
+
+        let cancelled = false;
+
+        const loadInitialMemos = async () => {
+            setIsLoading(true);
+            try {
+                const res = await getGalleryMemos(INITIAL_PAGE_SIZE, 0);
+                const nextMemos = res.success ? (res.data || []) : [];
+
+                if (cancelled) return;
+
+                setMemos(nextMemos);
+                setHasMore(nextMemos.length >= INITIAL_PAGE_SIZE);
+                setOffset(nextMemos.length);
+            } catch (err) {
+                console.error("Failed to bootstrap gallery memos:", err);
+                if (!cancelled) {
+                    setHasMore(false);
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        void loadInitialMemos();
+
+        return () => {
+            cancelled = true;
+        };
     }, [initialMemos]);
 
     const loadMore = useCallback(async () => {
@@ -33,10 +70,10 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
 
         setIsLoading(true);
         try {
-            const res = await getGalleryMemos(30, offset);
+            const res = await getGalleryMemos(LOAD_MORE_PAGE_SIZE, offset);
             const nextMemos = res.success ? (res.data || []) : [];
 
-            if (nextMemos.length < 30) {
+            if (nextMemos.length < LOAD_MORE_PAGE_SIZE) {
                 setHasMore(false);
             }
 

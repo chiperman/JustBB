@@ -21,14 +21,12 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
     const [offset, setOffset] = useState(initialMemos.length);
     const observerTarget = useRef<HTMLDivElement>(null);
 
-    // Derived state sync
-    const [lastInitialMemos, setLastInitialMemos] = useState(initialMemos);
-    if (initialMemos !== lastInitialMemos) {
-        setLastInitialMemos(initialMemos);
+    useEffect(() => {
         setMemos(initialMemos);
         setHasMore(initialMemos.length >= 20);
         setOffset(initialMemos.length);
-    }
+        setIsLoading(false);
+    }, [initialMemos]);
 
     const loadMore = useCallback(async () => {
         if (isLoading || !hasMore) return;

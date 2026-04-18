@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Search01Icon, Cancel01Icon, Calendar03Icon, Tag01Icon, Globe02Icon } from '@hugeicons/core-free-icons';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -18,12 +18,9 @@ export function SearchInput() {
 
     const [value, setValue] = useState(q);
 
-    // 同步 URL 参数到本地状态 (渲染期间同步模式)
-    const [prevQ, setPrevQ] = useState(q);
-    if (prevQ !== q) {
-        setPrevQ(q);
+    useEffect(() => {
         setValue(q);
-    }
+    }, [q]);
 
     const hasContext = !!(tag || num || date || (year && month));
 

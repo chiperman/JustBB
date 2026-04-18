@@ -15,6 +15,8 @@ const mockSupabase = {
     }),
     from: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
+    is: vi.fn().mockReturnThis(),
+    order: vi.fn().mockResolvedValue({ data: [], error: null }),
     eq: vi.fn().mockReturnThis(),
     single: vi.fn().mockResolvedValue({ data: null, error: null })
 };
@@ -86,8 +88,6 @@ describe('getMemoStats', () => {
     it('当管理员导出时应该返回格式化数据', async () => {
         mockSupabase.from.mockReturnThis();
         mockSupabase.select.mockReturnThis();
-        mockSupabase.eq.mockReturnThis();
-        mockSupabase.single.mockResolvedValue({ data: null, error: null });
         mockSupabase.is = vi.fn().mockReturnThis();
         mockSupabase.order = vi.fn().mockResolvedValue({
             data: [

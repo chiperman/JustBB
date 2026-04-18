@@ -16,7 +16,6 @@ import {
     UserCircleIcon as UserCircle,
     FlashIcon
 } from '@hugeicons/core-free-icons';
-import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { logout } from '@/features/auth/actions';
 import { supabase } from '@/lib/supabase';
@@ -24,6 +23,7 @@ import { DRAFT_CONTENT_KEY, DRAFT_IS_PRIVATE_KEY } from '@/features/memos/hooks/
 import { cn } from '@/lib/utils';
 import { useLayout } from '@/context/LayoutContext';
 import { useUser } from '@/context/UserContext';
+import { useToast } from '@/hooks/use-toast';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -60,7 +60,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     const { user, loading, setUser } = useUser();
     const { setViewMode } = useLayout();
     const { setTheme } = useTheme();
-    const router = useRouter();
+    const { toast } = useToast();
     const [loggingOut, setLoggingOut] = React.useState(false);
     const [hasMounted, setHasMounted] = React.useState(false);
 
@@ -86,13 +86,38 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
 
     const handleExport = async () => {
         const { exportMemos } = await import('@/actions/memos/analytics');
-        const data = await exportMemos('markdown');
+        const result = await exportMemos('markdown');
+        if (!result.success) {
+            toast({
+                title: "导出失败",
+                description: result.error || "导出过程中发生错误",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        const data = result.data || '';
+        if (!data) {
+            toast({
+                title: "导出失败",
+                description: "没有可导出的数据",
+                variant: "destructive",
+            });
+            return;
+        }
+
         const blob = new Blob([data], { type: 'text/markdown' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `JustMemo-Export-${new Date().toISOString().slice(0, 10)}.md`;
         a.click();
+        URL.revokeObjectURL(url);
+
+        toast({
+            title: "导出成功",
+            description: "备份文件已开始下载",
+        });
     };
 
     // 身份显示逻辑容器

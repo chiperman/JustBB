@@ -69,7 +69,11 @@ export async function getTimelineStats(): Promise<ActionResponse<TimelineStats>>
 /**
  * 导出笔记数据 (Markdown 或 JSON)
  */
-export async function exportMemos(format: 'markdown' | 'json' = 'markdown'): Promise<string> {
+export async function exportMemos(format: 'markdown' | 'json' = 'markdown'): Promise<ActionResponse<string>> {
+    if (!await isAdmin()) {
+        return { success: false, error: '权限不足', data: '' };
+    }
+
     const supabase = await getClient();
     const { data, error } = await supabase
         .from('memos')
@@ -77,13 +81,15 @@ export async function exportMemos(format: 'markdown' | 'json' = 'markdown'): Pro
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
-    if (error || !data) return "";
-
-    if (format === 'json') {
-        return JSON.stringify(data, null, 2);
+    if (error || !data) {
+        return { success: false, error: '导出失败', data: '' };
     }
 
-    return data.map(m => {
+    if (format === 'json') {
+        return { success: true, error: null, data: JSON.stringify(data, null, 2) };
+    }
+
+    const markdown = data.map(m => {
         // hydration-safe: 此函数仅在 Server Action 中执行，不参与渲染
         // eslint-disable-next-line no-restricted-syntax
         const date = new Date(m.created_at).toLocaleString();
@@ -96,4 +102,6 @@ ${m.content}
 
 `;
     }).join('\n\n');
+
+    return { success: true, error: null, data: markdown };
 }

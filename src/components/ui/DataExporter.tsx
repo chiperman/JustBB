@@ -14,7 +14,18 @@ export function DataExporter() {
     const handleExport = async (format: 'markdown' | 'json') => {
         try {
             setLoading(true);
-            const data = await exportMemos(format);
+            const result = await exportMemos(format);
+
+            if (!result.success) {
+                toast({
+                    title: "导出失败",
+                    description: result.error || "导出过程中发生错误",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            const data = result.data || '';
 
             if (!data) {
                 toast({

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getMemoStats } from './memos/analytics';
+import { getMemoStats, exportMemos } from './memos/analytics';
+import { isAdmin } from '@/features/auth/actions';
 
 // Mock Supabase Instance
 const mockSupabase = {
@@ -27,6 +28,10 @@ let mockEnv = {
 vi.mock('@/lib/supabase', () => ({
     getAdminClient: vi.fn(() => mockSupabase),
     getClient: vi.fn(async () => mockSupabase)
+}));
+
+vi.mock('@/features/auth/actions', () => ({
+    isAdmin: vi.fn(async () => true)
 }));
 
 vi.mock('@/lib/env', () => ({
@@ -65,5 +70,40 @@ describe('getMemoStats', () => {
         expect(result.success).toBe(false);
         expect(result.data?.totalMemos).toBe(0);
         expect(result.error).toBe('Database failure');
+    });
+
+    it('当未授权时应该拒绝导出', async () => {
+        vi.mocked(isAdmin).mockResolvedValueOnce(false);
+
+        const result = await exportMemos('markdown');
+
+        expect(result.success).toBe(false);
+        expect(result.error).toBe('权限不足');
+        expect(result.data).toBe('');
+        expect(mockSupabase.from).not.toHaveBeenCalled();
+    });
+
+    it('当管理员导出时应该返回格式化数据', async () => {
+        mockSupabase.from.mockReturnThis();
+        mockSupabase.select.mockReturnThis();
+        mockSupabase.eq.mockReturnThis();
+        mockSupabase.single.mockResolvedValue({ data: null, error: null });
+        mockSupabase.is = vi.fn().mockReturnThis();
+        mockSupabase.order = vi.fn().mockResolvedValue({
+            data: [
+                {
+                    content: '测试内容',
+                    created_at: '2024-01-01T00:00:00.000Z',
+                    tags: ['tag-a']
+                }
+            ],
+            error: null
+        });
+
+        const result = await exportMemos('json');
+
+        expect(result.success).toBe(true);
+        expect(result.error).toBeNull();
+        expect(result.data).toContain('测试内容');
     });
 });

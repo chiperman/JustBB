@@ -10,13 +10,11 @@ import { Memo } from "@/types/memo";
 import { usePageDataCache } from "@/context/PageDataCache";
 import { getMemos } from "@/actions/memos/query";
 import { useSearchParams } from "next/navigation";
-import { useLayout } from "@/context/LayoutContext";
 import { useUser } from "@/context/UserContext";
 
 export function MainLayoutClient() {
     const searchParams = useSearchParams();
     const { getCache, setCache } = usePageDataCache();
-    const { setViewMode } = useLayout();
     const { isAdmin } = useUser();
 
     // 滚动与吸顶状态管理
@@ -167,6 +165,7 @@ export function MainLayoutClient() {
                                         className="w-full"
                                     >
                                         <MemoFeed
+                                            key={cacheKey}
                                             initialMemos={memos}
                                             searchParams={Object.fromEntries(searchParams?.entries() || [])}
                                             isAdmin={isAdmin}

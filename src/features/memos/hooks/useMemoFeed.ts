@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Memo } from '@/types/memo';
 import { getMemos } from '@/actions/memos/query';
 import { mergeMemos } from '@/lib/streamUtils';
@@ -25,6 +25,14 @@ export function useMemoFeed({ initialMemos, searchParams, adminCode }: UseMemoFe
     const [isLoadingOlder, setIsLoadingOlder] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [lastCreatedId, setLastCreatedId] = useState<string | null>(null);
+
+    useEffect(() => {
+        setMemos(initialMemos);
+        setHasMoreOlder(initialMemos.length >= 30);
+        setIsLoadingOlder(false);
+        setEditingId(null);
+        setLastCreatedId(null);
+    }, [initialMemos]);
 
     const fetchOlderMemos = useCallback(async () => {
         if (isLoadingOlder || !hasMoreOlder) return;

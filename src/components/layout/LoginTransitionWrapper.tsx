@@ -8,7 +8,7 @@ import { LoginPanel } from '@/features/auth/components/LoginPanel';
 
 export function LoginTransitionWrapper({ children }: { children: React.ReactNode }) {
     const { viewMode, setViewMode } = useLayout();
-    const { user, isMounted } = useUser();
+    const { user } = useUser();
     const prevViewModeRef = useRef(viewMode);
 
     // CARD_VIEW 自动过渡逻辑（三段式状态机心跳）

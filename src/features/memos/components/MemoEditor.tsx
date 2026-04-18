@@ -1,13 +1,9 @@
 'use client';
 
 import { useRef, useEffect, useMemo } from 'react';
-import { HugeiconsIcon } from '@hugeicons/react';
 import { cn } from '@/lib/utils';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { motion } from 'framer-motion';
-
-
-import { spring, ease, duration } from '@/lib/animation';
 
 import { EditorSuggestionMenu } from '@/features/memos/components/EditorSuggestionMenu';
 import { MemoPrivateDialog } from '@/features/memos/components/MemoPrivateDialog';
@@ -192,7 +188,6 @@ export function MemoEditor({
         setSelectedIndex,
         setShowSuggestions,
         updateSuggestionPosition,
-        relativeGroupRef,
         selectedIndexRef,
         suggestionPropsRef,
         suggestionsRef

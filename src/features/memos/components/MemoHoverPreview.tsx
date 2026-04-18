@@ -26,7 +26,7 @@ const HoverCardContent = React.forwardRef<
 HoverCardContent.displayName = HoverCardPrimitive.Content.displayName;
 
 interface MemoHoverPreviewProps {
-    memoId: string; // logic handles converting #123 to ID? No, we search by #number
+    memoId?: string;
     memoNumber: string;
     children: React.ReactNode;
 }
@@ -44,11 +44,10 @@ export function MemoHoverPreview({ memoNumber, children }: MemoHoverPreviewProps
         if (open && !previewContent) {
             setLoading(true);
             try {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { getMemoByNumber } = (await import('@/actions/memos/query')) as any;
+                const { getMemoByNumber } = await import('@/actions/memos/query');
                 const memo = await getMemoByNumber(parseInt(memoNumber));
-                if (memo) {
-                    setPreviewContent(memo.content);
+                if (memo.success && memo.data) {
+                    setPreviewContent(memo.data.content);
                 } else {
                     setPreviewContent('Memo not found.');
                 }

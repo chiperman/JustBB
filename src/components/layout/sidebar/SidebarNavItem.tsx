@@ -3,10 +3,10 @@
 import { motion, Variants } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { cn } from '@/lib/utils';
+import { NavigationItem } from '@/config/navigation';
 
 interface SidebarNavItemProps {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    item: { id: string; icon: any; label: string; href: string };
+    item: NavigationItem;
     isActive: boolean;
     isCollapsed: boolean;
     onClick: (href: string) => void;

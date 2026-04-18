@@ -104,7 +104,7 @@ export function EditorToolbar({
                                 onClick={onCancel}
                                 className="h-8 px-3 text-muted-foreground hover:text-foreground transition-all active:scale-95"
                             >
-                                取消
+                                {mode === 'edit' ? '取消' : '清空'}
                             </Button>
                         )}
                         <Button

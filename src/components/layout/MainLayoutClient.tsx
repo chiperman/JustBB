@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { generateCacheKey, cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { MemoEditor, MemoFeed } from "@/features/memos";
@@ -56,7 +56,11 @@ export function MainLayoutClient() {
     }, []);
 
     // 1. 初始化数据：优先从缓存中获取，确保 SPA 切换瞬间完成
-    const flattenedParams = Object.fromEntries(searchParams?.entries() || []);
+    const searchParamsKey = searchParams?.toString() || "";
+    const flattenedParams = useMemo(
+        () => Object.fromEntries(new URLSearchParams(searchParamsKey).entries()),
+        [searchParamsKey],
+    );
     const cacheKey = generateCacheKey(flattenedParams);
     const cachedData = getCache(cacheKey);
     const latestRequestIdRef = useRef(0);
@@ -172,7 +176,7 @@ export function MainLayoutClient() {
                                         <MemoFeed
                                             key={cacheKey}
                                             initialMemos={memos}
-                                            searchParams={Object.fromEntries(searchParams?.entries() || [])}
+                                            searchParams={flattenedParams}
                                             isAdmin={isAdmin}
                                             scrollContainerRef={containerRef}
                                         />

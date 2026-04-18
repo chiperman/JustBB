@@ -138,6 +138,12 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
             localStorage.removeItem(DRAFT_IS_PRIVATE_KEY);
             setContent('');
             setIsPrivate(false);
+            setAccessCode('');
+            setAccessHint('');
+            setIsPinned(false);
+            setError(null);
+            setShowPrivateDialog(false);
+            setShowLocationPicker(false);
         }
     }, [mode, onCancel]);
 

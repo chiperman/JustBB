@@ -280,6 +280,13 @@ export function MemoEditor({
         }
     }, [editor, memo, mode, setContent]);
 
+    const handleToolbarCancel = () => {
+        if (mode === 'create') {
+            editor?.commands.clearContent();
+            editor?.commands.blur();
+        }
+        handleCancel();
+    };
 
 
     return (
@@ -399,7 +406,7 @@ export function MemoEditor({
                     onTogglePrivate={handleTogglePrivate}
                     onTogglePinned={() => setIsPinned(!isPinned)}
                     onShowLocationPicker={() => setShowLocationPicker(true)}
-                    onCancel={handleCancel}
+                    onCancel={handleToolbarCancel}
                     onPublish={() => isPrivate ? setShowPrivateDialog(true) : performPublish(editor)}
                 />
             </div>

@@ -2,13 +2,7 @@ import { NextRequest } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-    const requestHeaders = new Headers(request.headers)
-    requestHeaders.set('x-url', request.url)
-
-    // 简化：利用 NextRequest 构造函数自动复制原始请求的所有属性并合并 headers
-    return await updateSession(new NextRequest(request, {
-        headers: requestHeaders,
-    }))
+    return await updateSession(request)
 }
 
 export const config = {

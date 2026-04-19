@@ -259,28 +259,21 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
 
   return (
     <div className="relative hidden xl:block h-full shrink-0 overflow-visible">
-      <AnimatePresence initial={false}>
-        {isCollapsed && (
-          <motion.div
-            key="right-sidebar-open-button"
-            initial={{ opacity: 0, scale: 0.92, x: 12 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            exit={{ opacity: 0, scale: 0.92, x: 12 }}
-            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute top-6 right-6 z-30"
+      {isCollapsed && (
+        <div className="absolute top-6 right-6 z-30">
+          <Button
+            variant="outline"
+            size="icon-sm"
+            onClick={() => setCollapsedState(false)}
+            className="rounded-full border-border/60 bg-background/85 text-muted-foreground shadow-lg backdrop-blur-md transition-[background-color,color,transform] active:scale-95 hover:bg-background hover:text-foreground"
+            aria-label="展开右侧时间轴"
           >
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={() => setCollapsedState(false)}
-              className="rounded-full border-border/60 bg-background/85 text-muted-foreground shadow-lg backdrop-blur-md transition-all hover:bg-background hover:text-foreground"
-              aria-label="展开右侧时间轴"
-            >
+            <span className="flex items-center justify-center">
               <HugeiconsIcon icon={PanelRightOpenIcon} size={16} />
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </span>
+          </Button>
+        </div>
+      )}
 
       <motion.div
         initial={false}
@@ -295,10 +288,12 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
               variant="ghost"
               size="icon-sm"
               onClick={() => setCollapsedState(true)}
-              className="shrink-0 rounded-full text-muted-foreground transition-all active:scale-95"
+              className="shrink-0 rounded-full text-muted-foreground transition-[background-color,color,transform] active:scale-95 hover:bg-accent hover:text-accent-foreground"
               aria-label="收起右侧时间轴"
             >
-              <HugeiconsIcon icon={PanelRightCloseIcon} size={16} />
+              <span className="flex items-center justify-center">
+                <HugeiconsIcon icon={PanelRightCloseIcon} size={16} />
+              </span>
             </Button>
             <h3 className="flex-1 border-b-2 border-primary/20 pb-1.5 font-mono text-sm font-bold tracking-widest text-foreground uppercase">
               时间轴

@@ -1,50 +1,85 @@
-# JustMemo 文档中心 (Documentation)
+# JustMemo 文档中心
 
-> 最后更新：2026-04-06 (重组目录结构与对齐重构逻辑)
+> 最后更新：2026-04-19
+> 状态：总入口
 
-欢迎使用 JustMemo 开发者文档。本项目是一个追求现代圆润感、基于 Next.js 16 和 Supabase 构建的高性能私密笔记系统。
+这份文档是 `/docs` 的统一导航页。
 
----
+它只回答两件事：
 
-## 🏗️ 1. 核心架构 (Core)
-本项目底层的逻辑基石与数据协议。
+- 文档按什么维度划分
+- 你应该先读哪一份
 
-*   **[Logic Architecture](./core/architecture.md)**  
-    **[核心]** 详解双容器独立滚动架构、三级嵌套对齐模型及事件驱动同步机制。
-*   **[API Spec](./core/api.md)**  
-    Server Actions 响应契约、Next.js 动态 API 调用范式及分层缓存建议。
-*   **[Database Schema](./core/database.md)**  
-    数据库表结构、核心安全函数及 JSONB 定位字段说明。
-*   **[Security Architecture](./core/security.md)**  
-    隐私策略、解锁逻辑及基于口令哈希的访问控制模型。
+具体规则、细节和边界请分别进入对应专题文档。
 
----
+## 1. 推荐阅读顺序
 
-## 🎨 2. 界面与交互 (Interface)
-视觉语言与用户体验的工程化标准。
+如果你是第一次进入这个项目，建议按下面顺序阅读：
 
-*   **[Design System](./interface/system.md)**  
-    视觉哲学、配色体系、核心圆角比例及 **scrollbar-stable** 全站对齐规范。
-*   **[Interactions & Motion](./interface/interactions.md)**  
-    专项设计：编辑器迟滞滑动算法、视口感应 (IntersectionObserver) 及登录转场状态机。
+1. [文档体系与维护规范](./guide/documentation.md)
+2. [业务逻辑架构](./core/architecture.md)
+3. [私密 Memo 规则](./core/security.md)
+4. [接口与数据访问](./core/api.md)
+5. [数据库设计](./core/database.md)
 
----
+如果你更关心页面和交互，再继续看：
 
-## 📖 3. 开发指南 (Guide)
-工程流程与业务功能手册。
+- [功能模块总览](./features/features-guide.md)
+- [设计系统](./interface/system.md)
+- [交互与动画手册](./interface/interactions.md)
 
-*   **[Engineering Standards](./guide/standards.md)**  
-    开发 SOP、代码质量规范（Hooks 驱动、原子化设计）及极简 Git 提交准则。
-*   **[Tech Stack](./guide/tech-stack.md)**  
-    技术栈版本说明（Hugeicons, Framer Motion 等）及目录结构预览。
-*   **[Testing Strategy](./guide/testing.md)**  
-    E2E 测试原则与手动回归测试清单（含防退化 Checkpoints）。
-*   **[Features Guide](./features/features-guide.md)**  
-    业务模块手册：涵盖画廊、地图定位、链接预览及多选批量操作。
+## 2. 文档分区
 
----
+### `core`
 
-## 🛠️ 维护原则 (Docs-as-Code)
-1. **事实优先**：文档即系统。核心逻辑（如布局组件）变更必须同步更新本文档库。
-2. **三级嵌套准则**：在创建新视图时，必须遵循 `Container > Constraint > Padding` 嵌套逻辑，严禁产生 6px 的水平晃动。
-3. **KISS 原则**：保持文档简洁，及时清理过时的临时开发记录。
+系统级事实与底层约束：
+
+- [业务逻辑架构](./core/architecture.md)
+- [接口与数据访问](./core/api.md)
+- [数据库设计](./core/database.md)
+- [私密 Memo 规则](./core/security.md)
+
+### `features`
+
+业务模块和页面能力：
+
+- [功能模块总览](./features/features-guide.md)
+- [时间轴与归档](./features/timeline.md)
+- [地图功能](./features/map.md)
+- [画廊功能](./features/gallery.md)
+- [内容体验](./features/content-experience.md)
+- [多选与批量操作](./features/selection.md)
+- [Supabase 用量监控](./features/usage-monitoring.md)
+
+### `interface`
+
+视觉系统与交互规则：
+
+- [设计系统](./interface/system.md)
+- [交互与动画手册](./interface/interactions.md)
+
+### `guide`
+
+开发、测试、技术栈与文档治理：
+
+- [文档体系与维护规范](./guide/documentation.md)
+- [工程化标准与开发规范](./guide/standards.md)
+- [技术选型总览](./guide/tech-stack.md)
+- [测试与质量保证方案](./guide/testing.md)
+
+## 3. docs 之外的项目文档
+
+这些文件不放在 `/docs`，但仍然属于项目文档的一部分：
+
+- [仓库 README](../README.md)
+- [变更日志](../CHANGELOG.md)
+- [脚本目录说明](../scripts/README.md)
+- [Supabase 本地开发说明](../supabase/README.md)
+
+## 4. 使用原则
+
+- `docs/README.md` 永远只做入口，不堆实现细节。
+- 系统规则优先放进 `core`。
+- 业务能力优先放进 `features`。
+- 视觉和交互约束优先放进 `interface`。
+- 流程、测试、技术栈和文档治理优先放进 `guide`。

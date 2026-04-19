@@ -1,80 +1,64 @@
-# Scripts Directory
+# scripts 目录说明
 
-This directory contains utility scripts for database management, testing, and maintenance.
+> 最后更新：2026-04-19
+> 状态：与当前仓库内容同步
 
-## Prerequisites
+`scripts/` 目录只存放少量脚本型辅助文件，不承载主要业务逻辑。
 
-Before running the test scripts, ensure that:
+## 1. 当前文件
 
-1.  Node.js and npm are installed.
-2.  The `.env.local` file in the project root is configured with the correct Supabase credentials:
-    ```bash
-    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-    SUPABASE_SERVICE_ROLE_KEY=your_service_role_key (only for test-rls.ts)
-    ```
+### `dev-setup.sh`
 
----
+用途：
 
-## 1. Database Functions (SQL Scripts)
+- 为本地 Supabase 环境提供“智能启动”能力
+- 在 `npm run dev` 前自动检查本地端口与容器状态
+- 当 Supabase CLI 与 Docker 容器状态不一致时，尝试自动修复并重新启动
 
-These `.sql` files define Remote Procedure Call (RPC) functions in Supabase.
+对应入口：
 
-| Filename | Description |
-| --- | --- |
-| `rpc-search-memos.sql` | **Core Search Function** (`search_memos_secure`). Handles keyword search, tag filtering, date filtering, permission control (private/public), and sorting logic. |
-| `rpc-get-timeline.sql` | **Timeline Stats Function** (`get_timeline_stats`). A lightweight function that quickly returns the daily count of memos, used for rendering heatmaps or timelines. |
+- `package.json` 中的 `supabase:start`
 
-### How to Deploy
+### `rpc-search-memos.sql`
 
-These scripts **cannot** be run directly in the local terminal. To deploy them:
+用途：
 
-1.  Open the script file and copy all SQL content.
-2.  Log in to the [Supabase Dashboard](https://supabase.com/dashboard).
-3.  Go to the **SQL Editor** of your project.
-4.  Paste the code and click **Run**.
-5.  If the function already exists, the script usually uses `CREATE OR REPLACE FUNCTION`, which will automatically update the logic.
+- 保留早期 `search_memos_secure` 的 SQL 草稿与历史参考
 
----
+说明：
 
-## 2. Test Scripts (TypeScript Scripts)
+- 当前生产与本地真实数据库结构，应以 `supabase/migrations/` 中的迁移文件为准
+- 这个脚本更适合作为历史参考，而不是当前权威来源
 
-These `.ts` files are used to verify database logic locally.
+### `rpc-get-timeline.sql`
 
-| Filename | Description |
-| --- | --- |
-| `test-date-filter.ts` | **Date Filter Test**. Verifies that `search_memos_secure` correctly filters memos for a specific date. |
-| `test-rls.ts` | **Security Test (RLS)**. Simulates anonymous users and admins to verify that private memos are correctly hidden and can only be accessed with the correct token. |
+用途：
 
-### How to Use & Test
+- 保留早期时间轴统计 SQL 的独立脚本版本
 
-Run the scripts directly using `npx ts-node`.
+说明：
 
-#### Run Date Filter Test
-```bash
-# Ensure environment variables are loaded (if using dotenv-cli)
-npx dotenv -e .env.local -- npx ts-node scripts/test-date-filter.ts
+- 当前时间轴相关逻辑同样应优先以 `supabase/migrations/` 和 `src/actions/memos/analytics.ts` 为准
 
-# Or, if your environment is already configured
-npx ts-node scripts/test-date-filter.ts
-```
-*Expected Result*: The script outputs the number of found memos and verifies if their `created_at` matches the target date.
+## 2. 使用原则
 
-#### Run Security Test
-```bash
-npx dotenv -e .env.local -- npx ts-node scripts/test-rls.ts
-```
-*Expected Result*:
-1.  Creates a private test memo.
-2.  Attempts to read with an anonymous client -> **Should fail / return empty** (PASS).
-3.  Attempts to read with RPC -> **Should be marked as Locked or have empty content** (PASS).
-4.  Automatically deletes the test data.
+- 新的数据库变更不要继续写进 `scripts/*.sql`
+- 应统一通过 `supabase/migrations/*.sql` 管理
+- 新的本地辅助脚本可以放在这里，但必须保证：
+  - 文件职责单一
+  - 能从 `package.json` 找到入口，或在本文件中说明调用方式
 
----
+## 3. 何时更新本文件
 
-## Common Issues
+以下情况需要同步更新：
 
-*   **Error: "relation 'memos' does not exist"**
-    *   Check if your `.env.local` is connecting to the correct Supabase project.
-*   **Error: "function search_memos_secure does not exist"**
-    *   This indicates you haven't run `rpc-search-memos.sql` in the Supabase SQL Editor to deploy the function yet.
+- 新增了脚本文件
+- 删除了旧脚本
+- `package.json` 的脚本入口发生变化
+- 某个脚本从“当前入口”变成了“历史参考”
+
+## 4. 相关文档
+
+- [仓库 README](../README.md)
+- [Supabase 本地开发说明](../supabase/README.md)
+- [数据库设计](../docs/core/database.md)

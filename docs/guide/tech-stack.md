@@ -1,83 +1,87 @@
 # JustMemo 技术选型总览
 
-> 最后更新日期：2026-02-27 (工程化升级：增强安全校验与性能优化)
+> 最后更新：2026-04-19
+> 状态：与当前 `package.json` 和仓库结构同步
 
----
+## 1. 作用
 
-## 1. 核心框架
+这份文档用于快速说明：
 
-| 技术 | 版本 | 说明 |
-|------|------|------|
-| Next.js | 16.1.6 | 全栈 React 框架，采用 App Router 模式 |
-| React | 19.x | UI 渲染引擎与 Context API 状态管理 |
-| TypeScript | ^5 | 类型安全，严格模式 |
-| Hybrid SPA Routing | Custom | 基于 ViewContext + History API 的客户端路由，实现无刷新导航 |
+- 项目依赖什么核心技术
+- 当前技术栈大致如何分层
+- 主要目录分别负责什么
 
----
-
-## 2. 样式与 UI
+## 2. 核心框架
 
 | 技术 | 版本 | 说明 |
 |------|------|------|
-| Tailwind CSS | ^4 | 原子化 CSS 框架 |
-| Radix UI | ^1.x | 无障碍组件原语 |
-| Framer Motion | ^12.x | 动画与过渡效果 |
-| Hugeicons | ^1.1.5 | **[唯一图标库]** 配合自研 Wrapper 确保全站图标视觉对齐。 |
-| Tiptap | ^2.x | 富文本编辑器核心，支持 JSON 结构化存储。 |
-| Leaflet | ^1.9 | 轻量级地图 SDK，配合 CartoDB 提供深浅色底图。 |
-| next-themes | ^0.4 | 深/浅色/系统主题切换 |
-| next/image | Built-in | **[图片优化]** 全量迁移至 `next/image`，实现 WebP 自动转换与延迟加载。 |
+| Next.js | 16.1.6 | 应用框架，采用 App Router |
+| React | 19.x | UI 渲染与状态组合 |
+| TypeScript | 5.x | 类型系统 |
 
----
-
-## 3. 后端与数据
+## 3. 前端与交互
 
 | 技术 | 版本 | 说明 |
 |------|------|------|
-| Supabase | ^2.x | BaaS 平台（PostgreSQL + Auth + Storage） |
-| Zod | ^4.x | **[安全守卫]** 核心用于运行时与构建时环境变量强校验 (`src/lib/env.ts`)。 |
-| bcryptjs | ^3.x | 密码 Hash 处理 |
-| date-fns | ^4.x | 日期格式化与计算 |
+| Tailwind CSS | 4.x | 样式系统 |
+| Framer Motion | 12.x | 动画与过渡 |
+| Hugeicons | 1.1.5 | 统一图标库 |
+| Tiptap | 3.x | 富文本编辑器 |
+| next-themes | 0.4.x | 主题切换 |
+| Leaflet | 1.9.x | 地图能力 |
+| react-leaflet | 5.x | React 地图封装 |
 
----
+## 4. 后端与数据
 
-## 4. 目录结构
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| Supabase | 2.x | 数据库、Auth 与 BaaS 能力 |
+| Zod | 4.x | 运行时校验 |
+| bcryptjs | 3.x | 私密口令哈希 |
+| date-fns | 4.x | 日期处理 |
 
-```
-src/
-├── app/           # 路由与页面组件（App Router）
-├── components/    # UI 库与业务组件
-├── actions/       # Server Actions 逻辑
-├── context/       # React Context 全局状态管理 (View, PageDataCache, User, Selection, Tags, Stats, Timeline, LoginMode)
-├── lib/           # Supabase Client、工具函数、加密逻辑、环境校验 (env.ts)
-└── types/         # TypeScript 类型定义
-```
+## 5. 测试与工程工具
 
----
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| Vitest | 4.x | 单元与集成测试 |
+| Playwright | 1.58.x | E2E 测试 |
+| ESLint | 9.x | 代码检查 |
+| Husky | 9.x | Git Hook |
+| lint-staged | 16.x | 暂存区校验 |
+| standard-version | 9.5.x | 版本日志生成 |
 
-## 5. 部署方案
+## 6. 当前目录结构
 
-| 服务 | 说明 |
+### 根目录
+
+- `README.md`：仓库主入口
+- `docs/`：项目主文档库
+- `scripts/`：少量脚本型辅助文件
+- `supabase/`：本地 Supabase 配置、迁移和 seed
+
+### `src/`
+
+| 目录 | 作用 |
 |------|------|
-| Vercel | 生产环境托管，与 GitHub 自动集成 |
-| Supabase Cloud | 数据库与认证服务 |
+| `app/` | App Router 页面与布局 |
+| `actions/` | Server Actions |
+| `components/` | 通用组件与布局组件 |
+| `context/` | 客户端状态上下文 |
+| `features/` | 按业务域组织的前端模块 |
+| `lib/` | 查询、解析、缓存、工具函数 |
+| `types/` | 类型定义 |
 
----
+## 7. 当前架构特征
 
-## 6. 工程规范 (Engineering Standards)
+- 路由基于 Next.js App Router
+- 页面交互依赖 Client Components 与 Context 组合
+- 查询层由 Server Actions 和 Supabase 共同承载
+- 私密 Memo 采用 owner-based 权限模型
+- 地图、时间轴、标签与主列表共享同一套数据语义
 
-### 6.1 Git 规范
-*   原子化提交 (Atomic Commits)：每个 Commit 只做一件事。
-*   Commit 规范 (Commitlint)：强制采用 `type(scope): subject` 格式。主题与正文使用 中文。
-*   自动化守卫：通过 Husky 触发 `pre-commit` 钩子，执行全量类型检查与构建校验。
+## 8. 相关文档
 
-### 6.2 环境变量安全
-*   **强校验机制**：基于 Zod 定义 `envSchema`。在 `next.config.ts` 中集成校验，缺失必要变量将直接中止构建，防止“带病上线”。
-*   **关键变量集**：
-    *   `NEXT_PUBLIC_SUPABASE_URL`: 数据库访问入口。
-    *   `NEXT_PUBLIC_SUPABASE_ANON_KEY`: 客户端匿名访问密钥。
-    *   **`SUPABASE_SERVICE_ROLE_KEY`**: **[强制]** 服务端管理密钥。用于执行 `verifyUnlockCode` 等需要绕过 RLS 策略的关键操作。该变量严禁泄露至前端环境变量。
-
----
-
-*详细模块文档请参考 `/docs/` 目录。*
+- [业务逻辑架构](../core/architecture.md)
+- [接口与数据访问](../core/api.md)
+- [数据库设计](../core/database.md)

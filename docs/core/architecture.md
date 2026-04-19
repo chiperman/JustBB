@@ -1,179 +1,212 @@
-# JustMemo 业务逻辑架构 (Logic Architecture)
+# JustMemo 业务逻辑架构
 
-> 最后更新：2026-03-02 (增强底部加载微交互：Loading03 + Framer Motion + 1s 延迟机制)
+> 最后更新：2026-04-19
+> 状态：与当前代码同步
 
-本文档描述了 JustMemo 的核心业务逻辑，重点阐述其**SPA（单页应用）化架构**、**缓存优先策略**以及**无感导航级制**。
+## 1. 作用
 
----
+这份文档描述 JustMemo 当前的前端业务架构，重点回答：
 
-## 1. 核心架构模式 (Core Architecture)
+- 页面是如何组织的
+- 数据如何加载与缓存
+- 各个 Context 分别负责什么
+- 主列表、地图、时间轴和私密解锁如何协同
 
-我们采用 **"Hybrid SPA" (服务端首屏 + 客户端路由)** 模式，结合了 Next.js 的 SSR 优势与原生应用的流畅体验。
+## 2. 架构总览
 
-### 1.1 路由系统 (Client-Side Routing)
-放弃了 Next.js 的默认路由跳转（会导致页面硬刷新），转而在客户端实现了一套轻量级路由系统：
+JustMemo 当前采用的是：
 
-- **ViewContext**: 全局管理 `currentView` 状态。
-- **History API**: 使用 `window.history.pushState` 和 `popstate` 事件管理浏览器历史记录，保证后退/前进按钮正常工作。
-- **ClientRouter**: 根据 `currentView` 动态渲染页面组件 (`MemoFeed`, `Gallery`, `TagsPage` 等)，实现**无刷新 (No-Refresh)** 的视图切换。
-- **Link 劫持**: 所有内部链接（Sidebar, Tags）均拦截点击事件，调用 `ViewContext.setView` 而非触发浏览器跳转。
+- Next.js App Router 负责页面与路由
+- Server Components 负责首屏数据注入
+- Client Components 负责交互、缓存复用和局部刷新
 
-### 1.2 数据加载策略 (Data Loading)
+这不是早期那套基于 `ViewContext` 的自定义客户端路由结构。当前主导航已经回到 Next.js 路由与 `pathname` / `router.push` 驱动模型。
 
-JustMemo 采用 **"SSR + 客户端分页"** 的混合渲染模式，确保极致的直开速度与流畅的无限滚动体验。
+## 3. 页面与布局结构
 
-1. **分页数据流**:
-   - **首页/聚合页**: 采用 SSR 预取首屏数据 (前 20 条) 并注入客户端。后续数据的获取（如首页搜索、标签过滤或无限滚动）均通过 `getMemos` 接口直接调用远端分页 RPC 实现。
-   - **引用与搜索 (@ Mention)**: 同样为纯远端分页模式。编辑器触发时不再依赖本地缓存，而是实时请求远端接口，支持滚动加载更多。
+### 3.1 Layout Provider 栈
 
-2. **全局缓存与同步 (`memoCache`)**:
-   - **乐观更新**: 当用户发布新 Memo 后，系统通过 `memoCache.addItem` 瞬间更新本地状态。
-   - **UI 响应**: 列表组件通过订阅该缓存实现无需页面刷新即可展示新内容，提升交互的即时感。
+客户端布局统一经过 `ClientLayoutProviders` 注入以下状态层：
 
-3. **"Cache-First & Partitioning" (缓存分区与隔离)**:
-   - **动态缓存键**: 为了防止不同日期或搜索条件下的数据互相覆盖，`PageDataCache` 引入了基于完整 URL 参数的隔离机制。每个过滤组合（如 `?date=2026-02-13` 或 `?year=2026`）拥有独立的存储空间。
-   - **无感秒开**: 站内 SPA 导航切换（包括从右侧时间轴或左侧热力图点击日期）时，系统优选匹配当前路径+参数的缓存，在数据加载过程中提供平滑显示，极大地削弱骨架屏的存在感。
+- `UserProvider`
+- `UnlockedMemosProvider`
+- `PageDataCacheProvider`
+- `StatsProvider`
+- `LayoutProvider`
+- `UIProvider`
+- `TagsProvider`
 
-4. **"Derived State Sync" (派生状态同步/零延迟)**:
-   - **同步机制**: 针对 SSR 与客户端状态可能存在的“一帧延迟”竞争，系统采用渲染期派生模式。父组件在渲染阶段直接对比 Props 变化并即时更新 State，确保子组件（如 `MemoFeed`）在捕捉到路由变化时，能瞬间拿到最新的后端注入数据，彻底消除“慢半拍”现象。
+这意味着：
 
----
+- 用户身份
+- 私密解锁状态
+- 页面数据缓存
+- 统计与标签数据
+- 布局与多选状态
 
-## 2. 布局架构 (Layout Architecture)
+都在统一的布局入口处初始化，而不是散落在各页面中。
 
-全站从“传统 CSS Sticky”转向 **“双容器独立滚动架构 (Dual-Container Architecture)”**，以实现极致的吸顶稳定性与像素级对齐。
+### 3.2 主界面结构
 
-1. **结构分层 (Container Layering)**:
-   - **Main Layout Container**: 全局 `h-screen overflow-hidden`，禁绝原生 Body 滚动，由 `MainLayoutClient` 接管视口。
-   - **Fixed Top Area (功能定格区)**: 包含 `Logo`, `SearchInput`, `MemoEditor` 以及 `FeedHeader`。此容器在 Z 轴最高层级，不参与页面滚动。
-   - **Scrollable Content Area (内容滚动区)**: 包含核心笔记流 (`MemoFeed`)。通过独立的自滚动容器实现，确保编辑器与内容流在视觉上“合体”，物理上“解耦”。
+首页主界面由 `MainLayoutClient` 负责，整体分为两块：
 
-2. **三级嵌套对齐模型 (Triple-Nesting Model)**:
-   为消除不同系统滚动条占位 (Scrollbar Gutter) 导致的 6px 水平偏移，全站执行以下对齐标准：
-   - **Level 1: Container**: 撑满可用宽度，定义滚动条显示策略 (`scrollbar-stable`)。
-   - **Level 2: Constraint**: 使用统一的最大宽度约束 (`max-w-screen-md mx-auto`)。
-   - **Level 3: Padding**: 内边距下沉 (`px-4 sm:px-6`)。此层级确保内容在滚动条出现时，视觉中心点绝对固定，不产生布局晃动 (Jank)。
+- 顶部固定区
+- 底部滚动区
 
-3. **组件持久化与通讯 (Persistence & Sync)**:
-   - **组件生存期**: 侧边栏及顶部定格区在 SPA 视图切换时不卸载，保持输入草稿与交互状态。
-   - **事件驱动同步 (Event Bus)**: 摒弃繁重的 Context 轮询，采用基于 `CustomEvent` 的解耦通讯。例如：当 `MemoActions` 执行操作后，发送 `memo:re-fetch` 或 `memo:update` 事件，驱动 `MemoFeed` 局部刷新。
+顶部固定区承载：
 
----
+- `FeedHeader`
+- `MemoEditor`
 
-## 3. 核心状态流 (Context Map)
+底部滚动区承载：
 
-| Context | 管理职责 | 关键特性 |
-| :--- | :--- | :--- |
-| **ViewContext** | 客户端路由核心 | 管理 `currentView`，拦截浏览器历史记录，提供 `navigate()` 方法 |
-| **PageDataCache** | 页面数据缓存 | 实现“一次加载，会话级复用”，支持**路径+参数级**的缓存自动隔离 |
-| **UserContext** | 用户身份与权限 | SSR 注入初始状态，确保存并鉴权 |
-| **SelectionContext** | 多选模式状态 | 专注于管理选中项（Set<string>）与批量操作模式 |
-| **LayoutContext** | 布局与交互状态 | 管理 `viewMode` (`HOME_FOCUS` \| `CARD_VIEW` \| `SPLIT_VIEW`)、活动 ID (`activeId`) |
-| **StatsContext** | 全局统计数据 | 维护热力图与基础计数，支持精细化记忆化以减少重渲染 |
-| **TagsContext** | 标签全集管理 | 维护全站标签列表及其计数，支持按需刷新 |
+- `MemoFeed`
 
----
+这样做的目的，是把“创建内容”和“浏览内容”在视觉上连成一体、在滚动行为上解耦。
 
-## 4. 视觉与动画策略 (Visual & Animation)
+## 4. 数据加载策略
 
-### 4.1 去骨架屏设计 (No-Skeleton Policy)
-我们认为骨架屏虽然缓解了焦虑，但仍然是一种“加载中”的状态。通过 **PageDataCache**，我们力求让用户感觉页面是**瞬间就绪**的。除了极其罕见的冷启动延迟，用户在站内跳转时不应看到任何 Loading 状态。
+### 4.1 首屏与后续拉取
 
-### 4.2 零抖动挂载 (Zero-Jank Mounting)
-- **MemoEditor**: 设置 `initial={false}`。在页面刷新或路由切换回来时，编辑器直接以最终状态（展开/折叠）渲染，**不播放**从 `height: 0` 开始的入场动画，防止视觉跳变。
-- **MemoFeed**: 同样采用 `initial={false}`，保留列表项的布局动画（如删除/新增），但跳过列表整体的入场动画。
+- 首屏由服务端预取关键数据并注入布局。
+- 后续筛选、搜索、分页与解锁后的刷新，都通过 Server Actions 拉取。
 
-### 4.3 组件级重置模式 (Component Reset Pattern)
-为了处理 `framer-motion` 物理状态（如 `useSpring`）的残留问题，我们在 `ImageZoom` 等复杂交互组件中推广了 **Key-based Reset** 模式：
-- 将复杂状态封装在独立子组件。
-- 父组件通过动态 `key` 强制触发子组件的完整卸载与重新挂载。
-- 确保每次交互开始时，UI 的物理状态均处于基准线（居中、原位）。
+主列表的核心读取入口是：
 
-### 4.4 编辑模式即时切换 (Instant Edit Mode)
-移除了 `MemoCard` 切换编辑模式时的 `layoutId` 和 `AnimatePresence`，取消形变过渡以提升交互速度。编辑模式的进入/退出采用瞬间切换，不播放任何过渡动画。
+- `getMemos`
 
-### 4.5 加载微交互与节奏 (Loading Micro-interactions)
-为了优化滚动到底部（Infinite Scroll）距离的视觉节奏，系统实施了以下策略：
-- **图标选型**: 统一使用 `Loading03Icon`，兼顾现代感与视觉细节。
-- **动效引擎**: 放弃 CSS `animate-spin`，改用 `framer-motion` 实现 360 度循环旋转。这确保了交互动效的优先级与主逻辑渲染解耦，提供更流畅的 60fps 体验。
-- **防闪烁延迟机制**: 在加载逻辑中注入了 **1000ms 最短动画时间**。即便数据即刻返回，系统也会保证加载图标完整旋转一圈后才消失，从而消除了快速网络下 UI 闪烁带来的不适感，确保视觉体验的连贯性。
+### 4.2 页面级缓存
 
----
+`PageDataCache` 用于缓存已经访问过的页面结果。
 
-## 5. 关键组件逻辑
+缓存键由以下信息共同组成：
 
-### 5.1 MemoEditor
-- **高度管理**: 基于内容行数自动伸缩，通过 `isAnimating` 锁住 `overflow` 防止动画中的文字裁剪。
-- **滚动阈值**: 页面向下滚动 >100px 时自动收缩为迷你模式。为防止短内容页面产生抖动，引入了**迟滞 (Hysteresis)** 机制：仅在页面总可滚动空间 > 300px 时允许收缩，且在向上滚动至 50px 以内或空间减小时自动恢复。
+- 当前 URL 参数
+- 当前已解锁 Memo 集合
 
-### 5.2 Timeline (RightSidebar)
-- **路由感知**: 监听 `ViewContext`。仅在 `currentView === '/'` 时显示，从其他页面切回时状态（展开年份）保持不变。
-- **URL 驱动**: 点击年份/月份/直接走 `router.push` 更新 URL SearchParams，从而复用标准的全局拉取逻辑与页面缓存，不再存在额外的“时空跳跃”内部状态。
-- **边界流过滤**: 为了保证长列表滑动的预期，当时间轴带有具体边界参数时（如 `?year=2026&month=03`），瀑布流在加载历史数据时会自动对结果执行本地过滤截断，确保不会拉取到 2 月或更早的数据。
+这让系统可以区分：
 
-### 5.3 ImageZoom
-- **架构**: 采用父子分离架构（`ImageZoom` / `PreviewContent`）。
-- **生命周期**: 使用 `openCount` 作为 `key` 管理预览生命周期，实现物理偏移量的原子级清零。
-- **0ms 响应**: 移除 `layoutId` 共享布局过渡，点击缩略图瞬间挂载大图。
+- 同一个页面的不同搜索条件
+- 同一个页面在“未解锁 / 已解锁某条 Memo”下的不同数据结果
 
----
+### 4.3 全局轻量缓存
 
-### 5.4 提及与引用 (Mentions)
-在 `MemoEditor` 中输入 `@` 触发的引用逻辑已经过重构，从**全量索引匹配**转向**纯远端分页**模式：
+`memoCache` 仍承担轻量索引和局部同步职责，主要用于：
 
-1. **零冷启动延迟**: 移除了首屏下载数千条 Memo 索引的逻辑。
-2. **流式增量加载**: 
-   - 触发时并行发起 `offset=0` 的请求获取最新 20 条。
-   - 列表底部的滚动事件触发后续页码的异步补全。
-3. **编号精确匹配补丁**: 针对数字查询（如 `@66`），后端 Action 会强制执行一次全表编号匹配并置顶结果，弥补全文索引对低频数字权重计算的不足。
-4. **统一展示方案**: 列表始终展示正文预览片段（Snippet）并高亮关键词，代替了原本单一的编号展示。
+- 发布新 Memo 后的即时更新
+- 某些子页面的缓存预热
 
----
+它不是权限判断来源，也不是私密内容长期存储层。
 
-## 6. 图标工程 (Icon Engineering)
-- **Hugeicons 统一化**: 全站放弃 `lucide-react`，迁移至 `Hugeicons` (@hugeicons/react)。
-- **包装器组件**: 使用核心 `HugeiconsIcon` 组件对所有图标进行二次包装。这解决了：
-    1. **垂直对齐**: 修复了不同图标间微小的重心差异。
-    2. **属性继承**: 统一处理 `aria-hidden`、尺寸控制与颜色样式。
-    3. **性能**: 通过命名导入减少了无用代码打包。
+## 5. 私密 Memo 的前后端协作
 
----
+### 5.1 可见性来源
 
-## 7. 搜索与筛选逻辑 (Search & Filter)
+私密 Memo 的最终可见性由三部分共同决定：
 
-我们重构了高效的搜索与筛选系统，旨在提供直观的上下文检索体验：
+- 数据库中的 `owner_id`
+- 当前查看者身份
+- 当前页面中已解锁的 Memo ID 集合
 
-1. **Omnibox (万能输入框)**:
-   - **筹码式 (Chip-based) UI**: 将 tags, dates, sequence numbers 等显性过滤条件转化为输入框内的不可编辑 Chip。
-   - **关键词解耦**: 文本输入部分仅负责全局 `q` 关键字检索，支持在当前 Chip 上位条件下进行“结果内搜索”。
-   - **智能解析**: 监听输入。前缀为 `#` 的词自动转化为 `tag` Chip；纯数字词回车自动转化为 `num` (Memo Number) 精准跳转 Chip。
+### 5.2 客户端解锁状态
 
-2. **统一参数 Schema**:
-   - `?q=`: 模糊关键字搜索。
-   - `?tag=`: 精确标签匹配。
-   - `?num=`: 唯一的 Memo 编号精准跳转。
-   - `?date=`: 特定日期筛选。
-   - **组合查询**: 支持多个参数共存（例如：`?tag=生活&q=北京`）。
+`UnlockedMemosContext` 只在当前页面内存中保存已解锁 Memo：
 
-## 8. 数据访问层与重构模式 (DAL & Hooks)
+- 不写 Cookie
+- 不写 `localStorage`
+- 刷新或关闭页面后失效
 
-### 8.1 统一查询构建器 (Query Builder)
-系统在 `src/lib/memos/query-builder.ts` 中封装了统一的查询层：
-- **BASE_MEMO_SELECT**: 集中定义所有查询共享的字段集，确保类型一致性。
-- **MemoFilters**: 将常用的业务逻辑（如 `active`, `publicOnly`, `paginate`）转化为可复用的组合算子，消除了 Server Actions 中的重复代码。
+### 5.3 查询侧补丁
 
-### 8.2 Hooks 驱动的逻辑解耦
-为了解决巨型组件维护难题，我们将核心业务逻辑从 UI 中剥离：
-- **useMemoEditor**: 封装内容发布、私密性切换、草稿持久化及动画锁定状态。
-- **useEditorSuggestions**: 专门处理 Tiptap 的 @引用与 #标签建议系统的搜索与分页。
-- **useMemoBacklinks**: 负责反向引用的异步动态加载。
-- **useSidebarNavigation**: 解耦侧边栏的物理动效与路由同步逻辑。
+对于普通 RLS 无法直接表达的展示场景，例如：
 
-### 8.3 原子化组件设计 (Atomic Components)
-复杂组件（如 `MemoEditor`, `MemoCard`, `LeftSidebar`）已按职责拆分为原子级子组件：
-- **editor/**: 包含 `EditorToolbar`, `extensions.ts`。
-- **memo-card/**: 包含 `MemoCardHeader`, `MemoCardBacklinks`, `MemoCardLockOverlay`。
-- **sidebar/**: 包含 `SidebarNavItem`。
-这种结构确保了 UI 层的极简与逻辑的高内聚。
+- 地图中的锁定占位
+- 按编号获取单条 Memo
 
+系统会在查询结果上统一叠加可见性辅助，而不是让各组件自己写权限分支。
 
+## 6. 关键 Context
+
+| Context | 职责 |
+|------|------|
+| `UserContext` | 当前用户身份与权限 |
+| `UnlockedMemosContext` | 当前页面已解锁 Memo 集合 |
+| `PageDataCache` | 按页面条件缓存查询结果 |
+| `StatsContext` | 热力图与统计数据 |
+| `TagsContext` | 标签集合与计数 |
+| `LayoutContext` | 登录转场、布局状态 |
+| `UIContext` | 多选与批量操作状态 |
+
+## 7. 关键页面协同
+
+### 7.1 主列表
+
+主列表是所有规则的基线场景：
+
+- 搜索
+- 标签
+- 日期过滤
+- 私密占位
+- 已解锁后的即时可见
+
+都在这里汇合。
+
+### 7.2 时间轴与热力图
+
+时间轴和热力图不维护自己的数据真相，而是统一落回 URL 参数：
+
+- `?date=`
+- `?year=`
+- `?month=`
+
+这样可以直接复用主列表和 `PageDataCache`。
+
+### 7.3 地图
+
+地图页使用包含锁定占位语义的数据源：
+
+- 公开 Memo 可直接展示
+- 私密 Memo 可显示标记
+- 非作者点击后仍需单条解锁
+
+### 7.4 画廊
+
+画廊不是独立数据模型，而是同一批 Memo 的图片优先视图。
+
+## 8. 组件组织方式
+
+当前前端代码主要遵循两条拆分原则：
+
+### 8.1 Hooks 驱动
+
+复杂状态从组件中抽离到 Hook：
+
+- `useMemoEditor`
+- `useMemoFeed`
+- `useEditorSuggestions`
+- `useMapMemos`
+- `useSidebarNavigation`
+
+### 8.2 原子子组件
+
+复杂 UI 再按功能继续拆为子组件，例如：
+
+- `memo-card/*`
+- `components/layout/*`
+- `components/ui/*`
+
+这样做的目的是降低单组件复杂度，并让文档与代码结构更容易对应。
+
+## 9. 当前重点约束
+
+- 路由与页面切换优先依赖 Next.js 原生路由能力
+- 缓存必须按页面条件与解锁状态隔离
+- 私密可见性必须统一走作者 / 单条解锁模型
+- 新的页面能力应尽量复用现有 Context 和查询层，而不是再发明一套并行状态体系
+
+## 10. 相关文档
+
+- [接口与数据访问](./api.md)
+- [数据库设计](./database.md)
+- [私密 Memo 规则](./security.md)
+- [功能模块总览](../features/features-guide.md)

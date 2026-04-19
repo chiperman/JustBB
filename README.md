@@ -1,69 +1,137 @@
 # JustMemo
-一款不受「转评赞」限制的 MicroBlog
 
-想说什么说什么，
+> 最后更新：2026-04-19
+> 状态：主入口文档
 
-爱说什么说什么。
+JustMemo 是一个基于 Next.js 16、React 19 和 Supabase 构建的私密 Memo 系统。
 
-你管我说什么呢？
+它的核心目标不是做公开社交，而是提供一个更轻、更私密、更适合长期记录的个人表达空间。
 
-中心思想是：**「论如何逃离微信」**
+## 1. 你可以在这里找到什么
 
-## 感谢 ❤️
-本仓库 fork 自 [daibor](https://github.com/daibor) 的项目：[nonsense.fun](https://github.com/daibor/nonsense.fun)，我只是做了一些微不足道的样式修改。
+这份 `README` 只负责回答三个问题：
 
-如果你也想搭建，可以参考少数派的这篇文章：🔗[保卫表达：用后端 BaaS 快速搭建专属无点赞评论版微博——b言b语](https://sspai.com/post/60024)
+- 这个项目是什么
+- 如何在本地启动
+- 应该从哪份文档继续往下读
 
-## 技术栈 🛠️
+更详细的系统说明统一收口到：
+
+- [文档中心](./docs/README.md)
+
+## 2. 项目概览
+
+### 技术栈
 
 | 分类 | 技术 |
 |------|------|
-| **框架** | Next.js 16.1.6 + React 19 + TypeScript |
-| **样式** | Tailwind CSS 4 + Framer Motion |
-| **图标** | Hugeicons (@hugeicons/react) |
-| **后端** | Supabase (PostgreSQL + Auth) |
-| **部署** | Vercel |
+| 前端框架 | Next.js 16.1.6 + React 19 + TypeScript |
+| 样式与动效 | Tailwind CSS 4 + Framer Motion |
+| 编辑器 | Tiptap 3 |
+| 地图 | Leaflet |
+| 后端 | Supabase |
+| 部署 | Vercel |
 
-> 完整技术选型详见 [docs/tech-stack.md](docs/tech-stack.md)
+完整说明请看：
 
-## 快速开始 🚀
+- [技术选型总览](./docs/guide/tech-stack.md)
 
-### 1. 环境准备
-- 安装 [Node.js](https://nodejs.org/) (建议 v20+)
-- 安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/) 并确保其正在运行
-- 安装 [Supabase CLI](https://supabase.com/docs/guides/cli)
+### 核心能力
 
-### 2. 启动开发环境
+- 公开与私密 Memo
+- 单条私密解锁
+- 标签、搜索、地图与时间轴浏览
+- 画廊视图
+- 多选与批量操作
+- 作者维度备份导出
+
+私密 Memo 的规则说明请看：
+
+- [私密 Memo 规则](./docs/core/security.md)
+
+## 3. 快速开始
+
+### 环境准备
+
+- Node.js 20+
+- Docker Desktop
+- Supabase CLI
+- 项目根目录下的 `.env.local`
+
+### 安装依赖
+
 ```bash
-# 安装依赖
 npm install
+```
 
-# 启动 Supabase 和 Next.js
+### 启动开发环境
+
+```bash
 npm run dev
 ```
 
-### 3. 开发环境自愈
-本项目集成了智能启动脚本。如果你遇到由于电脑关机或 Docker 异常导致的“容器已退出但 CLI 认为正在运行”的问题，`npm run dev` 会**自动识别并修复**状态，无需手动运行 `supabase stop`。
+这个命令会先执行：
 
----
+- `npm run supabase:start`
+- 再启动 Next.js 开发服务器
 
+其中 `scripts/dev-setup.sh` 内置了 Supabase 本地环境的自愈逻辑，用于修复 Docker 异常关停后 CLI 与容器状态不同步的问题。
 
+### 常用命令
 
-## 参与贡献 🤝
+```bash
+npm run lint
+npm run test
+npm run test:integration
+npm run build
+npm run supabase:status
+```
 
-本项目严格遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范。
-请确保您的 Commit Message 符合以下格式，以便自动生成 Changelog：
+数据库与本地 Supabase 工作流请看：
 
-- `feat`: 新功能
-- `fix`: 修复 Bug
-- `docs`: 文档变更
-- `style`: 代码格式（不影响功能）
-- `refactor`: 代码重构
-- `perf`: 性能优化
-- `test`: 测试相关
-- `chore`: 构建/工具/杂项
+- [Supabase 本地开发说明](./supabase/README.md)
 
-开发完成后，请运行 `npm run release` 来生成版本日志并打标签。
+## 4. 文档地图
 
-## 更新日志 📝
-请查看 [CHANGELOG.md](CHANGELOG.md) 获取详细的更新记录。
+### 仓库级文档
+
+- [文档中心](./docs/README.md)
+- [变更日志](./CHANGELOG.md)
+- [脚本目录说明](./scripts/README.md)
+- [Supabase 目录说明](./supabase/README.md)
+
+### 核心系统文档
+
+- [业务逻辑架构](./docs/core/architecture.md)
+- [接口与数据访问](./docs/core/api.md)
+- [数据库设计](./docs/core/database.md)
+- [私密 Memo 规则](./docs/core/security.md)
+
+### 功能文档
+
+- [功能模块总览](./docs/features/features-guide.md)
+- [时间轴与归档](./docs/features/timeline.md)
+- [地图功能](./docs/features/map.md)
+- [画廊功能](./docs/features/gallery.md)
+- [内容体验](./docs/features/content-experience.md)
+- [多选与批量操作](./docs/features/selection.md)
+
+## 5. 开发与提交流程
+
+项目的工程规范、测试策略和文档维护规则统一写在：
+
+- [工程化标准与开发规范](./docs/guide/standards.md)
+- [测试与质量保证方案](./docs/guide/testing.md)
+- [文档体系与维护规范](./docs/guide/documentation.md)
+
+提交前建议至少执行：
+
+```bash
+npm run lint
+npm run test
+npm run build
+```
+
+## 6. 参考与致谢
+
+本仓库最早基于 [daibor/nonsense.fun](https://github.com/daibor/nonsense.fun) 的思路演化而来，后续围绕私密记录、作者权限模型、地图和时间轴体验做了持续重构。

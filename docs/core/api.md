@@ -1,69 +1,157 @@
-# JustMemo 接口设计规范 (API Spec)
+# JustMemo 接口与数据访问
 
-> 最后更新：2026-04-06 (整合 Next.js 动态 API 调用最佳实践)
+> 最后更新：2026-04-19
+> 状态：与当前代码同步
 
-## 1. 通用响应契约
-所有接口遵循以下统一返回格式：
+## 1. 作用
+
+这份文档说明 JustMemo 当前的数据访问层长什么样，重点包括：
+
+- Server Actions 的分组
+- 查询入口的职责边界
+- 私密 Memo 的读取与解锁语义
+- 缓存与动态 API 的使用约束
+
+## 2. 统一响应契约
+
+Server Actions 统一返回：
+
 ```ts
 {
-  success: boolean;    // 操作是否成功
-  data?: T;           // 成功时返回的数据
-  error?: string;      // 失败时的具体错误描述
+  success: boolean;
+  data?: T;
+  error?: string;
 }
 ```
 
-## 2. Server Actions (Mutations)
+约束：
 
-### 2.1 鉴权系列 (`auth.ts`)
-*   **Actions**: `login`, `signup`, `verifyOtp`, `updatePassword`
-*   **校验**: 强制通过 `src/lib/auth/schemas.ts` 中的 Zod 模式校验。
+- `success = false` 时必须给出可读错误信息
+- `data` 的结构应尽量稳定，避免前端大量做兜底分支
 
-### 2.2 笔记操作系列 (`mutate.ts`)
-*   **Actions**: `createMemo`, `updateMemoContent`, `updateMemoState`, `batchAddTagsToMemos`, `verifyUnlockCode`
-*   **特性**: 
-    *   `verifyUnlockCode`: 验证私密笔记口令。成功后设置 HttpOnly Cookie。
+## 3. 写操作入口
 
-### 2.3 回收站系列 (`trash.ts`)
-*   **Actions**: `deleteMemo`, `restoreMemo`, `permanentDeleteMemo`, `emptyTrash`
+### 3.1 鉴权相关
 
-## 3. 读操作 (Queries - 统一 DAL 架构)
+主要位于认证 action 中，负责：
 
-为了保证查询字段的一致性与安全性，所有读操作均应通过 `src/lib/memos/query-builder.ts` 构建。
+- 登录
+- 注册
+- 验证
+- 密码更新
 
-### 3.1 核心分页查询 (`query.ts`)
-*   **`getMemos`**: RPC 驱动的高性能安全分页查询。
-*   **`searchMemosForMention`**: 为编辑器设计的增量搜索接口。
+### 3.2 Memo 写操作
 
----
+当前核心写操作包括：
 
-## 4. Next.js 动态 API 调用规范 (Best Practices)
+- `createMemo`
+- `updateMemoContent`
+- `updateMemoState`
+- `batchAddTagsToMemos`
+- `verifyUnlockCode`
+- `clearUnlockCode`
 
-在 Server Actions 与 Server Components 中调用 Next.js 动态 API (如 `cookies()`, `headers()`) 时，必须遵循以下“解耦”原则：
+其中需要特别注意的是：
 
-### 4.1 动态 API 原子化封装
-不要在业务逻辑深处直接调用 `cookies()`。应在 `src/lib/supabase/server.ts` 等底层组件中统一实例化。
+#### `createMemo` / `updateMemoState`
 
-```ts
-// 推荐做法：通过工厂函数获取实例
-const supabase = await createClient();
-const { data: { user } } = await supabase.auth.getUser();
-```
+- 私密口令以明文输入进入 action
+- 进入数据库前必须转成 `access_code_hash`
+- 不允许明文口令落库
 
-### 4.2 性能与并发冲突规避
-1. **避免在循环中调用**: 动态 API 会触发 Next.js 的动态渲染切换，频繁调用会显著拉高 Time to First Byte (TTFB)。
-2. **轻量化实例化**: `createServerClient` 实例化开销极低。真正的性能瓶颈在于 `supabase.auth.getUser()` 的网络往返。
+#### `verifyUnlockCode`
 
-### 4.3 故障排查 Checklist
-如果你遇到 `cookies called outside request scope`：
-- 确认该调用发生在标准的 Server Component 渲染流或 Server Action 执行流中。
-- 确认你没有在 `setTimeout`、`setInterval` 或未经 `await` 的 Promise 中调用动态 API。
+- 只验证单条 Memo
+- 成功后直接返回这条可读 Memo 数据
+- 不写 Cookie
+- 客户端只把结果保存在当前页面内存态
 
----
+#### `clearUnlockCode`
 
-## 5. 分层缓存与同步 (Caching & Sync)
+- 当前只是兼容旧调用链保留的空操作
+- 它不负责清理任何持久化状态
 
-| 目标 | 方案 |
-| :--- | :--- |
-| **用户信息** | 在 Layout 级别获取一次，通过 Context/Props 传递。 |
-| **频繁查询数据** | 通过 `PageDataCache` (Client) 实现路径级自动隔离。 |
-| **UI 即时同步** | 使用 **CustomEvent** (如 `memo:re-fetch`) 触发组件解耦更新。 |
+## 4. 读操作入口
+
+### 4.1 核心分页查询
+
+主列表、搜索和大部分筛选都基于：
+
+- `getMemos`
+
+它的特点是：
+
+- 走 RPC
+- 支持分页
+- 支持日期、标签、编号等过滤
+- 支持 `unlockedMemoIds`
+
+### 4.2 Mention 与编号查询
+
+- `searchMemosForMention`：编辑器中的增量搜索
+- `getMemoByNumber`：按编号获取单条 Memo
+
+这两个入口都要遵守私密可见性规则，不能因为是“辅助查询”就绕过权限模型。
+
+### 4.3 地图查询
+
+- `getMemosWithLocations`
+
+这个查询允许返回锁定占位，因为地图需要先展示“有标记”，再决定是否展示正文。
+
+### 4.4 统计与导出
+
+- `getMemoStats`
+- `getTimelineStats`
+- `getAllTags`
+- `exportMemos`
+
+它们都不是“全站绝对统计”，而是基于当前查看者身份裁剪后的结果。
+
+## 5. 私密 Memo 读取规则
+
+接口层必须统一遵循以下模型：
+
+- 作者本人可以直接读取自己的私密 Memo
+- 非作者需要按条解锁
+- 未解锁的私密 Memo 在搜索、标签等场景中不应进入真实结果
+- 地图和主列表可根据场景返回锁定占位
+
+## 6. 动态 API 约束
+
+在 Server Actions 和 Server Components 中使用 Next.js 动态 API 时：
+
+- 不要在业务深处直接散落调用 `cookies()` / `headers()`
+- 应通过底层工厂函数统一创建服务端客户端实例
+- 避免在循环和无控制的异步链中频繁调用动态 API
+
+当前主要原则是：
+
+- 先统一拿到 Supabase client
+- 再在清晰的请求上下文里完成用户信息读取
+
+## 7. 缓存与同步
+
+### 7.1 页面级缓存
+
+频繁读取的数据由 `PageDataCache` 负责按页面条件缓存。
+
+### 7.2 UI 同步
+
+局部更新与反馈优先通过：
+
+- 统一状态层
+- 轻量缓存
+- 组件内显式刷新
+
+来完成，而不是依赖大量隐式全局副作用。
+
+## 8. 文档边界
+
+这份文档回答“接口怎么组织”。
+
+以下内容应分别查看：
+
+- 权限与私密规则：看 [security.md](./security.md)
+- SQL、RLS、RPC：看 [database.md](./database.md)
+- 页面与状态流：看 [architecture.md](./architecture.md)

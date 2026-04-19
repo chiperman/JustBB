@@ -127,19 +127,19 @@ export function MainLayoutClient() {
                 <div className="max-w-screen-md mx-auto">
                     {/* Level 3: Visual Padding Area */}
                     <div className="px-6 py-6 space-y-6">
+                        {/* Feed 标题与过滤显示 (包含 Logo 和 SearchInput) */}
+                        <FeedHeader isRefreshing={isRefreshing} />
+
                         {/* 编辑器区域 */}
                         <AnimatePresence>
                             {isAdmin && (
-                                <MemoEditor 
-                                    mode="create" 
-                                    isCollapsed={true} 
-                                    scrollCollapsed={editorForceCollapsed} 
+                                <MemoEditor
+                                    mode="create"
+                                    isCollapsed={true}
+                                    scrollCollapsed={editorForceCollapsed}
                                 />
                             )}
                         </AnimatePresence>
-                        
-                        {/* Feed 标题与过滤显示 (包含 Logo 和 SearchInput) */}
-                        <FeedHeader isRefreshing={isRefreshing} />
                     </div>
                 </div>
             </div>

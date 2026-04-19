@@ -16,8 +16,20 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}==> 正在检查 Supabase 本地环境状态...${NC}"
 
+is_port_open() {
+    local port="$1"
+    nc -z 127.0.0.1 "$port" >/dev/null 2>&1
+}
+
+if is_port_open 54321 && is_port_open 54322; then
+    echo -e "${GREEN}✔ 检测到本地 Supabase API(54321) 和 DB(54322) 已可用，跳过启动。${NC}"
+    exit 0
+fi
+
+echo -e "${YELLOW}! 本地 Supabase 端口未完全就绪，准备执行 'supabase start'...${NC}"
+
 # 获取当前状态并捕获错误
-# 注意：我们不直接 set -e 因为我们需要捕获失败的情况
+# 注意：我们不直接依赖 set -e，因为我们需要捕获启动失败的情况
 if supabase start; then
     echo -e "${GREEN}✔ Supabase 已成功启动！${NC}"
 else

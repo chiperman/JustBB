@@ -59,7 +59,7 @@ export function MemoCardView({
                 "relative bg-card rounded-card p-6 transition-all border border-border focus-within:ring-2 focus-within:ring-primary/10 group",
                 displayMemo.is_pinned && "bg-primary/5 border-primary/20",
                 isSelectionMode && "cursor-pointer hover:border-primary/40 select-none",
-                isSelectionMode && isSelected && "ring-2 ring-primary border-primary/50 shadow-sm",
+                isSelectionMode && isSelected && "border-primary/35 bg-primary/[0.03]",
                 isLastCreated && "animate-new-memo-highlight"
             )}
         >

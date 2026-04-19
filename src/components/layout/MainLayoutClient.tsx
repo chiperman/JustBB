@@ -127,7 +127,7 @@ export function MainLayoutClient() {
             {/* 1. 顶部固定区域 (Fixed Top Area) */}
             <div className={cn(
                 "flex-none z-30 transition-all duration-300 scrollbar-stable overflow-y-auto",
-                editorForceCollapsed ? "bg-background/80 backdrop-blur-md shadow-sm border-b border-border/50" : "bg-transparent"
+                editorForceCollapsed ? "bg-background/80 backdrop-blur-md border-b border-border/20" : "bg-transparent"
             )}>
                 <div className="max-w-screen-md mx-auto">
                     {/* Level 3: Visual Padding Area */}
@@ -156,7 +156,7 @@ export function MainLayoutClient() {
             >
                 <div className="max-w-screen-md mx-auto">
                     {/* Level 3: Visual Padding Area */}
-                    <div className="px-6 pb-20">
+                    <div className="px-6 pt-4 pb-20">
                         <div className="relative min-h-[400px]">
                             <AnimatePresence mode="wait">
                                 {isLoading ? (

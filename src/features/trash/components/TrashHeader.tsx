@@ -4,7 +4,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Delete02Icon as Trash2, Archive02Icon as Archive, Loading01Icon as Loader2 } from '@hugeicons/core-free-icons';
 
 import { Button } from "@/components/ui/button";
-import { ContextPageHeader, ContextPageStat } from '@/components/layout/ContextPageShell';
+import { ContextPageHeader } from '@/components/layout/ContextPageShell';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -28,7 +28,10 @@ export function TrashHeader({ count, isPending, onEmptyTrash }: TrashHeaderProps
         <ContextPageHeader
             icon={Archive}
             title="回收站"
-            description="所有已删除 Memo 都回到首页同一套阅读骨架里，保留上下文、弱化戏剧化装饰，只让删除状态本身成为信息。"
+            showTitle={false}
+            description={count > 0
+                ? `这里按最近删除排序，共 ${count} 条记录。`
+                : '这里暂时没有已删除记录。'}
             actions={count > 0 ? (
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -65,20 +68,6 @@ export function TrashHeader({ count, isPending, onEmptyTrash }: TrashHeaderProps
                     </AlertDialogContent>
                 </AlertDialog>
             ) : null}
-            meta={(
-                <>
-                    <ContextPageStat
-                        label="已删除"
-                        value={count.toString().padStart(2, '0')}
-                        hint="仅你本人可见"
-                    />
-                    <ContextPageStat
-                        label="排序"
-                        value="最近删除"
-                        hint="优先显示最新移入的记录"
-                    />
-                </>
-            )}
         />
     );
 }

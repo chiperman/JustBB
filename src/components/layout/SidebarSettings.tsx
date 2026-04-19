@@ -48,13 +48,11 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { motion, AnimatePresence } from 'framer-motion';
 import { UsageModal } from '@/components/admin/UsageModal';
 
 interface SidebarSettingsProps {
     isCollapsed?: boolean;
 }
-
 
 export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     const { user, loading, setUser } = useUser();
@@ -129,23 +127,26 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
         return <HugeiconsIcon icon={UserCircle} size={16} className="text-muted-foreground" />;
     };
 
+    const identityLabel = user ? user.email : (loading ? '同步中...' : '未登录');
+    const triggerClassName = cn(
+        "h-9 rounded-md overflow-hidden hover:bg-accent hover:text-accent-foreground focus-visible:ring-0 transition-[padding,gap,background-color,color,width] duration-200 active:scale-95",
+        isCollapsed ? "w-9 justify-center px-0" : "flex w-full items-center justify-start gap-3 px-3"
+    );
+
     if (!hasMounted) {
         return (
             <Button
                 variant="ghost"
-                className={cn(
-                    "w-full flex items-center gap-3 h-9 p-2 hover:bg-accent hover:text-accent-foreground rounded-md transition-all focus-visible:ring-0 group/settings overflow-hidden active:scale-95",
-                    isCollapsed ? "justify-center" : "justify-start px-3"
-                )}
+                className={triggerClassName}
                 aria-label="账号与设置"
             >
                 <div className="relative shrink-0">
                     <HugeiconsIcon icon={Settings} size={16} className="text-muted-foreground transition-colors" />
                 </div>
                 {!isCollapsed && (
-                    <div className="flex flex-col items-start overflow-hidden whitespace-nowrap flex-1">
-                        <span className="text-[14px] font-normal text-foreground truncate w-full flex items-center gap-1">
-                            {user ? user.email : (loading ? '同步中...' : '未登录')}
+                    <div className="min-w-0 flex-1 overflow-hidden whitespace-nowrap text-left">
+                        <span className="flex w-full items-center gap-1 truncate text-[14px] font-normal text-foreground">
+                            {identityLabel}
                         </span>
                     </div>
                 )}
@@ -159,10 +160,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                 <DropdownMenuTrigger asChild>
                     <Button
                         variant="ghost"
-                        className={cn(
-                            "w-full flex items-center gap-3 h-9 p-2 hover:bg-accent hover:text-accent-foreground rounded-md transition-all focus-visible:ring-0 group/settings overflow-hidden active:scale-95",
-                            isCollapsed ? "justify-center" : "justify-start px-3"
-                        )}
+                        className={triggerClassName}
                         aria-label="账号与设置"
                     >
                         <div className="relative shrink-0">
@@ -173,23 +171,16 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                             )}
                         </div>
 
-                        <AnimatePresence>
-                            {!isCollapsed && (
-                                <motion.div
-                                    key="content"
-                                    exit={{ opacity: 0, x: -10 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="flex flex-col items-start overflow-hidden whitespace-nowrap flex-1"
+                        {!isCollapsed && (
+                            <div className="min-w-0 flex-1 overflow-hidden whitespace-nowrap text-left">
+                                <span
+                                    className="flex w-full items-center gap-1 truncate text-[14px] font-normal text-foreground"
+                                    suppressHydrationWarning
                                 >
-                                    <span
-                                        className="text-[14px] font-normal text-foreground truncate w-full flex items-center gap-1"
-                                        suppressHydrationWarning
-                                    >
-                                        {user ? user.email : (loading ? '同步中...' : '未登录')}
-                                    </span>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                                    {identityLabel}
+                                </span>
+                            </div>
+                        )}
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="start" className="w-64 rounded-md border-border/40 backdrop-blur-md bg-popover/90 p-1 shadow-xl">

@@ -8,7 +8,7 @@ import { PanelLeftCloseIcon, PanelLeftOpenIcon, Cancel01Icon } from '@hugeicons/
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { SidebarSettings } from "./SidebarSettings";
-import { motion, Variants } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
 
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
@@ -18,6 +18,19 @@ import { useHasMounted } from '@/hooks/useHasMounted';
 export interface LeftSidebarProps {
     onClose?: () => void;
 }
+
+const SIDEBAR_EXPANDED_WIDTH = 280;
+const SIDEBAR_COLLAPSED_WIDTH = 88;
+const SIDEBAR_TRANSITION = {
+    duration: 0.28,
+    ease: [0.22, 1, 0.36, 1] as const
+};
+const CONTENT_FADE_TRANSITION = {
+    duration: 0.14,
+    ease: [0.4, 0, 0.2, 1] as const
+};
+const HEATMAP_SLOT_HEIGHT = 248;
+const TAGS_SLOT_HEIGHT = 176;
 
 export function LeftSidebar({ onClose }: LeftSidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -34,49 +47,23 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
         handleNavigate
     } = useSidebarNavigation();
 
-    const sidebarVariants: Variants = {
-        expanded: { width: "18rem" },
-        collapsed: { width: "5rem" }
-    };
-
-    const labelVariants: Variants = {
-        expanded: { opacity: 1, width: "auto", x: 0, transition: { duration: 0.2 } },
-        collapsed: { opacity: 0, width: 0, x: -10, transition: { duration: 0.1 } }
-    };
-
-    const navVariants: Variants = {
-        expanded: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } },
-        collapsed: { transition: { staggerChildren: 0.05, staggerDirection: -1 } }
-    };
-
-    const navItemVariants: Variants = {
-        expanded: { opacity: 1, x: 0 },
-        collapsed: { opacity: 1, x: 0 }
-    };
-
-    const sectionVariants: Variants = {
-        expanded: { opacity: 1, height: "auto", transition: { delay: 0.1, duration: 0.3 } },
-        collapsed: { opacity: 0, height: 0, transition: { duration: 0.2 } }
-    };
-
     return (
         <motion.aside
-            initial={effectiveIsCollapsed ? "collapsed" : "expanded"}
-            animate={effectiveIsCollapsed ? "collapsed" : "expanded"}
-            variants={sidebarVariants}
-            transition={{ stiffness: 350, damping: 35, mass: 1 }}
+            initial={false}
+            animate={{ width: effectiveIsCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH }}
+            transition={SIDEBAR_TRANSITION}
             style={{ willChange: "width" }}
-            className="h-full flex flex-col border-r border-border bg-background/50 backdrop-blur-md overflow-hidden group/sidebar relative p-2"
+            className="relative flex h-full shrink-0 flex-col overflow-hidden border-r border-border bg-background/50 p-2 backdrop-blur-md"
         >
             {/* Top Area */}
-            <div className={cn("mb-[24px]", !effectiveIsCollapsed ? "flex items-center gap-1 pr-1" : "pb-2 flex flex-col gap-4")}>
-                <div className="flex-1 min-w-0 h-9 overflow-hidden">
+            <div className={cn("mb-[24px] flex items-center gap-1 transition-[padding] duration-200", effectiveIsCollapsed ? "pr-0" : "pr-1")}>
+                <div className={cn("h-9 overflow-hidden", effectiveIsCollapsed ? "w-9 min-w-9 flex-none" : "flex-1 min-w-0")}>
                     <SidebarSettings isCollapsed={effectiveIsCollapsed} />
                 </div>
                 <Button
                     variant="ghost"
                     onClick={() => isMobile ? onClose() : setIsCollapsed(!isCollapsed)}
-                    className={cn("text-muted-foreground shrink-0 rounded transition-all active:scale-95", effectiveIsCollapsed ? "w-full justify-center h-9 p-2" : "h-8 w-8 px-0")}
+                    className="h-8 w-8 shrink-0 rounded px-0 text-muted-foreground transition-all active:scale-95"
                     asChild
                 >
                     <motion.button>
@@ -90,19 +77,37 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
             </div>
 
             {/* Heatmap Area */}
-            <motion.div variants={sectionVariants} className="overflow-hidden mb-[24px] px-1 min-w-[17rem]">
-                <Suspense fallback={<div className="h-40 w-full animate-pulse bg-muted/20 rounded" />}>
-                    <div className={effectiveIsCollapsed ? "pointer-events-none" : ""}>
-                        <Heatmap />
-                    </div>
-                </Suspense>
-            </motion.div>
+            <div className="mb-[24px] shrink-0 overflow-hidden px-1" style={{ height: HEATMAP_SLOT_HEIGHT }}>
+                <AnimatePresence initial={false} mode="popLayout">
+                    {!effectiveIsCollapsed && (
+                        <motion.div
+                            key="heatmap"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={CONTENT_FADE_TRANSITION}
+                            className="h-full"
+                        >
+                            <Suspense fallback={<div className="h-40 w-full animate-pulse rounded bg-muted/20" />}>
+                                <Heatmap />
+                            </Suspense>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
 
             {/* Navigation */}
-            <motion.nav variants={navVariants} className="flex-1 px-1 space-y-1 overflow-y-auto overflow-x-hidden custom-scrollbar mb-[24px] relative">
+            <motion.nav
+                className={cn(
+                    "relative min-h-0 flex-1 space-y-1 overflow-x-hidden px-1 pb-4 custom-scrollbar",
+                    effectiveIsCollapsed ? "overflow-y-hidden" : "overflow-y-auto"
+                )}
+            >
                 {hasMounted && (
                     <motion.div
-                        style={{ y: springY, scaleY, scaleX, opacity: 1, originY: 0.5 }}
+                        animate={{ opacity: effectiveIsCollapsed ? 0 : 1 }}
+                        transition={{ duration: 0.14 }}
+                        style={{ y: springY, scaleY, scaleX, originY: 0.5 }}
                         className="absolute left-0 w-1 h-5 bg-primary rounded-full z-10"
                     />
                 )}
@@ -114,19 +119,30 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                         isActive={hasMounted && (item.href === '/' ? currentView === '/' : currentView.startsWith(item.href))}
                         isCollapsed={effectiveIsCollapsed}
                         onClick={(href) => handleNavigate(href, isMobile, onClose)}
-                        labelVariants={labelVariants}
-                        navItemVariants={navItemVariants}
                     />
                 ))}
             </motion.nav>
 
             {/* Popular Tags */}
-            <motion.div variants={sectionVariants} className="overflow-hidden mb-[24px] px-1 min-w-[17rem]">
-                <h3 className="text-[24px] font-bold text-foreground leading-tight tracking-tight mb-4 flex items-center gap-2">热门标签</h3>
-                <Suspense fallback={<div className="space-y-2"><div className="flex flex-wrap gap-2">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-6 w-12 bg-muted/20 rounded-full animate-pulse" />)}</div></div>}>
-                    <TagCloud />
-                </Suspense>
-            </motion.div>
+            <div className="mt-auto shrink-0 overflow-hidden" style={{ height: TAGS_SLOT_HEIGHT }}>
+                <AnimatePresence initial={false} mode="popLayout">
+                    {!effectiveIsCollapsed && (
+                        <motion.div
+                            key="popular-tags"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={CONTENT_FADE_TRANSITION}
+                            className="h-full border-t border-border/60 bg-background/80 px-1 pt-4 pb-1 backdrop-blur-sm"
+                        >
+                            <h3 className="mb-4 flex items-center gap-2 text-[24px] leading-tight font-bold tracking-tight text-foreground">热门标签</h3>
+                            <Suspense fallback={<div className="space-y-2"><div className="flex flex-wrap gap-2">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-6 w-12 rounded-full bg-muted/20 animate-pulse" />)}</div></div>}>
+                                <TagCloud />
+                            </Suspense>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
         </motion.aside>
     );
 }

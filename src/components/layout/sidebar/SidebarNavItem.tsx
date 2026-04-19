@@ -1,34 +1,35 @@
 'use client';
 
-import { motion, Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { cn } from '@/lib/utils';
 import { NavigationItem } from '@/config/navigation';
+
+const LABEL_TRANSITION = {
+    duration: 0.18,
+    ease: [0.4, 0, 0.2, 1] as const
+};
 
 interface SidebarNavItemProps {
     item: NavigationItem;
     isActive: boolean;
     isCollapsed: boolean;
     onClick: (href: string) => void;
-    labelVariants: Variants;
-    navItemVariants: Variants;
 }
 
 export function SidebarNavItem({
     item,
     isActive,
     isCollapsed,
-    onClick,
-    labelVariants,
-    navItemVariants
+    onClick
 }: SidebarNavItemProps) {
     return (
-        <motion.div variants={navItemVariants}>
+        <motion.div layout="position">
             <button
                 onClick={() => onClick(item.href)}
                 className={cn(
-                    "flex items-center p-2 h-9 rounded transition-all group relative hover:bg-accent w-full text-left cursor-pointer active:scale-95",
-                    isCollapsed ? "justify-center gap-0" : "px-3 gap-3",
+                    "group relative flex h-9 w-full items-center overflow-hidden rounded text-left transition-[padding,gap,background-color,color] duration-200 hover:bg-accent active:scale-95",
+                    isCollapsed ? "mx-auto w-9 justify-center gap-0 px-0" : "px-3 gap-3",
                     isActive
                         ? "text-primary font-medium hover:text-primary"
                         : "text-muted-foreground hover:text-accent-foreground"
@@ -43,10 +44,16 @@ export function SidebarNavItem({
                 </span>
 
                 <motion.span
-                    variants={labelVariants}
-                    className="text-[14px] font-normal whitespace-nowrap flex items-center"
+                    initial={false}
+                    animate={isCollapsed
+                        ? { opacity: 0, x: -6, maxWidth: 0 }
+                        : { opacity: 1, x: 0, maxWidth: 160 }
+                    }
+                    transition={LABEL_TRANSITION}
+                    className="min-w-0 overflow-hidden whitespace-nowrap text-[14px] font-normal"
+                    aria-hidden={isCollapsed}
                 >
-                    {item.label}
+                    <span className="block truncate">{item.label}</span>
                 </motion.span>
             </button>
         </motion.div>

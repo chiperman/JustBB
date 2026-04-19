@@ -1,21 +1,37 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getMemoStats, exportMemos } from './memos/analytics';
-import { isAdmin } from '@/features/auth/actions';
+import { getCurrentUserId } from '@/features/auth/actions';
 
 // Mock Supabase Instance
 const mockSupabase = {
-    rpc: vi.fn().mockResolvedValue({ 
-        data: { 
-            totalMemos: 100, 
-            totalTags: 50, 
-            firstMemoDate: '2024-01-01', 
-            days: {} 
-        }, 
-        error: null 
-    }),
     from: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
-    is: vi.fn().mockReturnThis(),
+    is: vi.fn().mockResolvedValue({
+        data: [
+            {
+                created_at: '2024-01-01T00:00:00.000Z',
+                word_count: 10,
+                tags: ['tag-a', 'tag-b'],
+                is_private: false,
+                owner_id: 'user-1'
+            },
+            {
+                created_at: '2024-01-02T00:00:00.000Z',
+                word_count: 20,
+                tags: ['tag-c'],
+                is_private: true,
+                owner_id: 'user-1'
+            },
+            {
+                created_at: '2024-01-03T00:00:00.000Z',
+                word_count: 30,
+                tags: ['tag-d'],
+                is_private: true,
+                owner_id: 'other-user'
+            }
+        ],
+        error: null
+    }),
     order: vi.fn().mockResolvedValue({ data: [], error: null }),
     eq: vi.fn().mockReturnThis(),
     single: vi.fn().mockResolvedValue({ data: null, error: null })
@@ -33,7 +49,7 @@ vi.mock('@/lib/supabase', () => ({
 }));
 
 vi.mock('@/features/auth/actions', () => ({
-    isAdmin: vi.fn(async () => true)
+    getCurrentUserId: vi.fn(async () => 'user-1')
 }));
 
 vi.mock('@/lib/env', () => ({
@@ -57,12 +73,12 @@ describe('getMemoStats', () => {
         const result = await getMemoStats();
 
         expect(result.success).toBe(true);
-        expect(result.data?.totalMemos).toBe(100);
-        expect(result.data?.totalTags).toBe(50);
+        expect(result.data?.totalMemos).toBe(2);
+        expect(result.data?.totalTags).toBe(3);
     });
 
     it('当数据库报错时应该返回零值对象', async () => {
-        mockSupabase.rpc.mockResolvedValueOnce({
+        mockSupabase.is = vi.fn().mockResolvedValueOnce({
             data: null,
             error: { message: 'Database failure' }
         });
@@ -75,7 +91,7 @@ describe('getMemoStats', () => {
     });
 
     it('当未授权时应该拒绝导出', async () => {
-        vi.mocked(isAdmin).mockResolvedValueOnce(false);
+        vi.mocked(getCurrentUserId).mockResolvedValueOnce(null);
 
         const result = await exportMemos('markdown');
 
@@ -89,6 +105,7 @@ describe('getMemoStats', () => {
         mockSupabase.from.mockReturnThis();
         mockSupabase.select.mockReturnThis();
         mockSupabase.is = vi.fn().mockReturnThis();
+        mockSupabase.eq = vi.fn().mockReturnThis();
         mockSupabase.order = vi.fn().mockResolvedValue({
             data: [
                 {

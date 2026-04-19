@@ -21,6 +21,7 @@ describe('Security & RLS (Integrated)', () => {
 
     const adminClient = createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const anonClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const userClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let testMemoId: string;
     let canRun = true;
@@ -36,6 +37,7 @@ describe('Security & RLS (Integrated)', () => {
         const { data, error } = await adminClient
             .from('memos')
             .insert({
+                owner_id: '00000000-0000-0000-0000-000000000001',
                 content: 'SECRET_INTEGRATION_TEST_CONTENT',
                 is_private: true,
                 access_code_hint: 'test_hint'
@@ -101,7 +103,26 @@ describe('Security & RLS (Integrated)', () => {
         expect(target.content).toBe('');
     });
 
-    it('should allow admins (service role) to read everything', async () => {
+    it('should keep private memos locked for authenticated non-owners', async () => {
+        if (!canRun) return;
+
+        const { error: loginError } = await userClient.auth.signInWithPassword({
+            email: 'user@example.com',
+            password: 'user123456',
+        });
+
+        expect(loginError).toBeNull();
+
+        const { data, error } = await userClient
+            .from('memos')
+            .select('*')
+            .eq('id', testMemoId);
+
+        expect(error).toBeNull();
+        expect(data).toHaveLength(0);
+    });
+
+    it('should allow service role to read everything', async () => {
         if (!canRun) return;
 
         const { data, error } = await adminClient

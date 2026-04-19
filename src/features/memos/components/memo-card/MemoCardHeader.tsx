@@ -18,7 +18,6 @@ interface MemoCardHeaderProps {
     onToggleBacklinks: () => void;
     onEdit: () => void;
     onMenuOpenChange: (open: boolean) => void;
-    isAdmin: boolean;
     isMenuOpen: boolean;
     hasMounted: boolean;
     showViewOriginal?: boolean;
@@ -34,7 +33,6 @@ export function MemoCardHeader({
     onToggleBacklinks,
     onEdit,
     onMenuOpenChange,
-    isAdmin,
     isMenuOpen,
     hasMounted,
     showViewOriginal,
@@ -123,7 +121,7 @@ export function MemoCardHeader({
                                 tags={memo.tags ?? []}
                                 onEdit={onEdit}
                                 onOpenChange={onMenuOpenChange}
-                                isAdmin={isAdmin}
+                                isOwner={memo.is_owner}
                             />
                         </>
                     )}

@@ -141,6 +141,15 @@ export async function getCurrentUser(): Promise<UserInfo | null> {
     };
 }
 
+export async function getCurrentUserId(): Promise<string | null> {
+    const user = await getCurrentUser();
+    return user?.id ?? null;
+}
+
+export async function isAuthenticated() {
+    return (await getCurrentUserId()) !== null;
+}
+
 export async function isAdmin() {
     const user = await getCurrentUser();
     return user?.role === 'admin';

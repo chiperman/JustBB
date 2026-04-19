@@ -3,6 +3,7 @@
 import { useState, useEffect, ComponentType } from 'react';
 import { getMemosWithLocations } from '@/actions/memos/query';
 import { locationCache, type MapMarker } from '@/lib/location-cache';
+import { useUnlockedMemos } from '@/context/UnlockedMemosContext';
 
 // 模块级预加载
 const mapViewPromise = import('@/components/ui/MapView');
@@ -16,21 +17,22 @@ interface MapViewProps {
 }
 
 export function useMapMemos() {
+    const { unlockedMemoIds } = useUnlockedMemos();
     const [markers, setMarkers] = useState<MapMarker[]>([]);
-    const [isLoading, setIsLoading] = useState(!locationCache.getInitialized());
+    const [isLoading, setIsLoading] = useState(true);
     const [MapView, setMapView] = useState<ComponentType<MapViewProps> | null>(null);
 
     useEffect(() => {
         let isMounted = true;
 
         const load = async () => {
-            const hasCache = locationCache.getInitialized();
+            const hasCache = locationCache.getInitialized() && unlockedMemoIds.length === 0;
             if (hasCache) {
                 setMarkers(locationCache.getMarkers());
             }
 
             const [result, mapModule] = await Promise.all([
-                getMemosWithLocations(),
+                getMemosWithLocations(unlockedMemoIds),
                 mapViewPromise
             ]);
 
@@ -69,7 +71,7 @@ export function useMapMemos() {
             isMounted = false;
             setIsLoading(true);
         };
-    }, []);
+    }, [unlockedMemoIds]);
 
     return { markers, isLoading, MapView };
 }

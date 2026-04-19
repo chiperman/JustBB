@@ -7,6 +7,7 @@ import { getClient } from '../supabase';
 export const BASE_MEMO_SELECT = `
     id,
     memo_number,
+    owner_id,
     content,
     tags,
     is_private,

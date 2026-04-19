@@ -19,6 +19,7 @@ export interface NavigationItem {
     label: string;
     href: string;
     isAdminOnly?: boolean;
+    requiresAuth?: boolean;
 }
 
 export const NAVIGATION_CONFIG: NavigationItem[] = [
@@ -27,5 +28,5 @@ export const NAVIGATION_CONFIG: NavigationItem[] = [
     { id: 'tags', icon: Tag01Icon as unknown as IconSvgObject, label: '标签', href: '/tags' },
     { id: 'onthisday', icon: Calendar02Icon as unknown as IconSvgObject, label: '去年今日', href: '/on-this-day' },
     { id: 'map', icon: Location04Icon as unknown as IconSvgObject, label: '地图', href: '/map' },
-    { id: 'trash', icon: Delete02Icon as unknown as IconSvgObject, label: '回收站', href: '/trash', isAdminOnly: true },
+    { id: 'trash', icon: Delete02Icon as unknown as IconSvgObject, label: '回收站', href: '/trash', requiresAuth: true },
 ];

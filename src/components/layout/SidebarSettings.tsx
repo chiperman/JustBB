@@ -248,11 +248,11 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                 <DropdownMenuItem
                                     className="rounded-md disabled:opacity-40"
                                     onSelect={(e) => e.preventDefault()}
-                                    disabled={user?.role !== 'admin'}
-                                    title={user?.role !== 'admin' ? "仅管理员可导出数据" : undefined}
+                                    disabled={!user}
+                                    title={!user ? "登录后才可导出自己的数据" : undefined}
                                 >
                                     <HugeiconsIcon icon={Download} size={16} className="mr-2" />
-                                    <span>备份全站记录 (MD)</span>
+                                    <span>备份我的记录 (MD)</span>
                                 </DropdownMenuItem>
                             </AlertDialogTrigger>
                             <AlertDialogContent className="rounded-md border-border/50">
@@ -262,7 +262,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                                         确认导出数据？
                                     </AlertDialogTitle>
                                     <AlertDialogDescription>
-                                        系统将处理所有公开及私密记录，生成一个标准的 Markdown 格式备份，请妥善保管。
+                                        系统将导出你自己的公开及私密记录，生成一个标准的 Markdown 格式备份，请妥善保管。
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>

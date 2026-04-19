@@ -15,12 +15,16 @@ import { NAVIGATION_CONFIG } from '@/config/navigation';
 export function useSidebarNavigation() {
     const pathname = usePathname();
     const router = useRouter();
-    const { isAdmin } = useUser();
+    const { isAdmin, user } = useUser();
     const currentView = pathname || '/';
 
     const navItems = useMemo(() => {
-        return NAVIGATION_CONFIG.filter(item => !item.isAdminOnly || isAdmin);
-    }, [isAdmin]);
+        return NAVIGATION_CONFIG.filter(item => {
+            if (item.isAdminOnly && !isAdmin) return false;
+            if (item.requiresAuth && !user) return false;
+            return true;
+        });
+    }, [isAdmin, user]);
 
     // 计算当前索引 (渲染期间计算)
     const currentIndex = useMemo(() => {

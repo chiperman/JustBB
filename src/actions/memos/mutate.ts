@@ -1,15 +1,15 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { getClient, getAdminClient } from '@/lib/supabase';
 import { ActionResponse } from '../shared/types';
 import { Memo } from '@/types/memo';
-import { isAdmin } from '@/features/auth/actions';
+import { getCurrentUserId } from '@/features/auth/actions';
 import { calculateWordCount, extractLocations, mergeTagsIntoContent } from '@/lib/memos/parser';
 import { Database } from '@/types/database';
 import { createMemoSchema, updateMemoContentSchema, updateMemoStateSchema, batchAddTagsSchema } from '@/lib/memos/schemas';
+import { withViewerAccess } from '@/lib/memos/visibility';
 
 type MemoInsert = Database['public']['Tables']['memos']['Insert'];
 
@@ -17,7 +17,8 @@ type MemoInsert = Database['public']['Tables']['memos']['Insert'];
  * 创建新笔记
  */
 export async function createMemo(formData: FormData): Promise<ActionResponse<Memo>> {
-    if (!await isAdmin()) return { success: false, error: '权限不足' };
+    const viewerId = await getCurrentUserId();
+    if (!viewerId) return { success: false, error: '请先登录' };
 
     const rawData = Object.fromEntries(formData.entries());
     const validation = createMemoSchema.safeParse(rawData);
@@ -30,6 +31,7 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
     const supabase = await getClient();
 
     const payload: Partial<MemoInsert> = {
+        owner_id: viewerId,
         content,
         is_private,
         is_pinned,
@@ -62,7 +64,8 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
  * 更新笔记内容 (含内容解析)
  */
 export async function updateMemoContent(formData: FormData): Promise<ActionResponse<Memo>> {
-    if (!await isAdmin()) return { success: false, error: '权限不足' };
+    const viewerId = await getCurrentUserId();
+    if (!viewerId) return { success: false, error: '请先登录' };
 
     const rawData = Object.fromEntries(formData.entries());
     const validation = updateMemoContentSchema.safeParse(rawData);
@@ -83,6 +86,7 @@ export async function updateMemoContent(formData: FormData): Promise<ActionRespo
             updated_at: new Date().toISOString(),
         })
         .eq('id', id)
+        .eq('owner_id', viewerId)
         .select()
         .single();
 
@@ -99,7 +103,8 @@ export async function updateMemoContent(formData: FormData): Promise<ActionRespo
  * 更新笔记状态 (置顶、私密等)
  */
 export async function updateMemoState(formData: FormData): Promise<ActionResponse<Memo>> {
-    if (!await isAdmin()) return { success: false, error: '权限不足' };
+    const viewerId = await getCurrentUserId();
+    if (!viewerId) return { success: false, error: '请先登录' };
 
     const rawData = Object.fromEntries(formData.entries());
     const validation = updateMemoStateSchema.safeParse(rawData);
@@ -130,6 +135,7 @@ export async function updateMemoState(formData: FormData): Promise<ActionRespons
         .from('memos')
         .update(updatePayload)
         .eq('id', id)
+        .eq('owner_id', viewerId)
         .select()
         .single();
 
@@ -146,7 +152,8 @@ export async function updateMemoState(formData: FormData): Promise<ActionRespons
  * 批量为笔记添加标签
  */
 export async function batchAddTagsToMemos(formData: FormData): Promise<ActionResponse> {
-    if (!await isAdmin()) return { success: false, error: '权限不足' };
+    const viewerId = await getCurrentUserId();
+    if (!viewerId) return { success: false, error: '请先登录' };
 
     const rawData = Object.fromEntries(formData.entries());
     const validation = batchAddTagsSchema.safeParse(rawData);
@@ -169,6 +176,7 @@ export async function batchAddTagsToMemos(formData: FormData): Promise<ActionRes
     const { data: memos, error: fetchError } = await supabase
         .from('memos')
         .select('id, content, tags')
+        .eq('owner_id', viewerId)
         .in('id', validIds);
 
     if (fetchError) return { success: false, error: '获取笔记失败' };
@@ -202,15 +210,32 @@ export async function batchAddTagsToMemos(formData: FormData): Promise<ActionRes
 /**
  * 验证解锁口令
  */
-export async function verifyUnlockCode(memoId: string, code: string): Promise<ActionResponse> {
+export async function verifyUnlockCode(memoId: string, code: string): Promise<ActionResponse<Memo>> {
+    if (!memoId) {
+        return { success: false, error: '缺少 Memo ID' };
+    }
+
+    const viewerId = await getCurrentUserId();
     const supabase = await getAdminClient();
     const { data, error } = await supabase
         .from('memos')
-        .select('*')
+        .select('id, memo_number, owner_id, content, tags, access_code_hint, is_private, is_pinned, pinned_at, created_at, updated_at, deleted_at, word_count, locations, access_code_hash')
         .eq('id', memoId)
         .single();
 
-    if (error || !data?.access_code_hash) {
+    if (error || !data) {
+        return { success: false, error: '记录不存在' };
+    }
+
+    if (viewerId && data.owner_id === viewerId) {
+        return {
+            success: true,
+            error: null,
+            data: withViewerAccess(data as unknown as Memo, viewerId, [memoId]) as Memo,
+        };
+    }
+
+    if (!data.access_code_hash) {
         return { success: false, error: '未设置访问口令' };
     }
 
@@ -219,16 +244,11 @@ export async function verifyUnlockCode(memoId: string, code: string): Promise<Ac
         return { success: false, error: '口令错误' };
     }
 
-    // 设置 HttpOnly Cookie 授权访问
-    const cookieStore = await cookies();
-    cookieStore.set('memo_access_code', code, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7, // 1 week
-    });
-
-    return { success: true, error: null };
+    return {
+        success: true,
+        error: null,
+        data: withViewerAccess(data as unknown as Memo, viewerId, [memoId]) as Memo,
+    };
 }
 
 // Alias for legacy usage
@@ -238,7 +258,5 @@ export const unlockWithCode = verifyUnlockCode;
  * 清除解锁口令
  */
 export async function clearUnlockCode(): Promise<ActionResponse> {
-    const cookieStore = await cookies();
-    cookieStore.delete('memo_access_code');
     return { success: true, error: null };
 }

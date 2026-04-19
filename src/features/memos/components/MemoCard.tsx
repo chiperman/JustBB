@@ -9,7 +9,6 @@ import { MemoCardView } from './memo-card/MemoCardView';
 
 interface MemoCardProps {
     memo: Memo;
-    isAdmin?: boolean;
     isEditing?: boolean;
     onEditChange?: (editing: boolean, updatedMemo?: Memo) => void;
     showOriginalOnly?: boolean;
@@ -18,7 +17,6 @@ interface MemoCardProps {
 
 export const MemoCard = memo(function MemoCard({ 
     memo, 
-    isAdmin = false, 
     isEditing, 
     onEditChange, 
     showOriginalOnly = false,
@@ -44,7 +42,6 @@ export const MemoCard = memo(function MemoCard({
     return (
         <MemoCardView 
             memo={memo}
-            isAdmin={isAdmin}
             showOriginalOnly={showOriginalOnly}
             showViewOriginal={showViewOriginal}
             onEdit={() => onEditChange?.(true)}

@@ -58,7 +58,6 @@ export const batchAddTagsSchema = z.object({
  */
 export const fetchMemosSchema = z.object({
     query: z.string().optional().default(''),
-    adminCode: z.string().optional().default(''),
     limit: z.number().int().min(1).max(100).optional().default(20),
     offset: z.number().int().min(0).optional().default(0),
     tag: z.string().nullable().optional(),
@@ -70,10 +69,10 @@ export const fetchMemosSchema = z.object({
     after_date: z.string().nullable().optional(),
     before_date: z.string().nullable().optional(),
     excludePinned: z.preprocess(optionalBooleanPreprocessor, z.boolean().optional().default(false)),
+    unlockedMemoIds: z.array(z.string().uuid('无效的 Memo ID')).optional().default([]),
 });
 
 export type CreateMemoInput = z.infer<typeof createMemoSchema>;
 export type UpdateMemoContentInput = z.infer<typeof updateMemoContentSchema>;
 export type UpdateMemoStateInput = z.infer<typeof updateMemoStateSchema>;
 export type FetchMemosInput = z.infer<typeof fetchMemosSchema>;
-

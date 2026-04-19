@@ -27,6 +27,11 @@ export interface Memo extends Omit<DBRow, 'locations' | 'access_code_hash'> {
      * 注意：这个属性由 RPC (search_memos_secure) 动态计算返回
      */
     is_locked?: boolean;
+
+    /**
+     * 当前查看者是否为作者
+     */
+    is_owner?: boolean;
 }
 
 /**

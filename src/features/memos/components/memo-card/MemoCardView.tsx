@@ -11,10 +11,10 @@ import { MemoCardBacklinks } from './MemoCardBacklinks';
 import { MemoCardLockOverlay } from './MemoCardLockOverlay';
 import { useMemoBacklinks } from '../../hooks/useMemoBacklinks';
 import { ExpandableContent } from '@/components/ui/expandable-content';
+import { useUnlockedMemos } from '@/context/UnlockedMemosContext';
 
 interface MemoCardViewProps {
     memo: Memo;
-    isAdmin: boolean;
     showOriginalOnly: boolean;
     onEdit: () => void;
     shouldReduceMotion: boolean;
@@ -25,7 +25,6 @@ interface MemoCardViewProps {
 
 export function MemoCardView({
     memo,
-    isAdmin,
     showOriginalOnly,
     onEdit,
     shouldReduceMotion,
@@ -36,6 +35,8 @@ export function MemoCardView({
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { isSelectionMode, selectedIds, toggleId } = useSelection();
+    const { getUnlockedMemo } = useUnlockedMemos();
+    const displayMemo = getUnlockedMemo(memo.id) || memo;
     const isSelected = selectedIds.has(memo.id);
 
     const { 
@@ -43,7 +44,7 @@ export function MemoCardView({
         isLoading: loadingBacklinks, 
         showBacklinks, 
         toggleBacklinks 
-    } = useMemoBacklinks(memo.memo_number);
+    } = useMemoBacklinks(displayMemo.memo_number);
 
     const handleCardClick = () => {
         if (isSelectionMode) {
@@ -56,14 +57,14 @@ export function MemoCardView({
             onClick={handleCardClick}
             className={cn(
                 "relative bg-card rounded-card p-6 transition-all border border-border focus-within:ring-2 focus-within:ring-primary/10 group",
-                memo.is_pinned && "bg-primary/5 border-primary/20",
+                displayMemo.is_pinned && "bg-primary/5 border-primary/20",
                 isSelectionMode && "cursor-pointer hover:border-primary/40 select-none",
                 isSelectionMode && isSelected && "ring-2 ring-primary border-primary/50 shadow-sm",
                 isLastCreated && "animate-new-memo-highlight"
             )}
         >
-            <MemoCardHeader 
-                memo={memo}
+                <MemoCardHeader
+                memo={displayMemo}
                 isSelectionMode={isSelectionMode}
                 isSelected={isSelected}
                 onToggleSelection={() => toggleId(memo.id)}
@@ -73,23 +74,22 @@ export function MemoCardView({
                 onToggleBacklinks={toggleBacklinks}
                 onEdit={onEdit}
                 onMenuOpenChange={setIsMenuOpen}
-                isAdmin={isAdmin}
                 isMenuOpen={isMenuOpen}
                 hasMounted={hasMounted}
             />
 
-            <div className={cn("w-full transition-all mt-2", memo.is_locked && "blur-sm select-none")}>
-                {memo.is_locked ? (
+            <div className={cn("w-full transition-all mt-2", displayMemo.is_locked && "blur-sm select-none")}>
+                {displayMemo.is_locked ? (
                     <div className="text-base leading-relaxed text-muted-foreground italic opacity-60">
                         这一条私密记录已被锁定，输入口令后即可解锁阅读。
                     </div>
                 ) : (
                     <ExpandableContent
-                        needsExpansion={!showOriginalOnly && (memo.content.length > 300 || memo.content.split('\n').length > 8)}
+                        needsExpansion={!showOriginalOnly && (displayMemo.content.length > 300 || displayMemo.content.split('\n').length > 8)}
                         collapsedHeight={200}
                     >
                         <MemoContent
-                            content={memo.content}
+                            content={displayMemo.content}
                             disablePreview={showOriginalOnly}
                         />
                     </ExpandableContent>
@@ -98,14 +98,14 @@ export function MemoCardView({
 
             {!showOriginalOnly && (
                 <MemoCardBacklinks 
-                    memoId={memo.id}
+                    memoId={displayMemo.id}
                     showBacklinks={showBacklinks}
                     isLoading={loadingBacklinks}
                     backlinks={backlinks}
                 />
             )}
 
-            {memo.is_locked && (
+            {displayMemo.is_locked && (
                 <MemoCardLockOverlay 
                     onUnlock={() => setIsUnlockOpen(true)}
                     shouldReduceMotion={shouldReduceMotion}
@@ -113,9 +113,10 @@ export function MemoCardView({
             )}
 
             <UnlockDialog
+                memoId={displayMemo.id}
                 isOpen={isUnlockOpen}
                 onClose={() => setIsUnlockOpen(false)}
-                hint={memo.access_code_hint}
+                hint={displayMemo.access_code_hint}
             />
         </article>
     );

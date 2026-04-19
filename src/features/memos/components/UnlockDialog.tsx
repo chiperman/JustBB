@@ -15,18 +15,21 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { CircleLock01Icon as Lock } from '@hugeicons/core-free-icons';
 
 import { useHasMounted } from '@/hooks/useHasMounted';
+import { useUnlockedMemos } from '@/context/UnlockedMemosContext';
 
 interface UnlockDialogProps {
+    memoId: string;
     isOpen: boolean;
     onClose: () => void;
     hint?: string | null;
 }
 
-export function UnlockDialog({ isOpen, onClose, hint }: UnlockDialogProps) {
+export function UnlockDialog({ memoId, isOpen, onClose, hint }: UnlockDialogProps) {
     const [code, setCode] = useState('');
     const [isPending, setIsPending] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const hasMounted = useHasMounted();
+    const { storeUnlockedMemo } = useUnlockedMemos();
 
     const handleConfirm = async () => {
         if (!code) return;
@@ -34,10 +37,11 @@ export function UnlockDialog({ isOpen, onClose, hint }: UnlockDialogProps) {
         setError(null);
 
         try {
-            const res = await unlockWithCode('', code); // ID can be empty as we use cookie based auth
-            if (res.success) {
+            const res = await unlockWithCode(memoId, code);
+            if (res.success && res.data) {
+                storeUnlockedMemo(res.data);
+                setCode('');
                 onClose();
-                window.location.reload(); // 刷新以应用 Cookie
             } else {
                 setError(res.error || '验证失败');
             }

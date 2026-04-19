@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Editor } from '@tiptap/react';
 import { SuggestionProps } from '@tiptap/suggestion';
 import { searchMemosForMention } from '@/actions/memos/query';
+import { useUnlockedMemos } from '@/context/UnlockedMemosContext';
 
 export interface SuggestionItem {
     id: string;
@@ -43,6 +44,7 @@ const generateSnippet = (content?: string, query?: string): string => {
 };
 
 export function useEditorSuggestions() {
+    const { unlockedMemoIds } = useUnlockedMemos();
     const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(0);
@@ -172,7 +174,7 @@ export function useEditorSuggestions() {
         const performFetch = async () => {
             if (!isInitial) setIsLoading(true);
             try {
-                const res = await searchMemosForMention(query, offset, 20);
+                const res = await searchMemosForMention(query, offset, 20, unlockedMemoIds);
                 if (currentVersion !== requestVersionRef.current) return;
 
                 const results = res.success ? (res.data || []) : [];
@@ -213,7 +215,7 @@ export function useEditorSuggestions() {
         } else {
             performFetch();
         }
-    }, []);
+    }, [unlockedMemoIds]);
 
     const updateSuggestionPosition = useCallback((props: CustomSuggestionProps) => {
         const rect = props.clientRect?.();

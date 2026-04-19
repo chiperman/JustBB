@@ -5,6 +5,7 @@ import { Memo } from '@/types/memo';
 import { getMemos } from '@/actions/memos/query';
 import { mergeMemos } from '@/lib/streamUtils';
 import { useMemoSync, MemoEventPayload } from '@/lib/memos/events';
+import { useUnlockedMemos } from '@/context/UnlockedMemosContext';
 
 interface UseMemoFeedProps {
     initialMemos: Memo[];
@@ -16,7 +17,6 @@ interface UseMemoFeedProps {
         date?: string;
         sort?: string;
     };
-    adminCode?: string;
 }
 
 const INITIAL_MEMO_PAGE_SIZE = 30;
@@ -34,7 +34,8 @@ export function reconcileHasMoreOlder(currentHasMoreOlder: boolean, nextInitialM
     return currentHasMoreOlder && nextInitialMemos.length >= INITIAL_MEMO_PAGE_SIZE;
 }
 
-export function useMemoFeed({ initialMemos, searchParams, adminCode }: UseMemoFeedProps) {
+export function useMemoFeed({ initialMemos, searchParams }: UseMemoFeedProps) {
+    const { unlockedMemoIds } = useUnlockedMemos();
     const [memos, setMemos] = useState<Memo[]>(initialMemos);
     const [hasMoreOlder, setHasMoreOlder] = useState(initialMemos.length >= INITIAL_MEMO_PAGE_SIZE);
     const [isLoadingOlder, setIsLoadingOlder] = useState(false);
@@ -59,14 +60,14 @@ export function useMemoFeed({ initialMemos, searchParams, adminCode }: UseMemoFe
                 ? unpinnedMemos[unpinnedMemos.length - 1] 
                 : memos[memos.length - 1];
 
-            const res = await getMemos({
-                ...searchParams,
-                adminCode,
-                limit,
-                before_date: lastMemo?.created_at,
-                excludePinned: true,
-                sort: "newest",
-            });
+                const res = await getMemos({
+                    ...searchParams,
+                    limit,
+                    before_date: lastMemo?.created_at,
+                    excludePinned: true,
+                    sort: "newest",
+                    unlockedMemoIds,
+                });
 
             const nextMemos = res.data || [];
             const validNewMemos = nextMemos.filter(nm => !memos.find(m => m.id === nm.id));
@@ -84,7 +85,7 @@ export function useMemoFeed({ initialMemos, searchParams, adminCode }: UseMemoFe
         } finally {
             setIsLoadingOlder(false);
         }
-    }, [isLoadingOlder, hasMoreOlder, memos, searchParams, adminCode]);
+    }, [isLoadingOlder, hasMoreOlder, memos, searchParams, unlockedMemoIds]);
 
     const updateMemoInList = useCallback((updatedMemo: Memo) => {
         setMemos(prev => prev.map(m => m.id === updatedMemo.id ? updatedMemo : m));

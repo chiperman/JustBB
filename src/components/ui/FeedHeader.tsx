@@ -44,7 +44,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
     const activeDate = searchParams.get('date');
 
     const { isSelectionMode, toggleSelectionMode, selectedIds } = useSelection();
-    const { isAdmin } = useUser();
+    const { user } = useUser();
     const hasMounted = useHasMounted();
 
     const handleSortChange = (value: string) => {
@@ -140,7 +140,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start" side="bottom" className="w-48">
-                                {isAdmin && (
+                                {user && (
                                     <>
                                         <DropdownMenuItem
                                             className="cursor-pointer gap-2"

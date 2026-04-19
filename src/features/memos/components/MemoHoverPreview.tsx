@@ -32,11 +32,13 @@ interface MemoHoverPreviewProps {
 }
 
 import { useHasMounted } from '@/hooks/useHasMounted';
+import { useUnlockedMemos } from '@/context/UnlockedMemosContext';
 
 export function MemoHoverPreview({ memoNumber, children }: MemoHoverPreviewProps) {
     const [previewContent, setPreviewContent] = React.useState<string | null>(null);
     const [loading, setLoading] = React.useState(false);
     const hasMounted = useHasMounted();
+    const { unlockedMemoIds } = useUnlockedMemos();
 
     if (!hasMounted) return <>{children}</>;
 
@@ -45,7 +47,7 @@ export function MemoHoverPreview({ memoNumber, children }: MemoHoverPreviewProps
             setLoading(true);
             try {
                 const { getMemoByNumber } = await import('@/actions/memos/query');
-                const memo = await getMemoByNumber(parseInt(memoNumber));
+                const memo = await getMemoByNumber(parseInt(memoNumber), unlockedMemoIds);
                 if (memo.success && memo.data) {
                     setPreviewContent(memo.data.content);
                 } else {

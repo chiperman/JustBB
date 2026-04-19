@@ -9,6 +9,7 @@ export type Json =
 export type Memo = {
     id: string;
     memo_number: number;
+    owner_id: string;
     content: string;
     tags: string[];
     access_code_hash: string | null;
@@ -31,6 +32,7 @@ export type Database = {
                 Insert: {
                     id?: string;
                     memo_number?: number;
+                    owner_id?: string;
                     content: string;
                     tags?: string[];
                     access_code_hash?: string | null;
@@ -47,6 +49,7 @@ export type Database = {
                 Update: {
                     id?: string;
                     memo_number?: number;
+                    owner_id?: string;
                     content?: string;
                     tags?: string[];
                     access_code_hash?: string | null;
@@ -74,7 +77,7 @@ export type Database = {
             search_memos_secure: {
                 Args: {
                     query_text?: string;
-                    input_code?: string;
+                    unlocked_ids?: string[];
                     limit_val?: number;
                     offset_val?: number;
                     filters?: Json;
@@ -83,6 +86,7 @@ export type Database = {
                 Returns: {
                     id: string;
                     memo_number: number;
+                    owner_id: string;
                     content: string;
                     created_at: string;
                     tags: string[];
@@ -91,6 +95,7 @@ export type Database = {
                     is_pinned: boolean;
                     pinned_at: string | null;
                     is_locked: boolean;
+                    is_owner: boolean;
                     word_count: number;
                 }[];
             };

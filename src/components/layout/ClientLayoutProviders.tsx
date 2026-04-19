@@ -11,6 +11,7 @@ import { StatsProvider } from "@/context/StatsContext";
 import { HeatmapStats } from "@/types/stats";
 import { SelectionToolbar } from "@/components/ui/SelectionToolbar";
 import { PageDataCacheProvider } from "@/context/PageDataCache";
+import { UnlockedMemosProvider } from "@/context/UnlockedMemosContext";
 
 interface ClientLayoutProvidersProps {
     children: React.ReactNode;
@@ -26,22 +27,24 @@ export function ClientLayoutProviders({
 }: ClientLayoutProvidersProps & { initialUser?: UserInfo | null }) {
     return (
         <UserProvider initialUser={initialUser}>
-            <PageDataCacheProvider>
-                <StatsProvider initialData={initialStats}>
-                    <LayoutProvider>
-                        <UIProvider>
-                            <TagsProvider initialData={initialTags}>
-                                <LoginTransitionWrapper>
-                                    <MobileLayoutWrapper>
-                                        {children}
-                                        <SelectionToolbar />
-                                    </MobileLayoutWrapper>
-                                </LoginTransitionWrapper>
-                            </TagsProvider>
-                        </UIProvider>
-                    </LayoutProvider>
-                </StatsProvider>
-            </PageDataCacheProvider>
+            <UnlockedMemosProvider>
+                <PageDataCacheProvider>
+                    <StatsProvider initialData={initialStats}>
+                        <LayoutProvider>
+                            <UIProvider>
+                                <TagsProvider initialData={initialTags}>
+                                    <LoginTransitionWrapper>
+                                        <MobileLayoutWrapper>
+                                            {children}
+                                            <SelectionToolbar />
+                                        </MobileLayoutWrapper>
+                                    </LoginTransitionWrapper>
+                                </TagsProvider>
+                            </UIProvider>
+                        </LayoutProvider>
+                    </StatsProvider>
+                </PageDataCacheProvider>
+            </UnlockedMemosProvider>
         </UserProvider>
     );
 }

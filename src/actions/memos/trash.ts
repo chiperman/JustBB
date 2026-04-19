@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { getClient } from '@/lib/supabase';
 import { ActionResponse } from '../shared/types';
-import { isAdmin } from '@/features/auth/actions';
+import { getCurrentUserId } from '@/features/auth/actions';
 import { Memo } from '@/types/memo';
 import { getMemosQuery, MemoFilters } from '@/lib/memos/query-builder';
 
@@ -11,13 +11,15 @@ import { getMemosQuery, MemoFilters } from '@/lib/memos/query-builder';
  * 软删除笔记
  */
 export async function deleteMemo(id: string): Promise<ActionResponse> {
-    if (!await isAdmin()) return { success: false, error: '权限不足' };
+    const viewerId = await getCurrentUserId();
+    if (!viewerId) return { success: false, error: '请先登录' };
 
     const supabase = await getClient();
     const { error } = await supabase
         .from('memos')
         .update({ deleted_at: new Date().toISOString() })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('owner_id', viewerId);
 
     if (error) {
         console.error('Error soft deleting memo:', error);
@@ -32,13 +34,15 @@ export async function deleteMemo(id: string): Promise<ActionResponse> {
  * 恢复笔记
  */
 export async function restoreMemo(id: string): Promise<ActionResponse> {
-    if (!await isAdmin()) return { success: false, error: '权限不足' };
+    const viewerId = await getCurrentUserId();
+    if (!viewerId) return { success: false, error: '请先登录' };
 
     const supabase = await getClient();
     const { error } = await supabase
         .from('memos')
         .update({ deleted_at: null })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('owner_id', viewerId);
 
     if (error) {
         console.error('Error restoring memo:', error);
@@ -54,13 +58,15 @@ export async function restoreMemo(id: string): Promise<ActionResponse> {
  * 硬删除笔记
  */
 export async function permanentDeleteMemo(id: string): Promise<ActionResponse> {
-    if (!await isAdmin()) return { success: false, error: '权限不足' };
+    const viewerId = await getCurrentUserId();
+    if (!viewerId) return { success: false, error: '请先登录' };
 
     const supabase = await getClient();
     const { error } = await supabase
         .from('memos')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('owner_id', viewerId);
 
     if (error) {
         console.error('Error permanently deleting memo:', error);
@@ -75,10 +81,11 @@ export async function permanentDeleteMemo(id: string): Promise<ActionResponse> {
  * 清空回收站
  */
 export async function emptyTrash(): Promise<ActionResponse> {
-    if (!await isAdmin()) return { success: false, error: '权限不足' };
+    const viewerId = await getCurrentUserId();
+    if (!viewerId) return { success: false, error: '请先登录' };
 
     const supabase = await getClient();
-    const { error } = await MemoFilters.trashedOnly(supabase.from('memos').delete());
+    const { error } = await MemoFilters.trashedOnly(supabase.from('memos').delete().eq('owner_id', viewerId));
 
     if (error) {
         console.error('Error emptying trash:', error);
@@ -93,10 +100,11 @@ export async function emptyTrash(): Promise<ActionResponse> {
  * 获取回收站内容
  */
 export async function getTrashMemos(): Promise<ActionResponse<Memo[]>> {
-    if (!(await isAdmin())) return { success: false, error: '权限不足', data: [] };
+    const viewerId = await getCurrentUserId();
+    if (!viewerId) return { success: false, error: '请先登录', data: [] };
 
     const { query: qBuilder } = await getMemosQuery();
-    const q = MemoFilters.trashedOnly(qBuilder).order('deleted_at', { ascending: false });
+    const q = MemoFilters.trashedOnly(qBuilder).eq('owner_id', viewerId).order('deleted_at', { ascending: false });
 
     const { data, error } = await q;
 
@@ -107,7 +115,8 @@ export async function getTrashMemos(): Promise<ActionResponse<Memo[]>> {
 
     const memos = (data as unknown as Memo[] || []).map((memo) => ({
         ...memo,
-        is_locked: memo.is_private
+        is_locked: false,
+        is_owner: true,
     })) as Memo[];
 
     return { success: true, error: null, data: memos };
@@ -117,18 +126,19 @@ export async function getTrashMemos(): Promise<ActionResponse<Memo[]>> {
  * 批量操作：删除、恢复、永久删除
  */
 export async function batchTrashAction(ids: string[], action: 'delete' | 'restore' | 'permanent'): Promise<ActionResponse> {
-    if (!await isAdmin()) return { success: false, error: '权限不足' };
+    const viewerId = await getCurrentUserId();
+    if (!viewerId) return { success: false, error: '请先登录' };
     if (ids.length === 0) return { success: true, error: null };
 
     const supabase = await getClient();
     let query;
 
     if (action === 'delete') {
-        query = supabase.from('memos').update({ deleted_at: new Date().toISOString() }).in('id', ids);
+        query = supabase.from('memos').update({ deleted_at: new Date().toISOString() }).eq('owner_id', viewerId).in('id', ids);
     } else if (action === 'restore') {
-        query = supabase.from('memos').update({ deleted_at: null }).in('id', ids);
+        query = supabase.from('memos').update({ deleted_at: null }).eq('owner_id', viewerId).in('id', ids);
     } else {
-        query = supabase.from('memos').delete().in('id', ids);
+        query = supabase.from('memos').delete().eq('owner_id', viewerId).in('id', ids);
     }
 
     const { error } = await query;

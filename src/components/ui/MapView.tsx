@@ -15,6 +15,7 @@ import { UIProvider } from '@/context/UIContext';
 import { Memo } from '@/types/memo';
 import { Add01Icon, MinusSignIcon } from '@hugeicons/core-free-icons';
 import { MapMemoPopupContent } from './map/MapMemoPopupContent';
+import { UnlockedMemosProvider } from '@/context/UnlockedMemosContext';
 
 export interface MapViewProps {
     markers: MapMarker[];
@@ -206,13 +207,15 @@ export function MapView({
                     
                     const root = createRoot(popupEl);
                     root.render(
-                        <UIProvider currentPathname={pathname}>
-                            <MapMemoPopupContent
-                                title={locationName}
-                                memos={allMemos}
-                                onClose={() => map.closePopup()}
-                            />
-                        </UIProvider>
+                        <UnlockedMemosProvider>
+                            <UIProvider currentPathname={pathname}>
+                                <MapMemoPopupContent
+                                    title={locationName}
+                                    memos={allMemos}
+                                    onClose={() => map.closePopup()}
+                                />
+                            </UIProvider>
+                        </UnlockedMemosProvider>
                     );
 
                     const openPopup = () => {
@@ -320,13 +323,15 @@ export function MapView({
                 
                 const root = createRoot(popupEl);
                 root.render(
-                    <UIProvider currentPathname={pathname}>
-                        <MapMemoPopupContent
-                            title={marker.name}
-                            memos={marker.items}
-                            onClose={() => mapInstance.current?.closePopup()}
-                        />
-                    </UIProvider>
+                    <UnlockedMemosProvider>
+                        <UIProvider currentPathname={pathname}>
+                            <MapMemoPopupContent
+                                title={marker.name}
+                                memos={marker.items}
+                                onClose={() => mapInstance.current?.closePopup()}
+                            />
+                        </UIProvider>
+                    </UnlockedMemosProvider>
                 );
 
                 leafMarker.bindPopup(popupEl, {

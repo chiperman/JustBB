@@ -8,6 +8,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 CREATE TABLE IF NOT EXISTS public.memos (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     memo_number SERIAL UNIQUE,
+    owner_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,

@@ -11,11 +11,13 @@ import { usePageDataCache } from "@/context/PageDataCache";
 import { getMemos } from "@/actions/memos/query";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@/context/UserContext";
+import { useUnlockedMemos } from "@/context/UnlockedMemosContext";
 
 export function MainLayoutClient() {
     const searchParams = useSearchParams();
     const { getCache, setCache } = usePageDataCache();
-    const { isAdmin } = useUser();
+    const { user } = useUser();
+    const { unlockedMemoIds } = useUnlockedMemos();
 
     // 滚动与吸顶状态管理
     const containerRef = useRef<HTMLDivElement>(null);
@@ -61,7 +63,10 @@ export function MainLayoutClient() {
         () => Object.fromEntries(new URLSearchParams(searchParamsKey).entries()),
         [searchParamsKey],
     );
-    const cacheKey = generateCacheKey(flattenedParams);
+    const cacheKey = generateCacheKey({
+        ...flattenedParams,
+        unlocked: unlockedMemoIds.join(','),
+    });
     const cachedData = getCache(cacheKey);
     const latestRequestIdRef = useRef(0);
 
@@ -87,7 +92,7 @@ export function MainLayoutClient() {
 
         const refreshMemos = async () => {
             try {
-                const res = await getMemos({ ...flattenedParams, limit: 30 });
+                const res = await getMemos({ ...flattenedParams, limit: 30, unlockedMemoIds });
 
                 if (cancelled || latestRequestIdRef.current !== requestId) {
                     return;
@@ -115,7 +120,7 @@ export function MainLayoutClient() {
         return () => {
             cancelled = true;
         };
-    }, [cacheKey, flattenedParams, getCache, setCache]);
+    }, [cacheKey, flattenedParams, getCache, setCache, unlockedMemoIds]);
 
     return (
         <div className="flex flex-col h-full overflow-hidden bg-background">
@@ -132,7 +137,7 @@ export function MainLayoutClient() {
 
                         {/* 编辑器区域 */}
                         <AnimatePresence>
-                            {isAdmin && (
+                            {user && (
                                 <MemoEditor
                                     mode="create"
                                     isCollapsed={true}
@@ -177,7 +182,6 @@ export function MainLayoutClient() {
                                             key={cacheKey}
                                             initialMemos={memos}
                                             searchParams={flattenedParams}
-                                            isAdmin={isAdmin}
                                             scrollContainerRef={containerRef}
                                         />
                                     </motion.div>

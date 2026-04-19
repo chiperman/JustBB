@@ -41,7 +41,7 @@ interface MemoActionsProps {
     tags?: string[];
     onEdit?: () => void;
     onOpenChange?: (open: boolean) => void;
-    isAdmin?: boolean;
+    isOwner?: boolean;
 }
 
 export function MemoActions({
@@ -54,7 +54,7 @@ export function MemoActions({
     tags = [],
     onEdit,
     onOpenChange,
-    isAdmin = false
+    isOwner = false
 }: MemoActionsProps) {
     const [isPending, setIsPending] = useState(false);
     const [showDeleteAlert, setShowDeleteAlert] = useState(false);
@@ -164,7 +164,7 @@ export function MemoActions({
     if (isDeleted) {
         return (
             <div className="flex items-center gap-2">
-                {isAdmin && (
+                {isOwner && (
                     <>
                         <Button
                             variant="ghost"
@@ -218,24 +218,26 @@ export function MemoActions({
                 <DropdownMenuContent align="end" className="w-48">
                     {!isDeleted && (
                         <>
-                            {isAdmin && (
+                            {isOwner && (
                                 <DropdownMenuItem onClick={onEdit}>
                                     <HugeiconsIcon icon={PencilEdit01Icon} size={16} className="mr-2" />
                                     编辑
                                 </DropdownMenuItem>
                             )}
-                            <MemoShare
-                                memo={{ id, content, created_at: createdAt, tags, is_pinned: isPinned, is_private: isPrivate, memo_number: 0 } as Memo}
-                                trigger={
-                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                        <HugeiconsIcon icon={Share01Icon} size={16} className="mr-2" />
-                                        分享
-                                    </DropdownMenuItem>
-                                }
-                            />
+                            {!isPrivate && (
+                                <MemoShare
+                                    memo={{ id, content, created_at: createdAt, tags, is_pinned: isPinned, is_private: isPrivate, memo_number: 0, owner_id: '' } as Memo}
+                                    trigger={
+                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                            <HugeiconsIcon icon={Share01Icon} size={16} className="mr-2" />
+                                            分享
+                                        </DropdownMenuItem>
+                                    }
+                                />
+                            )}
                         </>
                     )}
-                    {isAdmin && (
+                    {isOwner && (
                         <>
                             <DropdownMenuItem
                                 onClick={handleTogglePin}

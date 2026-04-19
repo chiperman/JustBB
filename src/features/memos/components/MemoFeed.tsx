@@ -24,8 +24,6 @@ interface MemoFeedProps {
         date?: string;
         sort?: string;
     };
-    adminCode?: string;
-    isAdmin?: boolean;
     scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -42,8 +40,6 @@ const itemVariants: Variants = {
 export function MemoFeed({
     initialMemos = [],
     searchParams,
-    adminCode,
-    isAdmin = false,
     scrollContainerRef,
 }: MemoFeedProps) {
     const observerTargetBottom = useRef<HTMLDivElement>(null);
@@ -58,7 +54,7 @@ export function MemoFeed({
         updateMemoInList,
         lastCreatedId,
         clearLastCreatedId
-    } = useMemoFeed({ initialMemos, searchParams, adminCode });
+    } = useMemoFeed({ initialMemos, searchParams });
 
     // 1. 无限滚动监听
     useEffect(() => {
@@ -105,7 +101,6 @@ export function MemoFeed({
                             <div id={`memo-${memo.id}`}>
                                 <MemoCard
                                     memo={memo}
-                                    isAdmin={isAdmin}
                                     isEditing={editingId === memo.id}
                                     isLastCreated={lastCreatedId === memo.id}
                                     onEditChange={(editing, updatedMemo) => {

@@ -29,7 +29,7 @@ describe('getMemos TDD', () => {
 
         expect(mockRpc).toHaveBeenCalledWith('search_memos_secure', {
             query_text: '',
-            input_code: '',
+            unlocked_ids: [],
             limit_val: 20,
             offset_val: 0,
             filters: {},

@@ -7,12 +7,14 @@ import { cn, formatDate } from '@/lib/utils';
 import { Timeline, TimelineItem, TimelineLine, TimelineDot, TimelineHeading, TimelineContent } from '@/components/ui/timeline';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
+import { useUnlockedMemos } from '@/context/UnlockedMemosContext';
 
 interface DailyTimelineProps {
     date: string;
 }
 
 export function DailyTimeline({ date }: DailyTimelineProps) {
+    const { unlockedMemoIds } = useUnlockedMemos();
     const [memos, setMemos] = useState<Memo[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeMemoId, setActiveMemoId] = useState<string | null>(null);
@@ -21,7 +23,7 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
         const fetchDailyMemos = async () => {
             setLoading(true);
             try {
-                const res = await getMemos({ date, limit: 100 });
+                const res = await getMemos({ date, limit: 100, unlockedMemoIds });
                 setMemos(res.data || []);
             } catch (error) {
                 console.error('Failed to fetch daily memos:', error);
@@ -33,7 +35,7 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
         if (date) {
             fetchDailyMemos();
         }
-    }, [date]);
+    }, [date, unlockedMemoIds]);
 
     const handleMemoClick = (e: React.MouseEvent, memoId: string) => {
         e.preventDefault();

@@ -1,7 +1,12 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  PanelRightCloseIcon,
+  PanelRightOpenIcon,
+} from "@hugeicons/core-free-icons";
 import {
   Timeline,
   TimelineContent,
@@ -18,6 +23,20 @@ import { TimelineStats } from "@/types/stats";
 import { useHasMounted } from "@/hooks/useHasMounted";
 import { cn } from "@/lib/utils";
 import { getTimelineStats } from "@/actions/memos/analytics";
+import { Button } from "@/components/ui/button";
+
+const RIGHT_SIDEBAR_EXPANDED_WIDTH = 320;
+const RIGHT_SIDEBAR_STORAGE_KEY = "layout:right-sidebar-collapsed";
+const RIGHT_SIDEBAR_STORAGE_EVENT = "layout:right-sidebar-collapsed-change";
+const RIGHT_SIDEBAR_TRANSITION = {
+  duration: 0.28,
+  ease: [0.22, 1, 0.36, 1] as const,
+};
+
+function getStoredRightSidebarCollapsed() {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(RIGHT_SIDEBAR_STORAGE_KEY) === "true";
+}
 
 export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
   const [allDays, setAllDays] = useState<Record<string, { count: number }>>(
@@ -27,6 +46,32 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isCollapsed = useSyncExternalStore(
+    (onStoreChange) => {
+      if (typeof window === "undefined") return () => {};
+
+      const handleStorage = (event: StorageEvent) => {
+        if (event.key === RIGHT_SIDEBAR_STORAGE_KEY) {
+          onStoreChange();
+        }
+      };
+
+      const handleLocalChange = () => onStoreChange();
+
+      window.addEventListener("storage", handleStorage);
+      window.addEventListener(RIGHT_SIDEBAR_STORAGE_EVENT, handleLocalChange);
+
+      return () => {
+        window.removeEventListener("storage", handleStorage);
+        window.removeEventListener(
+          RIGHT_SIDEBAR_STORAGE_EVENT,
+          handleLocalChange,
+        );
+      };
+    },
+    getStoredRightSidebarCollapsed,
+    () => false,
+  );
 
 
   // Only display on homepage
@@ -38,6 +83,11 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
   const monthFilter = searchParams.get("month");
 
   const { activeId, setActiveId, setManualClick } = useLayout();
+
+  const setCollapsedState = (nextCollapsed: boolean) => {
+    localStorage.setItem(RIGHT_SIDEBAR_STORAGE_KEY, String(nextCollapsed));
+    window.dispatchEvent(new Event(RIGHT_SIDEBAR_STORAGE_EVENT));
+  };
 
   // 自动滚动侧边栏以确保选中项可见
   useEffect(() => {
@@ -60,7 +110,7 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
       setActiveId(`year-${yearFilter}`);
     }
   }, [dateFilter, yearFilter, monthFilter, setActiveId, isMounted]);
-  
+
   // 挂载后异步拉取时间轴数据 (如果服务端未提供)
   useEffect(() => {
     if (Object.keys(allDays).length === 0) {
@@ -208,171 +258,219 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
   if (!isHomePage) return null;
 
   return (
-    <aside className="hidden xl:flex w-80 h-full flex-col p-6 border-l border-border/40 bg-background/50 backdrop-blur-md overflow-hidden">
-      <div className="flex items-center justify-between mb-8">
-        <h3 className="text-sm font-bold text-foreground uppercase tracking-widest font-mono border-b-2 border-primary/20 pb-1.5 flex-1">
-          时间轴
-        </h3>
-      </div>
-      <div className="flex-1 relative overflow-y-auto scrollbar-hide pr-1">
-        <AnimatePresence mode="wait">
-          {!isMounted && Object.keys(allDays).length === 0 ? (
-            <motion.div
-              key="skeleton"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-              className="space-y-8"
+    <div className="relative hidden xl:block h-full shrink-0 overflow-visible">
+      <AnimatePresence initial={false}>
+        {isCollapsed && (
+          <motion.div
+            key="right-sidebar-open-button"
+            initial={{ opacity: 0, scale: 0.92, x: 12 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.92, x: 12 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute top-6 right-6 z-30"
+          >
+            <Button
+              variant="outline"
+              size="icon-sm"
+              onClick={() => setCollapsedState(false)}
+              className="rounded-full border-border/60 bg-background/85 text-muted-foreground shadow-lg backdrop-blur-md transition-all hover:bg-background hover:text-foreground"
+              aria-label="展开右侧时间轴"
             >
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="relative">
-                  <TimelineLine className="bg-[var(--heatmap-0)]" />
-                  <TimelineDot className="bg-[var(--heatmap-0)] border-[var(--heatmap-0)]" />
-                  <Skeleton
-                    className={cn("h-4 mb-6", i % 2 === 0 ? "w-16" : "w-12")}
-                  />
-                  <div className="pl-4 space-y-6">
-                    <div className="space-y-3">
+              <HugeiconsIcon icon={PanelRightOpenIcon} size={16} />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div
+        initial={false}
+        animate={{ width: isCollapsed ? 0 : RIGHT_SIDEBAR_EXPANDED_WIDTH }}
+        transition={RIGHT_SIDEBAR_TRANSITION}
+        style={{ willChange: "width" }}
+        className="relative h-full overflow-hidden"
+      >
+        <aside className="flex h-full w-80 flex-col overflow-hidden border-l border-border/40 bg-background/50 p-6 backdrop-blur-md">
+          <div className="mb-8 flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setCollapsedState(true)}
+              className="shrink-0 rounded-full text-muted-foreground transition-all active:scale-95"
+              aria-label="收起右侧时间轴"
+            >
+              <HugeiconsIcon icon={PanelRightCloseIcon} size={16} />
+            </Button>
+            <h3 className="flex-1 border-b-2 border-primary/20 pb-1.5 font-mono text-sm font-bold tracking-widest text-foreground uppercase">
+              时间轴
+            </h3>
+          </div>
+          <div className="relative flex-1 overflow-y-auto pr-1 scrollbar-hide">
+            <AnimatePresence mode="wait">
+              {!isMounted && Object.keys(allDays).length === 0 ? (
+                <motion.div
+                  key="skeleton"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                  className="space-y-8"
+                >
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="relative">
+                      <TimelineLine className="bg-[var(--heatmap-0)]" />
+                      <TimelineDot className="border-[var(--heatmap-0)] bg-[var(--heatmap-0)]" />
                       <Skeleton
-                        className={cn("h-3", i % 2 === 0 ? "w-12" : "w-14")}
+                        className={cn("mb-6 h-4", i % 2 === 0 ? "w-16" : "w-12")}
                       />
-                      <div className="space-y-2">
-                        <Skeleton className="h-2 w-10" />
-                        <Skeleton className="h-2 w-8" />
+                      <div className="space-y-6 pl-4">
+                        <div className="space-y-3">
+                          <Skeleton
+                            className={cn("h-3", i % 2 === 0 ? "w-12" : "w-14")}
+                          />
+                          <div className="space-y-2">
+                            <Skeleton className="h-2 w-10" />
+                            <Skeleton className="h-2 w-8" />
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </motion.div>
-          ) : dateFilter ? (
-            <DailyTimeline key="daily" date={dateFilter} />
-          ) : (
-            <motion.div
-              key="main-timeline"
-              exit={{ opacity: 0, x: 10 }}
-              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-              className="h-full flex flex-col"
-            >
-              <Timeline>
-                {Object.keys(allDays).length > 0 ? (
-                  fullTimeline.map((yearGroup) => (
-                    <TimelineItem
-                      key={yearGroup.year}
-                      className="pb-8 overflow-visible"
-                      id={`nav-year-${yearGroup.year}`}
-                    >
-                      <TimelineLine active={false} />
-                      <TimelineDot
-                        className={cn(
-                          "transition-all duration-300 top-1.5",
-                          isYearActive(yearGroup.year)
-                            ? "bg-primary border-primary ring-primary/10 shadow-[0_0_10px_rgba(var(--primary),0.3)] scale-110"
-                            : "bg-background border-border",
-                        )}
-                      />
-                      <TimelineHeading className="mb-6">
-                        <button
-                          className={cn(
-                            "transition-colors cursor-pointer text-sm font-bold font-mono tracking-tighter",
-                            isYearActive(yearGroup.year)
-                              ? "text-primary"
-                              : "text-foreground hover:text-primary",
-                          )}
-                          onClick={(e) => handleYearClick(e, yearGroup.year)}
+                  ))}
+                </motion.div>
+              ) : dateFilter ? (
+                <DailyTimeline key="daily" date={dateFilter} />
+              ) : (
+                <motion.div
+                  key="main-timeline"
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                  className="flex h-full flex-col"
+                >
+                  <Timeline>
+                    {Object.keys(allDays).length > 0 ? (
+                      fullTimeline.map((yearGroup) => (
+                        <TimelineItem
+                          key={yearGroup.year}
+                          className="overflow-visible pb-8"
+                          id={`nav-year-${yearGroup.year}`}
                         >
-                          {yearGroup.year}
-                        </button>
-                      </TimelineHeading>
-                      <TimelineContent>
-                        {yearGroup.months.map((monthGroup) => (
-                          <div
-                            key={monthGroup.month}
-                            className="relative mb-6 last:mb-0"
-                            id={`nav-month-${yearGroup.year}-${monthGroup.month}`}
-                          >
-                            <div className="relative mb-3">
-                              <TimelineLine
-                                active={isMonthActive(
-                                  yearGroup.year,
-                                  monthGroup.month,
-                                )}
-                                className={cn("-left-[25px] transition-opacity duration-300", !isMonthActive(yearGroup.year, monthGroup.month) && "opacity-0")}
-                              />
-                              <h5
-                                className={cn(
-                                  "text-[11px] font-bold pl-1 transition-colors cursor-pointer block uppercase tracking-wide",
-                                  isMonthActive(
-                                    yearGroup.year,
-                                    monthGroup.month,
-                                  )
-                                    ? "text-primary"
-                                    : "text-muted-foreground/80 hover:text-primary",
-                                )}
+                          <TimelineLine active={false} />
+                          <TimelineDot
+                            className={cn(
+                              "top-1.5 transition-all duration-300",
+                              isYearActive(yearGroup.year)
+                                ? "scale-110 border-primary bg-primary ring-primary/10 shadow-[0_0_10px_rgba(var(--primary),0.3)]"
+                                : "border-border bg-background",
+                            )}
+                          />
+                          <TimelineHeading className="mb-6">
+                            <button
+                              className={cn(
+                                "cursor-pointer font-mono text-sm font-bold tracking-tighter transition-colors",
+                                isYearActive(yearGroup.year)
+                                  ? "text-primary"
+                                  : "text-foreground hover:text-primary",
+                              )}
+                              onClick={(e) => handleYearClick(e, yearGroup.year)}
+                            >
+                              {yearGroup.year}
+                            </button>
+                          </TimelineHeading>
+                          <TimelineContent>
+                            {yearGroup.months.map((monthGroup) => (
+                              <div
+                                key={monthGroup.month}
+                                className="relative mb-6 last:mb-0"
+                                id={`nav-month-${yearGroup.year}-${monthGroup.month}`}
                               >
-                                <button
-                                  className="block w-full text-left"
-                                  onClick={(e) =>
-                                    handleMonthClick(
-                                      e,
+                                <div className="relative mb-3">
+                                  <TimelineLine
+                                    active={isMonthActive(
                                       yearGroup.year,
                                       monthGroup.month,
-                                    )
-                                  }
-                                >
-                                  {monthNames[monthGroup.month]}
-                                </button>
-                              </h5>
-                            </div>
-                            <div className="flex flex-col gap-1.5">
-                              {monthGroup.days.map((day) => {
-                                const dateStr = `${yearGroup.year}-${String(monthGroup.month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                                const isActive = isDayActive(dateStr);
-
-                                return (
-                                  <div
-                                    key={day}
-                                    className="relative"
-                                    id={`nav-date-${dateStr}`}
+                                    )}
+                                    className={cn(
+                                      "-left-[25px] transition-opacity duration-300",
+                                      !isMonthActive(yearGroup.year, monthGroup.month) && "opacity-0",
+                                    )}
+                                  />
+                                  <h5
+                                    className={cn(
+                                      "block cursor-pointer pl-1 text-[11px] font-bold tracking-wide uppercase transition-colors",
+                                      isMonthActive(
+                                        yearGroup.year,
+                                        monthGroup.month,
+                                      )
+                                        ? "text-primary"
+                                        : "text-muted-foreground/80 hover:text-primary",
+                                    )}
                                   >
-                                    <TimelineLine
-                                      active={isActive}
-                                      className={cn("-left-[25px] transition-opacity duration-300", !isActive && "opacity-0")}
-                                    />
                                     <button
-                                      type="button"
-                                      className={cn(
-                                        "w-full text-left text-[10px] transition-colors block py-0.5 pl-1 cursor-pointer font-mono font-bold tracking-tight",
-                                        isActive
-                                          ? "text-primary"
-                                          : "text-muted-foreground/50 hover:text-primary/70",
-                                      )}
+                                      className="block w-full text-left"
                                       onClick={(e) =>
-                                        handleDayClick(e, dateStr)
+                                        handleMonthClick(
+                                          e,
+                                          yearGroup.year,
+                                          monthGroup.month,
+                                        )
                                       }
                                     >
-                                      {`${day}号`}
+                                      {monthNames[monthGroup.month]}
                                     </button>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ))}
-                      </TimelineContent>
-                    </TimelineItem>
-                  ))
-                ) : (
-                  <div className="text-xs text-muted-foreground/50 py-4 font-mono">
-                    暂无记录
-                  </div>
-                )}
-              </Timeline>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </aside>
+                                  </h5>
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                  {monthGroup.days.map((day) => {
+                                    const dateStr = `${yearGroup.year}-${String(monthGroup.month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                                    const isActive = isDayActive(dateStr);
+
+                                    return (
+                                      <div
+                                        key={day}
+                                        className="relative"
+                                        id={`nav-date-${dateStr}`}
+                                      >
+                                        <TimelineLine
+                                          active={isActive}
+                                          className={cn(
+                                            "-left-[25px] transition-opacity duration-300",
+                                            !isActive && "opacity-0",
+                                          )}
+                                        />
+                                        <button
+                                          type="button"
+                                          className={cn(
+                                            "block w-full cursor-pointer py-0.5 pl-1 text-left font-mono text-[10px] font-bold tracking-tight transition-colors",
+                                            isActive
+                                              ? "text-primary"
+                                              : "text-muted-foreground/50 hover:text-primary/70",
+                                          )}
+                                          onClick={(e) =>
+                                            handleDayClick(e, dateStr)
+                                          }
+                                        >
+                                          {`${day}号`}
+                                        </button>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                          </TimelineContent>
+                        </TimelineItem>
+                      ))
+                    ) : (
+                      <div className="py-4 font-mono text-xs text-muted-foreground/50">
+                        暂无记录
+                      </div>
+                    )}
+                  </Timeline>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </aside>
+      </motion.div>
+    </div>
   );
 }

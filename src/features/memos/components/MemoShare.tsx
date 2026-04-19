@@ -17,8 +17,10 @@ import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { Memo } from '@/types/memo';
 import { useToast } from '@/hooks/use-toast';
+import { MemoContent } from '@/features/memos/components/MemoContent';
 
 import { useHasMounted } from '@/hooks/useHasMounted';
+import { getMemoShareUrl } from '@/lib/share';
 
 interface MemoShareProps {
     memo: Memo;
@@ -30,10 +32,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
     const [isGenerating, setIsGenerating] = useState(false);
     const { toast } = useToast();
     const hasMounted = useHasMounted();
-    // 生成链接：假设首页即详情页，通过 search query 定位
-    const shareUrl = typeof window !== 'undefined'
-        ? `${window.location.origin}/?q=${encodeURIComponent(memo.content.slice(0, 10))}`
-        : '';
+    const shareUrl = getMemoShareUrl(memo.id);
 
     const handleDownload = useCallback(async () => {
         if (!posterRef.current) return;
@@ -70,18 +69,18 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
         <Dialog>
             <DialogTrigger asChild>
                 {trigger || (
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-accent active:scale-95 transition-all" title="分享" aria-label="生成海报分享">
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-accent active:scale-95 transition-all" title="分享" aria-label="分享 Memo">
                         <HugeiconsIcon icon={Share2} size={16} className="text-muted-foreground" aria-hidden="true" />
                     </Button>
                 )}
             </DialogTrigger>
             <DialogContent className="max-w-md flex flex-col items-center">
                 <DialogHeader>
-                    <DialogTitle>生成海报分享</DialogTitle>
+                    <DialogTitle>分享 Memo</DialogTitle>
                 </DialogHeader>
 
                 {/* 预览/截图区域 */}
-                <div className="w-full max-h-[70vh] overflow-y-auto rounded-lg shadow-sm border bg-stone-100 flex justify-center py-6 custom-scrollbar">
+                <div className="w-full max-h-[70vh] overflow-y-auto flex justify-center py-4 custom-scrollbar">
                     <div
                         ref={posterRef}
                         className="w-[360px] bg-[#fffaf5] p-6 text-stone-800 relative shadow-md flex flex-col gap-4 h-fit"
@@ -95,20 +94,10 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                             </span>
                         </div>
 
-                        {/* Content */}
-                        <div className="py-2 min-h-[120px] text-sm leading-7 break-words whitespace-pre-wrap font-sans text-stone-700">
-                            {/* 这里简单渲染文本，不带交互链接 */}
-                            {memo.content}
-                        </div>
-
-                        {/* Tags */}
-                        {memo.tags && memo.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                                {memo.tags.map(t => (
-                                    <span key={t} className="text-xs text-stone-400">#{t}</span>
-                                ))}
-                            </div>
-                        )}
+                        <MemoContent
+                            content={memo.content}
+                            className="min-h-[120px] py-2 text-sm leading-7 font-sans text-stone-700"
+                        />
 
                         {/* Footer & QR */}
                         <div className="mt-4 pt-4 border-t border-stone-200 flex justify-between items-end">
@@ -118,9 +107,11 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                             </div>
                             <div className="bg-white p-1 rounded-md shadow-sm">
                                 <QRCodeSVG
-                                    value={shareUrl || 'https://justmemo.app'}
-                                    size={48}
+                                    value={shareUrl}
+                                    size={72}
                                     fgColor="#44403c"
+                                    bgColor="#ffffff"
+                                    includeMargin
                                 />
                             </div>
                         </div>

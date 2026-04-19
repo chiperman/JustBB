@@ -184,6 +184,29 @@ export async function getMemoByNumber(memoNumber: number, unlockedMemoIds: strin
     return { success: true, error: null, data: memo && !memo.is_locked ? memo : null };
 }
 
+export async function getMemoById(memoId: string, unlockedMemoIds: string[] = []): Promise<ActionResponse<Memo | null>> {
+    if (!memoId) {
+        return { success: false, error: '缺少 Memo ID', data: null };
+    }
+
+    const viewerId = await getCurrentUserId();
+    const supabase = getAdminClient();
+    const { data, error } = await supabase
+        .from('memos')
+        .select(BASE_MEMO_SELECT)
+        .eq('id', memoId)
+        .is('deleted_at', null)
+        .single();
+
+    if (error) {
+        if (error.code === 'PGRST116') return { success: true, error: null, data: null };
+        return { success: false, error: error.message, data: null };
+    }
+
+    const memo = withViewerAccess(data as Memo, viewerId, unlockedMemoIds);
+    return { success: true, error: null, data: memo && !memo.is_locked ? memo : null };
+}
+
 /**
  * 获取反向引用 (Backlinks)
  */

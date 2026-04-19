@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getMemoStats, exportMemos } from './memos/analytics';
-import { getCurrentUserId } from '@/features/auth/actions';
+import { getSupabaseUsageStats } from './usage';
+import { getCurrentUserId, isAdmin } from '@/features/auth/actions';
 
 // Mock Supabase Instance
 const mockSupabase = {
@@ -34,13 +35,24 @@ const mockSupabase = {
     }),
     order: vi.fn().mockResolvedValue({ data: [], error: null }),
     eq: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue({ data: null, error: null })
-};
-
-// 预定义 Mock 环境变量
-let mockEnv = {
-    SUPABASE_MANAGEMENT_API_KEY: 'test_key',
-    SUPABASE_PROJECT_REF: 'test_ref'
+    single: vi.fn().mockResolvedValue({ data: null, error: null }),
+    rpc: vi.fn().mockResolvedValue({ data: 100 * 1024 * 1024, error: null }),
+    schema: vi.fn(() => ({
+        from: vi.fn(() => ({
+            select: vi.fn().mockResolvedValue({
+                data: [{ metadata: { size: 10 * 1024 * 1024 } }],
+                error: null
+            })
+        }))
+    })),
+    auth: {
+        admin: {
+            listUsers: vi.fn().mockResolvedValue({
+                data: { users: [{ id: 'user-1' }], total: 12 },
+                error: null
+            })
+        }
+    }
 };
 
 vi.mock('@/lib/supabase', () => ({
@@ -49,24 +61,15 @@ vi.mock('@/lib/supabase', () => ({
 }));
 
 vi.mock('@/features/auth/actions', () => ({
-    getCurrentUserId: vi.fn(async () => 'user-1')
-}));
-
-vi.mock('@/lib/env', () => ({
-    env: {
-        get SUPABASE_MANAGEMENT_API_KEY() { return mockEnv.SUPABASE_MANAGEMENT_API_KEY },
-        get SUPABASE_PROJECT_REF() { return mockEnv.SUPABASE_PROJECT_REF }
-    }
+    getCurrentUserId: vi.fn(async () => 'user-1'),
+    isAdmin: vi.fn(async () => true)
 }));
 
 describe('getMemoStats', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        // Reset mock environment
-        mockEnv = {
-            SUPABASE_MANAGEMENT_API_KEY: 'test_key',
-            SUPABASE_PROJECT_REF: 'test_ref'
-        };
+        process.env.SUPABASE_MANAGEMENT_API_KEY = '';
+        process.env.SUPABASE_PROJECT_REF = '';
     });
 
     it('应该能正确获取基础统计数据', async () => {
@@ -122,5 +125,27 @@ describe('getMemoStats', () => {
         expect(result.success).toBe(true);
         expect(result.error).toBeNull();
         expect(result.data).toContain('测试内容');
+    });
+
+    it('应该在 fallback 模式下返回完整的 Supabase 用量结构', async () => {
+        vi.mocked(isAdmin).mockResolvedValueOnce(true);
+
+        const result = await getSupabaseUsageStats();
+
+        expect(result.success).toBe(true);
+        expect(result.isFullIndicator).toBe(false);
+        expect(result.data?.db.used).toBe(100);
+        expect(result.data?.storage.used).toBe(10);
+        expect(result.data?.mau.used).toBe(12);
+        expect(result.data?.egress.limit).toBe(5);
+    });
+
+    it('非管理员不应该获取 Supabase 用量', async () => {
+        vi.mocked(isAdmin).mockResolvedValueOnce(false);
+
+        const result = await getSupabaseUsageStats();
+
+        expect(result.success).toBe(false);
+        expect(result.error).toBe('权限不足');
     });
 });

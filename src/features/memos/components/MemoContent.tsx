@@ -71,7 +71,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                                 <Link
                                     key={`tag-${index}`}
                                     href={`/?tag=${encodeURIComponent(token.value.slice(1))}`}
-                                    className="text-primary hover:underline mx-0.5 focus-visible:ring-1 focus-visible:ring-primary/30 outline-none rounded-md transition-colors font-mono font-medium"
+                                    className="mx-0.5 rounded-md font-mono font-medium text-blue-600 transition-colors hover:text-blue-700 hover:underline focus-visible:ring-1 focus-visible:ring-blue-500/30 outline-none dark:text-blue-400 dark:hover:text-blue-300"
                                 >
                                     {token.value}
                                 </Link>

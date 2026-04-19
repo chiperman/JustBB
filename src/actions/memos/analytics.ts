@@ -62,9 +62,6 @@ export async function getMemoStats(): Promise<ActionResponse<HeatmapStats>> {
     };
 }
 
-// Alias for legacy usage
-export const getSupabaseUsageStats = getMemoStats;
-
 /**
  * 获取所有标签及其计数
  */

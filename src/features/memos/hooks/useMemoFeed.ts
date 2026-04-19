@@ -34,6 +34,15 @@ export function reconcileHasMoreOlder(currentHasMoreOlder: boolean, nextInitialM
     return currentHasMoreOlder && nextInitialMemos.length >= INITIAL_MEMO_PAGE_SIZE;
 }
 
+export function reconcileUpdatedMemo(existingMemo: Memo, updatedMemo: Memo): Memo {
+    return {
+        ...existingMemo,
+        ...updatedMemo,
+        is_owner: updatedMemo.is_owner ?? existingMemo.is_owner,
+        is_locked: updatedMemo.is_locked ?? existingMemo.is_locked,
+    };
+}
+
 export function useMemoFeed({ initialMemos, searchParams }: UseMemoFeedProps) {
     const { unlockedMemoIds } = useUnlockedMemos();
     const [memos, setMemos] = useState<Memo[]>(initialMemos);
@@ -88,7 +97,7 @@ export function useMemoFeed({ initialMemos, searchParams }: UseMemoFeedProps) {
     }, [isLoadingOlder, hasMoreOlder, memos, searchParams, unlockedMemoIds]);
 
     const updateMemoInList = useCallback((updatedMemo: Memo) => {
-        setMemos(prev => prev.map(m => m.id === updatedMemo.id ? updatedMemo : m));
+        setMemos(prev => prev.map(m => m.id === updatedMemo.id ? reconcileUpdatedMemo(m, updatedMemo) : m));
     }, []);
 
     const clearLastCreatedId = useCallback(() => {

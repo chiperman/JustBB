@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+const postgresUuidSchema = z.string().regex(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    '无效的 ID',
+);
+
 const booleanPreprocessor = (val: unknown) => {
     if (typeof val === 'string') return val.toLowerCase() === 'true';
     return Boolean(val);
@@ -31,14 +36,14 @@ export const createMemoSchema = memoContentSchema;
  * 更新 Memo 内容的 Schema
  */
 export const updateMemoContentSchema = memoContentSchema.extend({
-    id: z.string().uuid('无效的 ID'),
+    id: postgresUuidSchema,
 });
 
 /**
  * 更新状态的 Schema (Patch)
  */
 export const updateMemoStateSchema = z.object({
-    id: z.string().uuid('无效的 ID'),
+    id: postgresUuidSchema,
     is_pinned: z.preprocess(optionalBooleanPreprocessor, z.boolean().optional()),
     is_private: z.preprocess(optionalBooleanPreprocessor, z.boolean().optional()),
     access_code_hint: z.string().optional().nullable(),
@@ -49,7 +54,7 @@ export const updateMemoStateSchema = z.object({
  * 批量添加标签的 Schema
  */
 export const batchAddTagsSchema = z.object({
-    ids: z.array(z.string().uuid('无效的 ID')).min(1, '请至少选择一条记录'),
+    ids: z.array(postgresUuidSchema).min(1, '请至少选择一条记录'),
     tags: z.array(z.string()).min(1, '请至少选择一个标签'),
 });
 
@@ -69,7 +74,9 @@ export const fetchMemosSchema = z.object({
     after_date: z.string().nullable().optional(),
     before_date: z.string().nullable().optional(),
     excludePinned: z.preprocess(optionalBooleanPreprocessor, z.boolean().optional().default(false)),
-    unlockedMemoIds: z.array(z.string().uuid('无效的 Memo ID')).optional().default([]),
+    unlockedMemoIds: z.array(
+        z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, '无效的 Memo ID')
+    ).optional().default([]),
 });
 
 export type CreateMemoInput = z.infer<typeof createMemoSchema>;

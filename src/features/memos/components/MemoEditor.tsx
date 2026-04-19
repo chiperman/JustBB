@@ -73,6 +73,7 @@ export function MemoEditor({
     } = useEditorSuggestions();
 
     const isActuallyCollapsed = (isPropCollapsed || scrollCollapsed) && !isFocused && !showLocationPicker && !showPrivateDialog && mode === 'create';
+    const needsPrivateDialog = isPrivate && (mode === 'create' || !memo?.is_private);
 
     const extensions = useMemo(() => 
         // eslint-disable-next-line react-hooks/refs
@@ -407,7 +408,7 @@ export function MemoEditor({
                     onTogglePinned={() => setIsPinned(!isPinned)}
                     onShowLocationPicker={() => setShowLocationPicker(true)}
                     onCancel={handleToolbarCancel}
-                    onPublish={() => isPrivate ? setShowPrivateDialog(true) : performPublish(editor)}
+                    onPublish={() => needsPrivateDialog ? setShowPrivateDialog(true) : performPublish(editor)}
                 />
             </div>
 

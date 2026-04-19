@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Memo } from '@/types/memo';
-import { reconcileHasMoreOlder, reconcileInitialMemoWindow } from './useMemoFeed';
+import { reconcileHasMoreOlder, reconcileInitialMemoWindow, reconcileUpdatedMemo } from './useMemoFeed';
 
 function createMemo(id: string, createdAt: string, overrides: Partial<Memo> = {}): Memo {
     return {
@@ -59,5 +59,26 @@ describe('reconcileHasMoreOlder', () => {
         );
 
         expect(reconcileHasMoreOlder(true, nextInitialMemos)).toBe(false);
+    });
+});
+
+describe('reconcileUpdatedMemo', () => {
+    it('preserves viewer-scoped flags when the update payload omits derived fields', () => {
+        const existingMemo = createMemo('memo-1', '2026-04-03T00:00:00.000Z', {
+            is_owner: true,
+            is_locked: false,
+            content: 'before',
+        });
+        const updatedMemo = createMemo('memo-1', '2026-04-03T00:00:00.000Z', {
+            content: 'after',
+        });
+        delete (updatedMemo as Partial<Memo>).is_owner;
+        delete (updatedMemo as Partial<Memo>).is_locked;
+
+        const reconciled = reconcileUpdatedMemo(existingMemo, updatedMemo);
+
+        expect(reconciled.content).toBe('after');
+        expect(reconciled.is_owner).toBe(true);
+        expect(reconciled.is_locked).toBe(false);
     });
 });

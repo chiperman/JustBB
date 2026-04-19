@@ -63,10 +63,10 @@ export function MainLayoutClient() {
         () => Object.fromEntries(new URLSearchParams(searchParamsKey).entries()),
         [searchParamsKey],
     );
-    const cacheKey = generateCacheKey({
-        ...flattenedParams,
-        unlocked: unlockedMemoIds.join(','),
-    });
+    const baseCacheKey = generateCacheKey(flattenedParams);
+    const viewerScope = user?.id ?? 'anonymous';
+    const unlockedScope = unlockedMemoIds.join(',');
+    const cacheKey = `${baseCacheKey}::viewer=${viewerScope}::unlocked=${unlockedScope}`;
     const cachedData = getCache(cacheKey);
     const latestRequestIdRef = useRef(0);
 

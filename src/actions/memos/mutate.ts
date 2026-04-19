@@ -12,6 +12,64 @@ import { createMemoSchema, updateMemoContentSchema, updateMemoStateSchema, batch
 import { withViewerAccess } from '@/lib/memos/visibility';
 
 type MemoInsert = Database['public']['Tables']['memos']['Insert'];
+type ActionErrorLike = {
+    code?: string;
+    message?: string;
+    details?: string | null;
+    hint?: string | null;
+};
+type ValidationIssueLike = {
+    path: PropertyKey[];
+    message: string;
+};
+
+function enrichViewerMemo(memo: Memo, viewerId: string): Memo {
+    return withViewerAccess(memo, viewerId) ?? {
+        ...memo,
+        is_owner: memo.owner_id === viewerId,
+        is_locked: false,
+    };
+}
+
+function formatActionError(prefix: string, error?: ActionErrorLike | null) {
+    if (!error) return prefix;
+
+    if (error.code === 'PGRST116') {
+        return `${prefix}：没有找到可操作的记录，可能这条 memo 不属于当前账号。`;
+    }
+
+    return prefix;
+}
+
+function logDatabaseError(action: string, context: Record<string, unknown>, error?: ActionErrorLike | null) {
+    console.error(action, {
+        ...context,
+        code: error?.code ?? null,
+        message: error?.message ?? null,
+        details: error?.details ?? null,
+        hint: error?.hint ?? null,
+    });
+}
+
+function logValidationFailure(
+    action: string,
+    viewerId: string,
+    issue: ValidationIssueLike,
+    rawData: Record<string, FormDataEntryValue>,
+) {
+    const context: Record<string, unknown> = {
+        viewerId,
+        issuePath: issue.path.map(String).join('.'),
+        issueMessage: issue.message,
+        fields: Object.keys(rawData),
+    };
+
+    if (typeof rawData.id === 'string') {
+        context.memoId = rawData.id;
+    }
+
+    console.error(action, context);
+}
 
 /**
  * 创建新笔记
@@ -52,12 +110,12 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
         .single();
 
     if (error) {
-        console.error('Error creating memo:', error);
-        return { success: false, error: '发布失败' };
+        logDatabaseError('Error creating memo', { viewerId }, error);
+        return { success: false, error: formatActionError('发布失败', error) };
     }
 
     revalidatePath('/');
-    return { success: true, error: null, data: data as Memo };
+    return { success: true, error: null, data: enrichViewerMemo(data as Memo, viewerId) };
 }
 
 /**
@@ -71,7 +129,13 @@ export async function updateMemoContent(formData: FormData): Promise<ActionRespo
     const validation = updateMemoContentSchema.safeParse(rawData);
 
     if (!validation.success) {
-        return { success: false, error: validation.error.issues[0].message };
+        const issue = validation.error.issues[0];
+        const receivedId = typeof rawData.id === 'string' ? rawData.id : String(rawData.id ?? '');
+        logValidationFailure('Invalid memo update payload', viewerId, issue, rawData);
+        if (issue.path.includes('id')) {
+            return { success: false, error: `无效的ID：${receivedId || '(空)'}` };
+        }
+        return { success: false, error: issue.message };
     }
 
     const { id, content } = validation.data;
@@ -91,12 +155,18 @@ export async function updateMemoContent(formData: FormData): Promise<ActionRespo
         .single();
 
     if (error) {
-        console.error('Error updating memo content:', error);
-        return { success: false, error: '保存失败' };
+        logDatabaseError('Error updating memo content', { viewerId, memoId: id }, error);
+        return { success: false, error: formatActionError('保存失败', error) };
+    }
+
+    if (!data) {
+        const noDataError = '保存失败：数据库没有返回更新后的记录，可能这条 memo 不属于当前账号。';
+        console.error('Error updating memo content: no row returned', { viewerId, memoId: id });
+        return { success: false, error: noDataError };
     }
 
     revalidatePath('/');
-    return { success: true, error: null, data: data as Memo };
+    return { success: true, error: null, data: enrichViewerMemo(data as Memo, viewerId) };
 }
 
 /**
@@ -110,7 +180,13 @@ export async function updateMemoState(formData: FormData): Promise<ActionRespons
     const validation = updateMemoStateSchema.safeParse(rawData);
 
     if (!validation.success) {
-        return { success: false, error: validation.error.issues[0].message };
+        const issue = validation.error.issues[0];
+        const receivedId = typeof rawData.id === 'string' ? rawData.id : String(rawData.id ?? '');
+        logValidationFailure('Invalid memo state payload', viewerId, issue, rawData);
+        if (issue.path.includes('id')) {
+            return { success: false, error: `无效的ID：${receivedId || '(空)'}` };
+        }
+        return { success: false, error: issue.message };
     }
 
     const { id, is_pinned, is_private, access_code, access_code_hint } = validation.data;
@@ -140,12 +216,18 @@ export async function updateMemoState(formData: FormData): Promise<ActionRespons
         .single();
 
     if (error) {
-        console.error('Error updating memo state:', error);
-        return { success: false, error: '更新失败' };
+        logDatabaseError('Error updating memo state', { viewerId, memoId: id }, error);
+        return { success: false, error: formatActionError('更新失败', error) };
+    }
+
+    if (!data) {
+        const noDataError = '更新失败：数据库没有返回更新后的记录，可能这条 memo 不属于当前账号。';
+        console.error('Error updating memo state: no row returned', { viewerId, memoId: id });
+        return { success: false, error: noDataError };
     }
 
     revalidatePath('/');
-    return { success: true, error: null, data: data as Memo };
+    return { success: true, error: null, data: enrichViewerMemo(data as Memo, viewerId) };
 }
 
 /**

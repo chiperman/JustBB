@@ -8,10 +8,12 @@ import { memoCache } from '@/lib/memo-cache';
 import { useTags } from '@/context/TagsContext';
 import { useStats } from '@/context/StatsContext';
 import { Editor } from '@tiptap/react';
+import { useToast } from '@/hooks/use-toast';
 
 // Draft Persistence Keys
 export const DRAFT_CONTENT_KEY = 'memo_editor_draft_content';
 export const DRAFT_IS_PRIVATE_KEY = 'memo_editor_draft_is_private';
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 interface UseMemoEditorProps {
     mode: 'create' | 'edit';
@@ -23,6 +25,7 @@ interface UseMemoEditorProps {
 export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMemoEditorProps) {
     const { refreshTags } = useTags();
     const { refreshStats } = useStats();
+    const { toast } = useToast();
 
     const [content, setContent] = useState(initialMemo?.content || '');
     const [isPending, setIsPending] = useState(false);
@@ -62,7 +65,19 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
 
     const performPublish = async (editor: Editor | null) => {
         const textContent = editor?.getText({ blockSeparator: '\n' }) || content;
-        if (!textContent.trim() || isPending) return;
+        if (isPending) {
+            const message = '正在提交，请稍候。';
+            setError(message);
+            toast({ title: '请稍候', description: message });
+            return;
+        }
+
+        if (!textContent.trim()) {
+            const message = '内容为空，无法保存。';
+            setError(message);
+            toast({ title: mode === 'edit' ? '保存失败' : '发布失败', description: message, variant: 'destructive' });
+            return;
+        }
 
         setIsPending(true);
         setError(null);
@@ -81,6 +96,12 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
         try {
             let result;
             if (mode === 'edit' && initialMemo) {
+                if (!UUID_PATTERN.test(String(initialMemo.id ?? ''))) {
+                    const message = `无效的ID：${String(initialMemo.id ?? '(空)')}`;
+                    setError(message);
+                    toast({ title: '保存失败', description: message, variant: 'destructive' });
+                    return;
+                }
                 formData.append('id', initialMemo.id);
                 result = await updateMemoContent(formData);
             } else {
@@ -117,14 +138,20 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
                     if (newMemo) {
                         dispatchMemoEvent({ type: 'create', memo: newMemo });
                     }
+                    toast({ title: '已发布' });
                 } else {
+                    toast({ title: '已保存' });
                     onSuccess?.(newMemo);
                 }
             } else {
-                setError(typeof result.error === 'string' ? result.error : '操作失败，请稍后重试');
+                const message = typeof result.error === 'string' ? result.error : '操作失败，请稍后重试';
+                setError(message);
+                toast({ title: mode === 'edit' ? '保存失败' : '发布失败', description: message, variant: 'destructive' });
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : '服务器连接失败');
+            const message = err instanceof Error ? err.message : '服务器连接失败';
+            setError(message);
+            toast({ title: mode === 'edit' ? '保存失败' : '发布失败', description: message, variant: 'destructive' });
         } finally {
             setIsPending(false);
         }

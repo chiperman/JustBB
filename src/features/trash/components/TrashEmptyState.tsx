@@ -1,34 +1,38 @@
 'use client';
 
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { SparklesIcon as Sparkles } from '@hugeicons/core-free-icons';
+import { ArrowRight01Icon, Archive02Icon as Archive } from '@hugeicons/core-free-icons';
+
+import { Button } from '@/components/ui/button';
 
 export function TrashEmptyState() {
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center py-32 rounded-3xl border border-dashed border-border/20 bg-muted/5 relative overflow-hidden"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-card/30 px-6 py-16 text-center"
         >
-            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-50" />
-            
-            <div className="relative mb-6">
-                <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl animate-pulse" />
-                <div className="relative w-16 h-16 flex items-center justify-center rounded-full border border-primary/5 bg-background/40 backdrop-blur-sm">
-                    <HugeiconsIcon icon={Sparkles} size={32} className="text-primary/20" />
-                </div>
+            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-background/80 shadow-sm">
+                <HugeiconsIcon icon={Archive} size={24} className="text-primary/60" />
             </div>
-            
-            <p className="italic text-muted-foreground/40 text-sm font-sans tracking-widest text-center px-10">
-                尘埃落定 &mdash; 这里没有任何被遗忘的片段。
-            </p>
-            
-            <div className="mt-8 flex gap-1">
-                {[...Array(3)].map((_, i) => (
-                    <div key={i} className="w-1 h-1 rounded-full bg-primary/10" />
-                ))}
+
+            <div className="space-y-2">
+                <h2 className="text-lg font-medium tracking-tight text-foreground">
+                    回收站现在是空的
+                </h2>
+                <p className="max-w-md text-sm leading-6 text-muted-foreground">
+                    新删除的 Memo 会先来到这里。你可以稍后回来恢复它们，或者继续回到首页写新的记录。
+                </p>
             </div>
+
+            <Button asChild variant="outline" size="sm" className="mt-6 border-border/60 bg-background/80 shadow-none">
+                <Link href="/">
+                    返回首页
+                    <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
+                </Link>
+            </Button>
         </motion.div>
     );
 }

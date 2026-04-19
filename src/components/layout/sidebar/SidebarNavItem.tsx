@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { cn } from '@/lib/utils';
@@ -25,19 +26,24 @@ export function SidebarNavItem({
 }: SidebarNavItemProps) {
     return (
         <motion.div layout="position">
-            <button
-                onClick={() => onClick(item.href)}
+            <Link
+                href={item.href}
+                onClick={(event) => {
+                    event.preventDefault();
+                    onClick(item.href);
+                }}
                 className={cn(
-                    "group relative flex h-9 w-full items-center overflow-hidden rounded text-left transition-[padding,gap,background-color,color] duration-200 hover:bg-accent active:scale-95",
+                    "group relative flex h-9 w-full items-center overflow-hidden rounded-md text-left transition-[padding,gap,background-color,color] duration-200 active:scale-95",
                     isCollapsed ? "mx-auto w-9 justify-center gap-0 px-0" : "px-3 gap-3",
                     isActive
-                        ? "text-primary font-medium hover:text-primary"
-                        : "text-muted-foreground hover:text-accent-foreground"
+                        ? "bg-primary/8 text-primary font-medium"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 )}
                 title={item.label}
+                aria-current={isActive ? 'page' : undefined}
             >
                 <span className={cn(
-                    "transition-colors shrink-0 flex items-center justify-center",
+                    "shrink-0 flex items-center justify-center transition-colors",
                     isActive ? "text-primary" : "text-muted-foreground"
                 )}>
                     <HugeiconsIcon icon={item.icon} size={14} />
@@ -55,7 +61,7 @@ export function SidebarNavItem({
                 >
                     <span className="block truncate">{item.label}</span>
                 </motion.span>
-            </button>
+            </Link>
         </motion.div>
     );
 }

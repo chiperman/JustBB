@@ -70,9 +70,6 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
     const {
         navItems,
         currentView,
-        springY,
-        scaleY,
-        scaleX,
         handleNavigate
     } = useSidebarNavigation();
 
@@ -164,13 +161,6 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                         effectiveIsCollapsed ? "mx-1" : "mx-2"
                     )}
                 />
-
-                {hasMounted && !effectiveIsCollapsed && (
-                    <motion.div
-                        style={{ y: springY, scaleY, scaleX, originY: 0.5 }}
-                        className="absolute left-0 w-1 h-5 bg-primary rounded-full z-10"
-                    />
-                )}
 
                 {navItems.map((item) => (
                     <SidebarNavItem

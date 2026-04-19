@@ -60,7 +60,7 @@ const EMPTY_USAGE_STATS: SupabaseUsageResult = {
         functions: { invocations: 0 },
     },
 };
-const EMPTY_USAGE_DATA = EMPTY_USAGE_STATS.data!;
+const EMPTY_USAGE_DATA: NonNullable<SupabaseUsageResult["data"]> = EMPTY_USAGE_STATS.data!;
 
 function InfoHint({ label, tip, muted = false }: HintProps) {
     return (
@@ -124,7 +124,7 @@ export function UsageModal({ trigger }: UsageModalProps) {
     const [error, setError] = React.useState<string | null>(null);
     const hasMounted = useHasMounted();
     const displayStats = stats ?? EMPTY_USAGE_STATS;
-    const displayData = stats?.data ?? EMPTY_USAGE_DATA;
+    const displayData: NonNullable<SupabaseUsageResult["data"]> = stats?.data ?? EMPTY_USAGE_DATA;
     const isPlaceholder = !stats;
     const showStatusBanner = loading || !!error;
     const showManagementApiBanner = !isPlaceholder && displayStats.sourceMode === "fallback";

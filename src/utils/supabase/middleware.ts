@@ -2,8 +2,8 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { Database } from '@/types/database'
 
-// 注意：middleware 运行在 Edge Runtime，不能使用 lib/env.ts 中的完整 Zod 校验
-// 但可以保持 process.env 直接访问，因为 middleware 阶段这些变量必定存在
+// 注意：该逻辑由 Next.js Proxy 调用，运行时环境独立于页面渲染
+// 这里保持 process.env 直接访问，避免在请求前置阶段引入额外的配置依赖
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 

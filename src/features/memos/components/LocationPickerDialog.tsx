@@ -41,8 +41,24 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
     const [isSearching, setIsSearching] = React.useState(false);
     const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const isSelectingRef = React.useRef<boolean>(false);
-
     const [MapView, setMapView] = React.useState<typeof MapViewType | null>(null);
+
+    const resetFields = React.useCallback(() => {
+        setName('');
+        setLat('');
+        setLng('');
+        setSuggestions([]);
+        setShowSuggestions(false);
+        setIsGettingLocation(false);
+        setIsSearching(false);
+    }, []);
+
+    // 监听 open 状态，关闭时重置所有字段
+    React.useEffect(() => {
+        if (!open) {
+            resetFields();
+        }
+    }, [open, resetFields]);
 
     // 懒加载 MapView
     React.useEffect(() => {
@@ -174,11 +190,6 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
         const lngNum = parseFloat(lng);
         const locationText = `📍[${name.trim()}](${latNum}, ${lngNum})`;
         onConfirm(locationText, name.trim(), latNum, lngNum);
-        // 重置状态
-        setName('');
-        setLat('');
-        setLng('');
-        setSuggestions([]);
         onOpenChange(false);
     };
 

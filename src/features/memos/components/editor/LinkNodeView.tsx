@@ -1,0 +1,136 @@
+'use client';
+
+import React from 'react';
+import { NodeViewWrapper, NodeViewProps } from '@tiptap/react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+    Link01Icon,
+    Copy01Icon,
+    PencilEdit02Icon,
+    MoreHorizontalIcon,
+} from '@hugeicons/core-free-icons';
+import { LinkPreview } from '@/components/ui/LinkPreview';
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import {
+    HoverCard,
+    HoverCardContent,
+    HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { useToast } from '@/hooks/use-toast';
+
+export const LinkNodeView = (props: NodeViewProps) => {
+    const { node, updateAttributes } = props;
+    const { id: url, label: title, mode = 'mention', isPending = false } = node.attrs;
+    const { toast } = useToast();
+
+    const handleCopy = (e?: React.MouseEvent) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+        navigator.clipboard.writeText(url);
+        toast({ title: '链接已拷贝' });
+    };
+
+    const handleEdit = (e?: React.MouseEvent) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+        const event = new CustomEvent('edit-link', { 
+            detail: { url, title, node, updateAttributes } 
+        });
+        window.dispatchEvent(event);
+    };
+
+    const renderMenu = () => (
+        <DropdownMenu onOpenChange={(open) => {
+            window.dispatchEvent(new CustomEvent('memo-internal-menu-change', { detail: { open } }));
+        }}>
+            <DropdownMenuTrigger asChild>
+                <button 
+                    onMouseDown={(e) => e.preventDefault()}
+                    className="p-1 hover:bg-accent rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                >
+                    <HugeiconsIcon icon={MoreHorizontalIcon} size={14} />
+                </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32">
+                <DropdownMenuItem onClick={handleCopy} className="gap-2">
+                    <HugeiconsIcon icon={Copy01Icon} size={14} />
+                    拷贝链接
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleEdit} className="gap-2">
+                    <HugeiconsIcon icon={PencilEdit02Icon} size={14} />
+                    编辑
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+
+    if (isPending) {
+        return (
+            <NodeViewWrapper className="inline-block align-middle leading-none my-0.5">
+                <span className="text-primary/60 border-b border-primary/40 pb-0.5 font-mono text-sm italic animate-pulse">
+                    {url}
+                </span>
+            </NodeViewWrapper>
+        );
+    }
+
+    return (
+        <NodeViewWrapper className="inline-block align-middle leading-none my-0.5">
+            {mode === 'mention' && (
+                <HoverCard openDelay={200}>
+                    <HoverCardTrigger asChild>
+                        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-medium text-sm hover:bg-primary/20 transition-colors cursor-pointer group">
+                            <span>🔗</span>
+                            <span>{title}</span>
+                            <div className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {renderMenu()}
+                            </div>
+                        </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent className="w-80 p-0 overflow-hidden border-none shadow-2xl">
+                        <LinkPreview url={url} customTitle={title} className="m-0 border-none shadow-none rounded-none h-auto" />
+                    </HoverCardContent>
+                </HoverCard>
+            )}
+
+            {mode === 'pill' && (
+                <div className="inline-flex items-center gap-2 px-2 py-1 rounded-full border border-border bg-card/50 hover:bg-accent/30 transition-all group">
+                    <HugeiconsIcon icon={Link01Icon} size={14} className="text-muted-foreground/60" />
+                    <span className="text-xs text-foreground/80 font-medium truncate max-w-[200px]">{title}</span>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={handleCopy}
+                            className="p-1 hover:bg-accent rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                            title="拷贝链接"
+                        >
+                            <HugeiconsIcon icon={Copy01Icon} size={12} />
+                        </button>
+                        <button 
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={handleEdit}
+                            className="p-1 hover:bg-accent rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                            title="编辑"
+                        >
+                            <HugeiconsIcon icon={PencilEdit02Icon} size={12} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {mode === 'card' && (
+                <div className="relative group max-w-2xl my-2">
+                    <LinkPreview url={url} customTitle={title} className="m-0" />
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-md border border-border/50 shadow-sm p-0.5 z-10">
+                        {renderMenu()}
+                    </div>
+                </div>
+            )}
+        </NodeViewWrapper>
+    );
+};

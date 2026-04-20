@@ -1,7 +1,6 @@
 'use client';
 
 import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
 import LinkExtension from '@tiptap/extension-link';
 import Mention from '@tiptap/extension-mention';
 import { PluginKey } from '@tiptap/pm/state';
@@ -10,6 +9,9 @@ import { CustomSuggestionProps } from '../../hooks/useEditorSuggestions';
 
 export const mentionPluginKey = new PluginKey('mention');
 export const hashtagPluginKey = new PluginKey('hashtag');
+
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import { LinkNodeView } from './LinkNodeView';
 
 // 辅助函数，将纯文本转换为 Tiptap 能识别的 HTML 格式
 export function textToTiptapHtml(text: string): string {
@@ -27,6 +29,10 @@ export function textToTiptapHtml(text: string): string {
                 case 'ref':
                     const memoNum = token.value.slice(1);
                     return `<span data-type="mention" data-id="${memoNum}" data-label="${memoNum}">@${memoNum}</span>`;
+                case 'markupLink':
+                    const modeAttr = token.mode !== 'mention' ? ` data-mode="${token.mode}"` : '';
+                    const pendingAttr = (token as { isPending?: boolean }).isPending ? ` data-pending="true"` : '';
+                    return `<span data-type="markupLink" data-id="${token.url}" data-label="${token.title}"${modeAttr}${pendingAttr}>🔗[${token.title}](${token.url}${token.mode !== 'mention' ? `|${token.mode}` : ''})</span>`;
                 case 'text':
                     return token.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 default:
@@ -105,9 +111,46 @@ export const getExtensions = (options: ExtensionOptions) => [
             }),
         },
     }),
-    Placeholder.configure({
-        placeholder: 'Wanna memo something? JustMemo it!',
-        emptyEditorClass: 'is-editor-empty',
+    Mention.extend({
+        name: 'markupLink',
+        addAttributes() {
+            return {
+                ...this.parent?.(),
+                mode: {
+                    default: 'mention',
+                    parseHTML: element => element.getAttribute('data-mode') || 'mention',
+                    renderHTML: attributes => ({ 'data-mode': attributes.mode }),
+                },
+                isPending: {
+                    default: false,
+                    parseHTML: element => element.getAttribute('data-pending') === 'true',
+                    renderHTML: attributes => attributes.isPending ? { 'data-pending': 'true' } : {},
+                },
+            }
+        },
+        parseHTML() {
+            return [{ tag: 'span[data-type="markupLink"]' }]
+        },
+        renderHTML({ node }) {
+            const modeSuffix = node.attrs.mode !== 'mention' ? `|${node.attrs.mode}` : '';
+            return ['span', this.options.HTMLAttributes, `🔗[${node.attrs.label ?? '链接'}](${node.attrs.id}${modeSuffix})`]
+        },
+        addNodeView() {
+            return ReactNodeViewRenderer(LinkNodeView)
+        },
+        renderText({ node }) {
+            const modeSuffix = node.attrs.mode !== 'mention' ? `|${node.attrs.mode}` : '';
+            return `🔗[${node.attrs.label ?? '链接'}](${node.attrs.id}${modeSuffix})`;
+        },
+    }).configure({
+        HTMLAttributes: {
+            class: 'markup-link-node',
+        },
+        suggestion: {
+            char: '🔗',
+            pluginKey: new PluginKey('markupLink'),
+            render: () => ({}),
+        },
     }),
     LinkExtension.configure({
         openOnClick: false,

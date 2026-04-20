@@ -4,12 +4,17 @@ import { useRef, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { motion } from 'framer-motion';
+import { TextSelection } from '@tiptap/pm/state';
 
 import { EditorSuggestionMenu } from '@/features/memos/components/EditorSuggestionMenu';
 import { MemoPrivateDialog } from '@/features/memos/components/MemoPrivateDialog';
 import { LocationPickerDialog } from '@/features/memos/components/LocationPickerDialog';
+import { LinkPickerDialog } from '@/features/memos/components/LinkPickerDialog';
 import { EditorToolbar } from '@/features/memos/components/editor/EditorToolbar';
 import { getExtensions, textToTiptapHtml } from '@/features/memos/components/editor/extensions';
+import { fetchLinkMetadata } from '@/lib/link-preview';
+import { LinkPasteMenu } from '@/features/memos/components/editor/LinkPasteMenu';
+import { useState } from 'react';
 
 import { useMemoEditor, DRAFT_CONTENT_KEY } from '@/features/memos/hooks/useMemoEditor';
 import { useEditorSuggestions, CustomSuggestionProps } from '@/features/memos/hooks/useEditorSuggestions';
@@ -24,6 +29,8 @@ interface MemoEditorProps {
     scrollCollapsed?: boolean;
     className?: string;
 }
+
+const PLACEHOLDER_TEXT = 'Wanna memo something? JustMemo it!';
 
 export function MemoEditor({
     mode = 'create',
@@ -49,10 +56,35 @@ export function MemoEditor({
         isFocused, setIsFocused,
         isAnimating, setIsAnimating,
         showLocationPicker, setShowLocationPicker,
+        showLinkPicker, setShowLinkPicker,
+        isAnyDialogOpen,
+        setIsMenuOpen,
         handleTogglePrivate,
         performPublish,
         handleCancel
     } = useMemoEditor({ mode, initialMemo: memo, onSuccess, onCancel });
+
+    // 监听内部菜单（如提及/书签菜单）的开关状态
+    useEffect(() => {
+        const handleMenuChange = (e: Event) => {
+            const customEvent = e as CustomEvent<{ open: boolean }>;
+            setIsMenuOpen(customEvent.detail.open);
+        };
+        window.addEventListener('memo-internal-menu-change', handleMenuChange as EventListener);
+        return () => window.removeEventListener('memo-internal-menu-change', handleMenuChange as EventListener);
+    }, [setIsMenuOpen]);
+
+    // 智能链接系统相关状态
+    const [pasteMenuPosition, setPasteMenuPosition] = useState<{ top: number; left: number } | null>(null);
+    const [pendingPasteUrl, setPendingPasteUrl] = useState<string | null>(null);
+    const [pendingPastePos, setPendingPastePos] = useState<number | null>(null);
+    const [fetchedMeta, setFetchedMeta] = useState<{ title: string | null; domain: string | null } | null>(null);
+    const [editingLinkInfo, setEditingLinkInfo] = useState<{
+        title: string;
+        url: string;
+        mode?: string;
+        updateAttributes: (attrs: Record<string, string | boolean>) => void;
+    } | null>(null);
 
     const {
         suggestions,
@@ -72,118 +104,118 @@ export function MemoEditor({
         handleSuggestionScroll
     } = useEditorSuggestions();
 
-    const isActuallyCollapsed = (isPropCollapsed || scrollCollapsed) && !isFocused && !showLocationPicker && !showPrivateDialog && mode === 'create';
+    const isActuallyCollapsed = (isPropCollapsed || scrollCollapsed) && !isFocused && !isAnyDialogOpen && mode === 'create';
     const needsPrivateDialog = isPrivate && (mode === 'create' || !memo?.is_private);
 
-    const extensions = useMemo(() => 
+    const extensions = useMemo(() =>
         // eslint-disable-next-line react-hooks/refs
         getExtensions({
-        onMentionStart: (props) => {
-            suggestionPropsRef.current = props;
-            setShowSuggestions(true);
-            fetchMentionSuggestions(props.query, 0);
-            updateSuggestionPosition(props);
-        },
-        onMentionUpdate: (props) => {
-            suggestionPropsRef.current = props;
-            fetchMentionSuggestions(props.query, 0);
-            updateSuggestionPosition(props);
-        },
-        onMentionExit: () => {
-            setShowSuggestions(false);
-            suggestionPropsRef.current = null;
-        },
-        onMentionKeyDown: (props) => {
-            if (props.event.key === 'Escape') {
+            onMentionStart: (props) => {
+                suggestionPropsRef.current = props;
+                setShowSuggestions(true);
+                fetchMentionSuggestions(props.query, 0);
+                updateSuggestionPosition(props);
+            },
+            onMentionUpdate: (props) => {
+                suggestionPropsRef.current = props;
+                fetchMentionSuggestions(props.query, 0);
+                updateSuggestionPosition(props);
+            },
+            onMentionExit: () => {
                 setShowSuggestions(false);
-                return true;
-            }
-            if (props.event.key === ' ' && suggestionPropsRef.current) {
-                const query = suggestionPropsRef.current.query;
-                if (/^\d+$/.test(query)) {
-                    suggestionPropsRef.current.command({ id: query, label: query });
+                suggestionPropsRef.current = null;
+            },
+            onMentionKeyDown: (props) => {
+                if (props.event.key === 'Escape') {
+                    setShowSuggestions(false);
+                    return true;
+                }
+                if (props.event.key === ' ' && suggestionPropsRef.current) {
+                    const query = suggestionPropsRef.current.query;
+                    if (/^\d+$/.test(query)) {
+                        suggestionPropsRef.current.command({ id: query, label: query });
+                        props.event.preventDefault();
+                        return true;
+                    }
+                }
+                if (props.event.key === 'ArrowUp') {
+                    const len = suggestionsRef.current?.length || 0;
+                    setSelectedIndex((prev) => (prev + len - 1) % (len || 1));
                     props.event.preventDefault();
                     return true;
                 }
-            }
-            if (props.event.key === 'ArrowUp') {
-                const len = suggestionsRef.current?.length || 0;
-                setSelectedIndex((prev) => (prev + len - 1) % (len || 1));
-                props.event.preventDefault();
-                return true;
-            }
-            if (props.event.key === 'ArrowDown') {
-                const len = suggestionsRef.current?.length || 0;
-                setSelectedIndex((prev) => (prev + 1) % (len || 1));
-                props.event.preventDefault();
-                return true;
-            }
-            if (props.event.key === 'Enter') {
-                const item = suggestionsRef.current?.[selectedIndexRef.current];
-                if (item && suggestionPropsRef.current) {
-                    const label = item.label.startsWith('@') ? item.label.slice(1) : item.label;
-                    suggestionPropsRef.current.command({ id: label, label: label });
+                if (props.event.key === 'ArrowDown') {
+                    const len = suggestionsRef.current?.length || 0;
+                    setSelectedIndex((prev) => (prev + 1) % (len || 1));
                     props.event.preventDefault();
-                    props.event.stopPropagation();
                     return true;
                 }
-            }
-            return false;
-        },
-        onHashtagStart: (props) => {
-            suggestionPropsRef.current = props;
-            setShowSuggestions(true);
-            fetchHashtagSuggestions(props.query);
-            updateSuggestionPosition(props);
-        },
-        onHashtagUpdate: (props) => {
-            suggestionPropsRef.current = props;
-            fetchHashtagSuggestions(props.query);
-            updateSuggestionPosition(props);
-        },
-        onHashtagExit: () => {
-            setShowSuggestions(false);
-            suggestionPropsRef.current = null;
-        },
-        onHashtagKeyDown: (props) => {
-            if (props.event.key === 'Escape') {
+                if (props.event.key === 'Enter') {
+                    const item = suggestionsRef.current?.[selectedIndexRef.current];
+                    if (item && suggestionPropsRef.current) {
+                        const label = item.label.startsWith('@') ? item.label.slice(1) : item.label;
+                        suggestionPropsRef.current.command({ id: label, label: label });
+                        props.event.preventDefault();
+                        props.event.stopPropagation();
+                        return true;
+                    }
+                }
+                return false;
+            },
+            onHashtagStart: (props) => {
+                suggestionPropsRef.current = props;
+                setShowSuggestions(true);
+                fetchHashtagSuggestions(props.query);
+                updateSuggestionPosition(props);
+            },
+            onHashtagUpdate: (props) => {
+                suggestionPropsRef.current = props;
+                fetchHashtagSuggestions(props.query);
+                updateSuggestionPosition(props);
+            },
+            onHashtagExit: () => {
                 setShowSuggestions(false);
-                return true;
-            }
-            if (props.event.key === ' ' && suggestionPropsRef.current) {
-                const query = suggestionPropsRef.current.query;
-                if (/^[\w\u4e00-\u9fa5]+$/.test(query)) {
-                    suggestionPropsRef.current.command({ id: query, label: query });
+                suggestionPropsRef.current = null;
+            },
+            onHashtagKeyDown: (props) => {
+                if (props.event.key === 'Escape') {
+                    setShowSuggestions(false);
+                    return true;
+                }
+                if (props.event.key === ' ' && suggestionPropsRef.current) {
+                    const query = suggestionPropsRef.current.query;
+                    if (/^[\w\u4e00-\u9fa5]+$/.test(query)) {
+                        suggestionPropsRef.current.command({ id: query, label: query });
+                        props.event.preventDefault();
+                        return true;
+                    }
+                }
+                if (props.event.key === 'ArrowUp') {
+                    const len = suggestionsRef.current?.length || 0;
+                    setSelectedIndex((prev) => (prev + len - 1) % (len || 1));
                     props.event.preventDefault();
                     return true;
                 }
-            }
-            if (props.event.key === 'ArrowUp') {
-                const len = suggestionsRef.current?.length || 0;
-                setSelectedIndex((prev) => (prev + len - 1) % (len || 1));
-                props.event.preventDefault();
-                return true;
-            }
-            if (props.event.key === 'ArrowDown') {
-                const len = suggestionsRef.current?.length || 0;
-                setSelectedIndex((prev) => (prev + 1) % (len || 1));
-                props.event.preventDefault();
-                return true;
-            }
-            if (props.event.key === 'Enter') {
-                const item = suggestionsRef.current?.[selectedIndexRef.current];
-                if (suggestionPropsRef.current && item) {
-                    const rawLabel = item.label;
-                    const label = rawLabel.startsWith('#') ? rawLabel.slice(1) : rawLabel;
-                    suggestionPropsRef.current.command({ id: label, label: label });
+                if (props.event.key === 'ArrowDown') {
+                    const len = suggestionsRef.current?.length || 0;
+                    setSelectedIndex((prev) => (prev + 1) % (len || 1));
                     props.event.preventDefault();
-                    props.event.stopPropagation();
                     return true;
                 }
+                if (props.event.key === 'Enter') {
+                    const item = suggestionsRef.current?.[selectedIndexRef.current];
+                    if (suggestionPropsRef.current && item) {
+                        const rawLabel = item.label;
+                        const label = rawLabel.startsWith('#') ? rawLabel.slice(1) : rawLabel;
+                        suggestionPropsRef.current.command({ id: label, label: label });
+                        props.event.preventDefault();
+                        props.event.stopPropagation();
+                        return true;
+                    }
+                }
+                return false;
             }
-            return false;
-        }
-    }), [
+        }), [
         fetchHashtagSuggestions,
         fetchMentionSuggestions,
         setSelectedIndex,
@@ -238,8 +270,12 @@ export function MemoEditor({
             }, 100);
         },
         onBlur: () => {
-            setIsFocused(false);
-            setShowSuggestions(false);
+            // 只有当页面仍然拥有焦点时（即：用户点击了页面内其他地方），才执行收起逻辑
+            // 如果是因为切换程序导致的窗口失焦，则保持展开状态，避免用户切回时看到“跳动”
+            if (document.hasFocus()) {
+                setIsFocused(false);
+                setShowSuggestions(false);
+            }
         },
         editorProps: {
             attributes: {
@@ -248,8 +284,65 @@ export function MemoEditor({
                     "min-h-[120px] text-base"
                 ),
             },
+            handlePaste: (view, event) => {
+                const text = event.clipboardData?.getData('text/plain');
+                if (!text) return false;
+
+                const urlRegex = /^https?:\/\/[^\s]+$/;
+                if (!urlRegex.test(text.trim())) return false;
+
+                const url = text.trim();
+                const { state, dispatch } = view;
+                const { selection } = state;
+                const { from } = selection;
+
+                // 立即插入待确认状态的节点
+                const tr = state.tr.insert(from, state.schema.nodes.markupLink.create({
+                    id: url,
+                    label: url,
+                    isPending: true
+                }));
+                tr.insert(from + 1, state.schema.text(' '));
+
+                // 将光标移动到插入的内容之后
+                const selectionAfter = TextSelection.create(tr.doc, from + 2);
+                tr.setSelection(selectionAfter);
+
+                dispatch(tr);
+
+                // 获取并保存位置（由于插入了节点，位置是 from）
+                setPendingPastePos(from);
+                setPendingPasteUrl(url);
+                setFetchedMeta(null);
+
+                // 立即开始预获取元数据，节省时间
+                fetchLinkMetadata(url).then(meta => {
+                    setFetchedMeta(meta);
+                });
+
+                // 获取粘贴位置的坐标显示菜单
+                const coords = view.coordsAtPos(from);
+                setPasteMenuPosition({
+                    top: coords.bottom + window.scrollY,
+                    left: coords.left + window.scrollX
+                });
+
+                return true;
+            }
         },
     });
+
+    // 监听 NodeView 传出的编辑事件
+    useEffect(() => {
+        const handleEditLink = (e: Event) => {
+            const customEvent = e as CustomEvent<{ title: string; url: string; updateAttributes: (attrs: Record<string, string | boolean>) => void }>;
+            const { title, url, updateAttributes } = customEvent.detail;
+            setEditingLinkInfo({ title, url, updateAttributes });
+            setShowLinkPicker(true);
+        };
+        window.addEventListener('edit-link', handleEditLink as EventListener);
+        return () => window.removeEventListener('edit-link', handleEditLink as EventListener);
+    }, [setShowLinkPicker]);
 
     const prevScrollCollapsed = useRef(scrollCollapsed);
 
@@ -307,12 +400,12 @@ export function MemoEditor({
                 paddingBottom: 0,
                 paddingLeft: 0,
                 paddingRight: 0,
-                marginTop: -24, 
+                marginTop: -24,
                 marginBottom: -24,
                 borderWidth: 0,
                 boxShadow: "none",
-                transition: { 
-                    opacity: { duration: 0.2 }, 
+                transition: {
+                    opacity: { duration: 0.2 },
                     height: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
                     paddingTop: { duration: 0.3 },
                     paddingBottom: { duration: 0.3 },
@@ -322,7 +415,7 @@ export function MemoEditor({
                 }
             }}
             transition={{
-                height: isActuallyCollapsed 
+                height: isActuallyCollapsed
                     ? { type: 'spring', stiffness: 350, damping: 40 } // 设计文档收缩参数
                     : { duration: 0.4, ease: [0.22, 1, 0.36, 1] },   // 设计文档展开参数
                 opacity: { duration: 0.2 }
@@ -369,12 +462,21 @@ export function MemoEditor({
                             maskImage: isActuallyCollapsed ? 'linear-gradient(to bottom, black 90%, transparent 100%)' : 'none',
                         }}
                     >
-                        {!editor && (
-                            <div className="tiptap prose prose-sm max-w-none text-muted-foreground/50 absolute inset-0 pointer-events-none">
-                                <p>Wanna memo something? JustMemo it!</p>
+                        {/* 占位符 Overlay - 只要内容为空就显示，直到用户开始输入 */}
+                        {((!editor) || editor.isEmpty) && (
+                            <div className="absolute inset-x-0 top-0 h-[26px] flex items-center px-0 pointer-events-none z-10 transition-opacity duration-200">
+                                <span className={cn(
+                                    "text-sm font-medium transition-colors duration-200",
+                                    isActuallyCollapsed ? "text-muted-foreground/30" : "text-muted-foreground/40"
+                                )}>
+                                    {PLACEHOLDER_TEXT}
+                                </span>
                             </div>
                         )}
-                        <EditorContent editor={editor} className="flex-1 flex flex-col min-h-0" />
+                        <EditorContent
+                            editor={editor}
+                            className="flex-1 flex flex-col min-h-0"
+                        />
                     </motion.div>
 
                     {showSuggestions && (
@@ -389,6 +491,75 @@ export function MemoEditor({
                             onScroll={handleSuggestionScroll}
                         />
                     )}
+
+                    <LinkPasteMenu
+                        position={pasteMenuPosition}
+                        onClose={() => {
+                            // 如果关闭了菜单但没有选择，则保持 pending 状态或者转为默认
+                            // 这里我们选择转为默认 mention 模式并取消 pending
+                            if (pendingPasteUrl && editor && pendingPastePos !== null) {
+                                editor.state.doc.descendants((node) => {
+                                    if (node.type.name === 'markupLink' && node.attrs.isPending && node.attrs.id === pendingPasteUrl) {
+                                        editor.chain().updateAttributes('markupLink', { isPending: false, mode: 'mention' }).focus().run();
+                                        return false;
+                                    }
+                                    return true;
+                                });
+                            }
+                            setPasteMenuPosition(null);
+                            setPendingPasteUrl(null);
+                            setPendingPastePos(null);
+                        }}
+                        onSelect={(mode) => {
+                            if (pendingPasteUrl && editor) {
+                                // 寻找并更新处于 pending 状态的对应节点
+                                let targetPos = -1;
+                                editor.state.doc.descendants((node, pos) => {
+                                    if (node.type.name === 'markupLink' && node.attrs.isPending && node.attrs.id === pendingPasteUrl) {
+                                        targetPos = pos;
+                                        return false;
+                                    }
+                                    return true;
+                                });
+
+                                if (targetPos !== -1) {
+                                    const finalTitle = fetchedMeta?.title || fetchedMeta?.domain || pendingPasteUrl;
+
+                                    editor.chain()
+                                        .setNodeSelection(targetPos)
+                                        .updateAttributes('markupLink', {
+                                            isPending: false,
+                                            mode,
+                                            label: finalTitle // 如果已经获取到了，直接填入
+                                        })
+                                        .setTextSelection(targetPos + 2)
+                                        .focus()
+                                        .run();
+
+                                    // 如果还没获取到，则等待并更新
+                                    if (!fetchedMeta) {
+                                        fetchLinkMetadata(pendingPasteUrl).then(meta => {
+                                            const asyncTitle = meta?.title || meta?.domain || pendingPasteUrl;
+                                            editor.state.doc.descendants((node, pos) => {
+                                                if (node.type.name === 'markupLink' && node.attrs.id === pendingPasteUrl && !node.attrs.isPending) {
+                                                    editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, {
+                                                        ...node.attrs,
+                                                        label: asyncTitle
+                                                    }));
+                                                    return false;
+                                                }
+                                                return true;
+                                            });
+                                        });
+                                    }
+                                }
+                            }
+                            setPasteMenuPosition(null);
+                            setPendingPasteUrl(null);
+                            setPendingPastePos(null);
+                            setFetchedMeta(null);
+                        }}
+                    />
                 </div>
 
                 {error && (
@@ -407,6 +578,7 @@ export function MemoEditor({
                     onTogglePrivate={handleTogglePrivate}
                     onTogglePinned={() => setIsPinned(!isPinned)}
                     onShowLocationPicker={() => setShowLocationPicker(true)}
+                    onShowLinkPicker={() => setShowLinkPicker(true)}
                     onCancel={handleToolbarCancel}
                     onPublish={() => needsPrivateDialog ? setShowPrivateDialog(true) : performPublish(editor)}
                 />
@@ -433,6 +605,45 @@ export function MemoEditor({
                     if (!open) { setIsFocused(true); editor?.commands.focus(); }
                 }}
                 onConfirm={(loc) => editor?.chain().focus().insertContent(loc + ' ').run()}
+            />
+
+            <LinkPickerDialog
+                open={showLinkPicker}
+                onOpenChange={(open) => {
+                    setShowLinkPicker(open);
+                    if (!open) {
+                        setIsFocused(true);
+                        editor?.commands.focus();
+                        setEditingLinkInfo(null);
+                    }
+                }}
+                mode={editingLinkInfo ? 'edit' : 'create'}
+                initialTitle={editingLinkInfo?.title}
+                initialUrl={editingLinkInfo?.url}
+                onConfirm={(title, url) => {
+                    if (editingLinkInfo) {
+                        // 编辑模式下更新属性
+                        // 由于我们是纯文本驱动，最可靠的方式还是全局替换
+                        const oldMode = editingLinkInfo.mode || 'mention';
+                        const modeSuffix = oldMode !== 'mention' ? `|${oldMode}` : '';
+                        const oldText = `🔗[${editingLinkInfo.title}](${editingLinkInfo.url}${modeSuffix})`;
+                        const newText = `🔗[${title}](${url}${modeSuffix})`;
+
+                        const docText = editor?.getText({ blockSeparator: '\n' }) || '';
+                        if (docText.includes(oldText)) {
+                            const newDocText = docText.replace(oldText, newText);
+                            editor?.commands.setContent(textToTiptapHtml(newDocText));
+                        }
+                    } else {
+                        editor?.chain().focus().insertContent([
+                            {
+                                type: 'markupLink',
+                                attrs: { id: url, label: title }
+                            },
+                            { type: 'text', text: ' ' }
+                        ]).run();
+                    }
+                }}
             />
         </motion.section>
     );

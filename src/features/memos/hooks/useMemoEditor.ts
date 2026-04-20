@@ -40,6 +40,9 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
     const [isFocused, setIsFocused] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
     const [showLocationPicker, setShowLocationPicker] = useState(false);
+    const [showLinkPicker, setShowLinkPicker] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const isAnyDialogOpen = showPrivateDialog || showLocationPicker || showLinkPicker || isMenuOpen;
 
     // Draft Loading Effect
     useEffect(() => {
@@ -171,6 +174,7 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
             setError(null);
             setShowPrivateDialog(false);
             setShowLocationPicker(false);
+            setShowLinkPicker(false);
         }
     }, [mode, onCancel]);
 
@@ -186,6 +190,9 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
         isFocused, setIsFocused,
         isAnimating, setIsAnimating,
         showLocationPicker, setShowLocationPicker,
+        showLinkPicker, setShowLinkPicker,
+        isMenuOpen, setIsMenuOpen,
+        isAnyDialogOpen,
         handleTogglePrivate,
         performPublish,
         handleCancel

@@ -253,26 +253,7 @@ html body .cursor-pointer:not(:disabled) {
   cursor: pointer !important;
 }
 
-/* Tiptap Editor Placeholder */
-.tiptap .is-editor-empty:first-child::before {
-  content: attr(data-placeholder);
-  float: left;
-  color: var(--muted-foreground);
-  pointer-events: none;
-  height: 0;
-  opacity: 0.5;
-}
-
-/* 兼容 Tiptap 根节点直接挂 is-editor-empty 的场景 */
-.tiptap.is-editor-empty::before {
-  content: attr(data-placeholder);
-  float: left;
-  color: var(--muted-foreground);
-  pointer-events: none;
-  height: 0;
-  opacity: 0.5;
-}
-
+/* 确保编辑器在聚焦时没有外边框 */
 .tiptap:focus {
   outline: none;
 }

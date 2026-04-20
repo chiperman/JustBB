@@ -8,13 +8,14 @@ import { cn } from '@/lib/utils';
 
 interface LinkPreviewProps {
     url: string;
+    customTitle?: string;
     className?: string;
 }
 
 // Client-side cache for link metadata to prevent redundant fetches during a session
 const metadataCache = new Map<string, LinkMetadata>();
 
-export function LinkPreview({ url, className }: LinkPreviewProps) {
+export function LinkPreview({ url, customTitle, className }: LinkPreviewProps) {
     const [metadata, setMetadata] = useState<LinkMetadata | null>(() => metadataCache.get(url) || null);
     const [loading, setLoading] = useState(!metadataCache.has(url));
     const [error, setError] = useState(false);
@@ -98,7 +99,9 @@ export function LinkPreview({ url, className }: LinkPreviewProps) {
                     <HugeiconsIcon icon={Link01Icon} className="text-muted-foreground/30 animate-pulse" size={24} />
                 </div>
                 <div className="p-3 sm:p-4 flex-1 min-w-0 space-y-2 lg:space-y-3">
-                    <div className="h-4 bg-muted animate-pulse rounded w-3/4"></div>
+                    <div className="h-4 bg-muted animate-pulse rounded w-3/4">
+                        {customTitle && <span className="opacity-0">{customTitle}</span>}
+                    </div>
                     <div className="hidden sm:block h-3 bg-muted animate-pulse rounded w-full"></div>
                     <div className="hidden sm:block h-3 bg-muted animate-pulse rounded w-5/6"></div>
                     <div className="h-3 bg-muted animate-pulse rounded w-1/4 mt-auto"></div>
@@ -106,6 +109,8 @@ export function LinkPreview({ url, className }: LinkPreviewProps) {
             </a>
         );
     }
+    
+    const displayTitle = customTitle || metadata?.title || metadata?.domain;
 
     if (error || !metadata) {
         // Fallback to simple link with styling
@@ -118,7 +123,7 @@ export function LinkPreview({ url, className }: LinkPreviewProps) {
                 title={url}
             >
                 <HugeiconsIcon icon={Link01Icon} size={14} className="shrink-0" />
-                <span className="truncate">{url}</span>
+                <span className="truncate">{displayTitle}</span>
             </a>
         );
     }
@@ -141,7 +146,7 @@ export function LinkPreview({ url, className }: LinkPreviewProps) {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src={metadata.image}
-                        alt={metadata.title || "Link preview"}
+                        alt={displayTitle || "Link preview"}
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         onError={(e) => {
                             e.currentTarget.style.display = 'none';
@@ -160,7 +165,7 @@ export function LinkPreview({ url, className }: LinkPreviewProps) {
             <div className="flex flex-1 flex-col justify-between p-3 sm:p-4 min-w-0">
                 <div>
                     <h3 className="line-clamp-1 sm:line-clamp-2 text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {metadata.title || metadata.domain}
+                        {displayTitle}
                     </h3>
                     <p className="mt-1 line-clamp-1 sm:line-clamp-2 text-xs text-muted-foreground leading-relaxed">
                         {metadata.description || "点击前往查看详情"}

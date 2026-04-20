@@ -6,7 +6,8 @@ export type ContentToken =
     | { type: 'code'; value: string; lang?: string }
     | { type: 'location'; value: string; name: string; lat: number; lng: number }
     | { type: 'email'; value: string }
-    | { type: 'link'; value: string };
+    | { type: 'link'; value: string }
+    | { type: 'markupLink'; value: string; title: string; url: string; mode?: 'mention' | 'pill' | 'card' };
 
 export function parseContentTokens(text: string): ContentToken[] {
     // 包含六种匹配模式，注意顺序，代码块优先：
@@ -31,10 +32,11 @@ export function parseContentTokens(text: string): ContentToken[] {
         tag: /(?<=^|\s|[^a-zA-Z0-9])(#[\w\u4e00-\u9fa5]+)/,
         email: /([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)/,
         rawImage: /(https?:\/\/[a-zA-Z0-9\-._~:\/?#\[\]@!$&'()*+,;=%]+\.(?:jpg|jpeg|png|gif|webp))/,
+        markupLink: /🔗\[([^\]]+)\]\(([^\s\|]+)(?:\|(pill|card))?\)/,
         link: /(https?:\/\/[^\s\u4e00-\u9fa5<]+[^\s\u4e00-\u9fa5<.,;:!?'"”’。，！？）】])/,
     } as const;
 
-    // 按优先级组合（代码块 > 定位 > 图片 > 引用 > 标签 > 邮件 > 链接）
+    // 按优先级组合（代码块 > 定位 > 图片 > 引用 > 标签 > 邮件 > 图片直链 > 标记链接 > 原始链接）
     const regex = new RegExp(
         Object.values(PATTERNS).map(p => p.source).join('|'),
         'g'
@@ -43,7 +45,7 @@ export function parseContentTokens(text: string): ContentToken[] {
     const tokens: ContentToken[] = [];
     let lastIndex = 0;
 
-    cleanText.replace(regex, (match, lang, codeContent, locName, locLat, locLng, mdImgUrl, atRef, hashTag, email, rawImgUrl, rawLink, index) => {
+    cleanText.replace(regex, (match, lang, codeContent, locName, locLat, locLng, mdImgUrl, atRef, hashTag, email, rawImgUrl, markupLinkTitle, markupLinkUrl, markupLinkMode, rawLink, index) => {
         // 添加匹配前的纯文本
         if (index > lastIndex) {
             tokens.push({ type: 'text', value: cleanText.slice(lastIndex, index) });
@@ -63,6 +65,14 @@ export function parseContentTokens(text: string): ContentToken[] {
             tokens.push({ type: 'email', value: email });
         } else if (rawImgUrl) {
             tokens.push({ type: 'image', value: rawImgUrl });
+        } else if (markupLinkTitle !== undefined && markupLinkUrl !== undefined) {
+            tokens.push({ 
+                type: 'markupLink', 
+                value: match, 
+                title: markupLinkTitle, 
+                url: markupLinkUrl,
+                mode: (markupLinkMode as 'pill' | 'card') || 'mention'
+            });
         } else if (rawLink) {
             tokens.push({ type: 'link', value: rawLink });
         }

@@ -11,7 +11,8 @@ import { useSearchParams } from 'next/navigation';
 import { ImageZoom } from '@/components/ui/ImageZoom';
 import { LinkPreview } from '@/components/ui/LinkPreview';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { CheckmarkCircle01Icon as Check, Copy01Icon as Copy } from '@hugeicons/core-free-icons';
+import { CheckmarkCircle01Icon as Check, Copy01Icon as Copy, Globe02Icon } from '@hugeicons/core-free-icons';
+import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { toast } from '@/hooks/use-toast';
 import Image from 'next/image';
 
@@ -121,6 +122,46 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                                 >
                                     {locElement}
                                 </LocationHoverPreview>
+                            );
+                        case 'markupLink':
+                            if (token.mode === 'mention') {
+                                return (
+                                    <HoverCard key={`mlink-${index}`} openDelay={200}>
+                                        <HoverCardTrigger asChild>
+                                            <a 
+                                                href={token.url} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-medium text-sm hover:bg-primary/20 transition-colors mx-0.5"
+                                            >
+                                                <span>🔗</span>
+                                                <span>{token.title}</span>
+                                            </a>
+                                        </HoverCardTrigger>
+                                        <HoverCardContent className="w-80 p-0 overflow-hidden border-none shadow-2xl">
+                                            <LinkPreview url={token.url} customTitle={token.title} className="m-0 border-none shadow-none rounded-none h-auto" />
+                                        </HoverCardContent>
+                                    </HoverCard>
+                                );
+                            }
+                            
+                            if (token.mode === 'pill') {
+                                return (
+                                    <a 
+                                        key={`mlink-${index}`}
+                                        href={token.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 px-2 py-1 rounded-full border border-border bg-card/50 hover:bg-accent/30 transition-all mx-0.5"
+                                    >
+                                        <HugeiconsIcon icon={Globe02Icon} size={14} className="text-muted-foreground/60" />
+                                        <span className="text-xs text-foreground/80 font-mono truncate max-w-[200px]">{token.url}</span>
+                                    </a>
+                                );
+                            }
+
+                            return (
+                                <LinkPreview key={`mlink-${index}`} url={token.url} customTitle={token.title} />
                             );
                         case 'link':
                             return <LinkPreview key={`link-${index}`} url={token.value} />;

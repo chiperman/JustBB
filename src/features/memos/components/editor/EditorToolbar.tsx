@@ -7,6 +7,7 @@ import {
     LockIcon as Lock,
     CircleUnlock01Icon as LockOpen,
     Location04Icon,
+    Link01Icon,
 } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ interface EditorToolbarProps {
     onTogglePrivate: () => void;
     onTogglePinned: () => void;
     onShowLocationPicker: () => void;
+    onShowLinkPicker: () => void;
     onCancel: () => void;
     onPublish: () => void;
 }
@@ -36,6 +38,7 @@ export function EditorToolbar({
     onTogglePrivate,
     onTogglePinned,
     onShowLocationPicker,
+    onShowLinkPicker,
     onCancel,
     onPublish
 }: EditorToolbarProps) {
@@ -85,6 +88,17 @@ export function EditorToolbar({
                     >
                         <HugeiconsIcon icon={Location04Icon} size={16} />
                         <span className="text-xs font-medium">定位</span>
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={onShowLinkPicker}
+                        className="h-8 px-2 gap-1.5 text-muted-foreground active:scale-95 transition-all hover:text-foreground"
+                        aria-label="添加链接"
+                    >
+                        <HugeiconsIcon icon={Link01Icon} size={16} />
+                        <span className="text-xs font-medium">链接</span>
                     </Button>
 
 

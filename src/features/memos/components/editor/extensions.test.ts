@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { textToTiptapHtml } from './extensions';
+import { describe, expect, it, vi } from 'vitest';
+import { getExtensions, textToTiptapHtml } from './extensions';
 
 describe('textToTiptapHtml', () => {
     it('会对 smart-link 的标题和 URL 做 HTML 转义', () => {
@@ -15,5 +15,24 @@ describe('textToTiptapHtml', () => {
             '🔗[Fish &amp; &quot;Chips&quot; &lt;Menu&gt;](https://example.com?q=fish&amp;lang=zh|card)'
         );
         expect(html).not.toContain('data-label="Fish & "Chips" <Menu>"');
+    });
+});
+
+describe('getExtensions', () => {
+    it('会让 markupLink 在退格删除时不残留触发字符', () => {
+        const extensions = getExtensions({
+            onMentionStart: vi.fn(),
+            onMentionUpdate: vi.fn(),
+            onMentionExit: vi.fn(),
+            onMentionKeyDown: vi.fn(() => false),
+            onHashtagStart: vi.fn(),
+            onHashtagUpdate: vi.fn(),
+            onHashtagExit: vi.fn(),
+            onHashtagKeyDown: vi.fn(() => false),
+        });
+
+        const markupLink = extensions.find(extension => extension.name === 'markupLink');
+
+        expect(markupLink?.options.deleteTriggerWithBackspace).toBe(true);
     });
 });

@@ -4,6 +4,7 @@ import StarterKit from '@tiptap/starter-kit';
 import LinkExtension from '@tiptap/extension-link';
 import Mention from '@tiptap/extension-mention';
 import { PluginKey } from '@tiptap/pm/state';
+import type { Editor } from '@tiptap/core';
 import { parseContentTokens } from '@/lib/contentParser';
 import { CustomSuggestionProps } from '../../hooks/useEditorSuggestions';
 import {
@@ -17,6 +18,72 @@ export const hashtagPluginKey = new PluginKey('hashtag');
 
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { LinkNodeView } from './LinkNodeView';
+
+function deleteAtomicNodeBackward(editor: Editor, extensionName: string) {
+    return () => {
+        return editor.commands.command(({ tr, state }) => {
+            const { selection } = state;
+
+            if (!selection.empty) {
+                return false;
+            }
+
+            const { anchor } = selection;
+            let targetPos: number | null = null;
+            let targetSize = 0;
+
+            state.doc.nodesBetween(Math.max(0, anchor - 1), anchor, (node, pos) => {
+                if (node.type.name === extensionName) {
+                    targetPos = pos;
+                    targetSize = node.nodeSize;
+                    return false;
+                }
+
+                return true;
+            });
+
+            if (targetPos === null) {
+                return false;
+            }
+
+            tr.delete(targetPos, targetPos + targetSize);
+            return true;
+        });
+    };
+}
+
+function deleteAtomicNodeForward(editor: Editor, extensionName: string) {
+    return () => {
+        return editor.commands.command(({ tr, state }) => {
+            const { selection } = state;
+
+            if (!selection.empty) {
+                return false;
+            }
+
+            const { anchor } = selection;
+            let targetPos: number | null = null;
+            let targetSize = 0;
+
+            state.doc.nodesBetween(anchor, Math.min(state.doc.content.size, anchor + 1), (node, pos) => {
+                if (node.type.name === extensionName) {
+                    targetPos = pos;
+                    targetSize = node.nodeSize;
+                    return false;
+                }
+
+                return true;
+            });
+
+            if (targetPos === null) {
+                return false;
+            }
+
+            tr.delete(targetPos, targetPos + targetSize);
+            return true;
+        });
+    };
+}
 
 // 辅助函数，将纯文本转换为 Tiptap 能识别的 HTML 格式
 export function textToTiptapHtml(text: string): string {
@@ -124,6 +191,13 @@ export const getExtensions = (options: ExtensionOptions) => [
         addAttributes() {
             return {
                 ...this.parent?.(),
+                mentionSuggestionChar: {
+                    default: '🔗',
+                    parseHTML: element => element.getAttribute('data-mention-suggestion-char') || '🔗',
+                    renderHTML: attributes => ({
+                        'data-mention-suggestion-char': attributes.mentionSuggestionChar || '🔗',
+                    }),
+                },
                 mode: {
                     default: 'mention',
                     parseHTML: element => element.getAttribute('data-mode') || 'mention',
@@ -156,10 +230,17 @@ export const getExtensions = (options: ExtensionOptions) => [
                 mode: node.attrs.mode,
             });
         },
+        addKeyboardShortcuts() {
+            return {
+                Backspace: deleteAtomicNodeBackward(this.editor, this.name),
+                Delete: deleteAtomicNodeForward(this.editor, this.name),
+            };
+        },
     }).configure({
         HTMLAttributes: {
             class: 'markup-link-node',
         },
+        deleteTriggerWithBackspace: true,
         suggestion: {
             char: '🔗',
             pluginKey: new PluginKey('markupLink'),

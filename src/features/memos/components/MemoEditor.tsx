@@ -57,6 +57,7 @@ export function MemoEditor({
 }: MemoEditorProps) {
     const editorContainerRef = useRef<HTMLDivElement>(null);
     const relativeGroupRef = useRef<HTMLDivElement>(null);
+    const previousPendingRef = useRef(false);
 
     const {
         content, setContent,
@@ -78,21 +79,12 @@ export function MemoEditor({
         handleCancel
     } = useMemoEditor({ mode, initialMemo: memo, onSuccess, onCancel });
 
-    // 监听内部菜单（如提及/书签菜单）的开关状态
-    useEffect(() => {
-        const handleMenuChange = (e: Event) => {
-            const customEvent = e as CustomEvent<{ open: boolean }>;
-            setIsMenuOpen(customEvent.detail.open);
-        };
-        window.addEventListener('memo-internal-menu-change', handleMenuChange as EventListener);
-        return () => window.removeEventListener('memo-internal-menu-change', handleMenuChange as EventListener);
-    }, [setIsMenuOpen]);
-
     // 智能链接系统相关状态
     const [pasteMenuPosition, setPasteMenuPosition] = useState<{ top: number; left: number } | null>(null);
     const [pendingPasteUrl, setPendingPasteUrl] = useState<string | null>(null);
     const [pendingPastePos, setPendingPastePos] = useState<number | null>(null);
     const [fetchedMeta, setFetchedMeta] = useState<{ title: string | null; domain: string | null } | null>(null);
+    const [showPlaceholder, setShowPlaceholder] = useState(mode === 'create');
     const [editingLinkInfo, setEditingLinkInfo] = useState<{
         title: string;
         url: string;
@@ -244,8 +236,11 @@ export function MemoEditor({
         immediatelyRender: false,
         extensions,
         content: memo?.content || '',
-        onUpdate: ({ editor }) => {
+        onUpdate: ({ editor, transaction }) => {
             const text = editor.getText({ blockSeparator: '\n' });
+            if (transaction.docChanged) {
+                setShowPlaceholder(false);
+            }
             setContent(text);
             setError(null);
             if (mode === 'create') {
@@ -346,8 +341,18 @@ export function MemoEditor({
         },
     });
 
-    // 监听 NodeView 传出的编辑事件
     useEffect(() => {
+        if (!editor) {
+            return;
+        }
+
+        const editorDom = editor.view.dom;
+
+        const handleMenuChange = (e: Event) => {
+            const customEvent = e as CustomEvent<{ open: boolean }>;
+            setIsMenuOpen(customEvent.detail.open);
+        };
+
         const handleEditLink = (e: Event) => {
             const customEvent = e as CustomEvent<{
                 title: string;
@@ -359,9 +364,15 @@ export function MemoEditor({
             setEditingLinkInfo({ title, url, mode, updateAttributes });
             setShowLinkPicker(true);
         };
-        window.addEventListener('edit-link', handleEditLink as EventListener);
-        return () => window.removeEventListener('edit-link', handleEditLink as EventListener);
-    }, [setShowLinkPicker]);
+
+        editorDom.addEventListener('memo-internal-menu-change', handleMenuChange as EventListener);
+        editorDom.addEventListener('edit-link', handleEditLink as EventListener);
+
+        return () => {
+            editorDom.removeEventListener('memo-internal-menu-change', handleMenuChange as EventListener);
+            editorDom.removeEventListener('edit-link', handleEditLink as EventListener);
+        };
+    }, [editor, setIsMenuOpen, setShowLinkPicker]);
 
     const prevScrollCollapsed = useRef(scrollCollapsed);
 
@@ -388,15 +399,41 @@ export function MemoEditor({
                         editor.commands.setContent(textToTiptapHtml(draftContent));
                     }
                     setContent(editor.getText());
+                    setShowPlaceholder(false);
+                } else {
+                    setShowPlaceholder(isPristineEmptyEditor(editor));
                 }
             }
         }
     }, [editor, memo, mode, setContent]);
 
+    useEffect(() => {
+        if (
+            mode === 'create'
+            && previousPendingRef.current
+            && !isPending
+            && content === ''
+            && isPristineEmptyEditor(editor)
+        ) {
+            setShowPlaceholder(true);
+        }
+
+        previousPendingRef.current = isPending;
+    }, [content, editor, isPending, mode]);
+
+    useEffect(() => {
+        if (mode !== 'create' || !editor) {
+            return;
+        }
+
+        setShowPlaceholder(content.trim() === '' && isPristineEmptyEditor(editor));
+    }, [content, editor, mode]);
+
     const handleToolbarCancel = () => {
         if (mode === 'create') {
             editor?.commands.clearContent();
             editor?.commands.blur();
+            setShowPlaceholder(true);
         }
         handleCancel();
     };
@@ -482,7 +519,7 @@ export function MemoEditor({
                         }}
                     >
                         {/* 占位符 Overlay - 仅在编辑器处于初始空白态时显示 */}
-                        {isPristineEmptyEditor(editor) && (
+                        {showPlaceholder && (
                             <div className="absolute inset-x-0 top-0 h-[26px] flex items-center px-0 pointer-events-none z-10 transition-opacity duration-200">
                                 <span className={cn(
                                     "text-sm font-medium transition-colors duration-200",

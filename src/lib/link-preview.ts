@@ -40,6 +40,37 @@ export async function fetchLinkMetadata(url: string): Promise<LinkMetadata | nul
             return match ? (match[1] || match[2]) : null;
         };
 
+        const toAbsoluteUrl = (value: string | null) => {
+            if (!value) {
+                return null;
+            }
+
+            if (value.startsWith('http')) {
+                return value;
+            }
+
+            if (value.startsWith('//')) {
+                return `${urlObj.protocol}${value}`;
+            }
+
+            if (value.startsWith('/')) {
+                return `${urlObj.origin}${value}`;
+            }
+
+            return `${urlObj.origin}/${value}`;
+        };
+
+        const getFirstImage = (html: string) => {
+            const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+            const src = match?.[1] ?? null;
+
+            if (!src || src.startsWith('data:')) {
+                return null;
+            }
+
+            return src;
+        };
+
         const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
         let title = getMetaTag(html, 'og:title') || getMetaTag(html, 'twitter:title') || (titleMatch ? titleMatch[1] : null);
 
@@ -57,18 +88,12 @@ export async function fetchLinkMetadata(url: string): Promise<LinkMetadata | nul
             description = decodeEntities(description.trim());
         }
 
-        let image = getMetaTag(html, 'og:image') || getMetaTag(html, 'twitter:image');
-
-        // Ensure image URL is absolute
-        if (image && !image.startsWith('http')) {
-            if (image.startsWith('//')) {
-                image = urlObj.protocol + image;
-            } else if (image.startsWith('/')) {
-                image = urlObj.origin + image;
-            } else {
-                image = urlObj.origin + '/' + image;
-            }
-        }
+        const imageCandidate =
+            getMetaTag(html, 'og:image') ||
+            getMetaTag(html, 'og:image:url') ||
+            getMetaTag(html, 'twitter:image') ||
+            getFirstImage(html);
+        const image = toAbsoluteUrl(imageCandidate);
 
         return {
             title,

@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link01Icon, Loading03Icon as LoadingIcon, Globe02Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { useToast } from '@/hooks/use-toast';
 import { useHasMounted } from '@/hooks/useHasMounted';
 import { fetchLinkMetadata } from '@/lib/link-preview';
 
@@ -27,14 +26,59 @@ interface LinkPickerDialogProps {
 }
 
 export function LinkPickerDialog({ open, onOpenChange, onConfirm, initialTitle = '', initialUrl = '', mode = 'create' }: LinkPickerDialogProps) {
-    const { toast } = useToast();
     const hasMounted = useHasMounted();
     const [title, setTitle] = React.useState(initialTitle);
     const [url, setUrl] = React.useState(initialUrl);
     const [isFetching, setIsFetching] = React.useState(false);
     const urlInputRef = React.useRef<HTMLInputElement>(null);
+    const titleDirtyRef = React.useRef(false);
+    const latestTitleRef = React.useRef(initialTitle);
+    const latestUrlRef = React.useRef(initialUrl);
+    const latestRequestIdRef = React.useRef(0);
+    const lastFetchedUrlRef = React.useRef('');
 
     const isValid = url.trim() && /^https?:\/\/.+/.test(url.trim());
+
+    React.useEffect(() => {
+        latestUrlRef.current = url;
+    }, [url]);
+
+    React.useEffect(() => {
+        latestTitleRef.current = title;
+    }, [title]);
+
+    const handleFetchTitle = React.useCallback(async (targetUrl: string) => {
+        const normalizedUrl = targetUrl.trim();
+        if (!normalizedUrl || !/^https?:\/\/.+/.test(normalizedUrl)) return;
+        if (titleDirtyRef.current) return;
+        if (lastFetchedUrlRef.current === normalizedUrl && latestTitleRef.current.trim()) return;
+
+        const requestId = latestRequestIdRef.current + 1;
+        latestRequestIdRef.current = requestId;
+        setIsFetching(true);
+        try {
+            const meta = await fetchLinkMetadata(normalizedUrl);
+            const nextTitle = meta?.title || meta?.domain || '';
+
+            if (
+                latestRequestIdRef.current !== requestId ||
+                titleDirtyRef.current ||
+                latestUrlRef.current.trim() !== normalizedUrl ||
+                !nextTitle
+            ) {
+                return;
+            }
+
+            setTitle(nextTitle);
+            lastFetchedUrlRef.current = normalizedUrl;
+        } catch (error) {
+            console.error('Fetch title error:', error);
+        } finally {
+            if (latestRequestIdRef.current === requestId) {
+                setIsFetching(false);
+            }
+        }
+    }, []);
 
     // 当弹窗打开时，处理初始化
     React.useEffect(() => {
@@ -42,7 +86,13 @@ export function LinkPickerDialog({ open, onOpenChange, onConfirm, initialTitle =
             if (mode === 'edit') {
                 setTitle(initialTitle);
                 setUrl(initialUrl);
+                titleDirtyRef.current = initialTitle.trim().length > 0;
+                latestUrlRef.current = initialUrl;
+                lastFetchedUrlRef.current = '';
             } else {
+                titleDirtyRef.current = false;
+                latestUrlRef.current = '';
+                lastFetchedUrlRef.current = '';
                 // 创建模式下的剪贴板识别逻辑
                 const checkClipboard = async () => {
                     try {
@@ -50,6 +100,7 @@ export function LinkPickerDialog({ open, onOpenChange, onConfirm, initialTitle =
                         if (text && /^https?:\/\/[^\s]+$/.test(text.trim())) {
                             const trimmedUrl = text.trim();
                             setUrl(trimmedUrl);
+                            latestUrlRef.current = trimmedUrl;
                             handleFetchTitle(trimmedUrl);
                         }
                     } catch (e) {
@@ -63,26 +114,12 @@ export function LinkPickerDialog({ open, onOpenChange, onConfirm, initialTitle =
             setTitle('');
             setUrl('');
             setIsFetching(false);
+            titleDirtyRef.current = false;
+            latestUrlRef.current = '';
+            lastFetchedUrlRef.current = '';
+            latestRequestIdRef.current += 1;
         }
-    }, [open, mode, initialTitle, initialUrl]);
-
-    const handleFetchTitle = async (targetUrl: string) => {
-        if (!targetUrl || !/^https?:\/\/.+/.test(targetUrl)) return;
-        
-        setIsFetching(true);
-        try {
-            const meta = await fetchLinkMetadata(targetUrl);
-            if (meta?.title) {
-                setTitle(meta.title);
-            } else if (meta?.domain) {
-                setTitle(meta.domain);
-            }
-        } catch (error) {
-            console.error('Fetch title error:', error);
-        } finally {
-            setIsFetching(false);
-        }
-    };
+    }, [open, mode, initialTitle, initialUrl, handleFetchTitle]);
 
     const handleConfirm = () => {
         if (!isValid) return;
@@ -112,7 +149,14 @@ export function LinkPickerDialog({ open, onOpenChange, onConfirm, initialTitle =
                                 id="link-url"
                                 ref={urlInputRef}
                                 value={url}
-                                onChange={e => setUrl(e.target.value)}
+                                onChange={e => {
+                                    const nextUrl = e.target.value;
+                                    setUrl(nextUrl);
+                                    latestUrlRef.current = nextUrl;
+                                    if (nextUrl.trim() !== lastFetchedUrlRef.current) {
+                                        lastFetchedUrlRef.current = '';
+                                    }
+                                }}
                                 onBlur={() => handleFetchTitle(url)}
                                 placeholder="https://example.com"
                                 className="pr-10"
@@ -139,7 +183,10 @@ export function LinkPickerDialog({ open, onOpenChange, onConfirm, initialTitle =
                         <Input
                             id="link-title"
                             value={title}
-                            onChange={e => setTitle(e.target.value)}
+                            onChange={e => {
+                                titleDirtyRef.current = true;
+                                setTitle(e.target.value);
+                            }}
                             placeholder={isFetching ? '读取中...' : '页面标题'}
                         />
                     </div>

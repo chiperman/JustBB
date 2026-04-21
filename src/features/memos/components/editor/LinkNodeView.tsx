@@ -25,9 +25,10 @@ import { useToast } from '@/hooks/use-toast';
 import type { LinkRenderMode } from './smartLink';
 
 export const LinkNodeView = (props: NodeViewProps) => {
-    const { node, updateAttributes } = props;
+    const { node, updateAttributes, editor } = props;
     const { id: url, label: title, mode = 'mention', isPending = false } = node.attrs;
     const { toast } = useToast();
+    const editorDom = editor.view.dom;
 
     const handleCopy = (e?: React.MouseEvent) => {
         e?.preventDefault();
@@ -42,12 +43,12 @@ export const LinkNodeView = (props: NodeViewProps) => {
         const event = new CustomEvent('edit-link', { 
             detail: { url, title, mode: mode as LinkRenderMode, node, updateAttributes } 
         });
-        window.dispatchEvent(event);
+        editorDom.dispatchEvent(event);
     };
 
     const renderMenu = () => (
         <DropdownMenu onOpenChange={(open) => {
-            window.dispatchEvent(new CustomEvent('memo-internal-menu-change', { detail: { open } }));
+            editorDom.dispatchEvent(new CustomEvent('memo-internal-menu-change', { detail: { open } }));
         }}>
             <DropdownMenuTrigger asChild>
                 <button 
@@ -83,20 +84,27 @@ export const LinkNodeView = (props: NodeViewProps) => {
     return (
         <NodeViewWrapper className="inline-block align-middle leading-none my-0.5">
             {mode === 'mention' && (
-                <HoverCard openDelay={200}>
-                    <HoverCardTrigger asChild>
-                        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-medium text-sm hover:bg-primary/20 transition-colors cursor-pointer group">
-                            <span>🔗</span>
-                            <span>{title}</span>
-                            <div className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                {renderMenu()}
-                            </div>
-                        </div>
-                    </HoverCardTrigger>
-                    <HoverCardContent className="w-80 p-0 overflow-hidden border-none shadow-2xl">
-                        <LinkPreview url={url} customTitle={title} className="m-0 border-none shadow-none rounded-none h-auto" />
-                    </HoverCardContent>
-                </HoverCard>
+                <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-medium text-sm transition-colors group">
+                    <HoverCard openDelay={200}>
+                        <HoverCardTrigger asChild>
+                            <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 rounded-sm hover:bg-primary/20 transition-colors cursor-pointer"
+                            >
+                                <span>🔗</span>
+                                <span>{title}</span>
+                            </a>
+                        </HoverCardTrigger>
+                        <HoverCardContent className="w-80 p-0 overflow-hidden border-none shadow-2xl">
+                            <LinkPreview url={url} customTitle={title} className="m-0 border-none shadow-none rounded-none h-auto" />
+                        </HoverCardContent>
+                    </HoverCard>
+                    <div className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {renderMenu()}
+                    </div>
+                </div>
             )}
 
             {mode === 'pill' && (

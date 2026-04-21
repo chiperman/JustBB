@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { EditorContent, useEditor } from '@tiptap/react';
+import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import { motion } from 'framer-motion';
 import { TextSelection } from '@tiptap/pm/state';
 
@@ -32,6 +32,19 @@ interface MemoEditorProps {
 }
 
 const PLACEHOLDER_TEXT = 'Wanna memo something? JustMemo it!';
+
+function isPristineEmptyEditor(editor: Editor | null) {
+    if (!editor) {
+        return true;
+    }
+
+    const { doc } = editor.state;
+    const firstChild = doc.firstChild;
+
+    return doc.childCount === 1
+        && firstChild?.type.name === 'paragraph'
+        && firstChild.childCount === 0;
+}
 
 export function MemoEditor({
     mode = 'create',
@@ -468,8 +481,8 @@ export function MemoEditor({
                             maskImage: isActuallyCollapsed ? 'linear-gradient(to bottom, black 90%, transparent 100%)' : 'none',
                         }}
                     >
-                        {/* 占位符 Overlay - 只要内容为空就显示，直到用户开始输入 */}
-                        {((!editor) || editor.isEmpty) && (
+                        {/* 占位符 Overlay - 仅在编辑器处于初始空白态时显示 */}
+                        {isPristineEmptyEditor(editor) && (
                             <div className="absolute inset-x-0 top-0 h-[26px] flex items-center px-0 pointer-events-none z-10 transition-opacity duration-200">
                                 <span className={cn(
                                     "text-sm font-medium transition-colors duration-200",

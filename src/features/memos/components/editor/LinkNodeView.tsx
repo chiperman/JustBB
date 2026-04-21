@@ -22,6 +22,7 @@ import {
     HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { useToast } from '@/hooks/use-toast';
+import type { LinkRenderMode } from './smartLink';
 
 export const LinkNodeView = (props: NodeViewProps) => {
     const { node, updateAttributes } = props;
@@ -39,7 +40,7 @@ export const LinkNodeView = (props: NodeViewProps) => {
         e?.preventDefault();
         e?.stopPropagation();
         const event = new CustomEvent('edit-link', { 
-            detail: { url, title, node, updateAttributes } 
+            detail: { url, title, mode: mode as LinkRenderMode, node, updateAttributes } 
         });
         window.dispatchEvent(event);
     };

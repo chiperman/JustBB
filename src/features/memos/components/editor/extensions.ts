@@ -6,6 +6,11 @@ import Mention from '@tiptap/extension-mention';
 import { PluginKey } from '@tiptap/pm/state';
 import { parseContentTokens } from '@/lib/contentParser';
 import { CustomSuggestionProps } from '../../hooks/useEditorSuggestions';
+import {
+    escapeHtml,
+    formatSmartLinkToken,
+    serializeSmartLinkHtml,
+} from './smartLink';
 
 export const mentionPluginKey = new PluginKey('mention');
 export const hashtagPluginKey = new PluginKey('hashtag');
@@ -25,16 +30,19 @@ export function textToTiptapHtml(text: string): string {
             switch (token.type) {
                 case 'tag':
                     const tagName = token.value.slice(1);
-                    return `<span data-type="hashtag" data-id="${tagName}" data-label="${tagName}">#${tagName}</span>`;
+                    return `<span data-type="hashtag" data-id="${escapeHtml(tagName)}" data-label="${escapeHtml(tagName)}">#${escapeHtml(tagName)}</span>`;
                 case 'ref':
                     const memoNum = token.value.slice(1);
-                    return `<span data-type="mention" data-id="${memoNum}" data-label="${memoNum}">@${memoNum}</span>`;
+                    return `<span data-type="mention" data-id="${escapeHtml(memoNum)}" data-label="${escapeHtml(memoNum)}">@${escapeHtml(memoNum)}</span>`;
                 case 'markupLink':
-                    const modeAttr = token.mode !== 'mention' ? ` data-mode="${token.mode}"` : '';
-                    const pendingAttr = (token as { isPending?: boolean }).isPending ? ` data-pending="true"` : '';
-                    return `<span data-type="markupLink" data-id="${token.url}" data-label="${token.title}"${modeAttr}${pendingAttr}>🔗[${token.title}](${token.url}${token.mode !== 'mention' ? `|${token.mode}` : ''})</span>`;
+                    return serializeSmartLinkHtml({
+                        title: token.title,
+                        url: token.url,
+                        mode: token.mode,
+                        isPending: (token as { isPending?: boolean }).isPending,
+                    });
                 case 'text':
-                    return token.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    return escapeHtml(token.value);
                 default:
                     return token.value;
             }
@@ -132,15 +140,21 @@ export const getExtensions = (options: ExtensionOptions) => [
             return [{ tag: 'span[data-type="markupLink"]' }]
         },
         renderHTML({ node }) {
-            const modeSuffix = node.attrs.mode !== 'mention' ? `|${node.attrs.mode}` : '';
-            return ['span', this.options.HTMLAttributes, `🔗[${node.attrs.label ?? '链接'}](${node.attrs.id}${modeSuffix})`]
+            return ['span', this.options.HTMLAttributes, formatSmartLinkToken({
+                title: node.attrs.label ?? '链接',
+                url: node.attrs.id,
+                mode: node.attrs.mode,
+            })]
         },
         addNodeView() {
             return ReactNodeViewRenderer(LinkNodeView)
         },
         renderText({ node }) {
-            const modeSuffix = node.attrs.mode !== 'mention' ? `|${node.attrs.mode}` : '';
-            return `🔗[${node.attrs.label ?? '链接'}](${node.attrs.id}${modeSuffix})`;
+            return formatSmartLinkToken({
+                title: node.attrs.label ?? '链接',
+                url: node.attrs.id,
+                mode: node.attrs.mode,
+            });
         },
     }).configure({
         HTMLAttributes: {

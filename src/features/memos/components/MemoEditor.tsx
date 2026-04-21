@@ -14,6 +14,7 @@ import { EditorToolbar } from '@/features/memos/components/editor/EditorToolbar'
 import { getExtensions, textToTiptapHtml } from '@/features/memos/components/editor/extensions';
 import { fetchLinkMetadata } from '@/lib/link-preview';
 import { LinkPasteMenu } from '@/features/memos/components/editor/LinkPasteMenu';
+import { replaceSmartLinkToken, type LinkRenderMode } from '@/features/memos/components/editor/smartLink';
 import { useState } from 'react';
 
 import { useMemoEditor, DRAFT_CONTENT_KEY } from '@/features/memos/hooks/useMemoEditor';
@@ -82,7 +83,7 @@ export function MemoEditor({
     const [editingLinkInfo, setEditingLinkInfo] = useState<{
         title: string;
         url: string;
-        mode?: string;
+        mode: LinkRenderMode;
         updateAttributes: (attrs: Record<string, string | boolean>) => void;
     } | null>(null);
 
@@ -323,8 +324,8 @@ export function MemoEditor({
                 // 获取粘贴位置的坐标显示菜单
                 const coords = view.coordsAtPos(from);
                 setPasteMenuPosition({
-                    top: coords.bottom + window.scrollY,
-                    left: coords.left + window.scrollX
+                    top: coords.bottom,
+                    left: coords.left
                 });
 
                 return true;
@@ -335,9 +336,14 @@ export function MemoEditor({
     // 监听 NodeView 传出的编辑事件
     useEffect(() => {
         const handleEditLink = (e: Event) => {
-            const customEvent = e as CustomEvent<{ title: string; url: string; updateAttributes: (attrs: Record<string, string | boolean>) => void }>;
-            const { title, url, updateAttributes } = customEvent.detail;
-            setEditingLinkInfo({ title, url, updateAttributes });
+            const customEvent = e as CustomEvent<{
+                title: string;
+                url: string;
+                mode: LinkRenderMode;
+                updateAttributes: (attrs: Record<string, string | boolean>) => void;
+            }>;
+            const { title, url, mode, updateAttributes } = customEvent.detail;
+            setEditingLinkInfo({ title, url, mode, updateAttributes });
             setShowLinkPicker(true);
         };
         window.addEventListener('edit-link', handleEditLink as EventListener);
@@ -623,15 +629,14 @@ export function MemoEditor({
                 onConfirm={(title, url) => {
                     if (editingLinkInfo) {
                         // 编辑模式下更新属性
-                        // 由于我们是纯文本驱动，最可靠的方式还是全局替换
-                        const oldMode = editingLinkInfo.mode || 'mention';
-                        const modeSuffix = oldMode !== 'mention' ? `|${oldMode}` : '';
-                        const oldText = `🔗[${editingLinkInfo.title}](${editingLinkInfo.url}${modeSuffix})`;
-                        const newText = `🔗[${title}](${url}${modeSuffix})`;
-
                         const docText = editor?.getText({ blockSeparator: '\n' }) || '';
-                        if (docText.includes(oldText)) {
-                            const newDocText = docText.replace(oldText, newText);
+                        const newDocText = replaceSmartLinkToken(
+                            docText,
+                            editingLinkInfo,
+                            { title, url }
+                        );
+
+                        if (newDocText) {
                             editor?.commands.setContent(textToTiptapHtml(newDocText));
                         }
                     } else {

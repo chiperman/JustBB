@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useSyncExternalStore } from 'react';
+import { Suspense, useEffect, useSyncExternalStore } from 'react';
 import { TagCloud } from '../ui/TagCloud';
 import { Heatmap } from '../ui/Heatmap';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -14,9 +14,19 @@ import { motion } from 'framer-motion';
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
 import { SidebarNavItem } from './sidebar/SidebarNavItem';
 import { useHasMounted } from '@/hooks/useHasMounted';
+import {
+    LEFT_SIDEBAR_COOKIE_KEY,
+    LEFT_SIDEBAR_STORAGE_EVENT,
+    LEFT_SIDEBAR_STORAGE_KEY,
+    getStoredLayoutPreference,
+    persistLayoutPreference,
+    subscribeToLayoutPreference,
+    syncLayoutPreferenceCookie,
+} from '@/lib/layout-preferences';
 
 export interface LeftSidebarProps {
     onClose?: () => void;
+    initialCollapsed?: boolean;
 }
 
 const SIDEBAR_EXPANDED_WIDTH = 280;
@@ -31,38 +41,18 @@ const CONTENT_FADE_TRANSITION = {
 };
 const HEATMAP_SLOT_HEIGHT = 248;
 const TAGS_SLOT_HEIGHT = 176;
-const LEFT_SIDEBAR_STORAGE_KEY = 'layout:left-sidebar-collapsed';
-const LEFT_SIDEBAR_STORAGE_EVENT = 'layout:left-sidebar-collapsed-change';
 
-function getStoredLeftSidebarCollapsed() {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem(LEFT_SIDEBAR_STORAGE_KEY) === 'true';
-}
-
-export function LeftSidebar({ onClose }: LeftSidebarProps) {
+export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarProps) {
     const isMobile = !!onClose;
     const isCollapsed = useSyncExternalStore(
-        (onStoreChange) => {
-            if (typeof window === 'undefined') return () => {};
-
-            const handleStorage = (event: StorageEvent) => {
-                if (event.key === LEFT_SIDEBAR_STORAGE_KEY) {
-                    onStoreChange();
-                }
-            };
-
-            const handleLocalChange = () => onStoreChange();
-
-            window.addEventListener('storage', handleStorage);
-            window.addEventListener(LEFT_SIDEBAR_STORAGE_EVENT, handleLocalChange);
-
-            return () => {
-                window.removeEventListener('storage', handleStorage);
-                window.removeEventListener(LEFT_SIDEBAR_STORAGE_EVENT, handleLocalChange);
-            };
-        },
-        getStoredLeftSidebarCollapsed,
-        () => false,
+        (onStoreChange) =>
+            subscribeToLayoutPreference(
+                LEFT_SIDEBAR_STORAGE_KEY,
+                LEFT_SIDEBAR_STORAGE_EVENT,
+                onStoreChange,
+            ),
+        () => getStoredLayoutPreference(LEFT_SIDEBAR_STORAGE_KEY),
+        () => initialCollapsed,
     );
     const effectiveIsCollapsed = isMobile ? false : isCollapsed;
     const hasMounted = useHasMounted();
@@ -73,6 +63,13 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
         handleNavigate
     } = useSidebarNavigation();
 
+    useEffect(() => {
+        syncLayoutPreferenceCookie(
+            LEFT_SIDEBAR_STORAGE_KEY,
+            LEFT_SIDEBAR_COOKIE_KEY,
+        );
+    }, []);
+
     const toggleCollapsedState = () => {
         if (isMobile) {
             onClose?.();
@@ -80,8 +77,12 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
         }
 
         const nextCollapsed = !isCollapsed;
-        localStorage.setItem(LEFT_SIDEBAR_STORAGE_KEY, String(nextCollapsed));
-        window.dispatchEvent(new Event(LEFT_SIDEBAR_STORAGE_EVENT));
+        persistLayoutPreference(
+            LEFT_SIDEBAR_STORAGE_KEY,
+            LEFT_SIDEBAR_COOKIE_KEY,
+            LEFT_SIDEBAR_STORAGE_EVENT,
+            nextCollapsed,
+        );
     };
 
     return (
@@ -120,6 +121,7 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
 
             {/* Heatmap Area */}
             <motion.div
+                initial={false}
                 className={cn(
                     "shrink-0 overflow-hidden px-1",
                     effectiveIsCollapsed ? "mb-0" : "mb-5"
@@ -127,6 +129,7 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
                 style={{ height: effectiveIsCollapsed ? 0 : HEATMAP_SLOT_HEIGHT }}
             >
                 <motion.div
+                    initial={false}
                     className="h-full"
                     animate={{ opacity: effectiveIsCollapsed ? 0 : 1 }}
                     transition={
@@ -175,6 +178,7 @@ export function LeftSidebar({ onClose }: LeftSidebarProps) {
 
             {/* Popular Tags */}
             <motion.div
+                initial={false}
                 className="mt-auto shrink-0 overflow-hidden"
                 animate={{ height: effectiveIsCollapsed ? 0 : TAGS_SLOT_HEIGHT, opacity: effectiveIsCollapsed ? 0 : 1 }}
                 transition={

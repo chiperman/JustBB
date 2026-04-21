@@ -24,21 +24,29 @@ import { useHasMounted } from "@/hooks/useHasMounted";
 import { cn } from "@/lib/utils";
 import { getTimelineStats } from "@/actions/memos/analytics";
 import { Button } from "@/components/ui/button";
+import {
+  RIGHT_SIDEBAR_COOKIE_KEY,
+  RIGHT_SIDEBAR_STORAGE_EVENT,
+  RIGHT_SIDEBAR_STORAGE_KEY,
+  getStoredLayoutPreference,
+  persistLayoutPreference,
+  subscribeToLayoutPreference,
+  syncLayoutPreferenceCookie,
+} from "@/lib/layout-preferences";
 
 const RIGHT_SIDEBAR_EXPANDED_WIDTH = 320;
-const RIGHT_SIDEBAR_STORAGE_KEY = "layout:right-sidebar-collapsed";
-const RIGHT_SIDEBAR_STORAGE_EVENT = "layout:right-sidebar-collapsed-change";
 const RIGHT_SIDEBAR_TRANSITION = {
   duration: 0.28,
   ease: [0.22, 1, 0.36, 1] as const,
 };
 
-function getStoredRightSidebarCollapsed() {
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem(RIGHT_SIDEBAR_STORAGE_KEY) === "true";
-}
-
-export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
+export function RightSidebar({
+  initialCollapsed = false,
+  initialData,
+}: {
+  initialCollapsed?: boolean;
+  initialData?: TimelineStats;
+}) {
   const [allDays, setAllDays] = useState<Record<string, { count: number }>>(
     initialData?.days || {},
   );
@@ -47,30 +55,14 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isCollapsed = useSyncExternalStore(
-    (onStoreChange) => {
-      if (typeof window === "undefined") return () => {};
-
-      const handleStorage = (event: StorageEvent) => {
-        if (event.key === RIGHT_SIDEBAR_STORAGE_KEY) {
-          onStoreChange();
-        }
-      };
-
-      const handleLocalChange = () => onStoreChange();
-
-      window.addEventListener("storage", handleStorage);
-      window.addEventListener(RIGHT_SIDEBAR_STORAGE_EVENT, handleLocalChange);
-
-      return () => {
-        window.removeEventListener("storage", handleStorage);
-        window.removeEventListener(
-          RIGHT_SIDEBAR_STORAGE_EVENT,
-          handleLocalChange,
-        );
-      };
-    },
-    getStoredRightSidebarCollapsed,
-    () => false,
+    (onStoreChange) =>
+      subscribeToLayoutPreference(
+        RIGHT_SIDEBAR_STORAGE_KEY,
+        RIGHT_SIDEBAR_STORAGE_EVENT,
+        onStoreChange,
+      ),
+    () => getStoredLayoutPreference(RIGHT_SIDEBAR_STORAGE_KEY),
+    () => initialCollapsed,
   );
 
 
@@ -85,9 +77,20 @@ export function RightSidebar({ initialData }: { initialData?: TimelineStats }) {
   const { activeId, setActiveId, setManualClick } = useLayout();
 
   const setCollapsedState = (nextCollapsed: boolean) => {
-    localStorage.setItem(RIGHT_SIDEBAR_STORAGE_KEY, String(nextCollapsed));
-    window.dispatchEvent(new Event(RIGHT_SIDEBAR_STORAGE_EVENT));
+    persistLayoutPreference(
+      RIGHT_SIDEBAR_STORAGE_KEY,
+      RIGHT_SIDEBAR_COOKIE_KEY,
+      RIGHT_SIDEBAR_STORAGE_EVENT,
+      nextCollapsed,
+    );
   };
+
+  useEffect(() => {
+    syncLayoutPreferenceCookie(
+      RIGHT_SIDEBAR_STORAGE_KEY,
+      RIGHT_SIDEBAR_COOKIE_KEY,
+    );
+  }, []);
 
   // 自动滚动侧边栏以确保选中项可见
   useEffect(() => {

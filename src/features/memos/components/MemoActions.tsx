@@ -25,7 +25,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { PromptDialog } from '@/components/ui/prompt-dialog';
+import { AccessCodeDialog } from '@/features/memos/components/AccessCodeDialog';
 import { useToast } from '@/hooks/use-toast';
 import { MemoShare } from '@/features/memos/components/MemoShare';
 import { Memo } from '@/types/memo';
@@ -61,6 +61,8 @@ export function MemoActions({
     const [showPermanentDeleteAlert, setShowPermanentDeleteAlert] = useState(false);
     const [showPublicConfirm, setShowPublicConfirm] = useState(false);
     const [showPrompt, setShowPrompt] = useState(false);
+    const [accessCode, setAccessCode] = useState('');
+    const [accessHint, setAccessHint] = useState('');
     const { toast } = useToast();
     const hasMounted = useHasMounted();
 
@@ -139,7 +141,16 @@ export function MemoActions({
         }
     };
 
+    const handlePromptOpenChange = (open: boolean) => {
+        setShowPrompt(open);
+        if (!open) {
+            setAccessCode('');
+            setAccessHint('');
+        }
+    };
+
     const handlePromptConfirm = async (code: string, hint: string) => {
+        handlePromptOpenChange(false);
         setIsPending(true);
         const formData = new FormData();
         formData.append('id', id);
@@ -296,18 +307,17 @@ export function MemoActions({
                 </AlertDialogContent>
             </AlertDialog>
 
-            <PromptDialog
+            <AccessCodeDialog
                 open={showPrompt}
-                onOpenChange={setShowPrompt}
+                onOpenChange={handlePromptOpenChange}
+                accessCode={accessCode}
+                setAccessCode={setAccessCode}
+                accessHint={accessHint}
+                setAccessHint={setAccessHint}
+                onConfirm={() => handlePromptConfirm(accessCode, accessHint)}
                 title="设为私密内容"
-                description="请设置访问口令以保护此内容。设为私密后，查看此记录将需要输入该口令。"
-                placeholder="访问口令 (必填)"
-                showSecondInput={true}
-                secondPlaceholder="口令提示词 (可选)"
-                required={true}
-                isPassword={true}
-                onConfirm={handlePromptConfirm}
-                onCancel={() => { }}
+                description="请设置访问口令以保护此内容。设为私密后，查看这条记录将需要输入该口令。"
+                confirmLabel="确认设置"
             />
         </div>
     );

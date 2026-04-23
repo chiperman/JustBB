@@ -61,7 +61,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                             const linkElement = (
                                 <Link
                                     href={`/?num=${memoNum}`}
-                                    className="text-primary hover:underline cursor-pointer font-mono bg-primary/10 px-1 rounded-md mx-0.5 inline-block focus-visible:ring-1 focus-visible:ring-primary/30 outline-none hover:bg-primary/20 transition-colors"
+                                    className="text-primary hover:underline cursor-pointer font-mono bg-primary/10 px-1 rounded-md mx-0.5 my-0.5 inline-block align-middle focus-visible:ring-1 focus-visible:ring-primary/30 outline-none hover:bg-primary/20 transition-colors"
                                 >
                                     {token.value}
                                 </Link>
@@ -79,7 +79,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                                 <Link
                                     key={`tag-${index}`}
                                     href={`/?tag=${encodeURIComponent(token.value.slice(1))}`}
-                                    className="mx-0.5 rounded-md font-mono font-medium text-blue-600 transition-colors hover:text-blue-700 hover:underline focus-visible:ring-1 focus-visible:ring-blue-500/30 outline-none dark:text-blue-400 dark:hover:text-blue-300"
+                                    className="mx-0.5 my-0.5 rounded-md font-mono font-medium text-blue-600 transition-colors hover:text-blue-700 hover:underline focus-visible:ring-1 focus-visible:ring-blue-500/30 outline-none dark:text-blue-400 dark:hover:text-blue-300 inline-block align-middle"
                                 >
                                     {token.value}
                                 </Link>
@@ -112,7 +112,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                             );
                         case 'location':
                             const locElement = (
-                                <span className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer bg-primary/10 px-1.5 py-0.5 rounded-md mx-0.5 hover:bg-primary/20 transition-colors">
+                                <span className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer bg-primary/10 px-1.5 py-0.5 rounded-md mx-0.5 my-0.5 align-middle hover:bg-primary/20 transition-colors">
                                     <span className="text-sm">📍</span>
                                     <span className="text-[13px] font-medium">{token.name}</span>
                                 </span>
@@ -133,7 +133,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                         case 'markupLink':
                             if (token.mode === 'mention') {
                                 return (
-                                    <span key={`mlink-${index}`} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-medium text-sm transition-colors group mx-0.5 align-middle">
+                                    <span key={`mlink-${index}`} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-medium text-sm transition-colors group mx-0.5 my-0.5 align-middle">
                                         <HoverCard openDelay={200}>
                                             <HoverCardTrigger asChild>
                                                 <a
@@ -167,7 +167,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                             
                             if (token.mode === 'pill') {
                                 return (
-                                    <span key={`mlink-${index}`} className="inline-flex items-center gap-2 px-2 py-1 rounded-md border border-border bg-card/50 hover:bg-accent/30 transition-all group mx-0.5 align-middle">
+                                    <span key={`mlink-${index}`} className="inline-flex items-center gap-2 px-2 py-1 rounded-md border border-border bg-card/50 hover:bg-accent/30 transition-all group mx-0.5 my-0.5 align-middle">
                                         <a
                                             href={token.url}
                                             target="_blank"

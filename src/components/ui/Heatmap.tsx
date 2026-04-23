@@ -229,14 +229,14 @@ export const Heatmap = memo(function Heatmap() {
                         {hoveredDate && (
                             <div
                                 className={cn(
-                                    "absolute z-[999] px-2.5 py-1.5 text-[10px] font-mono text-white bg-black/95 backdrop-blur-md rounded pointer-events-none mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-xl border border-white/20 whitespace-nowrap",
+                                    "absolute z-[999] mt-[-15px] rounded border border-border/70 bg-popover/95 px-2.5 py-1.5 font-mono text-[10px] text-popover-foreground shadow-xl backdrop-blur-md pointer-events-none animate-in fade-in zoom-in duration-150 whitespace-nowrap",
                                     hoveredDate.align === 'center' && "-translate-x-1/2 -translate-y-full",
                                     hoveredDate.align === 'left' && "-translate-y-full ml-[-7px]",
                                     hoveredDate.align === 'right' && "-translate-x-full -translate-y-full mr-[-7px]"
                                 )}
                                 style={{ left: hoveredDate.left, top: hoveredDate.top }}
                             >
-                                <span className="text-[#9be9a8] font-bold tabular-nums">{hoveredDate.count} 笔记</span>
+                                <span className="font-bold tabular-nums text-primary">{hoveredDate.count} 笔记</span>
                                 <span className="mx-1.5 opacity-40">/</span>
                                 <span className="tabular-nums">{hoveredDate.date}</span>
                             </div>

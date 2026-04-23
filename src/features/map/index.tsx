@@ -21,7 +21,7 @@ export function MapPageContent() {
             </div>
 
             <div className="flex-1 min-h-0 px-6 pb-6 relative">
-                <div className="w-full h-full rounded-inner overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-sm relative bg-card">
+                <div className="relative h-full w-full overflow-hidden rounded-inner bg-card ring-1 ring-border/70 shadow-sm">
                     <AnimatePresence mode="wait">
                         {isLoading ? (
                             <MapLoadingScreen />

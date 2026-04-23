@@ -115,56 +115,63 @@ button:focus:not(:focus-visible) {
 }
 
 .dark {
-  --background: oklch(0.12 0.003 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.18 0.004 285.885);
-  --popover: oklch(0.18 0.004 285.885 / 88%);
-  --popover-foreground: oklch(0.985 0 0);
-  --glass-bg: oklch(0.18 0.004 285.885 / 85%);
+  --background: oklch(0.22 0.009 78);
+  --foreground: oklch(0.93 0.008 78);
+  --card: oklch(0.265 0.01 78);
+  --popover: oklch(0.285 0.011 78 / 90%);
+  --popover-foreground: oklch(0.95 0.006 78);
+  --glass-bg: oklch(0.285 0.011 78 / 84%);
   --glass-blur: 24px;
-  --success: #3fb950;
-  --error: #f85149;
+  --success: #63b87a;
+  --error: #eb7b73;
 
   /* Heatmap Colors (Dark) */
-  --heatmap-0: #2d333b;
-  --heatmap-1: #0e4429;
-  --heatmap-2: #006d32;
-  --heatmap-3: #26a641;
-  --heatmap-4: #39d353;
-  --card-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --shadow-md: 0 4px 12px -2px oklch(0 0 0 / 0.08), 0 2px 6px -1px oklch(0 0 0 / 0.04);
-  --shadow-lg: 0 10px 25px -5px oklch(0 0 0 / 0.08), 0 8px 10px -6px oklch(0 0 0 / 0.04);
-  --shadow-xl: 0 20px 40px -10px oklch(0 0 0 / 0.1), 0 10px 15px -5px oklch(0 0 0 / 0.04);
+  --heatmap-0: #3d443f;
+  --heatmap-1: #415b45;
+  --heatmap-2: #4f7750;
+  --heatmap-3: #6d9d61;
+  --heatmap-4: #8fc57c;
+  --card-foreground: oklch(0.93 0.008 78);
+  --primary: oklch(0.82 0.05 48);
+  --primary-foreground: oklch(0.23 0.009 78);
+  --secondary: oklch(0.31 0.01 78);
+  --secondary-foreground: oklch(0.92 0.007 78);
+  --muted: oklch(0.3 0.009 78);
+  --muted-foreground: oklch(0.74 0.014 78);
+  --accent: oklch(0.34 0.012 78);
+  --accent-foreground: oklch(0.94 0.007 78);
+  --shadow-md: 0 10px 30px -18px oklch(0 0 0 / 0.45), 0 6px 14px -12px oklch(0 0 0 / 0.3);
+  --shadow-lg: 0 18px 42px -22px oklch(0 0 0 / 0.48), 0 10px 20px -16px oklch(0 0 0 / 0.32);
+  --shadow-xl: 0 28px 64px -28px oklch(0 0 0 / 0.52), 0 14px 28px -20px oklch(0 0 0 / 0.35);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
+  --border: oklch(0.44 0.01 78 / 36%);
+  --input: oklch(0.36 0.01 78 / 78%);
+  --ring: oklch(0.63 0.028 55);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.18 0.004 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.552 0.016 285.938);
+  --sidebar: oklch(0.255 0.01 78);
+  --sidebar-foreground: oklch(0.92 0.008 78);
+  --sidebar-primary: oklch(0.82 0.05 48);
+  --sidebar-primary-foreground: oklch(0.22 0.009 78);
+  --sidebar-accent: oklch(0.32 0.011 78);
+  --sidebar-accent-foreground: oklch(0.93 0.008 78);
+  --sidebar-border: oklch(0.44 0.01 78 / 32%);
+  --sidebar-ring: oklch(0.63 0.028 55);
 }
 
 body {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease, background-image 0.3s ease;
+}
+
+.dark body {
+  background-image:
+    radial-gradient(circle at top left, rgba(217, 119, 87, 0.08), transparent 34%),
+    radial-gradient(circle at top right, rgba(63, 98, 18, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 24%);
 }
 
 html,
@@ -207,7 +214,7 @@ body {
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.08);
   border: 1px solid transparent;
   background-clip: padding-box;
   border-radius: 12px;
@@ -215,7 +222,7 @@ body {
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.16);
 }
 
 @utility scrollbar-stable {
@@ -452,5 +459,5 @@ html body .cursor-pointer:not(:disabled) {
 }
 
 .dark .map-capsule-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.08);
 }

@@ -69,8 +69,7 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
                                 <div
                                     tabIndex={0}
                                     className={cn(
-                                        "group relative overflow-hidden bg-muted/5 border border-border/50 hover:border-primary/40 transition-all duration-500 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/30",
-                                        "p-2 bg-white dark:bg-black shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] hover:shadow-xl"
+                                        "group relative overflow-hidden rounded-md border border-border/60 bg-card/85 p-2 shadow-[0_12px_30px_-22px_rgba(0,0,0,0.25)] transition-all duration-500 hover:border-primary/30 hover:bg-card focus:outline-none focus:ring-1 focus:ring-primary/30 hover:shadow-xl"
                                     )}
                                     aria-label={`查看由 ${format(item.dateObj, 'yyyy-MM-dd')} 发布的图片 Memo`}
                                 >

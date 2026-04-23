@@ -88,7 +88,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                             return (
                                 <span key={`img-${index}`} className="block my-5 group relative max-w-full overflow-hidden">
                                     <div className="flex justify-center items-center">
-                                        <div className="relative rounded-md overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-sm transition-all duration-500 hover:scale-[1.01]">
+                                        <div className="relative rounded-md overflow-hidden ring-1 ring-border/70 shadow-sm transition-all duration-500 hover:scale-[1.01]">
                                             <ImageZoom src={token.value}>
                                                 <div className="relative max-h-[550px] w-full aspect-auto h-[300px]">
                                                     <Image
@@ -112,7 +112,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                             );
                         case 'location':
                             const locElement = (
-                                <span className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer bg-primary/10 px-1.5 py-0.5 rounded mx-0.5 hover:bg-primary/20 transition-colors">
+                                <span className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer bg-primary/10 px-1.5 py-0.5 rounded-md mx-0.5 hover:bg-primary/20 transition-colors">
                                     <span className="text-sm">📍</span>
                                     <span className="text-[13px] font-medium">{token.name}</span>
                                 </span>
@@ -140,7 +140,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                                                     href={token.url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1 rounded-sm hover:bg-primary/20 transition-colors cursor-pointer"
+                                                    className="inline-flex items-center gap-1 rounded-md hover:bg-primary/20 transition-colors cursor-pointer"
                                                 >
                                                     <span>🔗</span>
                                                     <span>{token.title}</span>
@@ -167,7 +167,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                             
                             if (token.mode === 'pill') {
                                 return (
-                                    <span key={`mlink-${index}`} className="inline-flex items-center gap-2 px-2 py-1 rounded-full border border-border bg-card/50 hover:bg-accent/30 transition-all group mx-0.5 align-middle">
+                                    <span key={`mlink-${index}`} className="inline-flex items-center gap-2 px-2 py-1 rounded-md border border-border bg-card/50 hover:bg-accent/30 transition-all group mx-0.5 align-middle">
                                         <a
                                             href={token.url}
                                             target="_blank"
@@ -180,7 +180,7 @@ export function MemoContent({ content, className, disablePreview = false }: Memo
                                         <button
                                             type="button"
                                             onClick={(e) => handleCopyLink(e, token.url)}
-                                            className="p-1 hover:bg-accent rounded-full text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
+                                            className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
                                             title="拷贝链接"
                                             aria-label="拷贝链接"
                                         >

@@ -314,7 +314,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                         </div>
                     </div>
                     {/* 地图预览 */}
-                    <div className="rounded-inner overflow-hidden ring-1 ring-black/5 dark:ring-white/10 relative group bg-muted/10">
+                    <div className="relative group overflow-hidden rounded-inner bg-muted/10 ring-1 ring-border/70">
                         {/* 左上角操作提示 */}
                         <div className="absolute top-2 left-2 z-[10] bg-background/90 backdrop-blur-md px-2 py-1 rounded text-[10px] text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-border/50">
                             滚轮缩放 • 可拖移点

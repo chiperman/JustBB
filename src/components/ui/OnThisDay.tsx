@@ -50,7 +50,7 @@ export const OnThisDay = memo(function OnThisDay({ initialMemos }: { initialMemo
                     <li
                         key={memo.id}
                         className={cn(
-                            "bg-stone-50/50 dark:bg-stone-900/50 border border-stone-100 dark:border-stone-800 rounded-md p-4 text-sm hover:bg-stone-100 dark:hover:bg-stone-800 transition-all group lg:last:hidden xl:last:block outline-none focus-visible:ring-0",
+                            "rounded-md border border-border/70 bg-card/70 p-4 text-sm transition-all outline-none hover:bg-accent/60 focus-visible:ring-0 group lg:last:hidden xl:last:block",
                             !shouldReduceMotion && "hover:translate-x-1"
                         )}
                         tabIndex={0}
@@ -60,7 +60,7 @@ export const OnThisDay = memo(function OnThisDay({ initialMemos }: { initialMemo
                                 {new Date(memo.created_at).getFullYear()}
                             </span>
                         </div>
-                        <p className="line-clamp-4 text-[14px] font-normal leading-relaxed text-stone-600 dark:text-stone-400 group-hover:text-foreground transition-colors">
+                        <p className="line-clamp-4 text-[14px] font-normal leading-relaxed text-muted-foreground group-hover:text-foreground transition-colors">
                             {memo.content}
                         </p>
                     </li>

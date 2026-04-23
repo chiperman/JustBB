@@ -260,7 +260,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                                 {hoveredDay && (
                                     <div
                                         className={cn(
-                                            "absolute z-[999] px-2.5 py-1.5 text-[10px] font-mono text-white bg-black/95 backdrop-blur-md rounded-[6px] pointer-events-none mt-[-15px] animate-in fade-in zoom-in duration-150 shadow-xl border border-white/20 whitespace-nowrap transition-all duration-200 ease-out",
+                                            "absolute z-[999] mt-[-15px] rounded-[6px] border border-border/70 bg-popover/95 px-2.5 py-1.5 font-mono text-[10px] text-popover-foreground shadow-xl backdrop-blur-md pointer-events-none animate-in fade-in zoom-in duration-150 whitespace-nowrap transition-all duration-200 ease-out",
                                             hoveredDay.align === 'center' && "-translate-x-1/2 -translate-y-full",
                                             hoveredDay.align === 'left' && "-translate-y-full ml-[-7px]",
                                             hoveredDay.align === 'right' && "-translate-x-full -translate-y-full mr-[-7px]"
@@ -269,7 +269,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                                     >
                                         <div className="flex flex-col items-center">
                                             <div className="flex items-center gap-1.5 tabular-nums">
-                                                <span className="text-[#9be9a8] font-bold">{hoveredDay.count} 笔记</span>
+                                                <span className="font-bold text-primary">{hoveredDay.count} 笔记</span>
                                                 <span className="opacity-40">/</span>
                                                 <span>{hoveredDay.wordCount} 字</span>
                                             </div>

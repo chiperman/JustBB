@@ -64,7 +64,7 @@ export function LocationHoverPreview({ lat, lng, name, children }: LocationHover
                     <div className="text-[10px] text-muted-foreground font-mono tabular-nums">
                         {lat.toFixed(4)}, {lng.toFixed(4)}
                     </div>
-                    <div className="rounded-inner overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
+                    <div className="rounded-inner overflow-hidden ring-1 ring-border/70">
                         {MapView ? (
                             <MapView
                                 markers={[{ name: '', lat, lng, items: [] }]}

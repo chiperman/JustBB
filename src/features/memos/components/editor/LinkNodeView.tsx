@@ -91,7 +91,7 @@ export const LinkNodeView = (props: NodeViewProps) => {
                                 href={url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 rounded-sm hover:bg-primary/20 transition-colors cursor-pointer"
+                                className="inline-flex items-center gap-1 rounded-md hover:bg-primary/20 transition-colors cursor-pointer"
                             >
                                 <span>🔗</span>
                                 <span>{title}</span>
@@ -108,14 +108,14 @@ export const LinkNodeView = (props: NodeViewProps) => {
             )}
 
             {mode === 'pill' && (
-                <div className="inline-flex items-center gap-2 px-2 py-1 rounded-full border border-border bg-card/50 hover:bg-accent/30 transition-all group">
+                <div className="inline-flex items-center gap-2 px-2 py-1 rounded-md border border-border bg-card/50 hover:bg-accent/30 transition-all group">
                     <HugeiconsIcon icon={Link01Icon} size={14} className="text-muted-foreground/60" />
                     <span className="text-xs text-foreground/80 font-medium truncate max-w-[200px]">{title}</span>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={handleCopy}
-                            className="p-1 hover:bg-accent rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                            className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors"
                             title="拷贝链接"
                         >
                             <HugeiconsIcon icon={Copy01Icon} size={12} />
@@ -123,7 +123,7 @@ export const LinkNodeView = (props: NodeViewProps) => {
                         <button 
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={handleEdit}
-                            className="p-1 hover:bg-accent rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                            className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors"
                             title="编辑"
                         >
                             <HugeiconsIcon icon={PencilEdit02Icon} size={12} />

@@ -127,7 +127,7 @@ function YearlyStatsItem({ year, stats }: { year: number; stats: Record<string, 
                         title="条笔记"
                         total={totals.memos}
                         data={monthlyData.map(d => d.memoCount)}
-                        color="bg-[#4F46E5]" // Indigo-600
+                        color="bg-[#0075de]" // Notion Blue
                         maxScale={30}
                         labels={monthlyData.map(d => d.monthLabel)}
                     />
@@ -137,7 +137,7 @@ function YearlyStatsItem({ year, stats }: { year: number; stats: Record<string, 
                         title="字"
                         total={totals.words}
                         data={monthlyData.map(d => d.wordCount)}
-                        color="bg-[#10B981]" // Emerald-500
+                        color="bg-[#2a9d99]" // Teal
                         maxScale={100}
                         labels={monthlyData.map(d => d.monthLabel)}
                     />
@@ -147,7 +147,7 @@ function YearlyStatsItem({ year, stats }: { year: number; stats: Record<string, 
                         title="天"
                         total={totals.days}
                         data={monthlyData.map(d => d.activeDays)}
-                        color="bg-[#EF4444]" // Red-500
+                        color="bg-[#0075de]" // Notion Blue
                         maxScale={2}
                         labels={monthlyData.map(d => d.monthLabel)}
                     />
@@ -207,10 +207,10 @@ function StatCard({
     const currentScale = ticks[0] || maxValue;
 
     return (
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-black/5 flex flex-col gap-6 h-[280px] relative">
-            <div className="flex items-baseline gap-1 font-mono">
-                <span className="text-3xl font-bold tracking-tight">{total}</span>
-                <span className="text-sm font-bold text-foreground/80 font-sans tracking-normal">{title}</span>
+        <div className="bg-card rounded-[12px] p-6 shadow-[var(--shadow-notion-card)] border border-border flex flex-col gap-6 h-[280px] relative">
+            <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-bold tracking-tighter text-foreground">{total}</span>
+                <span className="text-sm font-semibold text-muted-foreground font-sans tracking-normal">{title}</span>
             </div>
 
             <div
@@ -224,7 +224,7 @@ function StatCard({
                         {ticks.map((tick) => (
                             <div key={tick} className="flex items-center w-full h-[1px] relative">
                                 <div className="flex-1" />
-                                <span className="text-[10px] text-muted-foreground/40 font-mono font-medium absolute right-[-32px] w-[28px] text-left tabular-nums">
+                                <span className="text-[10px] text-muted-foreground/30 font-sans font-medium absolute right-[-32px] w-[28px] text-left tabular-nums">
                                     {tick}
                                 </span>
                             </div>
@@ -243,18 +243,18 @@ function StatCard({
                                     onMouseEnter={() => setHoveredIdx(i)}
                                 >
                                     {/* Track (Background) - Hidden by default, visible on hover */}
-                                    <div className="absolute inset-x-0 bottom-0 top-0 w-[90%] mx-auto bg-black/[0.03] rounded-md pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                                    <div className="absolute inset-x-0 bottom-0 top-0 w-[90%] mx-auto bg-accent/30 rounded-[4px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
 
                                     {/* Bar */}
                                     <motion.div
                                         className={cn(
-                                            "w-[90%] rounded-md relative z-10",
+                                            "w-[90%] rounded-[4px] relative z-10",
                                             color,
                                             val === 0 ? "opacity-0" : "opacity-80 group-hover:opacity-100"
                                         )}
                                         initial={{ height: 0 }}
                                         animate={{ height: `${height}%` }}
-                                        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} // smooth easeOutCubic
+                                        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                                     />
                                 </div>
                             );
@@ -264,17 +264,17 @@ function StatCard({
                     {/* Singleton Tooltip */}
                     <div
                         className={cn(
-                            "absolute top-[30%] -translate-x-1/2 -translate-y-full mb-2 bg-white shadow-md rounded-md p-3 border border-black/5 z-30 min-w-[90px] pointer-events-none transition-all duration-300 ease-out",
+                            "absolute top-[30%] -translate-x-1/2 -translate-y-full mb-2 bg-card shadow-[var(--shadow-notion-deep)] rounded-[4px] p-3 border border-border z-30 min-w-[90px] pointer-events-none transition-all duration-300 ease-out",
                             hoveredIdx !== null ? "opacity-100 scale-100" : "opacity-0 scale-95"
                         )}
                         style={{
                             left: hoveredIdx !== null ? `${((hoveredIdx + 0.5) / data.length) * 100}%` : '50%'
                         }}
                     >
-                        <div className="text-[11px] text-muted-foreground mb-1 leading-none whitespace-nowrap font-mono">
+                        <div className="text-[11px] text-muted-foreground mb-1 leading-none whitespace-nowrap font-medium">
                             {hoveredIdx !== null ? labels[hoveredIdx] : ''}月
                         </div>
-                        <div className="text-sm font-bold leading-none whitespace-nowrap font-mono">
+                        <div className="text-sm font-bold leading-none whitespace-nowrap text-foreground">
                             {hoveredIdx !== null ? data[hoveredIdx] : 0}{title.includes('条') ? '条笔记' : title}
                         </div>
                     </div>
@@ -285,8 +285,8 @@ function StatCard({
                     {labels.map((label, i) => (
                         <div key={i} className="flex-1 text-center">
                             <span className={cn(
-                                "text-[10px] font-mono font-medium transition-colors tabular-nums",
-                                hoveredIdx === i ? "text-foreground/70" : "text-muted-foreground/40"
+                                "text-[10px] font-sans font-medium transition-colors tabular-nums",
+                                hoveredIdx === i ? "text-foreground/70" : "text-muted-foreground/30"
                             )}>
                                 {label}
                             </span>

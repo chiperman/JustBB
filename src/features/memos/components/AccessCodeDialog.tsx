@@ -91,7 +91,7 @@ export function AccessCodeDialog({
                             <Button
                                 type="button"
                                 variant="ghost"
-                                size="icon-sm"
+                                size="icon"
                                 onClick={() => setShowAccessCode((prev) => !prev)}
                                 className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 rounded-md text-muted-foreground hover:bg-accent/80 hover:text-foreground"
                                 aria-label={showAccessCode ? '隐藏口令' : '显示口令'}

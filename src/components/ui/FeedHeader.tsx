@@ -76,7 +76,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
                             onClick={() => {
                                 router.push('/');
                             }}
-                            className="group flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-accent transition-all mr-1 h-full active:scale-95"
+                            className="group flex items-center gap-1.5 px-2 py-1 rounded-[4px] hover:bg-accent transition-all mr-1 h-full active:scale-95"
                             title="回到首页"
                         >
                             {isRefreshing ? (
@@ -92,7 +92,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
                                     className="text-primary/70 group-hover:text-primary transition-colors"
                                 />
                             )}
-                            <span className="text-sm font-bold tracking-tight text-primary/90 group-hover:text-primary transition-colors leading-none">
+                            <span className="text-sm font-bold tracking-tight text-primary group-hover:text-primary transition-colors leading-none">
                                 JustMemo
                             </span>
                         </Link>
@@ -100,7 +100,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
                         {activeDate && (
                             <div className="flex items-center gap-1.5 h-full px-1">
                                 <span className="text-muted-foreground/30 text-[10px] font-light">/</span>
-                                <span className="text-xs font-mono font-medium text-primary tracking-tight tabular-nums leading-none">
+                                <span className="text-[12px] font-sans font-semibold text-primary tracking-tight tabular-nums leading-none">
                                     {activeDate}
                                 </span>
                             </div>
@@ -108,7 +108,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
                         {searchParams?.get('tag') && (
                             <div className="flex items-center gap-1.5 h-full px-1">
                                 <span className="text-muted-foreground/30 text-[10px] font-light">/</span>
-                                <span className="text-xs font-medium text-primary tracking-tight leading-none">
+                                <span className="text-[12px] font-semibold text-primary tracking-tight leading-none">
                                     #{searchParams.get('tag')}
                                 </span>
                             </div>
@@ -116,7 +116,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
                         {searchParams?.get('num') && (
                             <div className="flex items-center gap-1.5 h-full px-1">
                                 <span className="text-muted-foreground/30 text-[10px] font-light">/</span>
-                                <span className="text-xs font-mono font-medium text-primary tracking-tight leading-none">
+                                <span className="text-[12px] font-sans font-semibold text-primary tracking-tight leading-none">
                                     #{searchParams.get('num')}
                                 </span>
                             </div>
@@ -129,7 +129,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-md transition-all focus-visible:ring-0 active:scale-95"
+                                    className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-[4px] transition-all focus-visible:ring-0 active:scale-95"
                                     aria-label="更多选项"
                                 >
                                     <HugeiconsIcon

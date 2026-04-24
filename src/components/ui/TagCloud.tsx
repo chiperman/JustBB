@@ -75,10 +75,10 @@ export const TagCloud = memo(function TagCloud() {
                                 variant={isActive ? "default" : "secondary"}
                                 onClick={() => handleTagClick(tag_name)}
                                 className={cn(
-                                    "cursor-pointer rounded-md px-2 py-1 text-[12px] font-normal gap-1.5 border shadow-none transition-all active:scale-95",
+                                    "cursor-pointer px-2 py-0.5 text-[12px] font-medium gap-1.5 border transition-all active:scale-95",
                                     isActive
                                         ? "bg-primary text-primary-foreground"
-                                        : "border-border/70 bg-background/70 text-muted-foreground hover:border-primary/20 hover:bg-accent hover:text-foreground"
+                                        : "border-border/50 bg-background text-muted-foreground hover:bg-accent"
                                 )}
                                 aria-label={`标签 #${tag_name}，共有 ${count} 条记录`}
                             >

@@ -447,7 +447,7 @@ export function MemoEditor({
                 height: isActuallyCollapsed ? "auto" : "auto",
                 minHeight: isActuallyCollapsed ? 0 : 120,
                 padding: 24,
-                boxShadow: isActuallyCollapsed ? "none" : "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+                boxShadow: isActuallyCollapsed ? "none" : "var(--shadow-notion-card)",
             }}
             exit={{
                 opacity: 0,
@@ -472,8 +472,8 @@ export function MemoEditor({
             }}
             transition={{
                 height: isActuallyCollapsed
-                    ? { type: 'spring', stiffness: 350, damping: 40 } // 设计文档收缩参数
-                    : { duration: 0.4, ease: [0.22, 1, 0.36, 1] },   // 设计文档展开参数
+                    ? { type: 'spring', stiffness: 350, damping: 40 }
+                    : { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
                 opacity: { duration: 0.2 }
             }}
             onAnimationStart={() => setIsAnimating(true)}
@@ -483,8 +483,8 @@ export function MemoEditor({
                 overflow: (isActuallyCollapsed || isAnimating) ? 'hidden' : 'visible'
             }}
             className={cn(
-                "border border-border rounded-inner relative flex flex-col items-stretch selection:bg-primary/30",
-                isActuallyCollapsed && "shadow-none cursor-pointer hover:bg-accent/5",
+                "border border-border rounded-[12px] relative flex flex-col items-stretch selection:bg-primary/30",
+                isActuallyCollapsed && "shadow-none cursor-pointer hover:bg-muted/50",
                 className
             )}
             onClick={() => {
@@ -497,7 +497,7 @@ export function MemoEditor({
             }}
         >
             <motion.div
-                className="absolute inset-0 bg-card rounded-inner pointer-events-none"
+                className="absolute inset-0 bg-card rounded-[12px] pointer-events-none"
                 animate={{ opacity: isActuallyCollapsed ? 0 : 1 }}
             />
 

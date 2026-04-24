@@ -52,14 +52,14 @@ export function MemoCardHeader({
                             checked={isSelected}
                             onCheckedChange={onToggleSelection}
                             onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                            className="h-4 w-4 rounded-md border-border/50 bg-background/90 shadow-none hover:border-primary/30 data-[state=checked]:border-primary/35 data-[state=checked]:bg-primary/10 transition-[background-color,border-color,color] duration-200 cursor-pointer"
+                            className="h-4 w-4 rounded-[4px] border-border bg-background shadow-none transition-all cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                     </div>
                 )}
-                <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded-md">
+                <span className="text-[11px] font-sans font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-[4px]">
                     #{memo.memo_number}
                 </span>
-                <time className="text-xs text-muted-foreground font-sans">
+                <time className="text-[12px] text-muted-foreground font-sans tracking-tight">
                     {hasMounted ? (
                         memo.is_locked
                             ? `${formatDate(memo.created_at, 'yyyy-MM-dd HH:mm')} **:**`

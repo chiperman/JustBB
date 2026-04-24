@@ -11,176 +11,149 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
-  --color-primary: #d97757;
-  /* Terracotta */
-  --color-secondary: #3f6212;
-  /* Deep Olive */
-  --color-border: #e5e5e0;
-  --color-success: var(--success);
-  --color-error: var(--error);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
-  --radius-sm: 0.125rem;
-  --radius-md: 0.25rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
-  --radius-3xl: 1.5rem;
-  --radius-4xl: 2rem;
-  --radius-card: var(--radius-card);
-  --radius-inner: var(--radius-inner);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-card: 12px;
+  
+  --shadow-notion-card: rgba(0,0,0,0.04) 0px 4px 18px, rgba(0,0,0,0.027) 0px 2.025px 7.84688px, rgba(0,0,0,0.02) 0px 0.8px 2.925px, rgba(0,0,0,0.01) 0px 0.175px 1.04062px;
+  --shadow-notion-deep: rgba(0,0,0,0.01) 0px 1px 3px, rgba(0,0,0,0.02) 0px 3px 7px, rgba(0,0,0,0.02) 0px 7px 15px, rgba(0,0,0,0.04) 0px 14px 28px, rgba(0,0,0,0.05) 0px 23px 52px;
+
+  --font-sans: "Inter", var(--font-notion-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 :root {
-  --card: oklch(1 0 0);
-  --popover: oklch(1 0 0 / 88%);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --glass-bg: oklch(1 0 0 / 88%);
-  --glass-blur: 24px;
-  --success: #40c463;
-  --error: #ff6b6b;
+  --background: #ffffff;
+  --foreground: rgba(0, 0, 0, 0.95);
+  --card: #ffffff;
+  --card-foreground: rgba(0, 0, 0, 0.95);
+  --popover: #ffffff;
+  --popover-foreground: rgba(0, 0, 0, 0.95);
+  --primary: #0075de;
+  --primary-foreground: #ffffff;
+  --secondary: rgba(0, 0, 0, 0.05);
+  --secondary-foreground: rgba(0, 0, 0, 0.95);
+  --muted: #f6f5f4;
+  --muted-foreground: #615d59;
+  --accent: rgba(0, 0, 0, 0.05);
+  --accent-foreground: rgba(0, 0, 0, 0.95);
+  --destructive: #dd5b00;
+  --destructive-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.1);
+  --input: rgba(0, 0, 0, 0.1);
+  --ring: #097fe8;
+  --radius: 4px;
 
-  /* Heatmap Colors (Light) */
+  --chart-1: #0075de;
+  --chart-2: #2a9d99;
+  --chart-3: #1aae39;
+  --chart-4: #dd5b00;
+  --chart-5: #ff64c8;
+
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-blur: 8px;
+  
+  --success: #1aae39;
+  --error: #dd5b00;
+  
+  /* Heatmap Colors */
   --heatmap-0: #ebedf0;
   --heatmap-1: #9be9a8;
   --heatmap-2: #40c463;
   --heatmap-3: #30a14e;
   --heatmap-4: #216e39;
-  --radius: 0.25rem;
-  --radius-card: 0.75rem;
-  --radius-inner: 0.5rem;
-  --background: oklch(0.98 0.001 286.375);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: rgba(0, 0, 0, 0.05);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.21 0.006 285.885);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.705 0.015 286.067);
-}
-
-/* 移除所有输入元素的默认 focus outline，由父容器的 focus-within 样式表示选中状态 */
-textarea:focus,
-input:focus,
-select:focus {
-  outline: none;
-}
-
-/* 对于需要保持可访问性的按钮，使用 focus-visible */
-button:focus:not(:focus-visible) {
-  outline: none;
 }
 
 .dark {
-  --background: oklch(0.22 0.009 78);
-  --foreground: oklch(0.93 0.008 78);
-  --card: oklch(0.265 0.01 78);
-  --popover: oklch(0.285 0.011 78 / 90%);
-  --popover-foreground: oklch(0.95 0.006 78);
-  --glass-bg: oklch(0.285 0.011 78 / 84%);
-  --glass-blur: 24px;
-  --success: #63b87a;
-  --error: #eb7b73;
+  --background: #31302e;
+  --foreground: #f6f5f4;
+  --card: #31302e;
+  --card-foreground: #f6f5f4;
+  --popover: #31302e;
+  --popover-foreground: #f6f5f4;
+  --primary: #0075de;
+  --primary-foreground: #ffffff;
+  --secondary: rgba(255, 255, 255, 0.08);
+  --secondary-foreground: #f6f5f4;
+  --muted: #21201e;
+  --muted-foreground: #a39e98;
+  --accent: rgba(255, 255, 255, 0.08);
+  --accent-foreground: #f6f5f4;
+  --destructive: #eb7b73;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #097fe8;
 
+  --glass-bg: rgba(49, 48, 46, 0.85);
+  
   /* Heatmap Colors (Dark) */
   --heatmap-0: #3d443f;
   --heatmap-1: #415b45;
   --heatmap-2: #4f7750;
   --heatmap-3: #6d9d61;
   --heatmap-4: #8fc57c;
-  --card-foreground: oklch(0.93 0.008 78);
-  --primary: oklch(0.82 0.05 48);
-  --primary-foreground: oklch(0.23 0.009 78);
-  --secondary: oklch(0.31 0.01 78);
-  --secondary-foreground: oklch(0.92 0.007 78);
-  --muted: oklch(0.3 0.009 78);
-  --muted-foreground: oklch(0.74 0.014 78);
-  --accent: oklch(0.34 0.012 78);
-  --accent-foreground: oklch(0.94 0.007 78);
-  --shadow-md: 0 10px 30px -18px oklch(0 0 0 / 0.45), 0 6px 14px -12px oklch(0 0 0 / 0.3);
-  --shadow-lg: 0 18px 42px -22px oklch(0 0 0 / 0.48), 0 10px 20px -16px oklch(0 0 0 / 0.32);
-  --shadow-xl: 0 28px 64px -28px oklch(0 0 0 / 0.52), 0 14px 28px -20px oklch(0 0 0 / 0.35);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.44 0.01 78 / 36%);
-  --input: oklch(0.36 0.01 78 / 78%);
-  --ring: oklch(0.63 0.028 55);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.255 0.01 78);
-  --sidebar-foreground: oklch(0.92 0.008 78);
-  --sidebar-primary: oklch(0.82 0.05 48);
-  --sidebar-primary-foreground: oklch(0.22 0.009 78);
-  --sidebar-accent: oklch(0.32 0.011 78);
-  --sidebar-accent-foreground: oklch(0.93 0.008 78);
-  --sidebar-border: oklch(0.44 0.01 78 / 32%);
-  --sidebar-ring: oklch(0.63 0.028 55);
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease, background-image 0.3s ease;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.dark body {
-  background-image:
-    radial-gradient(circle at top left, rgba(217, 119, 87, 0.08), transparent 34%),
-    radial-gradient(circle at top right, rgba(63, 98, 18, 0.08), transparent 28%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 24%);
+/* Typography Utilities */
+@utility notion-hero {
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1.0;
+  letter-spacing: -2.125px;
+  font-feature-settings: "lnum", "locl";
 }
 
-html,
-body {
-  height: 100vh;
-  overflow: hidden;
+@utility notion-section-title {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.0;
+  letter-spacing: -1.5px;
+  font-feature-settings: "lnum", "locl";
 }
 
-/* 全局滚动条 */
+@utility notion-card-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.27;
+  letter-spacing: -0.25px;
+}
+
+@utility notion-body {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* Global Scrollbar */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
@@ -190,7 +163,6 @@ body {
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
 
-/* Webkit browsers (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -202,45 +174,12 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.05);
-  border: 1px solid transparent;
-  /* 通过透明边框让滑块重心更细 */
   background-clip: padding-box;
   border-radius: 12px;
-  transition: background-color 0.3s ease;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.15);
 }
 
 .dark ::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.08);
-  border: 1px solid transparent;
-  background-clip: padding-box;
-  border-radius: 12px;
-  transition: background-color 0.3s ease;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.16);
-}
-
-@utility scrollbar-stable {
-  scrollbar-gutter: stable;
-}
-
-@utility scrollbar-overlay {
-  overflow-y: overlay !important;
-  scrollbar-gutter: stable;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
 
 @layer base {
@@ -251,213 +190,44 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+  
+  h1 { @apply notion-hero; }
+  h2 { @apply notion-section-title; }
+  h3 { @apply notion-card-title; }
 }
 
-/* 彻底解决全局交互元素缺少指针光标问题，强制覆盖任何框架默认设置 */
-html body button:not(:disabled),
-html body [role="button"]:not(:disabled),
-html body .cursor-pointer:not(:disabled) {
-  cursor: pointer !important;
-}
-
-/* 确保编辑器在聚焦时没有外边框 */
-.tiptap:focus {
+/* UI Overrides for Notion feel */
+textarea:focus,
+input:focus,
+select:focus {
   outline: none;
 }
 
-/* Leaflet 归属标注弱化（合规保留，视觉低调） */
-.leaflet-control-attribution {
-  font-size: 9px !important;
-  opacity: 0.35;
-  transition: opacity 0.2s ease;
-  background: transparent !important;
-  color: inherit;
+button:focus:not(:focus-visible) {
+  outline: none;
 }
 
-.leaflet-control-attribution:hover {
-  opacity: 0.8;
-}
-
-.leaflet-control-attribution a {
-  color: inherit !important;
-}
-
-/* Leaflet Popup 现代极简悬浮样式 (Modern Floating Popup) */
+/* Leaflet Popup overrides for Notion style */
 .modern-map-popup .leaflet-popup-content-wrapper {
-  background-color: var(--glass-bg, rgba(255, 255, 255, 0.88)) !important;
-  backdrop-filter: blur(var(--glass-blur, 24px)) saturate(150%) !important;
-  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.05)) !important;
-  border-radius: 20px !important; 
-  box-shadow: var(--shadow-xl) !important;
+  background-color: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-notion-card) !important;
   padding: 0 !important;
   overflow: hidden !important;
 }
 
-.modern-map-popup .leaflet-popup-content {
-  margin: 0 !important;
-  width: auto !important;
-}
-
-/* 彻底隐藏弹出框小三角，实现纯粹的悬浮感 */
 .modern-map-popup .leaflet-popup-tip-container {
   display: none !important;
 }
 
-/* 关闭按钮适配现代 UI：移除原生按钮，由 React 手动渲染 Header */
-.modern-map-popup .leaflet-popup-close-button {
-  display: none !important;
-}
-
-/* Popup 内部卡片：采用“柔和岛屿”列表风格 */
 .modern-map-popup .rounded-card {
-  background: color-mix(in oklch, var(--color-background), transparent 40%) !important;
-  border: none !important;
-  border-bottom: 1px solid var(--color-border) !important;
-  padding: 1.25rem 1rem !important;
-  border-radius: 0 !important;
-  margin: 0 !important;
-  box-shadow: none !important;
-  transition: background 0.2s ease;
+  background: transparent !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 1rem !important;
+  transition: background 0.1s ease;
 }
 
 .modern-map-popup .rounded-card:hover {
-  background: color-mix(in oklch, var(--color-background), transparent 20%) !important;
-}
-
-.modern-map-popup .rounded-card:last-child {
-  border-bottom: none !important;
-}
-
-.modern-map-popup .bg-card {
-  background: transparent !important;
-}
-
-/* 即使在 Popup 内部，由于背景半透明，ExpandableContent 的遮罩层也需要透视同步 */
-.modern-map-popup .expansion-mask {
-  background: linear-gradient(to top, color-mix(in oklch, var(--color-background), transparent 20%), transparent) !important;
-}
-
-
-/* -------------------------------------------------------------------------- */
-/* Marker Entrance Animations (Chronological staggered fade)                  */
-/* -------------------------------------------------------------------------- */
-
-@keyframes marker-pop-in {
-  0% {
-    opacity: 0;
-    transform: scale(0.5);
-  }
-  60% {
-    transform: scale(1.05);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes marker-pulse-ring {
-  0% {
-    transform: scale(0.5);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(2);
-    opacity: 0;
-  }
-}
-
-/* 仅在地图处于“入场状态”时激活以下动画 */
-.map-intro-active .animate-marker-pop {
-  opacity: 0;
-  animation: marker-pop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  will-change: opacity, transform;
-}
-
-.map-intro-active .animate-marker-ring {
-  position: absolute;
-  inset: -4px;
-  border: 2px solid var(--color-primary);
-  border-radius: 9999px;
-  opacity: 0;
-  animation: marker-pulse-ring 1s cubic-bezier(0, 0, 0.2, 1) forwards;
-  pointer-events: none;
-}
-
-/* -------------------------------------------------------------------------- */
-/* Leaflet Markers & Clusters Animation & Styles                              */
-/* -------------------------------------------------------------------------- */
-
-/* 聚合点基础样式覆盖：恢复 Leaflet 默认的坐标即时同步，消除缩放时的偏移感 */
-.leaflet-marker-icon,
-.leaflet-marker-shadow {
-  transition: opacity 0.2s ease-in;
-}
-
-.custom-cluster-icon {
-  background: transparent !important;
-  border: none !important;
-}
-
-/* 聚合点内部圆形：具体布局由 MapView.tsx 的 Tailwind 控制 */
-
-/* 移除了导致 hover 方形背景的规则，改为在 MapView.tsx 中精准控制 */
-
-/* 彻底消除蜘蛛连线，保持地图纯净 */
-.leaflet-cluster-spider-leg {
-  display: none !important;
-}
-
-/* 地图 Marker 基础样式 */
-.custom-div-icon {
-  background: transparent !important;
-  border: none !important;
-}
-
-@keyframes low-breathing-highlight {
-  0%, 100% {
-    box-shadow: 0 0 0px 0px transparent;
-  }
-  50% {
-    box-shadow: 0 0 15px 2px var(--color-primary, #d97757);
-    border-color: var(--color-primary, #d97757);
-  }
-}
-
-.animate-new-memo-highlight {
-  animation: low-breathing-highlight 3s ease-in-out infinite;
-}
-/* 自定义胶囊控制 (Custom Capsule Controls) */
-.map-capsule-control {
-  background-color: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--color-border-subtle, rgba(0, 0, 0, 0.08));
-  border-radius: 9999px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--shadow-md);
-}
-
-.map-capsule-btn {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  color: var(--color-foreground-muted, #666);
-}
-
-.map-capsule-btn:active {
-  transform: scale(0.9);
-}
-
-.map-capsule-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  color: var(--color-primary);
-}
-
-.dark .map-capsule-btn:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background: var(--accent) !important;
 }

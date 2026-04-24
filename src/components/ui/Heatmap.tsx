@@ -157,18 +157,18 @@ export const Heatmap = memo(function Heatmap() {
 
     // 顶栏统计触发器
     const StatsTrigger = (
-        <div className="grid grid-cols-3 gap-8 w-full max-w-sm mx-auto px-4 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors rounded-xl py-2">
+        <div className="grid grid-cols-3 gap-8 w-full max-w-sm mx-auto px-4 cursor-pointer hover:bg-accent/50 transition-colors rounded-xl py-2">
             <div className="flex flex-col items-center">
-                <span className="text-3xl tracking-tight leading-none font-bold font-mono tabular-nums">{displayStats.totalMemos}</span>
-                <span className="text-[12px] font-normal text-stone-400 mt-1">记录</span>
+                <span className="text-3xl tracking-tighter leading-none font-bold tabular-nums text-foreground">{displayStats.totalMemos}</span>
+                <span className="text-[12px] font-medium text-muted-foreground mt-1">记录</span>
             </div>
             <div className="flex flex-col items-center border-x border-border/50">
-                <span className="text-3xl tracking-tight leading-none font-bold font-mono tabular-nums">{displayStats.totalTags}</span>
-                <span className="text-[12px] font-normal text-stone-400 mt-1">标签</span>
+                <span className="text-3xl tracking-tighter leading-none font-bold tabular-nums text-foreground">{displayStats.totalTags}</span>
+                <span className="text-[12px] font-medium text-muted-foreground mt-1">标签</span>
             </div>
             <div className="flex flex-col items-center">
-                <span className="text-3xl tracking-tight leading-none font-bold font-mono tabular-nums">{displayTotalActiveDays}</span>
-                <span className="text-[12px] font-normal text-stone-400 mt-1">天</span>
+                <span className="text-3xl tracking-tighter leading-none font-bold tabular-nums text-foreground">{displayTotalActiveDays}</span>
+                <span className="text-[12px] font-medium text-muted-foreground mt-1">天</span>
             </div>
         </div>
     );
@@ -229,7 +229,7 @@ export const Heatmap = memo(function Heatmap() {
                         {hoveredDate && (
                             <div
                                 className={cn(
-                                    "absolute z-[999] mt-[-15px] rounded border border-border/70 bg-popover/95 px-2.5 py-1.5 font-mono text-[10px] text-popover-foreground shadow-xl backdrop-blur-md pointer-events-none animate-in fade-in zoom-in duration-150 whitespace-nowrap",
+                                    "absolute z-[999] mt-[-15px] rounded-[4px] border border-border bg-card px-2.5 py-1.5 font-sans text-[11px] text-foreground shadow-[var(--shadow-notion-card)] pointer-events-none animate-in fade-in zoom-in duration-150 whitespace-nowrap",
                                     hoveredDate.align === 'center' && "-translate-x-1/2 -translate-y-full",
                                     hoveredDate.align === 'left' && "-translate-y-full ml-[-7px]",
                                     hoveredDate.align === 'right' && "-translate-x-full -translate-y-full mr-[-7px]"
@@ -238,7 +238,7 @@ export const Heatmap = memo(function Heatmap() {
                             >
                                 <span className="font-bold tabular-nums text-primary">{hoveredDate.count} 笔记</span>
                                 <span className="mx-1.5 opacity-40">/</span>
-                                <span className="tabular-nums">{hoveredDate.date}</span>
+                                <span className="tabular-nums font-medium">{hoveredDate.date}</span>
                             </div>
                         )}
                     </div>

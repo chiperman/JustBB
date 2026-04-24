@@ -91,7 +91,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
             animate={{ width: effectiveIsCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH }}
             transition={SIDEBAR_TRANSITION}
             style={{ willChange: "width" }}
-            className="relative flex h-full shrink-0 flex-col overflow-hidden border-r border-border bg-background/50 p-2 backdrop-blur-md"
+            className="relative flex h-full shrink-0 flex-col overflow-hidden border-r border-border bg-muted p-2"
         >
             {/* Top Area */}
             <div
@@ -193,8 +193,8 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
                         }
                 }
             >
-                <div className="h-full border-t border-border/60 bg-background/80 px-1 pt-4 pb-1 backdrop-blur-sm">
-                    <h3 className="mb-4 flex items-center gap-2 text-[24px] leading-tight font-bold tracking-tight text-foreground">热门标签</h3>
+                <div className="h-full border-t border-border/60 px-1 pt-4 pb-1">
+                    <h3 className="mb-4 flex items-center gap-2 text-[22px] leading-tight font-bold tracking-tight text-foreground">热门标签</h3>
                     <Suspense fallback={<div className="space-y-2"><div className="flex flex-wrap gap-2">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-6 w-12 rounded-full bg-muted/20 animate-pulse" />)}</div></div>}>
                         <TagCloud />
                     </Suspense>

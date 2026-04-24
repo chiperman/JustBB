@@ -266,9 +266,9 @@ export function RightSidebar({
         <div className="absolute top-6 right-6 z-30">
           <Button
             variant="outline"
-            size="icon-sm"
+            size="icon"
             onClick={() => setCollapsedState(false)}
-            className="rounded-full border-border/60 bg-background/85 text-muted-foreground shadow-lg backdrop-blur-md transition-[background-color,color,transform] active:scale-95 hover:bg-background hover:text-foreground"
+            className="rounded-[4px] border-border bg-background text-muted-foreground shadow-sm transition-all active:scale-95 hover:bg-accent hover:text-foreground"
             aria-label="展开右侧时间轴"
           >
             <span className="flex items-center justify-center">
@@ -285,20 +285,20 @@ export function RightSidebar({
         style={{ willChange: "width" }}
         className="relative h-full overflow-hidden"
       >
-        <aside className="flex h-full w-80 flex-col overflow-hidden border-l border-border/40 bg-background/50 p-6 backdrop-blur-md">
+        <aside className="flex h-full w-80 flex-col overflow-hidden border-l border-border bg-muted p-6">
           <div className="mb-8 flex items-center gap-3">
             <Button
               variant="ghost"
-              size="icon-sm"
+              size="icon"
               onClick={() => setCollapsedState(true)}
-              className="shrink-0 rounded-full text-muted-foreground transition-[background-color,color,transform] active:scale-95 hover:bg-accent hover:text-accent-foreground"
+              className="shrink-0 rounded-md text-muted-foreground transition-all active:scale-95 hover:bg-accent hover:text-accent-foreground"
               aria-label="收起右侧时间轴"
             >
               <span className="flex items-center justify-center">
                 <HugeiconsIcon icon={PanelRightCloseIcon} size={16} />
               </span>
             </Button>
-            <h3 className="flex-1 border-b-2 border-primary/20 pb-1.5 font-mono text-sm font-bold tracking-widest text-foreground uppercase">
+            <h3 className="flex-1 font-sans text-[14px] font-semibold tracking-tight text-foreground/80 uppercase">
               时间轴
             </h3>
           </div>

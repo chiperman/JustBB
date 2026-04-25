@@ -127,7 +127,7 @@ function YearlyStatsItem({ year, stats }: { year: number; stats: Record<string, 
                         title="条笔记"
                         total={totals.memos}
                         data={monthlyData.map(d => d.memoCount)}
-                        color="bg-[#0075de]" // Notion Blue
+                        color="bg-primary"
                         maxScale={30}
                         labels={monthlyData.map(d => d.monthLabel)}
                     />
@@ -137,7 +137,7 @@ function YearlyStatsItem({ year, stats }: { year: number; stats: Record<string, 
                         title="字"
                         total={totals.words}
                         data={monthlyData.map(d => d.wordCount)}
-                        color="bg-[#2a9d99]" // Teal
+                        color="bg-secondary"
                         maxScale={100}
                         labels={monthlyData.map(d => d.monthLabel)}
                     />
@@ -147,7 +147,7 @@ function YearlyStatsItem({ year, stats }: { year: number; stats: Record<string, 
                         title="天"
                         total={totals.days}
                         data={monthlyData.map(d => d.activeDays)}
-                        color="bg-[#0075de]" // Notion Blue
+                        color="bg-primary"
                         maxScale={2}
                         labels={monthlyData.map(d => d.monthLabel)}
                     />

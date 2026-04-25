@@ -57,7 +57,7 @@ export function MemoCardView({
             onClick={handleCardClick}
             className={cn(
                 "relative bg-card rounded-[12px] p-6 transition-all border border-border shadow-[var(--shadow-notion-card)] hover:shadow-md focus-within:ring-2 focus-within:ring-primary/10 group",
-                displayMemo.is_pinned && "bg-[#f2f9ff] border-[#0075de]/20",
+                displayMemo.is_pinned && "bg-primary/8 border-primary/20",
                 isSelectionMode && "cursor-pointer hover:border-primary/40 select-none",
                 isSelectionMode && isSelected && "border-primary/35 bg-primary/[0.03]",
                 isLastCreated && "animate-new-memo-highlight"

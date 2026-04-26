@@ -9,6 +9,8 @@
     "build:prod": "dotenv -e .env.remote -- next build",
     "start": "next start",
     "lint": "eslint .",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
     "test": "npm run test:unit",
     "test:unit": "dotenv -e .env.local -- vitest run --exclude src/actions/fetchMemos.integrated.test.ts --exclude src/actions/security.test.ts",
     "test:watch": "dotenv -e .env.local -- vitest --exclude src/actions/fetchMemos.integrated.test.ts --exclude src/actions/security.test.ts",
@@ -78,6 +80,7 @@
     "eslint-config-next": "16.1.6",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "prettier": "^3.8.3",
     "shadcn": "^3.8.4",
     "standard-version": "^9.5.0",
     "supabase": "^2.89.1",
@@ -87,7 +90,11 @@
     "vitest": "^4.0.18"
   },
   "lint-staged": {
+    "*.{css,html,json,md,mdx,mjs,yaml,yml}": [
+      "prettier --write"
+    ],
     "*.{js,jsx,ts,tsx}": [
+      "prettier --write",
       "eslint --fix",
       "vitest related --run"
     ]

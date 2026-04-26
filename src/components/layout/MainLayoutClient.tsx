@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useLayoutEffect, useState, useRef, useMemo } from "react";
 import { generateCacheKey, cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { MemoEditor, MemoFeed } from "@/features/memos";
@@ -25,11 +25,11 @@ export function MainLayoutClient() {
     const lastScrollTop = useRef(0);
 
     // 监听滚动，实现迟滞触发逻辑 (Hysteresis Logic)
-    useEffect(() => {
+    useLayoutEffect(() => {
         const container = containerRef.current;
         if (!container) return;
 
-        const handleScroll = () => {
+        const syncCollapsedState = () => {
             const scrollTop = container.scrollTop;
             const scrollHeight = container.scrollHeight;
             const clientHeight = container.clientHeight;
@@ -53,8 +53,9 @@ export function MainLayoutClient() {
             lastScrollTop.current = scrollTop;
         };
 
-        container.addEventListener('scroll', handleScroll, { passive: true });
-        return () => container.removeEventListener('scroll', handleScroll);
+        syncCollapsedState();
+        container.addEventListener('scroll', syncCollapsedState, { passive: true });
+        return () => container.removeEventListener('scroll', syncCollapsedState);
     }, []);
 
     // 1. 初始化数据：优先从缓存中获取，确保 SPA 切换瞬间完成

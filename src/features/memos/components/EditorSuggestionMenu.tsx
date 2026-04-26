@@ -71,9 +71,9 @@ export function EditorSuggestionMenu({
 
     return createPortal(
         <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+            initial={{ scale: 0.98, y: -6 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.98, y: -6 }}
             className="fixed z-[10000] w-[350px] pointer-events-auto"
             style={{
                 top: position.top,
@@ -86,7 +86,7 @@ export function EditorSuggestionMenu({
                 e.stopPropagation();
             }}
         >
-            <div className="bg-popover backdrop-blur-xl border border-border/40 rounded-md shadow-2xl overflow-hidden flex flex-col max-h-[450px]">
+            <div className="bg-background border border-border/40 rounded-md shadow-2xl overflow-hidden flex flex-col max-h-[450px]">
                 {isLoading && suggestions.length === 0 ? (
                     <div className="px-3 py-10 text-xs text-muted-foreground/60 text-center animate-pulse font-mono tracking-tight flex flex-col items-center gap-2">
                         <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />

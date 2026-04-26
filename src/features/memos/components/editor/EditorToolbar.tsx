@@ -15,6 +15,7 @@ import { spring, ease, duration } from '@/lib/animation';
 
 interface EditorToolbarProps {
     isActuallyCollapsed: boolean;
+    animateStateChanges?: boolean;
     isPrivate: boolean;
     isPinned: boolean;
     isPending: boolean;
@@ -30,6 +31,7 @@ interface EditorToolbarProps {
 
 export function EditorToolbar({
     isActuallyCollapsed,
+    animateStateChanges = true,
     isPrivate,
     isPinned,
     isPending,
@@ -50,8 +52,10 @@ export function EditorToolbar({
                 opacity: isActuallyCollapsed ? 0 : 1,
             }}
             transition={{
-                height: isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out },
-                opacity: { duration: duration.fast }
+                height: animateStateChanges
+                    ? (isActuallyCollapsed ? spring.default : { duration: duration.default, ease: ease.out })
+                    : { duration: 0 },
+                opacity: { duration: animateStateChanges ? duration.fast : 0 }
             }}
             style={{ willChange: "opacity, height" }}
             className="overflow-hidden bg-transparent"

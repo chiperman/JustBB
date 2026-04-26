@@ -80,9 +80,9 @@ function LinkPasteMenuContent({
     return createPortal(
         <AnimatePresence>
             <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                initial={{ scale: 0.98, y: -6 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.98, y: -6 }}
                 className="fixed z-[10001] w-[180px] pointer-events-auto"
                 style={{
                     top: position.top,
@@ -93,7 +93,7 @@ function LinkPasteMenuContent({
                     e.stopPropagation();
                 }}
             >
-                <div className="bg-popover backdrop-blur-xl border border-border/40 rounded-md shadow-2xl overflow-hidden flex flex-col py-1">
+                <div className="bg-background border border-border/40 rounded-md shadow-2xl overflow-hidden flex flex-col py-1">
                     <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium border-b border-border/40 mb-1">
                         粘贴为
                     </div>

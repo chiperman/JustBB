@@ -120,10 +120,12 @@ export function textToTiptapHtml(text: string): string {
 }
 
 interface ExtensionOptions {
+    shouldAllowMentionSuggestion: () => boolean;
     onMentionStart: (props: CustomSuggestionProps) => void;
     onMentionUpdate: (props: CustomSuggestionProps) => void;
     onMentionExit: () => void;
     onMentionKeyDown: (props: { event: KeyboardEvent }) => boolean;
+    shouldAllowHashtagSuggestion: () => boolean;
     onHashtagStart: (props: CustomSuggestionProps) => void;
     onHashtagUpdate: (props: CustomSuggestionProps) => void;
     onHashtagExit: () => void;
@@ -152,6 +154,7 @@ export const getExtensions = (options: ExtensionOptions) => [
         suggestion: {
             char: '@',
             pluginKey: mentionPluginKey,
+            allow: () => options.shouldAllowMentionSuggestion(),
             render: () => ({
                 onStart: options.onMentionStart,
                 onUpdate: options.onMentionUpdate,
@@ -177,7 +180,7 @@ export const getExtensions = (options: ExtensionOptions) => [
             char: '#',
             pluginKey: hashtagPluginKey,
             allowSpaces: false,
-            allow: () => true,
+            allow: () => options.shouldAllowHashtagSuggestion(),
             render: () => ({
                 onStart: options.onHashtagStart,
                 onUpdate: options.onHashtagUpdate,

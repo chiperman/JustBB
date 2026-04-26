@@ -62,6 +62,7 @@ export function MemoEditor({
     const editorContainerRef = useRef<HTMLDivElement>(null);
     const relativeGroupRef = useRef<HTMLDivElement>(null);
     const previousPendingRef = useRef(false);
+    const suppressSuggestionRestoreRef = useRef(true);
 
     const {
         content, setContent,
@@ -89,6 +90,7 @@ export function MemoEditor({
     const [pendingPastePos, setPendingPastePos] = useState<number | null>(null);
     const [fetchedMeta, setFetchedMeta] = useState<{ title: string | null; domain: string | null } | null>(null);
     const [showPlaceholder, setShowPlaceholder] = useState(mode === 'create');
+    const [enableCollapseAnimation, setEnableCollapseAnimation] = useState(false);
     const [editingLinkInfo, setEditingLinkInfo] = useState<{
         title: string;
         url: string;
@@ -115,18 +117,26 @@ export function MemoEditor({
     } = useEditorSuggestions();
 
     const isActuallyCollapsed = (isPropCollapsed || scrollCollapsed) && !isFocused && !isAnyDialogOpen && mode === 'create';
+    const shouldAnimateCollapse = enableCollapseAnimation && !scrollCollapsed;
     const needsPrivateDialog = isPrivate && (mode === 'create' || !memo?.is_private);
 
     const extensions = useMemo(() =>
         // eslint-disable-next-line react-hooks/refs
         getExtensions({
+            shouldAllowMentionSuggestion: () => !suppressSuggestionRestoreRef.current,
             onMentionStart: (props) => {
+                if (suppressSuggestionRestoreRef.current) {
+                    return;
+                }
                 suggestionPropsRef.current = props;
                 setShowSuggestions(true);
                 fetchMentionSuggestions(props.query, 0);
                 updateSuggestionPosition(props);
             },
             onMentionUpdate: (props) => {
+                if (suppressSuggestionRestoreRef.current) {
+                    return;
+                }
                 suggestionPropsRef.current = props;
                 fetchMentionSuggestions(props.query, 0);
                 updateSuggestionPosition(props);
@@ -172,13 +182,20 @@ export function MemoEditor({
                 }
                 return false;
             },
+            shouldAllowHashtagSuggestion: () => !suppressSuggestionRestoreRef.current,
             onHashtagStart: (props) => {
+                if (suppressSuggestionRestoreRef.current) {
+                    return;
+                }
                 suggestionPropsRef.current = props;
                 setShowSuggestions(true);
                 fetchHashtagSuggestions(props.query);
                 updateSuggestionPosition(props);
             },
             onHashtagUpdate: (props) => {
+                if (suppressSuggestionRestoreRef.current) {
+                    return;
+                }
                 suggestionPropsRef.current = props;
                 fetchHashtagSuggestions(props.query);
                 updateSuggestionPosition(props);
@@ -253,6 +270,11 @@ export function MemoEditor({
         },
         onFocus: () => {
             setIsFocused(true);
+
+            if (suppressSuggestionRestoreRef.current) {
+                return;
+            }
+
             setTimeout(() => {
                 if (!editor) return;
                 const { from } = editor.state.selection;
@@ -296,6 +318,16 @@ export function MemoEditor({
                     "tiptap prose prose-sm max-w-none focus:outline-none text-foreground/80 leading-relaxed tracking-normal",
                     "min-h-[120px] text-base"
                 ),
+            },
+            handleDOMEvents: {
+                mousedown: () => {
+                    suppressSuggestionRestoreRef.current = false;
+                    return false;
+                },
+                keydown: () => {
+                    suppressSuggestionRestoreRef.current = false;
+                    return false;
+                },
             },
             handlePaste: (view, event) => {
                 const text = event.clipboardData?.getData('text/plain');
@@ -465,6 +497,50 @@ export function MemoEditor({
         };
     }, [editor, pendingPastePos, pendingPasteUrl]);
 
+    useEffect(() => {
+        const frameId = window.requestAnimationFrame(() => {
+            setEnableCollapseAnimation(true);
+        });
+
+        return () => {
+            window.cancelAnimationFrame(frameId);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!editor) {
+            return;
+        }
+
+        const clearEditorUiState = () => {
+            suppressSuggestionRestoreRef.current = true;
+            suggestionPropsRef.current = null;
+            setShowSuggestions(false);
+            setIsFocused(false);
+            setPasteMenuPosition(null);
+            setPendingPasteUrl(null);
+            setPendingPastePos(null);
+            setFetchedMeta(null);
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') {
+                clearEditorUiState();
+                editor.commands.blur();
+            }
+        };
+
+        window.addEventListener('pagehide', clearEditorUiState);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            window.removeEventListener('pagehide', clearEditorUiState);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            clearEditorUiState();
+            editor.commands.blur();
+        };
+    }, [editor, setIsFocused, setShowSuggestions, suggestionPropsRef]);
+
     const handleToolbarCancel = () => {
         if (mode === 'create') {
             editor?.commands.clearContent();
@@ -497,20 +573,24 @@ export function MemoEditor({
                 borderWidth: 0,
                 boxShadow: "none",
                 transition: {
-                    opacity: { duration: 0.2 },
-                    height: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
-                    paddingTop: { duration: 0.3 },
-                    paddingBottom: { duration: 0.3 },
-                    marginTop: { duration: 0.3 },
-                    marginBottom: { duration: 0.3 },
-                    borderWidth: { duration: 0.3 }
+                    opacity: { duration: shouldAnimateCollapse ? 0.2 : 0 },
+                    height: { duration: shouldAnimateCollapse ? 0.3 : 0, ease: [0.22, 1, 0.36, 1] },
+                    paddingTop: { duration: shouldAnimateCollapse ? 0.3 : 0 },
+                    paddingBottom: { duration: shouldAnimateCollapse ? 0.3 : 0 },
+                    marginTop: { duration: shouldAnimateCollapse ? 0.3 : 0 },
+                    marginBottom: { duration: shouldAnimateCollapse ? 0.3 : 0 },
+                    borderWidth: { duration: shouldAnimateCollapse ? 0.3 : 0 }
                 }
             }}
             transition={{
                 height: isActuallyCollapsed
-                    ? { type: 'spring', stiffness: 350, damping: 40 }
-                    : { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
-                opacity: { duration: 0.2 }
+                    ? shouldAnimateCollapse
+                        ? { type: 'spring', stiffness: 350, damping: 40 }
+                        : { duration: 0 }
+                    : shouldAnimateCollapse
+                        ? { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
+                        : { duration: 0 },
+                opacity: { duration: shouldAnimateCollapse ? 0.2 : 0 }
             }}
             onAnimationStart={() => setIsAnimating(true)}
             onAnimationComplete={() => setIsAnimating(false)}
@@ -535,6 +615,7 @@ export function MemoEditor({
             <motion.div
                 className="absolute inset-0 bg-card rounded-[12px] pointer-events-none"
                 animate={{ opacity: isActuallyCollapsed ? 0 : 1 }}
+                transition={{ duration: shouldAnimateCollapse ? 0.2 : 0 }}
             />
 
             <div className="w-full flex-1 flex flex-col min-h-0">
@@ -544,6 +625,12 @@ export function MemoEditor({
                         animate={{
                             height: isActuallyCollapsed ? 26 : "auto",
                             minHeight: isActuallyCollapsed ? 0 : 120,
+                        }}
+                        transition={{
+                            height: shouldAnimateCollapse
+                                ? { duration: 0.35, ease: [0.22, 1, 0.36, 1] }
+                                : { duration: 0 },
+                            minHeight: { duration: shouldAnimateCollapse ? 0.35 : 0 }
                         }}
                         className={cn(
                             "relative",
@@ -664,6 +751,7 @@ export function MemoEditor({
 
                 <EditorToolbar
                     isActuallyCollapsed={isActuallyCollapsed}
+                    animateStateChanges={shouldAnimateCollapse}
                     isPrivate={isPrivate}
                     isPinned={isPinned}
                     isPending={isPending}

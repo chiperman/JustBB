@@ -1,9 +1,9 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "leaflet/dist/leaflet.css";
-@import "leaflet.markercluster/dist/MarkerCluster.css";
-@import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import 'leaflet/dist/leaflet.css';
+@import 'leaflet.markercluster/dist/MarkerCluster.css';
+@import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -37,11 +37,18 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-card: 12px;
-  
-  --shadow-notion-card: rgba(0,0,0,0.04) 0px 4px 18px, rgba(0,0,0,0.027) 0px 2.025px 7.84688px, rgba(0,0,0,0.02) 0px 0.8px 2.925px, rgba(0,0,0,0.01) 0px 0.175px 1.04062px;
-  --shadow-notion-deep: rgba(0,0,0,0.01) 0px 1px 3px, rgba(0,0,0,0.02) 0px 3px 7px, rgba(0,0,0,0.02) 0px 7px 15px, rgba(0,0,0,0.04) 0px 14px 28px, rgba(0,0,0,0.05) 0px 23px 52px;
 
-  --font-sans: "Inter", var(--font-notion-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --shadow-notion-card:
+    rgba(0, 0, 0, 0.04) 0px 4px 18px, rgba(0, 0, 0, 0.027) 0px 2.025px 7.84688px,
+    rgba(0, 0, 0, 0.02) 0px 0.8px 2.925px, rgba(0, 0, 0, 0.01) 0px 0.175px 1.04062px;
+  --shadow-notion-deep:
+    rgba(0, 0, 0, 0.01) 0px 1px 3px, rgba(0, 0, 0, 0.02) 0px 3px 7px,
+    rgba(0, 0, 0, 0.02) 0px 7px 15px, rgba(0, 0, 0, 0.04) 0px 14px 28px,
+    rgba(0, 0, 0, 0.05) 0px 23px 52px;
+
+  --font-sans:
+    'Inter', var(--font-notion-inter), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
 :root {
@@ -127,17 +134,17 @@ body {
 @utility notion-hero {
   font-size: 4rem;
   font-weight: 700;
-  line-height: 1.0;
+  line-height: 1;
   letter-spacing: -2.125px;
-  font-feature-settings: "lnum", "locl";
+  font-feature-settings: 'lnum', 'locl';
 }
 
 @utility notion-section-title {
   font-size: 3rem;
   font-weight: 700;
-  line-height: 1.0;
+  line-height: 1;
   letter-spacing: -1.5px;
-  font-feature-settings: "lnum", "locl";
+  font-feature-settings: 'lnum', 'locl';
 }
 
 @utility notion-card-title {
@@ -156,11 +163,11 @@ body {
 /* Global Scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+  scrollbar-color: gray transparent;
 }
 
 .dark * {
-  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  scrollbar-color: gray transparent;
 }
 
 ::-webkit-scrollbar {
@@ -190,10 +197,29 @@ body {
   body {
     @apply bg-background text-foreground;
   }
-  
-  h1 { @apply notion-hero; }
-  h2 { @apply notion-section-title; }
-  h3 { @apply notion-card-title; }
+
+  a[href] {
+    cursor: pointer;
+  }
+
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+
+  h1 {
+    @apply notion-hero;
+  }
+  h2 {
+    @apply notion-section-title;
+  }
+  h3 {
+    @apply notion-card-title;
+  }
 }
 
 /* UI Overrides for Notion feel */

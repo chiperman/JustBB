@@ -33,7 +33,7 @@ export function SidebarNavItem({
                     onClick(item.href);
                 }}
                 className={cn(
-                    "group relative flex h-9 w-full items-center overflow-hidden rounded-md text-left transition-[padding,gap,background-color,color] duration-200 active:scale-95",
+                    "group relative flex h-9 w-full cursor-pointer items-center overflow-hidden rounded-md text-left transition-[padding,gap,background-color,color] duration-200 active:scale-95",
                     isCollapsed ? "mx-auto w-9 justify-center gap-0 px-0" : "px-3 gap-3",
                     isActive
                         ? "bg-primary/8 text-primary font-medium"

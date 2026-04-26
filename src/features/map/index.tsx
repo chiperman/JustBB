@@ -6,45 +6,40 @@ import { MapLoadingScreen } from './components/MapLoadingScreen';
 import { MapErrorScreen } from './components/MapErrorScreen';
 
 export function MapPageContent() {
-    const { markers, isLoading, MapView } = useMapMemos();
+  const { markers, isLoading, MapView } = useMapMemos();
 
-    return (
-        <div className="flex flex-col gap-4 h-full min-h-0">
-            <div className="px-6 pt-6 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <span className="text-lg">📍</span>
-                    <h1 className="text-base font-semibold text-foreground">地图</h1>
-                </div>
-                <span className="text-xs text-muted-foreground font-mono tabular-nums">
-                    {markers.length} 个定位点
-                </span>
-            </div>
-
-            <div className="flex-1 min-h-0 px-6 pb-6 relative">
-                <div className="relative h-full w-full overflow-hidden rounded-inner bg-card ring-1 ring-border/70 shadow-sm">
-                    <AnimatePresence mode="wait">
-                        {isLoading ? (
-                            <MapLoadingScreen />
-                        ) : MapView ? (
-                            <motion.div
-                                key="map"
-                                initial={{ opacity: 0, scale: 0.98 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.5, ease: 'easeOut' }}
-                                className="w-full h-full"
-                            >
-                                <MapView
-                                    markers={markers}
-                                    mode="full"
-                                    className="w-full h-full min-h-[500px]"
-                                />
-                            </motion.div>
-                        ) : (
-                            <MapErrorScreen />
-                        )}
-                    </AnimatePresence>
-                </div>
-            </div>
+  return (
+    <div className="flex flex-col gap-4 h-full min-h-0">
+      <div className="px-6 pt-6 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h1 className="text-base font-semibold text-foreground">地图</h1>
         </div>
-    );
+        <span className="text-xs text-muted-foreground font-mono tabular-nums">
+          {markers.length} 个定位点
+        </span>
+      </div>
+
+      <div className="flex-1 min-h-0 px-6 pb-6 relative">
+        <div className="relative h-full w-full overflow-hidden rounded-inner bg-card ring-1 ring-border/70 shadow-sm">
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <MapLoadingScreen />
+            ) : MapView ? (
+              <motion.div
+                key="map"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <MapView markers={markers} mode="full" className="w-full h-full min-h-[500px]" />
+              </motion.div>
+            ) : (
+              <MapErrorScreen />
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
+  );
 }

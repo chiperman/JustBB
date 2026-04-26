@@ -2,6 +2,7 @@
 
 import React, { useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { motion } from 'framer-motion';
 import { cn, formatDate } from '@/lib/utils';
 import { useHasMounted } from '@/hooks/useHasMounted';
 
@@ -69,7 +70,10 @@ export function EditorSuggestionMenu({
     };
 
     return createPortal(
-        <div
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -10 }}
             className="fixed z-[10000] w-[350px] pointer-events-auto"
             style={{
                 top: position.top,
@@ -164,7 +168,7 @@ export function EditorSuggestionMenu({
                     </ul>
                 ) : null}
             </div>
-        </div>,
+        </motion.div>,
         document.body
     );
 }

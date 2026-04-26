@@ -14,7 +14,11 @@ import { EditorToolbar } from '@/features/memos/components/editor/EditorToolbar'
 import { getExtensions, textToTiptapHtml } from '@/features/memos/components/editor/extensions';
 import { fetchLinkMetadata } from '@/lib/link-preview';
 import { LinkPasteMenu } from '@/features/memos/components/editor/LinkPasteMenu';
-import { replaceSmartLinkToken, type LinkRenderMode } from '@/features/memos/components/editor/smartLink';
+import {
+    findPendingMarkupLink,
+    replaceSmartLinkToken,
+    type LinkRenderMode,
+} from '@/features/memos/components/editor/smartLink';
 import { useState } from 'react';
 
 import { useMemoEditor, DRAFT_CONTENT_KEY } from '@/features/memos/hooks/useMemoEditor';
@@ -429,6 +433,38 @@ export function MemoEditor({
         setShowPlaceholder(content.trim() === '' && isPristineEmptyEditor(editor));
     }, [content, editor, mode]);
 
+    useEffect(() => {
+        if (!editor || !pendingPasteUrl) {
+            return;
+        }
+
+        const syncPendingPasteMenu = () => {
+            const pendingLink = findPendingMarkupLink(editor.state.doc, {
+                url: pendingPasteUrl,
+                pos: pendingPastePos,
+            });
+
+            if (pendingLink) {
+                if (pendingLink.pos !== pendingPastePos) {
+                    setPendingPastePos(pendingLink.pos);
+                }
+                return;
+            }
+
+            setPasteMenuPosition(null);
+            setPendingPasteUrl(null);
+            setPendingPastePos(null);
+            setFetchedMeta(null);
+        };
+
+        syncPendingPasteMenu();
+        editor.on('update', syncPendingPasteMenu);
+
+        return () => {
+            editor.off('update', syncPendingPasteMenu);
+        };
+    }, [editor, pendingPastePos, pendingPasteUrl]);
+
     const handleToolbarCancel = () => {
         if (mode === 'create') {
             editor?.commands.clearContent();
@@ -553,42 +589,44 @@ export function MemoEditor({
                         onClose={() => {
                             // 如果关闭了菜单但没有选择，则保持 pending 状态或者转为默认
                             // 这里我们选择转为默认 mention 模式并取消 pending
-                            if (pendingPasteUrl && editor && pendingPastePos !== null) {
-                                editor.state.doc.descendants((node) => {
-                                    if (node.type.name === 'markupLink' && node.attrs.isPending && node.attrs.id === pendingPasteUrl) {
-                                        editor.chain().updateAttributes('markupLink', { isPending: false, mode: 'mention' }).focus().run();
-                                        return false;
-                                    }
-                                    return true;
+                            if (pendingPasteUrl && editor) {
+                                const pendingLink = findPendingMarkupLink(editor.state.doc, {
+                                    url: pendingPasteUrl,
+                                    pos: pendingPastePos,
                                 });
+
+                                if (pendingLink) {
+                                    editor
+                                        .chain()
+                                        .setNodeSelection(pendingLink.pos)
+                                        .updateAttributes('markupLink', { isPending: false, mode: 'mention' })
+                                        .focus()
+                                        .run();
+                                }
                             }
                             setPasteMenuPosition(null);
                             setPendingPasteUrl(null);
                             setPendingPastePos(null);
+                            setFetchedMeta(null);
                         }}
                         onSelect={(mode) => {
                             if (pendingPasteUrl && editor) {
-                                // 寻找并更新处于 pending 状态的对应节点
-                                let targetPos = -1;
-                                editor.state.doc.descendants((node, pos) => {
-                                    if (node.type.name === 'markupLink' && node.attrs.isPending && node.attrs.id === pendingPasteUrl) {
-                                        targetPos = pos;
-                                        return false;
-                                    }
-                                    return true;
+                                const pendingLink = findPendingMarkupLink(editor.state.doc, {
+                                    url: pendingPasteUrl,
+                                    pos: pendingPastePos,
                                 });
 
-                                if (targetPos !== -1) {
+                                if (pendingLink) {
                                     const finalTitle = fetchedMeta?.title || fetchedMeta?.domain || pendingPasteUrl;
 
                                     editor.chain()
-                                        .setNodeSelection(targetPos)
+                                        .setNodeSelection(pendingLink.pos)
                                         .updateAttributes('markupLink', {
                                             isPending: false,
                                             mode,
                                             label: finalTitle // 如果已经获取到了，直接填入
                                         })
-                                        .setTextSelection(targetPos + 2)
+                                        .setTextSelection(pendingLink.pos + 2)
                                         .focus()
                                         .run();
 

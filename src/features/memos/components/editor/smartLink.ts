@@ -1,5 +1,19 @@
 export type LinkRenderMode = 'mention' | 'pill' | 'card';
 
+interface PendingMarkupLinkLookupDoc {
+    descendants: (
+        callback: (node: {
+            type: { name: string };
+            attrs: { id?: string; isPending?: boolean };
+        }, pos: number) => boolean | void
+    ) => void;
+}
+
+export interface PendingMarkupLinkRef {
+    url: string | null;
+    pos: number | null;
+}
+
 interface SmartLinkTokenInput {
     title: string;
     url: string;
@@ -58,4 +72,50 @@ export function replaceSmartLinkToken(
             mode: current.mode,
         })
     );
+}
+
+export function findPendingMarkupLink(
+    doc: PendingMarkupLinkLookupDoc,
+    pendingRef: PendingMarkupLinkRef
+): { pos: number } | null {
+    if (!pendingRef.url) {
+        return null;
+    }
+
+    let exactMatch: { pos: number } | null = null;
+
+    doc.descendants((node, pos) => {
+        if (
+            node.type.name === 'markupLink'
+            && node.attrs.isPending
+            && node.attrs.id === pendingRef.url
+            && (pendingRef.pos === null || pos === pendingRef.pos)
+        ) {
+            exactMatch = { pos };
+            return false;
+        }
+
+        return true;
+    });
+
+    if (exactMatch || pendingRef.pos === null) {
+        return exactMatch;
+    }
+
+    let fallbackMatch: { pos: number } | null = null;
+
+    doc.descendants((node, pos) => {
+        if (
+            node.type.name === 'markupLink'
+            && node.attrs.isPending
+            && node.attrs.id === pendingRef.url
+        ) {
+            fallbackMatch = { pos };
+            return false;
+        }
+
+        return true;
+    });
+
+    return fallbackMatch;
 }

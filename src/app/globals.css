@@ -1,9 +1,9 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
-@import 'leaflet/dist/leaflet.css';
-@import 'leaflet.markercluster/dist/MarkerCluster.css';
-@import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "leaflet/dist/leaflet.css";
+@import "leaflet.markercluster/dist/MarkerCluster.css";
+@import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -39,16 +39,18 @@
   --radius-card: 12px;
 
   --shadow-notion-card:
-    rgba(0, 0, 0, 0.04) 0px 4px 18px, rgba(0, 0, 0, 0.027) 0px 2.025px 7.84688px,
-    rgba(0, 0, 0, 0.02) 0px 0.8px 2.925px, rgba(0, 0, 0, 0.01) 0px 0.175px 1.04062px;
+    rgba(0, 0, 0, 0.04) 0px 4px 18px,
+    rgba(0, 0, 0, 0.027) 0px 2.025px 7.84688px,
+    rgba(0, 0, 0, 0.02) 0px 0.8px 2.925px,
+    rgba(0, 0, 0, 0.01) 0px 0.175px 1.04062px;
   --shadow-notion-deep:
     rgba(0, 0, 0, 0.01) 0px 1px 3px, rgba(0, 0, 0, 0.02) 0px 3px 7px,
     rgba(0, 0, 0, 0.02) 0px 7px 15px, rgba(0, 0, 0, 0.04) 0px 14px 28px,
     rgba(0, 0, 0, 0.05) 0px 23px 52px;
 
   --font-sans:
-    'Inter', var(--font-notion-inter), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    "Inter", var(--font-notion-inter), ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 :root {
@@ -136,7 +138,7 @@ body {
   font-weight: 700;
   line-height: 1;
   letter-spacing: -2.125px;
-  font-feature-settings: 'lnum', 'locl';
+  font-feature-settings: "lnum", "locl";
 }
 
 @utility notion-section-title {
@@ -144,7 +146,7 @@ body {
   font-weight: 700;
   line-height: 1;
   letter-spacing: -1.5px;
-  font-feature-settings: 'lnum', 'locl';
+  font-feature-settings: "lnum", "locl";
 }
 
 @utility notion-card-title {
@@ -207,7 +209,7 @@ body {
   }
 
   button:disabled,
-  [aria-disabled='true'] {
+  [aria-disabled="true"] {
     cursor: not-allowed;
   }
 
@@ -256,4 +258,21 @@ button:focus:not(:focus-visible) {
 
 .modern-map-popup .rounded-card:hover {
   background: var(--accent) !important;
+}
+
+/* Leaflet tile seam mitigation */
+.map-view .leaflet-container {
+  background: var(--muted);
+}
+
+.map-view .leaflet-pane,
+.map-view .leaflet-tile-container,
+.map-view .leaflet-tile {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.map-view .leaflet-tile {
+  outline: 1px solid transparent;
 }

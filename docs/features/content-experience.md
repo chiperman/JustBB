@@ -1,6 +1,6 @@
 # JustMemo 内容体验
 
-> 最后更新：2026-04-19
+> 最后更新：2026-04-26
 > 状态：已实现
 
 ## 1. 作用
@@ -13,11 +13,18 @@
 
 1. Code Block
 2. Location
-3. Image
-4. Mention
+3. Markdown Image
+4. Mention / Ref
 5. Tag
 6. Email
-7. Link
+7. Raw Image URL
+8. Markup Link
+9. Raw Link
+
+其中需要注意：
+
+- `Image` 在实现里分为 Markdown 图片和图片直链两类
+- 除普通链接外，还支持 `🔗[title](url)` 这种标记链接语法，以及带显示模式的变体
 
 这样可以避免一段文本被多个规则错误重复命中。
 

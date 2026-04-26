@@ -1,6 +1,6 @@
 # JustMemo 功能模块总览
 
-> 最后更新：2026-04-19
+> 最后更新：2026-04-26
 > 状态：总览入口
 
 ## 1. 作用
@@ -17,13 +17,13 @@
 
 ## 2. 阅读顺序
 
-推荐按下面顺序阅读：
+如果你是从用户主流程理解项目，推荐按下面顺序阅读：
 
-1. [时间轴与归档](./timeline.md)
-2. [地图功能](./map.md)
-3. [画廊功能](./gallery.md)
-4. [内容体验](./content-experience.md)
-5. [多选与批量操作](./selection.md)
+1. [内容体验](./content-experience.md)
+2. [多选与批量操作](./selection.md)
+3. [时间轴与归档](./timeline.md)
+4. [地图功能](./map.md)
+5. [画廊功能](./gallery.md)
 6. [Supabase 用量监控](./usage-monitoring.md)
 
 ## 3. 模块分组

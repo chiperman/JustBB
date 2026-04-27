@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useCallback } from "react"
-import { toPng } from "html-to-image"
+import { toBlob } from "html-to-image"
 import { QRCodeSVG } from "qrcode.react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
@@ -37,7 +37,9 @@ interface MemoShareProps {
 
 export function MemoShare({ memo, trigger }: MemoShareProps) {
   const posterRef = useRef<HTMLDivElement>(null)
-  const [isGenerating, setIsGenerating] = useState(false)
+  const [activeAction, setActiveAction] = useState<"copy" | "download" | null>(
+    null
+  )
   const [activeThemeId, setActiveThemeId] = useState("classic")
   const [showDate, setShowDate] = useState(true)
   const [showQR, setShowQR] = useState(true)
@@ -49,16 +51,15 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
 
   const activeTheme = POSTER_THEMES[activeThemeId] || POSTER_THEMES.classic
 
-  const generateImage = useCallback(async (pixelRatio: number) => {
-    if (!posterRef.current) return null
+  const generateBlob = useCallback(async (pixelRatio: number) => {
+    if (!posterRef.current) throw new Error("Poster reference not found")
 
     await document.fonts.ready
-    await new Promise((resolve) => setTimeout(resolve, 150))
+    // 移除这里的 200ms 延时，因为它与外部的 150ms 累加后太长，容易导致浏览器剪贴板权限过期
 
-    return await toPng(posterRef.current, {
+    return await toBlob(posterRef.current, {
       cacheBust: true,
       pixelRatio,
-      // 移除这里的 backgroundColor，确保圆角外的区域是透明的
       style: {
         transform: "none",
         margin: "0",
@@ -67,26 +68,28 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
   }, [])
 
   const handleCopyToClipboard = useCallback(async () => {
+    if (!posterRef.current) return
     try {
-      setIsGenerating(true)
-      // 给浏览器一帧的时间来渲染 Loading 状态，避免点击瞬间主线程被阻塞
-      await new Promise((resolve) =>
-        requestAnimationFrame(() => setTimeout(resolve, 50))
-      )
+      setActiveAction("copy")
+      // 允许浏览器在重任务前先渲染出 Loading 状态，150ms 足以让动画平稳开始
+      await new Promise((resolve) => setTimeout(resolve, 150))
 
-      const blobPromise = (async () => {
-        const dataUrl = await generateImage(3) // 统一使用 3x 保证清晰度
-        if (!dataUrl) throw new Error("Generate failed")
-        const response = await fetch(dataUrl)
-        return await response.blob()
-      })()
+      const blobPromise = generateBlob(2.5).then((blob) => {
+        if (!blob) throw new Error("Generated blob is null")
+        return blob
+      })
 
       try {
+        // 优先尝试现代浏览器的 Promise 注入方式
         await navigator.clipboard.write([
           new ClipboardItem({ "image/png": blobPromise }),
         ])
       } catch (e) {
+        console.warn("ClipboardItem Promise rejected, trying fallback...", e)
+        // 降级方案：显式等待 Blob
         const blob = await blobPromise
+        if (!blob) throw new Error("Blob generation yielded no data")
+
         await navigator.clipboard.write([
           new ClipboardItem({ "image/png": blob }),
         ])
@@ -94,42 +97,45 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
 
       toast({ title: "已复制到剪贴板" })
     } catch (err) {
-      console.error("Copy failed", err)
+      console.error("Copy failed full error:", err)
+      const errorMsg = err instanceof Error ? err.message : String(err)
       toast({
         title: "复制失败",
-        description: "请使用保存功能",
+        description: `错误: ${errorMsg}。请尝试“保存海报”或长按图片。`,
         variant: "destructive",
       })
     } finally {
-      setIsGenerating(false)
+      setActiveAction(null)
     }
-  }, [generateImage, toast])
+  }, [generateBlob, toast])
 
   const handleDownload = useCallback(async () => {
     try {
-      setIsGenerating(true)
-      // 给浏览器时间渲染 UI
+      setActiveAction("download")
+
+      // 下载操作对延时不敏感，可以保留微小避让以确保动画平滑启动
       await new Promise((resolve) =>
         requestAnimationFrame(() => setTimeout(resolve, 50))
       )
 
-      const dataUrl = await generateImage(3)
-      if (!dataUrl) return
+      const blob = await generateBlob(2.5)
+      if (!blob) return
 
       const fileName = getExportFileName(memo)
       const link = document.createElement("a")
       link.download = `${fileName}.png`
-      link.href = dataUrl
+      link.href = URL.createObjectURL(blob)
       link.click()
 
+      setTimeout(() => URL.revokeObjectURL(link.href), 150)
       toast({ title: "海报已保存", description: fileName })
     } catch (err) {
       console.error("Save failed", err)
       toast({ title: "保存失败", variant: "destructive" })
     } finally {
-      setIsGenerating(false)
+      setActiveAction(null)
     }
-  }, [generateImage, memo, toast])
+  }, [generateBlob, memo, toast])
 
   if (!hasMounted) return trigger || null
 
@@ -190,7 +196,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
               </div>
             )}
 
-            {/* Header - 使用 margin 替代 gap */}
+            {/* Header */}
             {(showBrand || showDate) && (
               <div
                 className="flex justify-between items-center pb-4 mb-4"
@@ -222,7 +228,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
               </div>
             )}
 
-            {/* Content Area - 使用 padding/margin 替代 flex-1 空间计算 */}
+            {/* Content Area */}
             <div className="py-2 mb-6">
               <MemoContent
                 content={memo.content}
@@ -242,7 +248,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
               />
             </div>
 
-            {/* Footer - 移除 mt-auto 使用常规布局 */}
+            {/* Footer */}
             <div
               className="pt-6 flex justify-between items-end"
               style={{ borderTop: activeTheme.styles.footer.borderTop }}
@@ -377,44 +383,55 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
         <div className="flex gap-3 w-full mt-2">
           <Button
             variant="outline"
-            className="flex-1 rounded-full py-6 text-sm border-border/60"
+            className="flex-1 rounded-full py-6 text-sm border-border/60 relative overflow-hidden group/btn"
             onClick={handleCopyToClipboard}
-            disabled={isGenerating}
+            disabled={activeAction !== null}
           >
-            {isGenerating ? (
-              <HugeiconsIcon
-                icon={Loader2}
-                size={18}
-                className="animate-spin mr-2"
-              />
-            ) : (
-              <HugeiconsIcon icon={Copy} size={18} className="mr-2" />
-            )}
-            {isGenerating ? "处理中..." : "复制图片"}
-          </Button>
-          <Button
-            className="flex-1 rounded-full py-6 text-sm font-medium relative overflow-hidden group"
-            onClick={handleDownload}
-            disabled={isGenerating}
-          >
-            <div
+            {/* 默认状态层 - 保持占位防止布局抖动 */}
+            <span
               className={cn(
-                "absolute inset-0 bg-primary",
-                isGenerating && "opacity-80"
+                "flex items-center justify-center gap-2 transition-opacity duration-200",
+                activeAction === "copy" ? "opacity-0" : "opacity-100"
               )}
-            />
-            <span className="relative flex items-center gap-2">
-              {isGenerating ? (
-                <HugeiconsIcon
-                  icon={Loader2}
-                  size={18}
-                  className="animate-spin"
-                />
-              ) : (
-                <HugeiconsIcon icon={Download} size={18} />
-              )}
-              {isGenerating ? "生成中..." : "保存海报"}
+            >
+              <HugeiconsIcon icon={Copy} size={18} />
+              复制图片
             </span>
+
+            {/* 加载层 - 绝对定位 */}
+            {activeAction === "copy" && (
+              <div className="absolute inset-0 flex items-center justify-center gap-2 bg-background/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin [will-change:transform]" />
+                <span className="font-medium text-primary">处理中...</span>
+              </div>
+            )}
+          </Button>
+
+          <Button
+            className="flex-1 rounded-full py-6 text-sm font-medium relative overflow-hidden group/btn"
+            onClick={handleDownload}
+            disabled={activeAction !== null}
+          >
+            {/* 默认状态层 */}
+            <span
+              className={cn(
+                "flex items-center justify-center gap-2 transition-opacity duration-200",
+                activeAction === "download" ? "opacity-0" : "opacity-100"
+              )}
+            >
+              <HugeiconsIcon icon={Download} size={18} />
+              保存海报
+            </span>
+
+            {/* 加载层 */}
+            {activeAction === "download" && (
+              <div className="absolute inset-0 flex items-center justify-center gap-2 bg-primary/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+                <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin [will-change:transform]" />
+                <span className="font-medium text-primary-foreground">
+                  生成中...
+                </span>
+              </div>
+            )}
           </Button>
         </div>
       </DialogContent>

@@ -27,6 +27,7 @@ import { MemoContent } from "@/features/memos/components/MemoContent"
 import { useHasMounted } from "@/hooks/useHasMounted"
 import { getMemoShareUrl } from "@/lib/share"
 import { POSTER_THEMES } from "@/lib/export-themes"
+import { getExportFileName } from "@/lib/export-utils"
 import { cn } from "@/lib/utils"
 
 interface MemoShareProps {
@@ -106,19 +107,20 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
       const dataUrl = await generateImage(3)
       if (!dataUrl) return
 
+      const fileName = getExportFileName(memo)
       const link = document.createElement("a")
-      link.download = `memo-${memo.id.slice(0, 8)}.png`
+      link.download = `${fileName}.png`
       link.href = dataUrl
       link.click()
 
-      toast({ title: "海报已保存" })
+      toast({ title: "海报已保存", description: fileName })
     } catch (err) {
       console.error("Save failed", err)
       toast({ title: "保存失败", variant: "destructive" })
     } finally {
       setIsGenerating(false)
     }
-  }, [generateImage, memo.id, toast])
+  }, [generateImage, memo, toast])
 
   if (!hasMounted) return trigger || null
 
@@ -370,14 +372,28 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
             onClick={handleCopyToClipboard}
             disabled={isGenerating}
           >
-            <HugeiconsIcon icon={Copy} size={18} className="mr-2" /> 复制图片
+            {isGenerating ? (
+              <HugeiconsIcon
+                icon={Loader2}
+                size={18}
+                className="animate-spin mr-2"
+              />
+            ) : (
+              <HugeiconsIcon icon={Copy} size={18} className="mr-2" />
+            )}
+            {isGenerating ? "处理中..." : "复制图片"}
           </Button>
           <Button
             className="flex-1 rounded-full py-6 text-sm font-medium relative overflow-hidden group"
             onClick={handleDownload}
             disabled={isGenerating}
           >
-            <div className="absolute inset-0 bg-primary" />
+            <div
+              className={cn(
+                "absolute inset-0 bg-primary",
+                isGenerating && "opacity-80"
+              )}
+            />
             <span className="relative flex items-center gap-2">
               {isGenerating ? (
                 <HugeiconsIcon
@@ -388,7 +404,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
               ) : (
                 <HugeiconsIcon icon={Download} size={18} />
               )}
-              保存海报
+              {isGenerating ? "生成中..." : "保存海报"}
             </span>
           </Button>
         </div>

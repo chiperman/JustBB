@@ -20,11 +20,16 @@
 
 - **零动效响应**：移除所有过渡动画，确保主题与开关切换的瞬间即达性。
 - **内容自适应**：高度随文本量自动伸缩，确保长文本排版稳健，永不截断。
+- **布局稳定加载 (Layout-Stable Loading)**：在执行耗时任务（如海报生成）时，按钮状态切换不触发物理结构跳变，确保视觉连贯性。
 
 ---
 
 ## 3. 技术实现要点
 
 - **渲染引擎**: 使用 `html-to-image` 进行 DOM 到 Canvas 的转换。
-- **兼容性适配**: 采用 Promise 模式的 `ClipboardItem` 解决 Safari/iOS 的异步复制限制。
+- **兼容性适配**: 采用 Promise 模式的 `ClipboardItem` 并结合同步路径触发，解决 Safari/iOS 的异步复制限制。
 - **排版引擎**: 强制 `font-variant-numeric: lining-nums` 确保数字美观。
+- **性能避让策略**:
+  - **多帧预留 (Multi-frame Yielding)**: 在下载路径使用嵌套 `requestAnimationFrame` 确保 UI 动画平稳启动。
+  - **图层隔离**: 为 Loading Spinner 开启硬件加速（`will-change`），在 CPU 高负载时通过合成线程维持动画流畅。
+  - **状态隔离**: 采用动作枚举隔离多个并发按钮的 Loading 表现。

@@ -352,10 +352,10 @@ export function MemoActions({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-md">取消</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 rounded-md"
             >
               删除
             </AlertDialogAction>
@@ -372,8 +372,11 @@ export function MemoActions({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmMakePublic}>
+            <AlertDialogCancel className="rounded-md">取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmMakePublic}
+              className="rounded-md"
+            >
               设为公开
             </AlertDialogAction>
           </AlertDialogFooter>

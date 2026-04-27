@@ -38,6 +38,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuPortal,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import {
@@ -60,7 +62,7 @@ interface SidebarSettingsProps {
 export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
   const { user, loading, setUser } = useUser()
   const { setViewMode } = useLayout()
-  const { setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const { toast } = useToast()
   const [loggingOut, setLoggingOut] = React.useState(false)
   const [hasMounted, setHasMounted] = React.useState(false)
@@ -221,7 +223,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
         <DropdownMenuContent
           side="top"
           align="start"
-          className="w-64 rounded-md border-border/40 backdrop-blur-md bg-popover/90 p-1 shadow-xl"
+          className="w-64 border-border/40 backdrop-blur-md bg-popover/90 p-1 shadow-xl"
         >
           <DropdownMenuLabel className="font-normal px-3 py-3">
             <div className="flex flex-col space-y-2">
@@ -266,28 +268,28 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                 <span>外观主题</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
-                <DropdownMenuSubContent className="rounded-md ml-1">
-                  <DropdownMenuItem
-                    className="rounded-md"
-                    onClick={() => setTheme("light")}
+                <DropdownMenuSubContent className="ml-1">
+                  <DropdownMenuRadioGroup
+                    value={theme}
+                    onValueChange={setTheme}
                   >
-                    <HugeiconsIcon icon={Sun} size={16} className="mr-2" />
-                    <span>浅色模式</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="rounded-md"
-                    onClick={() => setTheme("dark")}
-                  >
-                    <HugeiconsIcon icon={Moon} size={16} className="mr-2" />
-                    <span>深色模式</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="rounded-md"
-                    onClick={() => setTheme("system")}
-                  >
-                    <HugeiconsIcon icon={Monitor} size={16} className="mr-2" />
-                    <span>跟随系统</span>
-                  </DropdownMenuItem>
+                    <DropdownMenuRadioItem value="light">
+                      <HugeiconsIcon icon={Sun} size={16} className="mr-2" />
+                      <span>浅色模式</span>
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="dark">
+                      <HugeiconsIcon icon={Moon} size={16} className="mr-2" />
+                      <span>深色模式</span>
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="system">
+                      <HugeiconsIcon
+                        icon={Monitor}
+                        size={16}
+                        className="mr-2"
+                      />
+                      <span>跟随系统</span>
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
             </DropdownMenuSub>
@@ -312,7 +314,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                   <span>备份我的记录 (MD)</span>
                 </DropdownMenuItem>
               </AlertDialogTrigger>
-              <AlertDialogContent className="rounded-md border-border/50">
+              <AlertDialogContent className="border-border/50">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="flex items-center gap-2 text-primary">
                     <HugeiconsIcon icon={Download} size={20} />

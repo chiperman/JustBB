@@ -69,6 +69,10 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
   const handleCopyToClipboard = useCallback(async () => {
     try {
       setIsGenerating(true)
+      // 给浏览器一帧的时间来渲染 Loading 状态，避免点击瞬间主线程被阻塞
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => setTimeout(resolve, 50))
+      )
 
       const blobPromise = (async () => {
         const dataUrl = await generateImage(3) // 统一使用 3x 保证清晰度
@@ -104,6 +108,11 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
   const handleDownload = useCallback(async () => {
     try {
       setIsGenerating(true)
+      // 给浏览器时间渲染 UI
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => setTimeout(resolve, 50))
+      )
+
       const dataUrl = await generateImage(3)
       if (!dataUrl) return
 

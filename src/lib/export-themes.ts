@@ -10,7 +10,6 @@ export const POSTER_THEMES: Record<string, PosterTheme> = {
         color: "#37302a",
         padding: "48px 40px",
         borderRadius: "0px",
-        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.15)",
         borderColor: "#e5e1da",
       },
       header: {
@@ -49,7 +48,6 @@ export const POSTER_THEMES: Record<string, PosterTheme> = {
         padding: "44px",
         borderRadius: "16px",
         borderColor: "#f4f4f5",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
       },
       header: {
         brandColor: "#18181b",
@@ -68,6 +66,9 @@ export const POSTER_THEMES: Record<string, PosterTheme> = {
         qrBgColor: "#f4f4f5",
         qrFgColor: "#18181b",
       },
+      decorations: {
+        paperEffect: "noise",
+      },
     },
   },
   midnight: {
@@ -79,7 +80,6 @@ export const POSTER_THEMES: Record<string, PosterTheme> = {
         color: "#e7e5e4", // 柔白文字
         padding: "40px",
         borderRadius: "24px",
-        boxShadow: "0 30px 60px rgba(0,0,0,0.3)",
         borderColor: "#292524",
       },
       header: {
@@ -102,6 +102,7 @@ export const POSTER_THEMES: Record<string, PosterTheme> = {
         qrFgColor: "#b45309", // 二维码同样使用低饱和度色
       },
       decorations: {
+        paperEffect: "noise",
         cornerColor: "rgba(180, 83, 9, 0.08)",
       },
     },

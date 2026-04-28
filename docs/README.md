@@ -25,8 +25,7 @@
 如果你更关心页面和交互，再继续看：
 
 - [功能模块总览](./features/features-guide.md)
-- [设计系统](./interface/system.md)
-- [交互与动画手册](./interface/interactions.md)
+- [设计系统](./interface/design.md)
 
 ## 2. 文档分区
 
@@ -55,8 +54,7 @@
 
 视觉系统与交互规则：
 
-- [设计系统](./interface/system.md)
-- [交互与动画手册](./interface/interactions.md)
+- [设计系统](./interface/design.md)
 
 ### `guide`
 

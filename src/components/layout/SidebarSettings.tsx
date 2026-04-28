@@ -26,7 +26,6 @@ import {
 import { cn } from "@/lib/utils"
 import { useLayout } from "@/context/LayoutContext"
 import { useUser } from "@/context/UserContext"
-import { useToast } from "@/hooks/use-toast"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,30 +41,21 @@ import {
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import { UsageModal } from "@/components/admin/UsageModal"
+import { ExportConfigDialog } from "./ExportConfigDialog"
 
 interface SidebarSettingsProps {
   isCollapsed?: boolean
 }
 
 export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
-  const { user, loading, setUser } = useUser()
+  const { user, setUser } = useUser()
   const { setViewMode } = useLayout()
   const { theme, setTheme } = useTheme()
-  const { toast } = useToast()
   const [loggingOut, setLoggingOut] = React.useState(false)
   const [hasMounted, setHasMounted] = React.useState(false)
+  const [exportDialogOpen, setExportDialogOpen] = React.useState(false)
+  const [usageModalOpen, setUsageModalOpen] = React.useState(false)
 
   React.useEffect(() => {
     setHasMounted(true)
@@ -74,11 +64,8 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
   const handleLogout = async () => {
     setLoggingOut(true)
     setUser(null)
-    // 优先签出客户端获取最佳响应时间，触发 UserContext 更新
     await supabase.auth.signOut()
-    // 通知服务端清理相关 Cookie 以及 session
     await logout()
-    // 清理编辑器草稿缓存
     if (typeof window !== "undefined") {
       localStorage.removeItem(DRAFT_CONTENT_KEY)
       localStorage.removeItem(DRAFT_IS_PRIVATE_KEY)
@@ -86,45 +73,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     setLoggingOut(false)
   }
 
-  const handleExport = async () => {
-    const { exportMemos } = await import("@/actions/memos/analytics")
-    const result = await exportMemos("markdown")
-    if (!result.success) {
-      toast({
-        title: "导出失败",
-        description: result.error || "导出过程中发生错误",
-        variant: "destructive",
-      })
-      return
-    }
-
-    const data = result.data || ""
-    if (!data) {
-      toast({
-        title: "导出失败",
-        description: "没有可导出的数据",
-        variant: "destructive",
-      })
-      return
-    }
-
-    const blob = new Blob([data], { type: "text/markdown" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `JustMemo-Export-${new Date().toISOString().slice(0, 10)}.md`
-    a.click()
-    URL.revokeObjectURL(url)
-
-    toast({
-      title: "导出成功",
-      description: "备份文件已开始下载",
-    })
-  }
-
-  // 身份显示逻辑容器
   const renderIdentity = () => {
-    // 如果有缓存的用户数据，优先显示身份图标而不是加载状态
     if (user?.role === "admin")
       return (
         <HugeiconsIcon icon={ShieldCheck} size={16} className="text-primary" />
@@ -137,14 +86,6 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
           className="text-muted-foreground"
         />
       )
-    if (loading && !user)
-      return (
-        <HugeiconsIcon
-          icon={Loader2}
-          size={16}
-          className="animate-spin text-muted-foreground"
-        />
-      )
     return (
       <HugeiconsIcon
         icon={UserCircle}
@@ -154,7 +95,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     )
   }
 
-  const identityLabel = user ? user.email : loading ? "同步中..." : "未登录"
+  const identityLabel = user ? user.email : "未登录"
   const triggerClassName = cn(
     "h-9 rounded-md overflow-hidden hover:bg-accent hover:text-accent-foreground focus-visible:ring-0 transition-[padding,gap,background-color,color,width] duration-200 active:scale-95",
     isCollapsed
@@ -169,20 +110,12 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
         className={triggerClassName}
         aria-label="账号与设置"
       >
-        <div className="relative shrink-0">
-          <HugeiconsIcon
-            icon={Settings}
-            size={16}
-            className="text-muted-foreground transition-colors"
-          />
-        </div>
-        {!isCollapsed && (
-          <div className="min-w-0 flex-1 overflow-hidden whitespace-nowrap text-left">
-            <span className="flex w-full items-center gap-1 truncate text-[14px] font-normal text-foreground">
-              {identityLabel}
-            </span>
-          </div>
-        )}
+        <HugeiconsIcon
+          icon={Settings}
+          size={16}
+          className="text-muted-foreground"
+        />
+        {!isCollapsed && <span className="text-[14px]">{identityLabel}</span>}
       </Button>
     )
   }
@@ -200,92 +133,103 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
               <HugeiconsIcon
                 icon={Settings}
                 size={16}
-                className="text-muted-foreground transition-colors"
+                className="text-muted-foreground"
               />
-              {/* 状态小圆点提示 - 有用户时立即显示 */}
               {user && (
                 <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background bg-primary" />
               )}
             </div>
-
             {!isCollapsed && (
-              <div className="min-w-0 flex-1 overflow-hidden whitespace-nowrap text-left">
-                <span
-                  className="flex w-full items-center gap-1 truncate text-[14px] font-normal text-foreground"
-                  suppressHydrationWarning
-                >
-                  {identityLabel}
-                </span>
-              </div>
+              <span className="text-[14px] truncate">{identityLabel}</span>
             )}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           side="top"
           align="start"
-          className="w-64 border-border/40 backdrop-blur-md bg-popover/90 p-1 shadow-xl"
+          className="w-64 border-border/40 backdrop-blur-md bg-popover/90 p-1 shadow-xl rounded-2xl"
         >
           <DropdownMenuLabel className="font-normal px-3 py-3">
             <div className="flex flex-col space-y-2">
-              <p className="text-[12px] font-normal text-stone-400 uppercase tracking-wider font-sans opacity-60">
+              <p className="text-[11px] font-bold text-stone-400 uppercase tracking-widest opacity-60">
                 Identity / 身份
               </p>
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-3">
                 <div
                   className={cn(
-                    "p-2 rounded-md",
+                    "p-2 rounded-xl shadow-sm",
                     user ? "bg-primary/10" : "bg-muted"
                   )}
                 >
                   {renderIdentity()}
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <p className="text-sm font-normal truncate leading-none">
+                  <p className="text-[13px] font-bold truncate leading-none">
                     {user
                       ? user.role === "admin"
                         ? "正式管理员"
                         : "普通用户"
                       : "匿名身份"}
                   </p>
-                  <p className="text-[11px] text-muted-foreground truncate mt-1">
-                    {user ? user.email : "当前仅可查看公开内容"}
+                  <p className="text-[11px] text-muted-foreground truncate mt-1.5 opacity-70">
+                    {user ? user.email : "仅可查看公开内容"}
                   </p>
                 </div>
               </div>
             </div>
           </DropdownMenuLabel>
 
-          <DropdownMenuSeparator className="opacity-50" />
+          <DropdownMenuSeparator className="bg-border/10" />
 
-          {/* 视觉与偏好 */}
           <div className="px-1 py-1">
-            <DropdownMenuLabel className="px-2 py-1.5 text-[12px] font-normal text-stone-400 uppercase tracking-wider font-sans">
+            <DropdownMenuLabel className="px-2 py-2 text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] opacity-50">
               Settings / 偏好
             </DropdownMenuLabel>
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="rounded-md">
-                <HugeiconsIcon icon={Sun} size={16} className="mr-2" />
+              <DropdownMenuSubTrigger className="rounded-xl h-10">
+                <HugeiconsIcon
+                  icon={Sun}
+                  size={16}
+                  className="mr-2 text-muted-foreground"
+                />
                 <span>外观主题</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
-                <DropdownMenuSubContent className="ml-1">
+                <DropdownMenuSubContent className="ml-1 border-border/40 bg-popover/95 backdrop-blur-md rounded-xl p-1 shadow-lg">
                   <DropdownMenuRadioGroup
                     value={theme}
                     onValueChange={setTheme}
                   >
-                    <DropdownMenuRadioItem value="light">
-                      <HugeiconsIcon icon={Sun} size={16} className="mr-2" />
+                    <DropdownMenuRadioItem
+                      value="light"
+                      className="rounded-lg h-9"
+                    >
+                      <HugeiconsIcon
+                        icon={Sun}
+                        size={15}
+                        className="mr-2 opacity-70"
+                      />
                       <span>浅色模式</span>
                     </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="dark">
-                      <HugeiconsIcon icon={Moon} size={16} className="mr-2" />
+                    <DropdownMenuRadioItem
+                      value="dark"
+                      className="rounded-lg h-9"
+                    >
+                      <HugeiconsIcon
+                        icon={Moon}
+                        size={15}
+                        className="mr-2 opacity-70"
+                      />
                       <span>深色模式</span>
                     </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="system">
+                    <DropdownMenuRadioItem
+                      value="system"
+                      className="rounded-lg h-9"
+                    >
                       <HugeiconsIcon
                         icon={Monitor}
-                        size={16}
-                        className="mr-2"
+                        size={15}
+                        className="mr-2 opacity-70"
                       />
                       <span>跟随系统</span>
                     </DropdownMenuRadioItem>
@@ -295,94 +239,58 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
             </DropdownMenuSub>
           </div>
 
-          <DropdownMenuSeparator className="opacity-50" />
+          <DropdownMenuSeparator className="bg-border/10" />
 
-          {/* 工具区 */}
           <div className="px-1 py-1">
-            <p className="px-2 py-1.5 text-[12px] font-medium text-stone-400 uppercase tracking-wider font-sans">
+            <p className="px-2 py-2 text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] opacity-50">
               Tools / 工具
             </p>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <DropdownMenuItem
-                  className="rounded-md disabled:opacity-40"
-                  onSelect={(e) => e.preventDefault()}
-                  disabled={!user}
-                  title={!user ? "登录后才可导出自己的数据" : undefined}
-                >
-                  <HugeiconsIcon icon={Download} size={16} className="mr-2" />
-                  <span>备份我的记录 (MD)</span>
-                </DropdownMenuItem>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="border-border/50">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="flex items-center gap-2 text-primary">
-                    <HugeiconsIcon icon={Download} size={20} />
-                    导出我的记录？
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    系统会导出你自己的公开和私密记录，并生成一份 Markdown
-                    备份，请妥善保管。
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="rounded-md">
-                    取消
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    className="rounded-md"
-                    onClick={handleExport}
-                  >
-                    导出
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <DropdownMenuItem
+              className="rounded-xl h-10 disabled:opacity-40"
+              onClick={() => setExportDialogOpen(true)}
+              disabled={!user}
+            >
+              <HugeiconsIcon
+                icon={Download}
+                size={16}
+                className="mr-2 text-muted-foreground"
+              />
+              <span>导出 Memos</span>
+            </DropdownMenuItem>
 
             {user?.role === "admin" && (
-              <UsageModal
-                trigger={
-                  <DropdownMenuItem
-                    className="rounded-md"
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    <HugeiconsIcon
-                      icon={FlashIcon}
-                      size={16}
-                      className="mr-2"
-                    />
-                    <span>服务用量监控</span>
-                  </DropdownMenuItem>
-                }
-              />
+              <DropdownMenuItem
+                className="rounded-xl h-10 group"
+                onClick={() => setUsageModalOpen(true)}
+              >
+                <HugeiconsIcon
+                  icon={FlashIcon}
+                  size={16}
+                  className="mr-2 text-primary group-hover:animate-pulse"
+                />
+                <span>服务用量监控</span>
+              </DropdownMenuItem>
             )}
           </div>
 
-          <DropdownMenuSeparator className="opacity-50" />
+          <DropdownMenuSeparator className="bg-border/10" />
 
-          {/* 操作区 */}
           <div className="px-1 py-1">
-            {!user && (
-              <>
-                <DropdownMenuItem
-                  className="rounded-md"
-                  onClick={() => {
-                    setViewMode("CARD_VIEW")
-                  }}
-                >
-                  <HugeiconsIcon
-                    icon={LogIn}
-                    size={16}
-                    className="mr-2 text-primary"
-                  />
-                  <span>登录系统</span>
-                </DropdownMenuItem>
-              </>
-            )}
-
-            {user && (
+            {!user ? (
               <DropdownMenuItem
-                className="rounded-md text-destructive focus:text-destructive focus:bg-destructive/10"
+                className="rounded-xl h-10"
+                onClick={() => setViewMode("CARD_VIEW")}
+              >
+                <HugeiconsIcon
+                  icon={LogIn}
+                  size={16}
+                  className="mr-2 text-primary"
+                />
+                <span className="font-semibold">登录系统</span>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                className="rounded-xl h-10 text-destructive focus:text-destructive focus:bg-destructive/10"
                 onClick={handleLogout}
                 disabled={loggingOut}
               >
@@ -397,6 +305,12 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <UsageModal open={usageModalOpen} onOpenChange={setUsageModalOpen} />
+      <ExportConfigDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+      />
     </>
   )
 }

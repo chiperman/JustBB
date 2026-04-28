@@ -56,7 +56,7 @@ export function MemoContent({
           part.toLowerCase() === highlight.toLowerCase() ? (
             <span
               key={i}
-              className="bg-[#fdf5f2] text-primary font-medium px-0.5 rounded-sm mx-px"
+              className="bg-[#fdf5f2] text-primary font-medium px-0.5 rounded-md mx-px"
             >
               {part}
             </span>
@@ -80,7 +80,7 @@ export function MemoContent({
               const linkElement = (
                 <Link
                   href={`/?num=${memoNum}`}
-                  className="text-primary hover:underline cursor-pointer font-mono bg-[#fdf5f2] px-1 rounded-sm mx-0.5 my-0.5 inline-block align-middle focus-visible:ring-1 focus-visible:ring-primary/30 outline-none hover:bg-[#eecbc0] transition-colors"
+                  className="text-primary hover:underline cursor-pointer font-mono bg-[#fdf5f2] px-1 rounded-md mx-0.5 my-0.5 inline-block align-middle focus-visible:ring-1 focus-visible:ring-primary/30 outline-none hover:bg-[#eecbc0] transition-colors"
                 >
                   {token.value}
                 </Link>
@@ -104,7 +104,7 @@ export function MemoContent({
                 <Link
                   key={`tag-${index}`}
                   href={`/?tag=${encodeURIComponent(token.value.slice(1))}`}
-                  className="mx-0.5 my-0.5 px-1 rounded-sm font-mono font-medium text-[#2a9d99] bg-[#2a9d99]/5 transition-colors hover:text-[#2a9d99] hover:bg-[#2a9d99]/10 hover:underline focus-visible:ring-1 focus-visible:ring-[#2a9d99]/30 outline-none inline-block align-middle"
+                  className="mx-0.5 my-0.5 px-1 rounded-md font-mono font-medium text-[#2a9d99] bg-[#2a9d99]/5 transition-colors hover:text-[#2a9d99] hover:bg-[#2a9d99]/10 hover:underline focus-visible:ring-1 focus-visible:ring-[#2a9d99]/30 outline-none inline-block align-middle"
                 >
                   {token.value}
                 </Link>

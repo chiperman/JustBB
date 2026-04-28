@@ -5,7 +5,7 @@ import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-full border border-transparent px-2.5 py-0.5 w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none transition-all badge-text",
+  "inline-flex items-center justify-center rounded-md border border-transparent px-2.5 py-0.5 w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none transition-all badge-text",
   {
     variants: {
       variant: {
@@ -17,9 +17,14 @@ const badgeVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },
+      shape: {
+        default: "rounded-md",
+        pill: "rounded-full px-3",
+      },
     },
     defaultVariants: {
       variant: "default",
+      shape: "default",
     },
   }
 )
@@ -27,6 +32,7 @@ const badgeVariants = cva(
 function Badge({
   className,
   variant = "default",
+  shape = "default",
   asChild = false,
   ...props
 }: React.ComponentProps<"span"> &
@@ -37,7 +43,7 @@ function Badge({
     <Comp
       data-slot="badge"
       data-variant={variant}
-      className={cn(badgeVariants({ variant }), className)}
+      className={cn(badgeVariants({ variant, shape }), className)}
       {...props}
     />
   )

@@ -41,11 +41,8 @@ export function AdminDialogShell({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={cn(
-          // Humanistic Minimalism: 纯白/纯墨背景，极致 1px 边框，无毛玻璃
-          "bg-white dark:bg-[#1a1a18] p-0 overflow-hidden rounded-2xl border border-[#1d1d1b]/10 dark:border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.08)] [&>button]:hidden transition-all duration-300",
-          maxWidth
-        )}
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        className={cn("p-0 overflow-hidden [&>button]:hidden", maxWidth)}
       >
         <div className="flex flex-col">
           {/* 页头：低语分割线，Anthropic Clay 强调色 */}
@@ -89,11 +86,9 @@ export function AdminDialogShell({
             {children}
           </div>
 
-          {/* 页脚：Warm Parchment 柔和底色 */}
+          {/* 页脚：极致纯净布局 */}
           {footer && (
-            <div className="px-8 py-5 bg-[#f9f7f2]/50 dark:bg-white/[0.02] border-t border-[#1d1d1b]/5 dark:border-white/5 flex items-center justify-end gap-3 shrink-0">
-              {footer}
-            </div>
+            <div className="px-8 pb-8 flex items-center shrink-0">{footer}</div>
           )}
         </div>
       </DialogContent>

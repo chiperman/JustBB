@@ -1,132 +1,151 @@
-'use client';
+"use client"
 
-import { HugeiconsIcon } from '@hugeicons/react';
-import { PinIcon, ChatLock01Icon as LockIcon, Link02Icon } from '@hugeicons/core-free-icons';
-import { cn, formatDate } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { MemoActions } from '../MemoActions';
-import { Memo } from '@/types/memo';
+import { HugeiconsIcon } from "@hugeicons/react"
+import {
+  PinIcon,
+  ChatLock01Icon as LockIcon,
+  Link02Icon,
+} from "@hugeicons/core-free-icons"
+import { cn, formatDate } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { MemoActions } from "../MemoActions"
+import { Memo } from "@/types/memo"
 
 interface MemoCardHeaderProps {
-    memo: Memo;
-    isSelectionMode: boolean;
-    isSelected: boolean;
-    onToggleSelection: () => void;
-    showOriginalOnly: boolean;
-    showBacklinks: boolean;
-    onToggleBacklinks: () => void;
-    onEdit: () => void;
-    onMenuOpenChange: (open: boolean) => void;
-    isMenuOpen: boolean;
-    hasMounted: boolean;
-    showViewOriginal?: boolean;
+  memo: Memo
+  isSelectionMode: boolean
+  isSelected: boolean
+  onToggleSelection: () => void
+  showOriginalOnly: boolean
+  showBacklinks: boolean
+  onToggleBacklinks: () => void
+  onEdit: () => void
+  onMenuOpenChange: (open: boolean) => void
+  isMenuOpen: boolean
+  hasMounted: boolean
+  showViewOriginal?: boolean
 }
 
 export function MemoCardHeader({
-    memo,
-    isSelectionMode,
-    isSelected,
-    onToggleSelection,
-    showOriginalOnly,
-    showBacklinks,
-    onToggleBacklinks,
-    onEdit,
-    onMenuOpenChange,
-    isMenuOpen,
-    hasMounted,
-    showViewOriginal,
+  memo,
+  isSelectionMode,
+  isSelected,
+  onToggleSelection,
+  showOriginalOnly,
+  showBacklinks,
+  onToggleBacklinks,
+  onEdit,
+  onMenuOpenChange,
+  isMenuOpen,
+  hasMounted,
+  showViewOriginal,
 }: MemoCardHeaderProps) {
-    return (
-        <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-                {isSelectionMode && (
-                    <div
-                        className="flex items-center justify-center cursor-pointer"
-                        onClick={(e: React.MouseEvent) => {
-                            e.stopPropagation();
-                            onToggleSelection();
-                        }}
-                    >
-                        <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={onToggleSelection}
-                            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                            className="h-4 w-4 rounded-[4px] border-border bg-background shadow-none transition-all cursor-pointer data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                        />
-                    </div>
+  return (
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-3">
+        {isSelectionMode && (
+          <div
+            className="flex items-center justify-center cursor-pointer"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation()
+              onToggleSelection()
+            }}
+          >
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={onToggleSelection}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              className="h-4 w-4 rounded-[4px] border-border bg-background shadow-none transition-all cursor-pointer data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+            />
+          </div>
+        )}
+        <span className="badge-text bg-[#fdf5f2] px-2 py-0.5 rounded-sm">
+          #{memo.memo_number}
+        </span>
+        <time className="caption tracking-tight">
+          {hasMounted
+            ? memo.is_locked
+              ? `${formatDate(memo.created_at, "yyyy-MM-dd HH:mm")} **:**`
+              : formatDate(memo.created_at, "yyyy-MM-dd HH:mm")
+            : "--:--"}
+        </time>
+        {memo.is_pinned && (
+          <HugeiconsIcon
+            icon={PinIcon}
+            size={14}
+            className="text-primary fill-current"
+            aria-hidden="true"
+          />
+        )}
+        {memo.is_private && (
+          <HugeiconsIcon
+            icon={LockIcon}
+            size={14}
+            className="text-muted-foreground"
+            aria-hidden="true"
+          />
+        )}
+        {memo.word_count !== undefined && (
+          <span className="text-[10px] caption opacity-60">
+            {memo.is_locked ? "*" : memo.word_count} 字
+          </span>
+        )}
+      </div>
+      {!memo.is_locked && !isSelectionMode && (
+        <div className="flex items-center gap-2">
+          {showOriginalOnly || showViewOriginal ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                e.preventDefault()
+                window.location.assign(`/?num=${memo.memo_number}`)
+              }}
+              className={cn(
+                "h-7 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-all z-10 pointer-events-auto",
+                !showViewOriginal &&
+                  "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+              )}
+            >
+              查看原文
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onToggleBacklinks}
+                className={cn(
+                  "h-8 w-8 rounded-md transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 active:scale-95",
+                  showBacklinks
+                    ? "bg-primary/10 text-primary opacity-100"
+                    : "text-muted-foreground",
+                  (showBacklinks || isMenuOpen) && "opacity-100"
                 )}
-                <span className="text-[11px] font-sans font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-[4px]">
-                    #{memo.memo_number}
-                </span>
-                <time className="text-[12px] text-muted-foreground font-sans tracking-tight">
-                    {hasMounted ? (
-                        memo.is_locked
-                            ? `${formatDate(memo.created_at, 'yyyy-MM-dd HH:mm')} **:**`
-                            : formatDate(memo.created_at, 'yyyy-MM-dd HH:mm')
-                    ) : (
-                        '--:--'
-                    )}
-                </time>
-                {memo.is_pinned && <HugeiconsIcon icon={PinIcon} size={14} className="text-primary fill-current" aria-hidden="true" />}
-                {memo.is_private && <HugeiconsIcon icon={LockIcon} size={14} className="text-muted-foreground" aria-hidden="true" />}
-                {memo.word_count !== undefined && (
-                    <span className="text-[10px] text-muted-foreground/60">
-                        {memo.is_locked ? '*' : memo.word_count} 字
-                    </span>
-                )}
-            </div>
-            {!memo.is_locked && !isSelectionMode && (
-                <div className="flex items-center gap-2">
-                    {showOriginalOnly || showViewOriginal ? (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                window.location.assign(`/?num=${memo.memo_number}`);
-                            }}
-                            className={cn(
-                                "h-7 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-all z-10 pointer-events-auto",
-                                !showViewOriginal && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-                            )}
-                        >
-                            查看原文
-                        </Button>
-                    ) : (
-                        <>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={onToggleBacklinks}
-                                className={cn(
-                                    "h-8 w-8 rounded-md transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 active:scale-95",
-                                    showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground",
-                                    (showBacklinks || isMenuOpen) && "opacity-100",
-                                )}
-                                aria-expanded={showBacklinks}
-                                aria-label="查看引用"
-                                title="查看引用"
-                            >
-                                <HugeiconsIcon icon={Link02Icon} size={16} />
-                            </Button>
-                            <MemoActions
-                                id={memo.id}
-                                isDeleted={!!memo.deleted_at}
-                                isPinned={memo.is_pinned}
-                                isPrivate={memo.is_private}
-                                content={memo.content}
-                                createdAt={memo.created_at}
-                                tags={memo.tags ?? []}
-                                onEdit={onEdit}
-                                onOpenChange={onMenuOpenChange}
-                                isOwner={memo.is_owner}
-                            />
-                        </>
-                    )}
-                </div>
-            )}
+                aria-expanded={showBacklinks}
+                aria-label="查看引用"
+                title="查看引用"
+              >
+                <HugeiconsIcon icon={Link02Icon} size={16} />
+              </Button>
+              <MemoActions
+                id={memo.id}
+                isDeleted={!!memo.deleted_at}
+                isPinned={memo.is_pinned}
+                isPrivate={memo.is_private}
+                content={memo.content}
+                createdAt={memo.created_at}
+                tags={memo.tags ?? []}
+                onEdit={onEdit}
+                onOpenChange={onMenuOpenChange}
+                isOwner={memo.is_owner}
+              />
+            </>
+          )}
         </div>
-    );
+      )}
+    </div>
+  )
 }

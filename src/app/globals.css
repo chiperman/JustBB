@@ -14,9 +14,9 @@
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  --color-primary: #d97757;
+  --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: #3f6212;
+  --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
@@ -32,10 +32,13 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
+  --radius-xs: 4px;
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+  --radius-inner: 12px;
   --radius-card: var(--radius-lg);
 
   --shadow-notion-card:
@@ -54,38 +57,40 @@
 }
 
 :root {
-  --background: oklch(0.98 0.001 286.375);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0 / 88%);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: #d97757;
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: rgba(0, 0, 0, 0.05);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
+  /* Warm Neutrals & Primary */
+  --background: #ffffff;
+  --foreground: #1d1d1b; /* Anthropic Black */
+  --card: #ffffff;
+  --card-foreground: #1d1d1b;
+  --popover: rgba(255, 255, 255, 0.9);
+  --popover-foreground: #1d1d1b;
+  --primary: #d97757; /* Anthropic Clay */
+  --primary-foreground: #ffffff;
+  --secondary: rgba(29, 29, 27, 0.05);
+  --secondary-foreground: #1d1d1b;
+  --muted: #f6f5f4; /* Warm White */
+  --muted-foreground: #6b6964; /* Warm Gray 500 */
+  --accent: rgba(29, 29, 27, 0.05);
+  --accent-foreground: #1d1d1b;
+  --destructive: #dd5b00; /* Semantic Orange/Red */
   --destructive-foreground: #ffffff;
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
+  --border: rgba(29, 29, 27, 0.1); /* Whisper Border */
+  --input: #dddddd;
   --ring: #d97757;
   --radius: 12px;
 
+  --active-clay: #c46648;
+  --badge-clay-bg: #fdf5f2;
+  --badge-clay-text: #d97757;
+
   --chart-1: #d97757;
-  --chart-2: #3f6212;
-  --chart-3: #40c463;
-  --chart-4: #ff6b6b;
-  --chart-5: #b779d6;
+  --chart-2: #2a9d99; /* Teal */
+  --chart-3: #1aae39; /* Green */
+  --chart-4: #dd5b00; /* Orange */
+  --chart-5: #ff64c8; /* Pink */
 
-  --glass-bg: oklch(1 0 0 / 88%);
-  --glass-blur: 8px;
-
-  --success: #40c463;
-  --error: #ff6b6b;
+  --success: #1aae39;
+  --error: #dd5b00;
 
   /* Heatmap Colors */
   --heatmap-0: #ebedf0;
@@ -96,27 +101,29 @@
 }
 
 .dark {
-  --background: oklch(0.12 0.003 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.18 0.004 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.18 0.004 285.885 / 88%);
-  --popover-foreground: oklch(0.985 0 0);
+  --background: #1d1d1b;
+  --foreground: #f6f5f4;
+  --card: #31302e; /* Warm Dark */
+  --card-foreground: #f6f5f4;
+  --popover: rgba(49, 48, 46, 0.9);
+  --popover-foreground: #f6f5f4;
   --primary: #d97757;
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: #f85149;
+  --primary-foreground: #ffffff;
+  --secondary: rgba(246, 245, 244, 0.1);
+  --secondary-foreground: #f6f5f4;
+  --muted: #31302e;
+  --muted-foreground: #a39e98; /* Warm Gray 300 */
+  --accent: rgba(246, 245, 244, 0.1);
+  --accent-foreground: #f6f5f4;
+  --destructive: #dd5b00;
   --destructive-foreground: #ffffff;
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
+  --border: rgba(246, 245, 244, 0.1);
+  --input: #6b6964;
   --ring: #d97757;
 
-  --glass-bg: oklch(0.18 0.004 285.885 / 85%);
+  --active-clay: #c46648;
+  --badge-clay-bg: rgba(217, 119, 87, 0.1);
+  --badge-clay-text: #d97757;
 
   /* Heatmap Colors (Dark) */
   --heatmap-0: #2d333b;
@@ -130,10 +137,12 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
-/* Typography Utilities */
-@utility notion-hero {
+/* Typography Utilities per Design Doc */
+@utility display-hero {
   font-size: 4rem;
   font-weight: 700;
   line-height: 1;
@@ -141,7 +150,15 @@ body {
   font-feature-settings: "lnum", "locl";
 }
 
-@utility notion-section-title {
+@utility display-secondary {
+  font-size: 3.375rem;
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -1.875px;
+  font-feature-settings: "lnum", "locl";
+}
+
+@utility section-heading {
   font-size: 3rem;
   font-weight: 700;
   line-height: 1;
@@ -149,33 +166,120 @@ body {
   font-feature-settings: "lnum", "locl";
 }
 
-@utility notion-card-title {
+@utility sub-heading-large {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+@utility sub-heading {
+  font-size: 1.625rem;
+  font-weight: 700;
+  line-height: 1.23;
+  letter-spacing: -0.625px;
+}
+
+@utility card-title {
   font-size: 1.375rem;
   font-weight: 700;
   line-height: 1.27;
   letter-spacing: -0.25px;
 }
 
-@utility notion-body {
+@utility body-large {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.125px;
+}
+
+@utility body-text {
   font-size: 1rem;
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
-@utility rounded-inner {
-  border-radius: var(--radius-xl);
+@utility body-medium {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.6;
 }
 
-/* Global Scrollbar */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: gray transparent;
+@utility body-semibold {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.6;
 }
 
-.dark * {
-  scrollbar-color: gray transparent;
+@utility body-bold {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.6;
 }
 
+@utility caption {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.43;
+  color: #6b6964;
+}
+
+@utility badge-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.33;
+  letter-spacing: 0.125px;
+  color: var(--badge-clay-text);
+}
+
+@utility micro-label {
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.33;
+  letter-spacing: 0.125px;
+  color: var(--muted-foreground);
+}
+
+@utility nav-button-text {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.33;
+}
+
+/* Global Elements */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  h1 {
+    @apply display-hero;
+  }
+  h2 {
+    @apply section-heading;
+  }
+  h3 {
+    @apply card-title;
+  }
+  p {
+    @apply body-text;
+  }
+}
+
+/* UI Interactions */
+.hover-scale {
+  @apply transition-transform duration-200 hover:scale-102 active:scale-95;
+}
+
+.whisper-border {
+  border: 1px solid rgba(29, 29, 27, 0.1);
+}
+
+.dark .whisper-border {
+  border: 1px solid rgba(246, 245, 244, 0.1);
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -186,97 +290,10 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.05);
-  background-clip: padding-box;
+  background-color: rgba(29, 29, 27, 0.05);
   border-radius: 12px;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.08);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
-
-  a[href] {
-    cursor: pointer;
-  }
-
-  button:not(:disabled) {
-    cursor: pointer;
-  }
-
-  button:disabled,
-  [aria-disabled="true"] {
-    cursor: not-allowed;
-  }
-
-  h1 {
-    @apply notion-hero;
-  }
-  h2 {
-    @apply notion-section-title;
-  }
-  h3 {
-    @apply notion-card-title;
-  }
-}
-
-/* UI Overrides for Notion feel */
-textarea:focus,
-input:focus,
-select:focus {
-  outline: none;
-}
-
-button:focus:not(:focus-visible) {
-  outline: none;
-}
-
-/* Leaflet Popup overrides for Notion style */
-.modern-map-popup .leaflet-popup-content-wrapper {
-  background-color: var(--card) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 12px !important;
-  box-shadow: var(--shadow-notion-card) !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-}
-
-.modern-map-popup .leaflet-popup-tip-container {
-  display: none !important;
-}
-
-.modern-map-popup .rounded-card {
-  background: transparent !important;
-  border-bottom: 1px solid var(--border) !important;
-  padding: 1rem !important;
-  transition: background 0.1s ease;
-}
-
-.modern-map-popup .rounded-card:hover {
-  background: var(--accent) !important;
-}
-
-/* Leaflet tile seam mitigation */
-.map-view .leaflet-container {
-  background: var(--muted);
-}
-
-.map-view .leaflet-pane,
-.map-view .leaflet-tile-container,
-.map-view .leaflet-tile {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-.map-view .leaflet-tile {
-  outline: 1px solid transparent;
+  background-color: rgba(246, 245, 244, 0.1);
 }

@@ -98,33 +98,31 @@ function MetricCard({
   muted?: boolean
 }) {
   const accentClass = muted
-    ? "bg-[#6b6964]/30"
+    ? "bg-muted-foreground/30"
     : accent === "orange"
-      ? "bg-[#d97757]"
+      ? "bg-primary"
       : accent === "blue"
         ? "bg-[#af8fef]"
-        : "bg-[#1aae39]"
+        : "bg-success"
 
   return (
-    <div className="group rounded-2xl border border-[#1d1d1b]/5 dark:border-white/5 bg-[#f6f5f4] dark:bg-white/[0.02] p-4 transition-all duration-300 hover:bg-[#efefef] dark:hover:bg-white/[0.04] shadow-sm">
+    <div className="group flex flex-col py-2">
       <div className="mb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#6b6964]">
-          <span className={cn("h-1.5 w-1.5 rounded-full", accentClass)} />
+        <div className="flex items-center gap-2 badge-text uppercase text-muted-foreground/60">
+          <span className={cn("h-1 w-1 rounded-full", accentClass)} />
           <span className="truncate">{label}</span>
         </div>
         <InfoHint label={label} tip={hint} muted={muted} />
       </div>
       <div
         className={cn(
-          "text-xl font-bold tabular-nums tracking-tight text-[#1d1d1b] dark:text-white/90",
+          "text-2xl font-bold tabular-nums tracking-tighter text-foreground leading-none mb-1",
           muted ? "opacity-30" : "opacity-100"
         )}
       >
         {value}
       </div>
-      <div className="mt-1 text-[10px] text-[#6b6964] font-medium truncate">
-        {footnote}
-      </div>
+      <div className="caption opacity-40">{footnote}</div>
     </div>
   )
 }
@@ -196,13 +194,15 @@ export function UsageModal({
         </Button>
       }
       footer={
-        <div className="flex items-center gap-2.5 text-[#6b6964] font-medium tracking-tight">
-          <HugeiconsIcon icon={ApiIcon} size={12} />
-          <p>数据每分钟同步一次。配额基于 Supabase Free 档标准。</p>
+        <div className="w-full flex justify-center overflow-hidden">
+          <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground/20 font-medium tracking-widest uppercase scale-[0.85] origin-center">
+            <HugeiconsIcon icon={ApiIcon} size={14} className="shrink-0" />
+            <p>数据每分钟同步一次。配额基于 Supabase Free 档标准。</p>
+          </div>
         </div>
       }
     >
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="space-y-6">
         {error && (
           <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#d97757]/20 bg-[#d97757]/[0.03] px-4 py-3 shadow-sm">
             <div className="flex items-start gap-3">
@@ -228,29 +228,29 @@ export function UsageModal({
         )}
 
         {/* 状态卡片 */}
-        <div className="flex flex-col bg-[#f9f7f2] dark:bg-white/[0.01] rounded-2xl border border-[#1d1d1b]/5 dark:border-white/5 shadow-inner overflow-hidden transition-all duration-300">
+        <div className="flex flex-col bg-background rounded-xl border border-border overflow-hidden">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-3">
             <div className="flex items-center gap-2.5">
               <div
                 className={cn(
-                  "w-2 h-2 rounded-full animate-pulse shadow-[0_0_8px_rgba(26,174,57,0.3)]",
-                  displayStats.isFullIndicator ? "bg-[#1aae39]" : "bg-[#d97757]"
+                  "w-2 h-2 rounded-full",
+                  displayStats.isFullIndicator ? "bg-[#1aae39]" : "bg-primary"
                 )}
               />
-              <span className="text-[13px] font-bold text-[#1d1d1b] dark:text-white/80 tracking-tight">
+              <span className="text-[14px] font-bold text-foreground tracking-tight">
                 数据源状态
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="rounded-lg border border-[#d97757]/10 bg-[#d97757]/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-[#d97757]">
+              <span className="rounded-full border border-primary/10 bg-[#fdf5f2] px-2.5 py-0.5 badge-text uppercase">
                 Free Plan
               </span>
               <span
                 className={cn(
-                  "text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border shadow-sm",
+                  "badge-text px-2.5 py-0.5 rounded-full border uppercase",
                   displayStats.isFullIndicator
-                    ? "bg-green-500/10 text-[#1aae39] border-[#1aae39]/10"
-                    : "bg-[#d97757]/10 text-[#d97757] border-[#d97757]/10"
+                    ? "bg-[#1aae39]/5 text-[#1aae39] border-[#1aae39]/10"
+                    : "bg-primary/5 text-primary border-primary/10"
                 )}
               >
                 {displayStats.isFullIndicator ? "Full Sync" : "Basic Mode"}
@@ -283,13 +283,13 @@ export function UsageModal({
         </div>
 
         {/* 核心资源 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
           <section className="space-y-4">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-[#6b6964] uppercase tracking-[0.2em] pl-1">
-              <HugeiconsIcon icon={Database01Icon} size={12} />
+            <div className="flex items-center gap-2 badge-text uppercase pl-1">
+              <HugeiconsIcon icon={Database01Icon} size={14} />
               <span>存储与数据库</span>
             </div>
-            <div className="grid gap-6 bg-[#f6f5f4] dark:bg-white/[0.01] rounded-2xl p-5 border border-[#1d1d1b]/5 dark:border-white/5 h-full shadow-inner">
+            <div className="space-y-6 px-1">
               <UsageProgress
                 label="数据库存储"
                 used={displayData.db.used}
@@ -299,7 +299,6 @@ export function UsageModal({
                 muted={isPlaceholder}
                 info="Supabase Postgres 数据库当前占用空间。"
               />
-              <div className="h-px bg-[#1d1d1b]/5 dark:bg-white/5" />
               <UsageProgress
                 label="对象存储"
                 used={displayData.storage.used}
@@ -313,11 +312,11 @@ export function UsageModal({
           </section>
 
           <section className="space-y-4">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-[#6b6964] uppercase tracking-[0.2em] pl-1">
-              <HugeiconsIcon icon={UserGroupIcon} size={12} />
+            <div className="flex items-center gap-2 badge-text uppercase pl-1">
+              <HugeiconsIcon icon={UserGroupIcon} size={14} />
               <span>访问与流量</span>
             </div>
-            <div className="grid gap-6 bg-[#f6f5f4] dark:bg-white/[0.01] rounded-2xl p-5 border border-[#1d1d1b]/5 dark:border-white/5 h-full shadow-inner">
+            <div className="space-y-6 px-1">
               <UsageProgress
                 label="月活用户 (MAU)"
                 used={displayData.mau.used}
@@ -326,7 +325,6 @@ export function UsageModal({
                 muted={isPlaceholder}
                 info="当前计费周期内活跃过的独立用户数。"
               />
-              <div className="h-px bg-[#1d1d1b]/5 dark:bg-white/5" />
               <UsageProgress
                 label="网络流出 (Egress)"
                 used={displayData.egress.used}
@@ -341,12 +339,12 @@ export function UsageModal({
         </div>
 
         {/* 其它指标 */}
-        <section className="space-y-4 pt-1">
-          <div className="flex items-center gap-2 text-[10px] font-bold text-[#6b6964] uppercase tracking-[0.2em] pl-1">
-            <HugeiconsIcon icon={FlashIcon} size={12} />
+        <section className="space-y-6 pt-8 border-t border-border">
+          <div className="flex items-center gap-2 badge-text uppercase pl-1">
+            <HugeiconsIcon icon={FlashIcon} size={14} />
             <span>实时与性能指标</span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-12 gap-y-8 px-1">
             <MetricCard
               label="Realtime 连接"
               value={displayData.realtime.connections}
@@ -371,44 +369,16 @@ export function UsageModal({
               accent="green"
               muted={isPlaceholder}
             />
-            <div className="group rounded-2xl border border-[#1d1d1b]/5 dark:border-white/5 bg-[#f6f5f4] dark:bg-white/[0.01] p-3.5 transition-all duration-300 hover:bg-[#efefef] dark:hover:bg-white/[0.04] shadow-sm">
-              <div className="mb-1.5 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#6b6964]">
-                  <HugeiconsIcon
-                    icon={CheckListIcon}
-                    size={12}
-                    className={cn(isPlaceholder && "opacity-30")}
-                  />
-                  <span className="truncate">完整性</span>
-                </div>
-                <InfoHint
-                  label="数据完整性"
-                  tip="全量表示来自 API；基础表示部分指标为估算值。"
-                  muted={isPlaceholder}
-                />
-              </div>
-              <div
-                className={cn(
-                  "text-lg font-bold tracking-tight flex items-center gap-1.5 text-[#1d1d1b] dark:text-white/90",
-                  isPlaceholder && "opacity-30"
-                )}
-              >
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    isPlaceholder
-                      ? "bg-[#6b6964]/30"
-                      : displayStats.isFullIndicator
-                        ? "bg-[#1aae39]"
-                        : "bg-[#d97757]"
-                  )}
-                />
-                {displayStats.isFullIndicator ? "全量" : "基础"}
-              </div>
-              <div className="mt-0.5 text-[10px] text-[#6b6964] font-medium truncate tracking-tight">
-                {displayStats.isFullIndicator ? "API Sync" : "Basic Mode"}
-              </div>
-            </div>
+            <MetricCard
+              label="完整性"
+              value={displayStats.isFullIndicator ? "全量" : "基础"}
+              footnote={
+                displayStats.isFullIndicator ? "API Sync" : "Basic Mode"
+              }
+              hint="数据同步模式说明"
+              accent={displayStats.isFullIndicator ? "green" : "orange"}
+              muted={isPlaceholder}
+            />
           </div>
         </section>
       </div>

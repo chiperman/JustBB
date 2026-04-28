@@ -7,22 +7,15 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Download01Icon as Download,
   Share01Icon as Share2,
-  Loading01Icon as Loader2,
   Copy01Icon as Copy,
 } from "@hugeicons/core-free-icons"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
 import { zhCN } from "date-fns/locale"
 import { Memo } from "@/types/memo"
 import { useToast } from "@/hooks/use-toast"
 import { MemoContent } from "@/features/memos/components/MemoContent"
+import { AdminDialogShell } from "@/components/ui/AdminDialogShell"
 
 import { useHasMounted } from "@/hooks/useHasMounted"
 import { getMemoShareUrl } from "@/lib/share"
@@ -36,6 +29,7 @@ interface MemoShareProps {
 }
 
 export function MemoShare({ memo, trigger }: MemoShareProps) {
+  const [open, setOpen] = useState(false)
   const posterRef = useRef<HTMLDivElement>(null)
   const [activeAction, setActiveAction] = useState<"copy" | "download" | null>(
     null
@@ -55,8 +49,6 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
     if (!posterRef.current) throw new Error("Poster reference not found")
 
     await document.fonts.ready
-    // 移除这里的 200ms 延时，因为它与外部的 150ms 累加后太长，容易导致浏览器剪贴板权限过期
-
     return await toBlob(posterRef.current, {
       cacheBust: true,
       pixelRatio,
@@ -71,7 +63,6 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
     if (!posterRef.current) return
     try {
       setActiveAction("copy")
-      // 允许浏览器在重任务前先渲染出 Loading 状态，150ms 足以让动画平稳开始
       await new Promise((resolve) => setTimeout(resolve, 150))
 
       const blobPromise = generateBlob(2.5).then((blob) => {
@@ -80,13 +71,11 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
       })
 
       try {
-        // 优先尝试现代浏览器的 Promise 注入方式
         await navigator.clipboard.write([
           new ClipboardItem({ "image/png": blobPromise }),
         ])
       } catch (e) {
         console.warn("ClipboardItem Promise rejected, trying fallback...", e)
-        // 降级方案：显式等待 Blob
         const blob = await blobPromise
         if (!blob) throw new Error("Blob generation yielded no data")
 
@@ -112,8 +101,6 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
   const handleDownload = useCallback(async () => {
     try {
       setActiveAction("download")
-
-      // 下载操作对延时不敏感，可以保留微小避让以确保动画平滑启动
       await new Promise((resolve) =>
         requestAnimationFrame(() => setTimeout(resolve, 50))
       )
@@ -140,8 +127,8 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
   if (!hasMounted) return trigger || null
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
+    <>
+      <div onClick={() => setOpen(true)} className="contents">
         {trigger || (
           <Button variant="ghost" size="icon" className="rounded-full">
             <HugeiconsIcon
@@ -151,159 +138,39 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
             />
           </Button>
         )}
-      </DialogTrigger>
-      <DialogContent className="max-w-md flex flex-col items-center gap-4 py-6">
-        <DialogHeader className="py-0">
-          <DialogTitle className="text-base font-semibold text-foreground/80">
-            分享预览
-          </DialogTitle>
-        </DialogHeader>
+      </div>
 
-        {/* 预览区域 */}
-        <div className="w-full h-[50vh] min-h-[360px] overflow-y-auto py-6 custom-scrollbar bg-accent/5 rounded-xl border border-border/40">
-          <div
-            ref={posterRef}
-            className="w-[340px] mx-auto relative flex flex-col origin-top h-fit"
-            style={{
-              backgroundColor: activeTheme.styles.container.backgroundColor,
-              color: activeTheme.styles.container.color,
-              padding: activeTheme.styles.container.padding,
-              borderRadius: activeTheme.styles.container.borderRadius,
-              border: activeTheme.styles.container.borderColor
-                ? `1px solid ${activeTheme.styles.container.borderColor}`
-                : "none",
-              fontVariantNumeric: "lining-nums",
-              fontFeatureSettings: '"lnum" 1',
-            }}
-          >
-            {/* 锯齿 - 顶部 */}
-            {activeTheme.styles.decorations?.paperEffect === "typewriter" && (
-              <div
-                className="absolute top-0 left-0 right-0 flex pointer-events-none"
-                style={{ transform: "translateY(-100%)" }}
-              >
-                {[...Array(34)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-[10px] h-[8px]"
-                    style={{
-                      backgroundColor:
-                        activeTheme.styles.container.backgroundColor,
-                      clipPath: "polygon(0% 100%, 50% 0%, 100% 100%)",
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Header */}
-            {(showBrand || showDate) && (
-              <div
-                className="flex justify-between items-center pb-4 mb-4"
-                style={{ borderBottom: activeTheme.styles.header.borderBottom }}
-              >
-                {showBrand ? (
-                  <span
-                    className="font-bold tracking-[0.2em] uppercase"
-                    style={{
-                      color: activeTheme.styles.header.brandColor,
-                      fontSize: activeTheme.styles.header.fontSize,
-                    }}
-                  >
-                    JustBB
-                  </span>
-                ) : (
-                  <div />
-                )}
-                {showDate && (
-                  <span
-                    className="font-mono opacity-60 text-[11px]"
-                    style={{ color: activeTheme.styles.header.dateColor }}
-                  >
-                    {format(new Date(memo.created_at), "yyyy.MM.dd", {
-                      locale: zhCN,
-                    })}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Content Area */}
-            <div className="py-2 mb-6">
-              <MemoContent
-                content={memo.content}
-                className={cn(
-                  "py-1",
-                  activeTheme.styles.content.fontFamily === "serif"
-                    ? "font-serif"
-                    : activeTheme.styles.content.fontFamily === "mono"
-                      ? "font-mono"
-                      : "font-sans"
-                )}
-                style={{
-                  fontSize: activeTheme.styles.content.fontSize,
-                  lineHeight: activeTheme.styles.content.lineHeight,
-                  color: activeTheme.styles.content.color,
-                }}
-              />
-            </div>
-
-            {/* Footer */}
+      <AdminDialogShell
+        open={open}
+        onOpenChange={setOpen}
+        title="分享预览"
+        subtitle="生成并下载精美海报"
+        icon={Share2}
+        maxWidth="max-w-md"
+      >
+        <div className="flex flex-col items-center gap-4">
+          {/* 预览区域 */}
+          <div className="w-full h-[50vh] min-h-[360px] overflow-y-auto py-6 custom-scrollbar bg-accent/5 rounded-xl border border-border/40">
             <div
-              className="pt-6 flex justify-between items-end"
-              style={{ borderTop: activeTheme.styles.footer.borderTop }}
+              ref={posterRef}
+              className="w-[340px] mx-auto relative flex flex-col origin-top h-fit"
+              style={{
+                backgroundColor: activeTheme.styles.container.backgroundColor,
+                color: activeTheme.styles.container.color,
+                padding: activeTheme.styles.container.padding,
+                borderRadius: activeTheme.styles.container.borderRadius,
+                border: activeTheme.styles.container.borderColor
+                  ? `1px solid ${activeTheme.styles.container.borderColor}`
+                  : "none",
+                fontVariantNumeric: "lining-nums",
+                fontFeatureSettings: '"lnum" 1',
+              }}
             >
-              <div className="flex flex-col gap-1">
-                <span
-                  className="text-[10px] font-medium tracking-widest uppercase opacity-50"
-                  style={{ color: activeTheme.styles.footer.textColor }}
-                >
-                  Captured via JustBB
-                </span>
-                <span
-                  className="text-[9px] opacity-30"
-                  style={{ color: activeTheme.styles.footer.textColor }}
-                >
-                  Minimalist Notes for Thinkers
-                </span>
-              </div>
-              {showQR && (
+              {/* 锯齿 - 顶部 */}
+              {activeTheme.styles.decorations?.paperEffect === "typewriter" && (
                 <div
-                  className="p-1.5 rounded-lg"
-                  style={{
-                    backgroundColor: activeTheme.styles.footer.qrBgColor,
-                  }}
-                >
-                  <QRCodeSVG
-                    value={shareUrl}
-                    size={42}
-                    fgColor={activeTheme.styles.footer.qrFgColor}
-                    bgColor="transparent"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* 噪点纹理 */}
-            {activeTheme.styles.decorations?.paperEffect === "noise" && (
-              <div
-                className="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-multiply"
-                style={{
-                  backgroundImage: `radial-gradient(#000 10%, transparent 10%)`,
-                  backgroundSize: "2px 2px",
-                }}
-              />
-            )}
-
-            {/* 纸张特效 */}
-            {activeTheme.styles.decorations?.paperEffect === "typewriter" && (
-              <>
-                {activeTheme.styles.decorations?.showMarginLine && (
-                  <div className="absolute left-8 top-0 bottom-0 w-[1px] bg-red-400/20 pointer-events-none" />
-                )}
-                <div
-                  className="absolute bottom-0 left-0 right-0 flex pointer-events-none"
-                  style={{ transform: "translateY(100%)" }}
+                  className="absolute top-0 left-0 right-0 flex pointer-events-none"
+                  style={{ transform: "translateY(-100%)" }}
                 >
                   {[...Array(34)].map((_, i) => (
                     <div
@@ -312,129 +179,251 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                       style={{
                         backgroundColor:
                           activeTheme.styles.container.backgroundColor,
-                        clipPath: "polygon(0% 0%, 50% 100%, 100% 0%)",
+                        clipPath: "polygon(0% 100%, 50% 0%, 100% 100%)",
                       }}
                     />
                   ))}
                 </div>
-              </>
-            )}
-          </div>
-        </div>
+              )}
 
-        {/* 控制面板 */}
-        <div className="w-full space-y-4 px-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-              风格
-            </span>
-            <div className="flex gap-1 p-1 bg-muted/50 rounded-full border border-border/50">
-              {Object.values(POSTER_THEMES).map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setActiveThemeId(t.id)}
-                  className={cn(
-                    "px-3 py-0.5 text-[11px] rounded-full",
-                    activeThemeId === t.id
-                      ? "bg-background shadow-sm font-medium"
-                      : "text-muted-foreground"
-                  )}
+              {/* Header */}
+              {(showBrand || showDate) && (
+                <div
+                  className="flex justify-between items-center pb-4 mb-4"
+                  style={{
+                    borderBottom: activeTheme.styles.header.borderBottom,
+                  }}
                 >
-                  {t.name}
+                  {showBrand ? (
+                    <span
+                      className="font-bold tracking-[0.2em] uppercase"
+                      style={{
+                        color: activeTheme.styles.header.brandColor,
+                        fontSize: activeTheme.styles.header.fontSize,
+                      }}
+                    >
+                      JustBB
+                    </span>
+                  ) : (
+                    <div />
+                  )}
+                  {showDate && (
+                    <span
+                      className="font-mono opacity-60 text-[11px]"
+                      style={{ color: activeTheme.styles.header.dateColor }}
+                    >
+                      {format(new Date(memo.created_at), "yyyy.MM.dd", {
+                        locale: zhCN,
+                      })}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Content Area */}
+              <div className="py-2 mb-6">
+                <MemoContent
+                  content={memo.content}
+                  className={cn(
+                    "py-1",
+                    activeTheme.styles.content.fontFamily === "serif"
+                      ? "font-serif"
+                      : activeTheme.styles.content.fontFamily === "mono"
+                        ? "font-mono"
+                        : "font-sans"
+                  )}
+                  style={{
+                    fontSize: activeTheme.styles.content.fontSize,
+                    lineHeight: activeTheme.styles.content.lineHeight,
+                    color: activeTheme.styles.content.color,
+                  }}
+                />
+              </div>
+
+              {/* Footer */}
+              <div
+                className="pt-6 flex justify-between items-end"
+                style={{ borderTop: activeTheme.styles.footer.borderTop }}
+              >
+                <div className="flex flex-col gap-1">
+                  <span
+                    className="text-[10px] font-medium tracking-widest uppercase opacity-50"
+                    style={{ color: activeTheme.styles.footer.textColor }}
+                  >
+                    Captured via JustBB
+                  </span>
+                  <span
+                    className="text-[9px] opacity-30"
+                    style={{ color: activeTheme.styles.footer.textColor }}
+                  >
+                    Minimalist Notes for Thinkers
+                  </span>
+                </div>
+                {showQR && (
+                  <div
+                    className="p-1.5 rounded-lg"
+                    style={{
+                      backgroundColor: activeTheme.styles.footer.qrBgColor,
+                    }}
+                  >
+                    <QRCodeSVG
+                      value={shareUrl}
+                      size={42}
+                      fgColor={activeTheme.styles.footer.qrFgColor}
+                      bgColor="transparent"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* 噪点纹理 */}
+              {activeTheme.styles.decorations?.paperEffect === "noise" && (
+                <div
+                  className="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-multiply"
+                  style={{
+                    backgroundImage: `radial-gradient(#000 10%, transparent 10%)`,
+                    backgroundSize: "2px 2px",
+                  }}
+                />
+              )}
+
+              {/* 纸张特效 */}
+              {activeTheme.styles.decorations?.paperEffect === "typewriter" && (
+                <>
+                  {activeTheme.styles.decorations?.showMarginLine && (
+                    <div className="absolute left-8 top-0 bottom-0 w-[1px] bg-red-400/20 pointer-events-none" />
+                  )}
+                  <div
+                    className="absolute bottom-0 left-0 right-0 flex pointer-events-none"
+                    style={{ transform: "translateY(100%)" }}
+                  >
+                    {[...Array(34)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-[10px] h-[8px]"
+                        style={{
+                          backgroundColor:
+                            activeTheme.styles.container.backgroundColor,
+                          clipPath: "polygon(0% 0%, 50% 100%, 100% 0%)",
+                        }}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* 控制面板 */}
+          <div className="w-full space-y-4 px-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                风格
+              </span>
+              <div className="flex gap-1 p-1 bg-muted/50 rounded-full border border-border/50">
+                {Object.values(POSTER_THEMES).map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveThemeId(t.id)}
+                    className={cn(
+                      "px-3 py-0.5 text-[11px] rounded-full",
+                      activeThemeId === t.id
+                        ? "bg-background shadow-sm font-medium"
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    {t.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-around py-2 border-t border-border/40">
+              {[
+                { label: "品牌", state: showBrand, setter: setShowBrand },
+                { label: "日期", state: showDate, setter: setShowDate },
+                { label: "二维码", state: showQR, setter: setShowQR },
+              ].map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => item.setter(!item.state)}
+                  className="flex items-center gap-2 group"
+                >
+                  <div
+                    className={cn(
+                      "w-3 h-3 rounded-sm border",
+                      item.state
+                        ? "bg-primary border-primary shadow-[0_0_8px_rgba(var(--primary),0.4)]"
+                        : "border-muted-foreground/30 bg-transparent"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "text-[12px]",
+                      item.state
+                        ? "text-foreground font-medium"
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="flex items-center justify-around py-2 border-t border-border/40">
-            {[
-              { label: "品牌", state: showBrand, setter: setShowBrand },
-              { label: "日期", state: showDate, setter: setShowDate },
-              { label: "二维码", state: showQR, setter: setShowQR },
-            ].map((item) => (
-              <button
-                key={item.label}
-                onClick={() => item.setter(!item.state)}
-                className="flex items-center gap-2 group"
+          <div className="flex gap-3 w-full mt-2">
+            <Button
+              variant="outline"
+              className="flex-1 h-11 text-sm border-border/60 relative overflow-hidden group/btn"
+              onClick={handleCopyToClipboard}
+              disabled={activeAction !== null}
+            >
+              <span
+                className={cn(
+                  "flex items-center justify-center gap-2 transition-opacity duration-200",
+                  activeAction === "copy" ? "opacity-0" : "opacity-100"
+                )}
               >
-                <div
-                  className={cn(
-                    "w-3 h-3 rounded-sm border",
-                    item.state
-                      ? "bg-primary border-primary shadow-[0_0_8px_rgba(var(--primary),0.4)]"
-                      : "border-muted-foreground/30 bg-transparent"
-                  )}
-                />
-                <span
-                  className={cn(
-                    "text-[12px]",
-                    item.state
-                      ? "text-foreground font-medium"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  {item.label}
-                </span>
-              </button>
-            ))}
+                <HugeiconsIcon icon={Copy} size={18} />
+                复制图片
+              </span>
+
+              {activeAction === "copy" && (
+                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-background/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin [will-change:transform]" />
+                  <span className="font-medium text-primary">处理中...</span>
+                </div>
+              )}
+            </Button>
+
+            <Button
+              className="flex-1 h-11 text-sm font-medium relative overflow-hidden group/btn shadow-notion-card"
+              onClick={handleDownload}
+              disabled={activeAction !== null}
+            >
+              <span
+                className={cn(
+                  "flex items-center justify-center gap-2 transition-opacity duration-200",
+                  activeAction === "download" ? "opacity-0" : "opacity-100"
+                )}
+              >
+                <HugeiconsIcon icon={Download} size={18} />
+                保存海报
+              </span>
+
+              {activeAction === "download" && (
+                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-primary/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+                  <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin [will-change:transform]" />
+                  <span className="font-medium text-primary-foreground">
+                    生成中...
+                  </span>
+                </div>
+              )}
+            </Button>
           </div>
         </div>
-
-        <div className="flex gap-3 w-full mt-2">
-          <Button
-            variant="outline"
-            className="flex-1 rounded-full py-6 text-sm border-border/60 relative overflow-hidden group/btn"
-            onClick={handleCopyToClipboard}
-            disabled={activeAction !== null}
-          >
-            {/* 默认状态层 - 保持占位防止布局抖动 */}
-            <span
-              className={cn(
-                "flex items-center justify-center gap-2 transition-opacity duration-200",
-                activeAction === "copy" ? "opacity-0" : "opacity-100"
-              )}
-            >
-              <HugeiconsIcon icon={Copy} size={18} />
-              复制图片
-            </span>
-
-            {/* 加载层 - 绝对定位 */}
-            {activeAction === "copy" && (
-              <div className="absolute inset-0 flex items-center justify-center gap-2 bg-background/40 backdrop-blur-[2px] animate-in fade-in duration-200">
-                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin [will-change:transform]" />
-                <span className="font-medium text-primary">处理中...</span>
-              </div>
-            )}
-          </Button>
-
-          <Button
-            className="flex-1 rounded-full py-6 text-sm font-medium relative overflow-hidden group/btn"
-            onClick={handleDownload}
-            disabled={activeAction !== null}
-          >
-            {/* 默认状态层 */}
-            <span
-              className={cn(
-                "flex items-center justify-center gap-2 transition-opacity duration-200",
-                activeAction === "download" ? "opacity-0" : "opacity-100"
-              )}
-            >
-              <HugeiconsIcon icon={Download} size={18} />
-              保存海报
-            </span>
-
-            {/* 加载层 */}
-            {activeAction === "download" && (
-              <div className="absolute inset-0 flex items-center justify-center gap-2 bg-primary/40 backdrop-blur-[2px] animate-in fade-in duration-200">
-                <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin [will-change:transform]" />
-                <span className="font-medium text-primary-foreground">
-                  生成中...
-                </span>
-              </div>
-            )}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      </AdminDialogShell>
+    </>
   )
 }

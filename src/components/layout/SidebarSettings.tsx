@@ -182,7 +182,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
               Settings / 偏好
             </DropdownMenuLabel>
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="rounded-xl h-10">
+              <DropdownMenuSubTrigger className="h-10">
                 <HugeiconsIcon
                   icon={Sun}
                   size={16}
@@ -196,10 +196,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                     value={theme}
                     onValueChange={setTheme}
                   >
-                    <DropdownMenuRadioItem
-                      value="light"
-                      className="rounded-lg h-9"
-                    >
+                    <DropdownMenuRadioItem value="light" className="h-9">
                       <HugeiconsIcon
                         icon={Sun}
                         size={15}
@@ -207,10 +204,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                       />
                       <span>浅色模式</span>
                     </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem
-                      value="dark"
-                      className="rounded-lg h-9"
-                    >
+                    <DropdownMenuRadioItem value="dark" className="h-9">
                       <HugeiconsIcon
                         icon={Moon}
                         size={15}
@@ -218,10 +212,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                       />
                       <span>深色模式</span>
                     </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem
-                      value="system"
-                      className="rounded-lg h-9"
-                    >
+                    <DropdownMenuRadioItem value="system" className="h-9">
                       <HugeiconsIcon
                         icon={Monitor}
                         size={15}
@@ -242,7 +233,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
               Tools / 工具
             </p>
             <DropdownMenuItem
-              className="rounded-xl h-10 disabled:opacity-40"
+              className="h-10 disabled:opacity-40"
               onClick={() => setExportDialogOpen(true)}
               disabled={!user}
             >
@@ -256,7 +247,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
 
             {user?.role === "admin" && (
               <DropdownMenuItem
-                className="rounded-xl h-10 group"
+                className="h-10 group"
                 onClick={() => setUsageModalOpen(true)}
               >
                 <HugeiconsIcon
@@ -274,7 +265,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
           <div className="px-1 py-1">
             {!user ? (
               <DropdownMenuItem
-                className="rounded-xl h-10"
+                className="h-10"
                 onClick={() => setViewMode("CARD_VIEW")}
               >
                 <HugeiconsIcon
@@ -286,7 +277,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem
-                className="rounded-xl h-10 text-destructive focus:text-destructive focus:bg-destructive/10"
+                className="h-10 text-destructive focus:text-destructive focus:bg-destructive/10"
                 onClick={handleLogout}
                 disabled={loggingOut}
               >

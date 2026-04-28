@@ -33,10 +33,10 @@ export function SidebarNavItem({
           onClick(item.href)
         }}
         className={cn(
-          "group relative flex h-9 w-full cursor-pointer items-center overflow-hidden rounded-sm text-left transition-all duration-200 active:scale-95 hover:scale-102",
+          "group relative flex h-9 w-full cursor-pointer items-center overflow-hidden rounded-md text-left transition-all duration-200 active:scale-95 hover:scale-102",
           isCollapsed ? "mx-auto w-9 justify-center gap-0 px-0" : "px-3 gap-3",
           isActive
-            ? "bg-[#fdf5f2] text-primary font-semibold"
+            ? "bg-(--badge-clay-bg) text-primary font-semibold"
             : "text-muted-foreground hover:bg-secondary hover:text-foreground"
         )}
         title={item.label}
@@ -59,7 +59,7 @@ export function SidebarNavItem({
               : { opacity: 1, x: 0, maxWidth: 160 }
           }
           transition={LABEL_TRANSITION}
-          className="min-w-0 overflow-hidden whitespace-nowrap text-[15px] font-semibold tracking-tight"
+          className="min-w-0 overflow-hidden whitespace-nowrap nav-button-text tracking-tight"
           aria-hidden={isCollapsed}
         >
           <span className="block truncate">{item.label}</span>

@@ -126,7 +126,7 @@ export function LeftSidebar({
                 ? "展开侧边栏"
                 : "收起侧边栏"
           }
-          className="h-9 w-9 shrink-0 rounded-md px-0 text-muted-foreground transition-[background-color,color,transform] active:scale-95"
+          className="h-9 w-9 shrink-0 rounded-sm px-0 text-muted-foreground transition-all duration-200 active:scale-95 hover:scale-102 hover:bg-secondary"
         >
           <span className="flex items-center justify-center">
             {isMobile ? (
@@ -186,7 +186,7 @@ export function LeftSidebar({
           layout
           transition={SIDEBAR_TRANSITION}
           className={cn(
-            "mb-3 border-t border-border/60",
+            "mb-3 border-t border-border",
             effectiveIsCollapsed ? "mx-1" : "mx-2"
           )}
         />
@@ -222,10 +222,8 @@ export function LeftSidebar({
             : { ...CONTENT_FADE_TRANSITION, delay: 0.14 },
         }}
       >
-        <div className="h-full border-t border-border/60 px-1 pt-4 pb-1">
-          <h3 className="mb-4 flex items-center gap-2 text-[22px] leading-tight font-bold tracking-tight text-foreground">
-            热门标签
-          </h3>
+        <div className="h-full border-t border-border px-1 pt-4 pb-1">
+          <h3 className="mb-4 flex items-center gap-2 card-title">热门标签</h3>
           <Suspense
             fallback={
               <div className="space-y-2">

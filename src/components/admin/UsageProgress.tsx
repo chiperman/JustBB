@@ -72,7 +72,7 @@ export function UsageProgress({
         <div className="space-y-0.5">
           <span
             className={cn(
-              "inline-flex items-center gap-2 text-[13px] font-medium transition-colors",
+              "inline-flex items-center gap-2 caption font-medium transition-colors",
               muted ? "text-muted-foreground/50" : "text-foreground/80"
             )}
           >
@@ -93,7 +93,7 @@ export function UsageProgress({
                     <HugeiconsIcon icon={InformationCircleIcon} size={12} />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="max-w-xs rounded-xl border-border/40 bg-popover/95 px-3 py-2 text-[11px] font-medium leading-relaxed backdrop-blur-md shadow-2xl">
+                <TooltipContent className="max-w-xs rounded-inner border-border/40 bg-popover/95 px-3 py-2 micro-label font-medium leading-relaxed backdrop-blur-md shadow-notion-card">
                   <p>{info}</p>
                 </TooltipContent>
               </Tooltip>
@@ -103,14 +103,14 @@ export function UsageProgress({
         <div className="text-right leading-none">
           <span
             className={cn(
-              "text-[13px] font-semibold tabular-nums",
+              "caption font-semibold tabular-nums",
               muted ? "text-muted-foreground/50" : "text-foreground"
             )}
           >
             {used}
             {unit}
           </span>
-          <span className="ml-1 text-[11px] text-muted-foreground/50 italic">
+          <span className="ml-1 micro-label text-muted-foreground/50 italic">
             / {limit}
             {unit}
           </span>
@@ -135,7 +135,7 @@ export function UsageProgress({
       <div className="flex justify-between items-center px-0.5">
         <span
           className={cn(
-            "text-[10px] font-bold uppercase tracking-wider transition-colors duration-500",
+            "micro-label font-bold uppercase tracking-wider transition-colors duration-500",
             statusTextClass
           )}
         >
@@ -143,7 +143,7 @@ export function UsageProgress({
         </span>
         <span
           className={cn(
-            "text-[11px] font-mono font-medium",
+            "micro-label font-mono font-medium",
             muted ? "text-muted-foreground/40" : "text-muted-foreground/60"
           )}
         >

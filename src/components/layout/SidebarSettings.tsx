@@ -140,18 +140,14 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
               )}
             </div>
             {!isCollapsed && (
-              <span className="text-[14px] truncate">{identityLabel}</span>
+              <span className="nav-button-text truncate">{identityLabel}</span>
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          side="top"
-          align="start"
-          className="w-64 border-border/40 backdrop-blur-md bg-popover/90 p-1 shadow-xl rounded-2xl"
-        >
+        <DropdownMenuContent side="top" align="start" className="w-64">
           <DropdownMenuLabel className="font-normal px-3 py-3">
             <div className="flex flex-col space-y-2">
-              <p className="text-[11px] font-bold text-stone-400 uppercase tracking-widest opacity-60">
+              <p className="micro-label font-bold uppercase tracking-widest opacity-60">
                 Identity / 身份
               </p>
               <div className="flex items-center gap-3">
@@ -164,14 +160,14 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                   {renderIdentity()}
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <p className="text-[13px] font-bold truncate leading-none">
+                  <p className="body-large font-bold truncate leading-none">
                     {user
                       ? user.role === "admin"
                         ? "正式管理员"
                         : "普通用户"
                       : "匿名身份"}
                   </p>
-                  <p className="text-[11px] text-muted-foreground truncate mt-1.5 opacity-70">
+                  <p className="micro-label truncate mt-1.5 opacity-70">
                     {user ? user.email : "仅可查看公开内容"}
                   </p>
                 </div>
@@ -179,10 +175,10 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
             </div>
           </DropdownMenuLabel>
 
-          <DropdownMenuSeparator className="bg-border/10" />
+          <DropdownMenuSeparator />
 
           <div className="px-1 py-1">
-            <DropdownMenuLabel className="px-2 py-2 text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] opacity-50">
+            <DropdownMenuLabel className="px-2 py-2 micro-label font-bold uppercase tracking-[0.2em] opacity-50">
               Settings / 偏好
             </DropdownMenuLabel>
             <DropdownMenuSub>
@@ -190,12 +186,12 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                 <HugeiconsIcon
                   icon={Sun}
                   size={16}
-                  className="mr-2 text-muted-foreground"
+                  className="mr-2 text-primary"
                 />
                 <span>外观主题</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
-                <DropdownMenuSubContent className="ml-1 border-border/40 bg-popover/95 backdrop-blur-md rounded-xl p-1 shadow-lg">
+                <DropdownMenuSubContent className="ml-1">
                   <DropdownMenuRadioGroup
                     value={theme}
                     onValueChange={setTheme}
@@ -207,7 +203,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                       <HugeiconsIcon
                         icon={Sun}
                         size={15}
-                        className="mr-2 opacity-70"
+                        className="mr-2 text-primary opacity-80"
                       />
                       <span>浅色模式</span>
                     </DropdownMenuRadioItem>
@@ -218,7 +214,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                       <HugeiconsIcon
                         icon={Moon}
                         size={15}
-                        className="mr-2 opacity-70"
+                        className="mr-2 text-primary opacity-80"
                       />
                       <span>深色模式</span>
                     </DropdownMenuRadioItem>
@@ -229,7 +225,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                       <HugeiconsIcon
                         icon={Monitor}
                         size={15}
-                        className="mr-2 opacity-70"
+                        className="mr-2 text-primary opacity-80"
                       />
                       <span>跟随系统</span>
                     </DropdownMenuRadioItem>
@@ -239,10 +235,10 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
             </DropdownMenuSub>
           </div>
 
-          <DropdownMenuSeparator className="bg-border/10" />
+          <DropdownMenuSeparator />
 
           <div className="px-1 py-1">
-            <p className="px-2 py-2 text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] opacity-50">
+            <p className="px-2 py-2 micro-label font-bold uppercase tracking-[0.2em] opacity-50">
               Tools / 工具
             </p>
             <DropdownMenuItem
@@ -253,7 +249,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
               <HugeiconsIcon
                 icon={Download}
                 size={16}
-                className="mr-2 text-muted-foreground"
+                className="mr-2 text-primary"
               />
               <span>导出 Memos</span>
             </DropdownMenuItem>
@@ -273,7 +269,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
             )}
           </div>
 
-          <DropdownMenuSeparator className="bg-border/10" />
+          <DropdownMenuSeparator />
 
           <div className="px-1 py-1">
             {!user ? (

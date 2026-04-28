@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { HugeiconsIcon } from "@hugeicons/react"
 import {
   PanelRightCloseIcon,
   PanelRightOpenIcon,
-} from "@hugeicons/core-free-icons";
+} from "@hugeicons/core-free-icons"
 import {
   Timeline,
   TimelineContent,
@@ -14,16 +14,16 @@ import {
   TimelineDot,
   TimelineHeading,
   TimelineItem,
-} from "@/components/ui/timeline";
-import { DailyTimeline } from "./DailyTimeline";
-import { Skeleton } from "@/components/ui/skeleton";
-import { motion, AnimatePresence } from "framer-motion";
-import { useLayout } from "@/context/LayoutContext";
-import { TimelineStats } from "@/types/stats";
-import { useHasMounted } from "@/hooks/useHasMounted";
-import { cn } from "@/lib/utils";
-import { getTimelineStats } from "@/actions/memos/analytics";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/timeline"
+import { DailyTimeline } from "./DailyTimeline"
+import { Skeleton } from "@/components/ui/skeleton"
+import { motion, AnimatePresence } from "framer-motion"
+import { useLayout } from "@/context/LayoutContext"
+import { TimelineStats } from "@/types/stats"
+import { useHasMounted } from "@/hooks/useHasMounted"
+import { cn } from "@/lib/utils"
+import { getTimelineStats } from "@/actions/memos/analytics"
+import { Button } from "@/components/ui/button"
 import {
   RIGHT_SIDEBAR_COOKIE_KEY,
   RIGHT_SIDEBAR_STORAGE_EVENT,
@@ -32,169 +32,168 @@ import {
   persistLayoutPreference,
   subscribeToLayoutPreference,
   syncLayoutPreferenceCookie,
-} from "@/lib/layout-preferences";
+} from "@/lib/layout-preferences"
 
-const RIGHT_SIDEBAR_EXPANDED_WIDTH = 320;
+const RIGHT_SIDEBAR_EXPANDED_WIDTH = 320
 const RIGHT_SIDEBAR_TRANSITION = {
   duration: 0.28,
   ease: [0.22, 1, 0.36, 1] as const,
-};
+}
 
 export function RightSidebar({
   initialCollapsed = false,
   initialData,
 }: {
-  initialCollapsed?: boolean;
-  initialData?: TimelineStats;
+  initialCollapsed?: boolean
+  initialData?: TimelineStats
 }) {
   const [allDays, setAllDays] = useState<Record<string, { count: number }>>(
-    initialData?.days || {},
-  );
-  const isMounted = useHasMounted();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+    initialData?.days || {}
+  )
+  const isMounted = useHasMounted()
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const isCollapsed = useSyncExternalStore(
     (onStoreChange) =>
       subscribeToLayoutPreference(
         RIGHT_SIDEBAR_STORAGE_KEY,
         RIGHT_SIDEBAR_STORAGE_EVENT,
-        onStoreChange,
+        onStoreChange
       ),
     () => getStoredLayoutPreference(RIGHT_SIDEBAR_STORAGE_KEY),
-    () => initialCollapsed,
-  );
-
+    () => initialCollapsed
+  )
 
   // Only display on homepage
-  const isHomePage = pathname === "/";
+  const isHomePage = pathname === "/"
 
   // 读取 URL 筛选参数
-  const dateFilter = searchParams.get("date");
-  const yearFilter = searchParams.get("year");
-  const monthFilter = searchParams.get("month");
+  const dateFilter = searchParams.get("date")
+  const yearFilter = searchParams.get("year")
+  const monthFilter = searchParams.get("month")
 
-  const { activeId, setActiveId, setManualClick } = useLayout();
+  const { activeId, setActiveId, setManualClick } = useLayout()
 
   const setCollapsedState = (nextCollapsed: boolean) => {
     persistLayoutPreference(
       RIGHT_SIDEBAR_STORAGE_KEY,
       RIGHT_SIDEBAR_COOKIE_KEY,
       RIGHT_SIDEBAR_STORAGE_EVENT,
-      nextCollapsed,
-    );
-  };
+      nextCollapsed
+    )
+  }
 
   useEffect(() => {
     syncLayoutPreferenceCookie(
       RIGHT_SIDEBAR_STORAGE_KEY,
-      RIGHT_SIDEBAR_COOKIE_KEY,
-    );
-  }, []);
+      RIGHT_SIDEBAR_COOKIE_KEY
+    )
+  }, [])
 
   // 自动滚动侧边栏以确保选中项可见
   useEffect(() => {
     if (isMounted && activeId) {
-      const element = document.getElementById(`nav-${activeId}`);
+      const element = document.getElementById(`nav-${activeId}`)
       if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.scrollIntoView({ behavior: "smooth", block: "center" })
       }
     }
-  }, [activeId, isMounted]);
+  }, [activeId, isMounted])
 
   // 当 URL 参数变化时（热力图筛选），同步本地高亮状态
   useEffect(() => {
-    if (!isMounted) return;
+    if (!isMounted) return
     if (dateFilter) {
-      setActiveId(`date-${dateFilter}`);
+      setActiveId(`date-${dateFilter}`)
     } else if (yearFilter && monthFilter) {
-      setActiveId(`month-${yearFilter}-${monthFilter}`);
+      setActiveId(`month-${yearFilter}-${monthFilter}`)
     } else if (yearFilter) {
-      setActiveId(`year-${yearFilter}`);
+      setActiveId(`year-${yearFilter}`)
     }
-  }, [dateFilter, yearFilter, monthFilter, setActiveId, isMounted]);
+  }, [dateFilter, yearFilter, monthFilter, setActiveId, isMounted])
 
   // 挂载后异步拉取时间轴数据 (如果服务端未提供)
   useEffect(() => {
     if (Object.keys(allDays).length === 0) {
-      getTimelineStats().then(res => {
+      getTimelineStats().then((res) => {
         if (res.success && res.data) {
-          setAllDays(res.data.days);
+          setAllDays(res.data.days)
         }
-      });
+      })
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // 构建时间轴数据结构（始终基于全量数据）
   const fullTimeline = useMemo(() => {
-    const structure = new Map<number, Map<number, Set<number>>>();
+    const structure = new Map<number, Map<number, Set<number>>>()
 
     Object.keys(allDays).forEach((dateStr) => {
-      const parts = dateStr.split("-");
-      if (parts.length < 3) return;
+      const parts = dateStr.split("-")
+      if (parts.length < 3) return
 
-      const year = parseInt(parts[0]);
-      const month = parseInt(parts[1]);
-      const day = parseInt(parts[2]);
+      const year = parseInt(parts[0])
+      const month = parseInt(parts[1])
+      const day = parseInt(parts[2])
 
-      if (isNaN(year) || isNaN(month) || isNaN(day)) return;
+      if (isNaN(year) || isNaN(month) || isNaN(day)) return
 
       if (!structure.has(year)) {
-        structure.set(year, new Map());
+        structure.set(year, new Map())
       }
-      const yearMap = structure.get(year)!;
+      const yearMap = structure.get(year)!
 
       if (!yearMap.has(month)) {
-        yearMap.set(month, new Set());
+        yearMap.set(month, new Set())
       }
-      yearMap.get(month)?.add(day);
-    });
+      yearMap.get(month)?.add(day)
+    })
 
     return Array.from(structure.keys())
       .sort((a, b) => b - a)
       .map((year) => {
-        const yearMap = structure.get(year)!;
+        const yearMap = structure.get(year)!
         const months = Array.from(yearMap.keys())
           .sort((a, b) => b - a)
           .map((month) => ({
             month,
             days: Array.from(yearMap.get(month)!).sort((a, b) => b - a),
-          }));
-        return { year, months };
-      });
-  }, [allDays]);
+          }))
+        return { year, months }
+      })
+  }, [allDays])
 
   // 计算高亮状态 - 增加 isMounted 守卫以解决 Hydration Mismatch
   const isYearActive = (year: number) => {
-    if (!isMounted) return false; // 服务端始终返回 false
-    const id = `year-${year}`;
-    if (activeId === id) return true;
+    if (!isMounted) return false // 服务端始终返回 false
+    const id = `year-${year}`
+    if (activeId === id) return true
     if (!activeId && yearFilter === String(year) && !monthFilter && !dateFilter)
-      return true;
-    return false;
-  };
+      return true
+    return false
+  }
 
   const isMonthActive = (year: number, month: number) => {
-    if (!isMounted) return false;
-    const id = `month-${year}-${month}`;
-    if (activeId === id) return true;
+    if (!isMounted) return false
+    const id = `month-${year}-${month}`
+    if (activeId === id) return true
     if (
       !activeId &&
       yearFilter === String(year) &&
       monthFilter === String(month) &&
       !dateFilter
     )
-      return true;
-    return false;
-  };
+      return true
+    return false
+  }
 
   const isDayActive = (dateStr: string) => {
-    if (!isMounted) return false;
-    const id = `date-${dateStr}`;
-    if (activeId === id) return true;
-    if (!activeId && dateFilter === dateStr) return true;
-    return false;
-  };
+    if (!isMounted) return false
+    const id = `date-${dateStr}`
+    if (activeId === id) return true
+    if (!activeId && dateFilter === dateStr) return true
+    return false
+  }
 
   const monthNames = [
     "",
@@ -210,55 +209,55 @@ export function RightSidebar({
     "十月",
     "十一月",
     "十二月",
-  ];
+  ]
 
   const handleYearClick = (e: React.MouseEvent, year: number) => {
-    e.preventDefault();
-    const id = `year-${year}`;
-    setManualClick(true);
-    setActiveId(id);
+    e.preventDefault()
+    const id = `year-${year}`
+    setManualClick(true)
+    setActiveId(id)
 
     // Instead of teleporting silently, we push state to URL to enable caching
     // setTeleportDate({ date: `${year}-01-01`, type: "year" });
-    const currentParams = new URLSearchParams(searchParams.toString());
-    currentParams.delete("date");
-    currentParams.delete("month");
-    currentParams.set("year", String(year));
-    router.push(`/?${currentParams.toString()}`);
-  };
+    const currentParams = new URLSearchParams(searchParams.toString())
+    currentParams.delete("date")
+    currentParams.delete("month")
+    currentParams.set("year", String(year))
+    router.push(`/?${currentParams.toString()}`)
+  }
 
   const handleMonthClick = (
     e: React.MouseEvent,
     year: number,
-    month: number,
+    month: number
   ) => {
-    e.preventDefault();
-    const id = `month-${year}-${month}`;
-    setManualClick(true);
-    setActiveId(id);
+    e.preventDefault()
+    const id = `month-${year}-${month}`
+    setManualClick(true)
+    setActiveId(id)
 
-    const currentParams = new URLSearchParams(searchParams.toString());
-    currentParams.delete("date");
-    currentParams.set("year", String(year));
-    currentParams.set("month", String(month));
-    router.push(`/?${currentParams.toString()}`);
-  };
+    const currentParams = new URLSearchParams(searchParams.toString())
+    currentParams.delete("date")
+    currentParams.set("year", String(year))
+    currentParams.set("month", String(month))
+    router.push(`/?${currentParams.toString()}`)
+  }
 
   const handleDayClick = (e: React.MouseEvent, dateStr: string) => {
-    e.preventDefault();
-    const id = `date-${dateStr}`;
-    setManualClick(true);
-    setActiveId(id);
+    e.preventDefault()
+    const id = `date-${dateStr}`
+    setManualClick(true)
+    setActiveId(id)
 
-    const currentParams = new URLSearchParams(searchParams.toString());
+    const currentParams = new URLSearchParams(searchParams.toString())
 
-    currentParams.delete("year");
-    currentParams.delete("month");
-    currentParams.set("date", dateStr);
-    router.push(`/?${currentParams.toString()}`);
-  };
+    currentParams.delete("year")
+    currentParams.delete("month")
+    currentParams.set("date", dateStr)
+    router.push(`/?${currentParams.toString()}`)
+  }
 
-  if (!isHomePage) return null;
+  if (!isHomePage) return null
 
   return (
     <div className="relative hidden xl:block h-full shrink-0 overflow-visible">
@@ -268,7 +267,7 @@ export function RightSidebar({
             variant="outline"
             size="icon"
             onClick={() => setCollapsedState(false)}
-            className="rounded-[4px] border-border bg-background text-muted-foreground shadow-sm transition-all active:scale-95 hover:bg-accent hover:text-foreground"
+            className="rounded-sm border-border bg-background text-muted-foreground shadow-sm transition-all active:scale-95 hover:bg-secondary hover:text-foreground"
             aria-label="展开右侧时间轴"
           >
             <span className="flex items-center justify-center">
@@ -291,16 +290,14 @@ export function RightSidebar({
               variant="ghost"
               size="icon"
               onClick={() => setCollapsedState(true)}
-              className="shrink-0 rounded-md text-muted-foreground transition-all active:scale-95 hover:bg-accent hover:text-accent-foreground"
+              className="shrink-0 rounded-sm text-muted-foreground transition-all active:scale-95 hover:bg-secondary hover:text-foreground"
               aria-label="收起右侧时间轴"
             >
               <span className="flex items-center justify-center">
                 <HugeiconsIcon icon={PanelRightCloseIcon} size={16} />
               </span>
             </Button>
-            <h3 className="flex-1 font-sans text-[14px] font-semibold tracking-tight text-foreground/80 uppercase">
-              时间轴
-            </h3>
+            <h3 className="flex-1 badge-text uppercase">时间轴</h3>
           </div>
           <div className="relative flex-1 overflow-y-auto pr-1 scrollbar-hide">
             <AnimatePresence mode="wait">
@@ -318,7 +315,10 @@ export function RightSidebar({
                       <TimelineLine className="bg-[var(--heatmap-0)]" />
                       <TimelineDot className="border-[var(--heatmap-0)] bg-[var(--heatmap-0)]" />
                       <Skeleton
-                        className={cn("mb-6 h-4", i % 2 === 0 ? "w-16" : "w-12")}
+                        className={cn(
+                          "mb-6 h-4",
+                          i % 2 === 0 ? "w-16" : "w-12"
+                        )}
                       />
                       <div className="space-y-6 pl-4">
                         <div className="space-y-3">
@@ -356,8 +356,8 @@ export function RightSidebar({
                             className={cn(
                               "top-1.5 transition-all duration-300",
                               isYearActive(yearGroup.year)
-                                ? "scale-110 border-primary bg-primary ring-primary/10 shadow-[0_0_10px_rgba(var(--primary),0.3)]"
-                                : "border-border bg-background",
+                                ? "scale-110 border-primary bg-primary ring-primary/20"
+                                : "border-border bg-background"
                             )}
                           />
                           <TimelineHeading className="mb-6">
@@ -366,9 +366,11 @@ export function RightSidebar({
                                 "cursor-pointer font-mono text-sm font-bold tracking-tighter transition-colors",
                                 isYearActive(yearGroup.year)
                                   ? "text-primary"
-                                  : "text-foreground hover:text-primary",
+                                  : "text-foreground hover:text-primary"
                               )}
-                              onClick={(e) => handleYearClick(e, yearGroup.year)}
+                              onClick={(e) =>
+                                handleYearClick(e, yearGroup.year)
+                              }
                             >
                               {yearGroup.year}
                             </button>
@@ -384,11 +386,14 @@ export function RightSidebar({
                                   <TimelineLine
                                     active={isMonthActive(
                                       yearGroup.year,
-                                      monthGroup.month,
+                                      monthGroup.month
                                     )}
                                     className={cn(
                                       "-left-[25px] transition-opacity duration-300",
-                                      !isMonthActive(yearGroup.year, monthGroup.month) && "opacity-0",
+                                      !isMonthActive(
+                                        yearGroup.year,
+                                        monthGroup.month
+                                      ) && "opacity-0"
                                     )}
                                   />
                                   <h5
@@ -396,10 +401,10 @@ export function RightSidebar({
                                       "block cursor-pointer pl-1 text-[11px] font-bold tracking-wide uppercase transition-colors",
                                       isMonthActive(
                                         yearGroup.year,
-                                        monthGroup.month,
+                                        monthGroup.month
                                       )
                                         ? "text-primary"
-                                        : "text-muted-foreground/80 hover:text-primary",
+                                        : "text-muted-foreground/80 hover:text-primary"
                                     )}
                                   >
                                     <button
@@ -408,7 +413,7 @@ export function RightSidebar({
                                         handleMonthClick(
                                           e,
                                           yearGroup.year,
-                                          monthGroup.month,
+                                          monthGroup.month
                                         )
                                       }
                                     >
@@ -418,8 +423,8 @@ export function RightSidebar({
                                 </div>
                                 <div className="flex flex-col gap-1.5">
                                   {monthGroup.days.map((day) => {
-                                    const dateStr = `${yearGroup.year}-${String(monthGroup.month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                                    const isActive = isDayActive(dateStr);
+                                    const dateStr = `${yearGroup.year}-${String(monthGroup.month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+                                    const isActive = isDayActive(dateStr)
 
                                     return (
                                       <div
@@ -431,7 +436,7 @@ export function RightSidebar({
                                           active={isActive}
                                           className={cn(
                                             "-left-[25px] transition-opacity duration-300",
-                                            !isActive && "opacity-0",
+                                            !isActive && "opacity-0"
                                           )}
                                         />
                                         <button
@@ -440,7 +445,7 @@ export function RightSidebar({
                                             "block w-full cursor-pointer py-0.5 pl-1 text-left font-mono text-[10px] font-bold tracking-tight transition-colors",
                                             isActive
                                               ? "text-primary"
-                                              : "text-muted-foreground/50 hover:text-primary/70",
+                                              : "text-muted-foreground/50 hover:text-primary/70"
                                           )}
                                           onClick={(e) =>
                                             handleDayClick(e, dateStr)
@@ -449,7 +454,7 @@ export function RightSidebar({
                                           {`${day}号`}
                                         </button>
                                       </div>
-                                    );
+                                    )
                                   })}
                                 </div>
                               </div>
@@ -470,5 +475,5 @@ export function RightSidebar({
         </aside>
       </motion.div>
     </div>
-  );
+  )
 }

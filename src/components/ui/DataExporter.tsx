@@ -81,11 +81,9 @@ export function DataExporter() {
   }
 
   return (
-    <section className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-      <h3 className="text-lg font-semibold mb-4">数据管理</h3>
-      <p className="text-sm text-muted-foreground mb-4">
-        将所有数据导出为本地文件进行备份。
-      </p>
+    <section className="bg-card border border-border rounded-xl p-6 shadow-notion-card">
+      <h3 className="card-title mb-4">数据管理</h3>
+      <p className="caption mb-4">将所有数据导出为本地文件进行备份。</p>
       <div className="flex gap-4">
         <Button
           onClick={() => handleExport("json")}

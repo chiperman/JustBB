@@ -191,7 +191,7 @@ export const Heatmap = memo(function Heatmap() {
 
   // 顶栏统计触发器
   const StatsTrigger = (
-    <div className="grid grid-cols-3 gap-8 w-full max-w-sm mx-auto px-4 cursor-pointer hover:bg-accent/50 transition-colors rounded-xl py-2">
+    <div className="grid grid-cols-3 gap-8 w-full max-w-sm mx-auto px-4 cursor-pointer hover:bg-accent/50 hover:ring-1 hover:ring-border/40 transition-all rounded-md py-2">
       <div className="flex flex-col items-center">
         <span className="text-3xl tracking-tighter leading-none font-bold tabular-nums text-foreground">
           {displayStats.totalMemos}
@@ -278,7 +278,7 @@ export const Heatmap = memo(function Heatmap() {
             {hoveredDate && (
               <div
                 className={cn(
-                  "absolute z-[999] mt-[-15px] rounded-[4px] border border-border bg-card px-2.5 py-1.5 font-sans text-[11px] text-foreground-[var(--)] pointer-events-none animate-in fade-in zoom-in duration-150 whitespace-nowrap",
+                  "absolute z-[999] mt-[-15px] rounded-md border border-border bg-card px-2.5 py-1.5 font-sans text-[11px] text-foreground-[var(--)] pointer-events-none animate-in fade-in zoom-in duration-150 whitespace-nowrap hover:ring-1 hover:ring-border/40",
                   hoveredDate.align === "center" &&
                     "-translate-x-1/2 -translate-y-full",
                   hoveredDate.align === "left" && "-translate-y-full ml-[-7px]",

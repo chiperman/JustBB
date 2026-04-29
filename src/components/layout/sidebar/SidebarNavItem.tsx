@@ -33,11 +33,11 @@ export function SidebarNavItem({
           onClick(item.href)
         }}
         className={cn(
-          "group relative flex h-9 w-full cursor-pointer items-center overflow-hidden rounded-md text-left transition-colors duration-200",
+          "group relative flex h-9 w-full cursor-pointer items-center rounded-md text-left transition-colors duration-200",
           isCollapsed ? "mx-auto w-9 justify-center gap-0 px-0" : "px-3 gap-3",
           isActive
             ? "bg-(--badge-clay-bg) text-primary font-medium"
-            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            : "text-muted-foreground hover:bg-secondary hover:text-foreground hover:ring-1 hover:ring-border/40"
         )}
         title={item.label}
         aria-current={isActive ? "page" : undefined}

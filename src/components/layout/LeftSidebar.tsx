@@ -110,7 +110,7 @@ export function LeftSidebar({
       >
         <div
           className={cn(
-            "h-9 overflow-hidden",
+            "h-9",
             effectiveIsCollapsed ? "w-9 min-w-9 shrink-0" : "flex-1 min-w-0"
           )}
         >
@@ -126,7 +126,7 @@ export function LeftSidebar({
                 ? "展开侧边栏"
                 : "收起侧边栏"
           }
-          className="h-9 w-9 shrink-0 rounded-md border border-transparent px-0 text-muted-foreground transition-all duration-200 hover:bg-secondary"
+          className="h-9 w-9 shrink-0 rounded-md px-0 text-muted-foreground transition-all duration-200 hover:bg-secondary hover:ring-1 hover:ring-border/40"
         >
           <span className="flex items-center justify-center">
             {isMobile ? (

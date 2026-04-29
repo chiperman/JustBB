@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - 这是一个基于 Next.js App Router、React 19、TypeScript 和 Supabase 的私密 Memo 系统。
 - 这个仓库最重要的设计前提不是“公开社交”，而是“长期个人记录 + 私密内容按条解锁”。
-- 讨论实现时，优先关注权限边界、数据可见性和状态一致性，而不是单纯的页面表现。
+- 讨论实现时，优先关注权限边界、数据可见性和状态一致性，同时也必须遵循 **Humanistic Flat 2.0** 视觉规范（统一 8px 圆角与 Whisper Ring 交互）。
 
 ## 先建立的心智模型
 
@@ -146,5 +146,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `docs/guide/testing.md`
 - `docs/guide/standards.md`
-- `docs/interface/system.md`
-- `docs/interface/interactions.md`
+- `docs/interface/design.md` (包含视觉、交互、圆角及阴影规范)

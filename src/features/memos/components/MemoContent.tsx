@@ -80,7 +80,7 @@ export function MemoContent({
               const linkElement = (
                 <Link
                   href={`/?num=${memoNum}`}
-                  className="text-primary hover:underline cursor-pointer font-mono bg-[#fdf5f2] px-1 rounded-md mx-0.5 my-0.5 inline-block align-middle focus-visible:ring-1 focus-visible:ring-primary/30 outline-none hover:bg-[#eecbc0] transition-colors"
+                  className="text-primary hover:underline cursor-pointer font-mono bg-[#fdf5f2] px-1 rounded-md mx-0.5 my-0.5 inline-block align-middle focus-visible:ring-1 focus-visible:ring-primary/30 outline-none hover:bg-[#eecbc0] hover:ring-1 hover:ring-border/40 transition-colors"
                 >
                   {token.value}
                 </Link>
@@ -104,7 +104,7 @@ export function MemoContent({
                 <Link
                   key={`tag-${index}`}
                   href={`/?tag=${encodeURIComponent(token.value.slice(1))}`}
-                  className="mx-0.5 my-0.5 px-1 rounded-md font-mono font-medium text-[#2a9d99] bg-[#2a9d99]/5 transition-colors hover:text-[#2a9d99] hover:bg-[#2a9d99]/10 hover:underline focus-visible:ring-1 focus-visible:ring-[#2a9d99]/30 outline-none inline-block align-middle"
+                  className="mx-0.5 my-0.5 px-1 rounded-md font-mono font-medium text-[#2a9d99] bg-[#2a9d99]/5 transition-colors hover:text-[#2a9d99] hover:bg-[#2a9d99]/10 hover:underline hover:ring-1 hover:ring-border/40 focus-visible:ring-1 focus-visible:ring-[#2a9d99]/30 outline-none inline-block align-middle"
                 >
                   {token.value}
                 </Link>
@@ -143,7 +143,7 @@ export function MemoContent({
               )
             case "location":
               const locElement = (
-                <span className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer bg-primary/10 px-1.5 py-0.5 rounded-md mx-0.5 my-0.5 align-middle hover:bg-primary/20 transition-colors">
+                <span className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer bg-primary/10 px-1.5 py-0.5 rounded-md mx-0.5 my-0.5 align-middle hover:bg-primary/20 hover:ring-1 hover:ring-border/40 transition-colors">
                   <span className="text-sm">📍</span>
                   <span className="text-[13px] font-medium">{token.name}</span>
                 </span>

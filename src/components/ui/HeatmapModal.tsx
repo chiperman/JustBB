@@ -156,13 +156,13 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
 
           {/* Centered Toggle Switch */}
           <div className="absolute left-0 right-0 top-0 bottom-0 flex items-center justify-center pointer-events-none">
-            <div className="bg-black/5 p-1 rounded-xl pointer-events-auto flex relative">
+            <div className="bg-black/5 p-1 rounded-lg pointer-events-auto flex relative">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setViewMode("month")}
                 className={cn(
-                  "relative z-10 px-6 py-1 text-sm h-8 rounded-lg transition-colors hover:bg-transparent",
+                  "relative z-10 px-6 py-1 text-sm h-8 rounded-md transition-colors hover:bg-transparent",
                   viewMode === "month"
                     ? "font-bold text-foreground"
                     : "text-muted-foreground hover:text-foreground font-medium"
@@ -171,7 +171,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                 {viewMode === "month" && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute inset-0 bg-white rounded-lg"
+                    className="absolute inset-0 bg-white rounded-md"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
@@ -182,7 +182,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                 size="sm"
                 onClick={() => setViewMode("year")}
                 className={cn(
-                  "relative z-10 px-6 py-1 text-sm h-8 rounded-lg transition-colors hover:bg-transparent",
+                  "relative z-10 px-6 py-1 text-sm h-8 rounded-md transition-colors hover:bg-transparent",
                   viewMode === "year"
                     ? "font-bold text-foreground"
                     : "text-muted-foreground hover:text-foreground font-medium"
@@ -191,7 +191,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                 {viewMode === "year" && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute inset-0 bg-white rounded-lg"
+                    className="absolute inset-0 bg-white rounded-md"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
@@ -288,7 +288,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                 {hoveredDay && (
                   <div
                     className={cn(
-                      "absolute z-[999] mt-[-15px] rounded-[6px] border border-border/70 bg-popover/95 px-2.5 py-1.5 font-mono text-[10px] text-popover-foreground backdrop-blur-md pointer-events-none animate-in fade-in zoom-in duration-150 whitespace-nowrap transition-all duration-200 ease-out",
+                      "absolute z-[999] mt-[-15px] rounded-md border border-border/70 bg-popover/95 px-2.5 py-1.5 font-mono text-[10px] text-popover-foreground backdrop-blur-md pointer-events-none animate-in fade-in zoom-in duration-150 whitespace-nowrap transition-all duration-200 ease-out",
                       hoveredDay.align === "center" &&
                         "-translate-x-1/2 -translate-y-full",
                       hoveredDay.align === "left" &&
@@ -414,7 +414,7 @@ function MonthCalendar({
             >
               <div
                 className={cn(
-                  "w-full h-full rounded-[6px] transition-colors duration-200",
+                  "w-full h-full rounded-md transition-colors duration-200",
                   !isCurrentMonth
                     ? "opacity-0 pointer-events-none"
                     : colorFn(count)

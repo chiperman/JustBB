@@ -75,7 +75,7 @@ export function UnlockDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-md gap-5 rounded-inner border-border/40 bg-card/95 p-6 shadow-xl backdrop-blur-xl">
+      <DialogContent className="max-w-md gap-5 rounded-inner border-border/40 bg-card/95 p-6 backdrop-blur-xl">
         <DialogHeader className="gap-3 pr-8">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -119,7 +119,7 @@ export function UnlockDialog({
                 placeholder="请输入访问口令"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className="h-11 rounded-md border-border/50 bg-background pr-11 shadow-none focus-visible:ring-primary/20"
+                className="h-11 rounded-md border-border/50 bg-background pr-11-none focus-visible:ring-primary/20"
                 autoFocus
                 onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
               />

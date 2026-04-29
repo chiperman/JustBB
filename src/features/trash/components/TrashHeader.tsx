@@ -49,7 +49,7 @@ export function TrashHeader({
               <Button
                 variant="outline"
                 size="sm"
-                className="border-border/60 bg-background/80 text-muted-foreground shadow-none hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
+                className="border-border/60 bg-background/80 text-muted-foreground-none hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
                 disabled={isPending}
               >
                 {isPending ? (

@@ -149,7 +149,7 @@ export function EditorToolbar({
               size="sm"
               onClick={onPublish}
               disabled={!content.trim() || isPending}
-              className="h-8 px-4 bg-primary text-primary-foreground shadow-sm transition-all"
+              className="h-8 px-4 bg-primary text-primary-foreground transition-all"
             >
               {isPending ? "提交中..." : mode === "edit" ? "保存" : "发布"}
             </Button>

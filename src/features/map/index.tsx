@@ -1,12 +1,12 @@
-'use client';
+"use client"
 
-import { AnimatePresence, motion } from 'framer-motion';
-import { useMapMemos } from './hooks/useMapMemos';
-import { MapLoadingScreen } from './components/MapLoadingScreen';
-import { MapErrorScreen } from './components/MapErrorScreen';
+import { AnimatePresence, motion } from "framer-motion"
+import { useMapMemos } from "./hooks/useMapMemos"
+import { MapLoadingScreen } from "./components/MapLoadingScreen"
+import { MapErrorScreen } from "./components/MapErrorScreen"
 
 export function MapPageContent() {
-  const { markers, isLoading, MapView } = useMapMemos();
+  const { markers, isLoading, MapView } = useMapMemos()
 
   return (
     <div className="flex flex-col gap-4 h-full min-h-0">
@@ -20,7 +20,7 @@ export function MapPageContent() {
       </div>
 
       <div className="flex-1 min-h-0 px-6 pb-6 relative">
-        <div className="relative h-full w-full overflow-hidden rounded-inner bg-card ring-1 ring-border/70 shadow-sm">
+        <div className="relative h-full w-full overflow-hidden rounded-inner bg-card ring-1 ring-border/70">
           <AnimatePresence mode="wait">
             {isLoading ? (
               <MapLoadingScreen />
@@ -29,10 +29,14 @@ export function MapPageContent() {
                 key="map"
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
                 className="w-full h-full"
               >
-                <MapView markers={markers} mode="full" className="w-full h-full min-h-[500px]" />
+                <MapView
+                  markers={markers}
+                  mode="full"
+                  className="w-full h-full min-h-[500px]"
+                />
               </motion.div>
             ) : (
               <MapErrorScreen />
@@ -41,5 +45,5 @@ export function MapPageContent() {
         </div>
       </div>
     </div>
-  );
+  )
 }

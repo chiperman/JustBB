@@ -6,7 +6,7 @@ JustBB embodies the philosophy of a high-quality physical notebook: a blank canv
 
 The custom font stack (Inter-based) is the backbone of the system. At display sizes (64px), it uses aggressive negative letter-spacing (-2.125px), creating headlines that feel compressed and precise. The weight range is broader than typical systems: 400 for body, 500 for UI elements, 600 for semi-bold labels, and 700 for display headings. OpenType features `"lnum"` (lining numerals) and `"locl"` (localized forms) are enabled on larger text, adding typographic sophistication.
 
-What makes this visual language distinctive is its border philosophy. Rather than heavy borders or shadows, we use ultra-thin `1px solid rgba(29,29,27,0.1)` borders -- borders that exist as whispers, barely perceptible division lines that create structure without weight. The shadow system is equally restrained: multi-layer stacks with cumulative opacity never exceeding 0.05, creating depth that's felt rather than seen.
+What makes this visual language distinctive is its border philosophy. Rather than shadows, we use ultra-thin `1px solid rgba(29,29,27,0.1)` borders -- borders that exist as whispers, barely perceptible division lines that create structure without weight. We embrace a flat aesthetic where depth is defined by color alternation and these delicate boundaries.
 
 **Key Characteristics:**
 
@@ -14,7 +14,7 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 - Warm neutral palette: grays carry yellow-brown undertones (`#f6f5f4` warm white, `#31302e` warm dark)
 - Near-black text via **Anthropic Black** (`#1d1d1b`) -- creating micro-warmth and reducing eye strain
 - Ultra-thin borders: `1px solid rgba(29,29,27,0.1)` throughout -- whisper-weight division
-- Multi-layer shadow stacks with sub-0.05 opacity for barely-there depth
+- **Flat Aesthetic**: No elevation shadows; hierarchy is achieved through layout and borders
 - **Anthropic Clay** (`#d97757`) as the singular accent color for CTAs and interactive elements
 - Pill badges (9999px radius) with tinted clay backgrounds for status indicators
 - 8px base spacing unit with an organic, non-rigid scale
@@ -53,11 +53,10 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 - **Badge Clay Bg** (`#fdf5f2`): Pill badge background, tinted clay surface.
 - **Badge Clay Text** (`#d97757`): Pill badge text, darker clay for readability.
 
-### Shadows & Depth
+### Borders & Division
 
-- **Card Shadow** (`rgba(0,0,0,0.04) 0px 4px 18px, rgba(0,0,0,0.027) 0px 2.025px 7.84688px, rgba(0,0,0,0.02) 0px 0.8px 2.925px, rgba(0,0,0,0.01) 0px 0.175px 1.04062px`): Multi-layer card elevation.
-- **Deep Shadow** (`rgba(0,0,0,0.01) 0px 1px 3px, rgba(0,0,0,0.02) 0px 3px 7px, rgba(0,0,0,0.02) 0px 7px 15px, rgba(0,0,0,0.04) 0px 14px 28px, rgba(0,0,0,0.05) 0px 23px 52px`): Five-layer deep elevation for modals and featured content.
 - **Whisper Border** (`1px solid rgba(29,29,27,0.1)`): Standard division border -- cards, dividers, sections.
+- **Focus Clay** (`1px solid #d97757`): Active focus state ring.
 
 ## 3. Typography Rules
 
@@ -131,7 +130,7 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 - Background: `#ffffff`
 - Border: `1px solid rgba(29,29,27,0.1)` (whisper border)
 - Radius: 12px (standard cards), 16px (featured/modals)
-- Shadow: Multi-layer stack for subtle elevation.
+- Elevation: Completely flat, no shadows.
 
 ### Inputs & Forms
 
@@ -160,14 +159,13 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 - Comfortable (12px): Standard cards
 - Large (16px): Dialogs and Modals
 
-## 6. Depth & Elevation
+## 6. Layout Depth
 
-| Level               | Treatment                        | Use              |
-| ------------------- | -------------------------------- | ---------------- |
-| Flat (Level 0)      | No shadow                        | Page background  |
-| Whisper (Level 1)   | `1px solid rgba(29,29,27,0.1)`   | Standard borders |
-| Soft Card (Level 2) | 4-layer shadow stack             | Content cards    |
-| Deep Card (Level 3) | 5-layer shadow stack (52px blur) | Modals           |
+| Level             | Treatment                          | Use              |
+| ----------------- | ---------------------------------- | ---------------- |
+| Flat (Level 0)    | No shadow                          | Page background  |
+| Whisper (Level 1) | `1px solid rgba(29,29,27,0.1)`     | Standard borders |
+| Surface (Level 2) | Background alternation (`#f6f5f4`) | Secondary areas  |
 
 ## 7. Responsive Behavior
 

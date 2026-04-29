@@ -55,7 +55,7 @@ export function ExportConfigDialog({
             disabled={
               status !== "idle" && status !== "completed" && status !== "error"
             }
-            className="h-10 px-8 shadow-notion-card font-bold"
+            className="h-10 px-8 font-bold"
           >
             开始导出数据
           </Button>

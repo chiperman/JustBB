@@ -21,7 +21,7 @@ export default function UnauthorizedPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="max-w-md w-full space-y-8 text-center bg-card border border-border rounded-xl p-10 shadow-notion-deep">
+      <div className="max-w-md w-full space-y-8 text-center bg-card border border-border rounded-xl p-10">
         <div className="flex justify-center">
           <div className="p-4 bg-destructive/10 rounded-full">
             <HugeiconsIcon

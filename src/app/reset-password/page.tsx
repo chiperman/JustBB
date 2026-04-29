@@ -71,7 +71,7 @@ export default function ResetPasswordPage() {
   if (isSuccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-6">
-        <div className="max-w-md w-full space-y-8 text-center bg-card border border-border rounded-xl p-10 shadow-notion-deep">
+        <div className="max-w-md w-full space-y-8 text-center bg-card border border-border rounded-xl p-10">
           <div className="flex justify-center">
             <div className="p-4 bg-primary/10 rounded-full">
               <HugeiconsIcon
@@ -101,7 +101,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="max-w-md w-full space-y-8 bg-card border border-border rounded-xl p-10 shadow-notion-deep">
+      <div className="max-w-md w-full space-y-8 bg-card border border-border rounded-xl p-10">
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="p-3 bg-primary/10 rounded-2xl">
             <HugeiconsIcon
@@ -157,7 +157,7 @@ export default function ResetPasswordPage() {
 
           <Button
             type="submit"
-            className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/20 mt-4 transition-all active:scale-[0.98]"
+            className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold-primary/20 mt-4 transition-all active:scale-[0.98]"
             disabled={isLoading}
           >
             {isLoading ? (

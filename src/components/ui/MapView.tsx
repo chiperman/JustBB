@@ -208,7 +208,7 @@ export function MapView({
           return L.divIcon({
             html: `<div class="relative w-10 h-10 flex items-center justify-center shrink-0 aspect-square group">
                                 ${isFirstLoadRef.current ? `<div class="animate-marker-ring shrink-0 aspect-square"></div>` : ""}
-                                <div class="w-10 h-10 bg-primary/20 backdrop-blur-sm border-2 border-primary rounded-full flex items-center justify-center text-primary font-bold shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/30 shrink-0 aspect-square ${isFirstLoadRef.current ? "animate-marker-pop" : ""}">
+                                <div class="w-10 h-10 bg-primary/20 backdrop-blur-sm border-2 border-primary rounded-full flex items-center justify-center text-primary font-bold transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/30 shrink-0 aspect-square ${isFirstLoadRef.current ? "animate-marker-pop" : ""}">
                                     <span class="text-xs leading-none">${totalMemos}</span>
                                 </div>
                                </div>`,
@@ -396,11 +396,11 @@ export function MapView({
                                 ? `<div class="animate-marker-ring shrink-0 aspect-square" style="animation-delay: ${delay}ms;"></div>`
                                 : ""
                             }
-                            <div class="w-8 h-8 bg-primary/20 backdrop-blur-sm border-2 border-primary rounded-full flex items-center justify-center text-primary shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/30 shrink-0 aspect-square ${isFirstLoadRef.current && mode === "full" ? "animate-marker-pop" : ""}" 
+                            <div class="w-8 h-8 bg-primary/20 backdrop-blur-sm border-2 border-primary rounded-full flex items-center justify-center text-primary transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/30 shrink-0 aspect-square ${isFirstLoadRef.current && mode === "full" ? "animate-marker-pop" : ""}" 
                                 style="${isFirstLoadRef.current && mode === "full" ? `animation-delay: ${delay}ms;` : ""}">
                                 ${
                                   mode === "mini"
-                                    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="drop-shadow-sm"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`
+                                    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="drop-"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`
                                     : `<span class="text-[10px] font-bold leading-none">${marker.items.length || 1}</span>`
                                 }
                             </div>
@@ -494,7 +494,7 @@ export function MapView({
         <>
           {mode === "full" ? (
             <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 pointer-events-none">
-              <div className="bg-background/80 backdrop-blur-md border border-border/50 px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
+              <div className="bg-background/80 backdrop-blur-md border border-border/50 px-3 py-1.5 rounded-full flex items-center gap-2">
                 <HugeiconsIcon
                   icon={Location04Icon}
                   size={14}
@@ -507,7 +507,7 @@ export function MapView({
             </div>
           ) : (
             <div className="absolute top-2 right-2 z-10 pointer-events-none">
-              <div className="bg-background/82 text-foreground/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[9px] font-bold shadow-sm border border-border/50 tracking-[0.18em] uppercase">
+              <div className="bg-background/82 text-foreground/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[9px] font-bold border border-border/50 tracking-[0.18em] uppercase">
                 LEVEL {currentZoom}
               </div>
             </div>
@@ -523,7 +523,7 @@ export function MapView({
                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 className="absolute bottom-8 left-1/2 z-10"
               >
-                <div className="bg-background/80 text-foreground/80 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-bold shadow-sm border border-border/50 tracking-[0.2em] uppercase">
+                <div className="bg-background/80 text-foreground/80 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-bold border border-border/50 tracking-[0.2em] uppercase">
                   LEVEL {currentZoom}
                 </div>
               </motion.div>
@@ -533,7 +533,7 @@ export function MapView({
           {/* 自定义胶囊缩放控件：对齐空间预览风格 */}
           {mode === "full" && (
             <div className="absolute bottom-6 right-6 z-10 hidden md:block">
-              <div className="flex flex-col bg-background/80 backdrop-blur-md border border-border/50 rounded-full shadow-sm overflow-hidden">
+              <div className="flex flex-col bg-background/80 backdrop-blur-md border border-border/50 rounded-full overflow-hidden">
                 <button
                   onClick={() => mapInstance.current?.zoomIn()}
                   className="p-2.5 flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-accent/50 transition-colors border-b border-border/40"

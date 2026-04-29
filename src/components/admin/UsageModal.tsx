@@ -75,7 +75,7 @@ function InfoHint({
           <HugeiconsIcon icon={InformationCircleIcon} size={12} />
         </button>
       </TooltipTrigger>
-      <TooltipContent className="max-w-52 rounded-xl border border-[#1d1d1b]/10 bg-white dark:bg-[#1a1a18] px-3 py-2 text-[11px] font-medium leading-relaxed shadow-xl">
+      <TooltipContent className="max-w-52 rounded-xl border border-[#1d1d1b]/10 bg-white dark:bg-[#1a1a18] px-3 py-2 text-[11px] font-medium leading-relaxed">
         <p>{tip}</p>
       </TooltipContent>
     </Tooltip>
@@ -204,9 +204,9 @@ export function UsageModal({
     >
       <div className="space-y-6">
         {error && (
-          <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#d97757]/20 bg-[#d97757]/[0.03] px-4 py-3 shadow-sm">
+          <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#d97757]/20 bg-[#d97757]/[0.03] px-4 py-3">
             <div className="flex items-start gap-3">
-              <div className="mt-0.5 rounded-xl p-1.5 bg-[#d97757]/10 text-[#d97757] shadow-sm">
+              <div className="mt-0.5 rounded-xl p-1.5 bg-[#d97757]/10 text-[#d97757]">
                 <HugeiconsIcon icon={ApiIcon} size={14} />
               </div>
               <div className="space-y-1">

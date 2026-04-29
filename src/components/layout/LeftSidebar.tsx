@@ -100,14 +100,7 @@ export function LeftSidebar({
       className="relative flex h-full shrink-0 flex-col overflow-hidden border-r border-border bg-muted p-2"
     >
       {/* Top Area */}
-      <div
-        className={cn(
-          "mb-5 flex min-h-9 transition-[margin,gap] duration-200",
-          effectiveIsCollapsed
-            ? "flex-col items-center gap-1.5"
-            : "items-center gap-2 pr-1"
-        )}
-      >
+      <div className="flex h-16 shrink-0 items-center justify-between px-3">
         <div
           className={cn(
             "h-9 overflow-hidden",
@@ -116,28 +109,30 @@ export function LeftSidebar({
         >
           <SidebarSettings isCollapsed={effectiveIsCollapsed} />
         </div>
-        <Button
-          variant="ghost"
-          onClick={toggleCollapsedState}
-          aria-label={
-            isMobile
-              ? "关闭侧边栏"
-              : effectiveIsCollapsed
-                ? "展开侧边栏"
-                : "收起侧边栏"
-          }
-          className="h-9 w-9 shrink-0 rounded-md px-0 text-muted-foreground transition-all duration-200 active:scale-95 hover:scale-102 hover:bg-secondary"
-        >
-          <span className="flex items-center justify-center">
-            {isMobile ? (
-              <HugeiconsIcon icon={Cancel01Icon} size={16} />
-            ) : effectiveIsCollapsed ? (
-              <HugeiconsIcon icon={PanelLeftCloseIcon} size={16} />
-            ) : (
-              <HugeiconsIcon icon={PanelLeftOpenIcon} size={16} />
-            )}
-          </span>
-        </Button>
+        {!effectiveIsCollapsed && (
+          <Button
+            variant="ghost"
+            onClick={toggleCollapsedState}
+            aria-label={
+              isMobile
+                ? "关闭侧边栏"
+                : effectiveIsCollapsed
+                  ? "展开侧边栏"
+                  : "收起侧边栏"
+            }
+            className="h-9 w-9 shrink-0 rounded-md border-none px-0 text-muted-foreground transition-all duration-200 hover:bg-secondary/80"
+          >
+            <span className="flex items-center justify-center">
+              {isMobile ? (
+                <HugeiconsIcon icon={Cancel01Icon} size={16} />
+              ) : effectiveIsCollapsed ? (
+                <HugeiconsIcon icon={PanelLeftCloseIcon} size={16} />
+              ) : (
+                <HugeiconsIcon icon={PanelLeftOpenIcon} size={16} />
+              )}
+            </span>
+          </Button>
+        )}
       </div>
 
       {/* Heatmap Area */}

@@ -100,7 +100,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
 
   const identityLabel = user ? user.email : "未登录"
   const triggerClassName = cn(
-    "h-9 rounded-md overflow-hidden hover:bg-accent hover:text-accent-foreground focus-visible:ring-0 transition-[padding,gap,background-color,color,width] duration-200 active:scale-95",
+    "h-9 rounded-md overflow-hidden bg-transparent border-none hover:bg-secondary/80 hover:text-accent-foreground focus-visible:ring-0 focus-visible:outline-none transition-all duration-200",
     isCollapsed
       ? "w-9 justify-center px-0"
       : "flex w-full items-center justify-start gap-3 px-3"
@@ -118,7 +118,11 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
           size={16}
           className="text-muted-foreground"
         />
-        {!isCollapsed && <span className="text-[14px]">{identityLabel}</span>}
+        {!isCollapsed && (
+          <span className="nav-button-text truncate opacity-80">
+            {identityLabel}
+          </span>
+        )}
       </Button>
     )
   }
@@ -143,14 +147,16 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
               )}
             </div>
             {!isCollapsed && (
-              <span className="nav-button-text truncate">{identityLabel}</span>
+              <span className="nav-button-text truncate opacity-80">
+                {identityLabel}
+              </span>
             )}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent side="top" align="start" className="w-64">
           <DropdownMenuLabel className="font-normal px-3 py-3">
             <div className="flex flex-col space-y-2">
-              <p className="micro-label font-bold uppercase tracking-widest opacity-60">
+              <p className="text-[10.5px] font-semibold uppercase tracking-[0.2em] opacity-50">
                 Identity / 身份
               </p>
               <div className="flex items-center gap-3">
@@ -181,7 +187,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
           <DropdownMenuSeparator />
 
           <div className="px-1 py-1">
-            <DropdownMenuLabel className="px-2 py-2 micro-label font-bold uppercase tracking-[0.2em] opacity-50">
+            <DropdownMenuLabel className="px-2 py-2 text-[10.5px] font-semibold uppercase tracking-[0.2em] opacity-50">
               Settings / 偏好
             </DropdownMenuLabel>
             <DropdownMenuSub>
@@ -191,7 +197,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                   size={16}
                   className="mr-2 text-primary"
                 />
-                <span>外观主题</span>
+                <span className="nav-button-text">外观主题</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuSubContent className="ml-1">
@@ -205,7 +211,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         size={15}
                         className="mr-2 text-primary opacity-80"
                       />
-                      <span>浅色模式</span>
+                      <span className="nav-button-text">浅色模式</span>
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="dark" className="h-9">
                       <HugeiconsIcon
@@ -213,7 +219,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         size={15}
                         className="mr-2 text-primary opacity-80"
                       />
-                      <span>深色模式</span>
+                      <span className="nav-button-text">深色模式</span>
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="system" className="h-9">
                       <HugeiconsIcon
@@ -221,7 +227,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         size={15}
                         className="mr-2 text-primary opacity-80"
                       />
-                      <span>跟随系统</span>
+                      <span className="nav-button-text">跟随系统</span>
                     </DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
                 </DropdownMenuSubContent>
@@ -232,7 +238,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
           <DropdownMenuSeparator />
 
           <div className="px-1 py-1">
-            <p className="px-2 py-2 micro-label font-bold uppercase tracking-[0.2em] opacity-50">
+            <p className="px-2 py-2 text-[10.5px] font-semibold uppercase tracking-[0.2em] opacity-50">
               Tools / 工具
             </p>
             <DropdownMenuItem
@@ -245,7 +251,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                 size={16}
                 className="mr-2 text-primary"
               />
-              <span>导入 Memos</span>
+              <span className="nav-button-text">导入 Memos</span>
             </DropdownMenuItem>
 
             <DropdownMenuItem
@@ -258,7 +264,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                 size={16}
                 className="mr-2 text-primary"
               />
-              <span>导出 Memos</span>
+              <span className="nav-button-text">导出 Memos</span>
             </DropdownMenuItem>
 
             {user?.role === "admin" && (
@@ -271,7 +277,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                   size={16}
                   className="mr-2 text-primary group-hover:animate-pulse"
                 />
-                <span>服务用量监控</span>
+                <span className="nav-button-text">服务用量监控</span>
               </DropdownMenuItem>
             )}
           </div>
@@ -289,7 +295,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                   size={16}
                   className="mr-2 text-primary"
                 />
-                <span className="font-semibold">登录系统</span>
+                <span className="nav-button-text">登录系统</span>
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem
@@ -302,7 +308,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                   size={16}
                   className={cn("mr-2", loggingOut && "animate-spin")}
                 />
-                <span>退出登录</span>
+                <span className="nav-button-text">退出登录</span>
               </DropdownMenuItem>
             )}
           </div>

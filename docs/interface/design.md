@@ -81,7 +81,7 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 | Body Medium       | Inter | 16px (1.00rem) | 500    | 1.60         | normal         | Anthropic Black |
 | Body Semibold     | Inter | 16px (1.00rem) | 600    | 1.60         | normal         | Anthropic Black |
 | Body Bold         | Inter | 16px (1.00rem) | 700    | 1.60         | normal         | Anthropic Black |
-| Nav / Button      | Inter | 15px (0.94rem) | 600    | 1.33         | normal         | Anthropic Black |
+| Nav / Button      | Inter | 14px (0.88rem) | 500    | 1.33         | normal         | Anthropic Black |
 | Caption           | Inter | 14px (0.88rem) | 500    | 1.43         | normal         | Warm Gray 500   |
 | Caption Light     | Inter | 14px (0.88rem) | 400    | 1.43         | normal         | Warm Gray 500   |
 | Badge             | Inter | 12px (0.75rem) | 600    | 1.33         | 0.125px        | Anthropic Clay  |

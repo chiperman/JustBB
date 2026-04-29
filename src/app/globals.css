@@ -241,9 +241,9 @@ body {
 }
 
 @utility nav-button-text {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  line-height: 1.33;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.43;
 }
 
 /* Global Elements */

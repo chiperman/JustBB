@@ -138,13 +138,22 @@ export function ExportProvider({ children }: { children: React.ReactNode }) {
       blob = new Blob([content], { type: "application/json" })
       filename = `memos-backup-${timestamp}.json`
     } else {
-      // Markdown 转换逻辑
+      // Markdown 转换逻辑 - 极简标题，元数据全部隐藏
       const content = data
         .map((memo: Memo) => {
           // eslint-disable-next-line no-restricted-syntax
-          const date = new Date(memo.created_at as string).toLocaleString() // hydration-safe
-          const visibility = memo.is_private ? "🔒 私密" : "🌍 公开"
-          return `### [${date}] ${visibility}\n\n${memo.content}\n\n---\n`
+          const date = new Date(memo.created_at as string).toLocaleString()
+
+          // 构建全量元数据（排除 content 和 owner_id）
+          const metadataFields = { ...memo } as unknown as Record<
+            string,
+            unknown
+          >
+          delete metadataFields.content
+          delete metadataFields.owner_id
+          const metadata = JSON.stringify(metadataFields)
+
+          return `### [${date}]\n<!-- ${metadata} -->\n\n${memo.content}\n\n---\n`
         })
         .join("\n")
       blob = new Blob([content], { type: "text/markdown" })

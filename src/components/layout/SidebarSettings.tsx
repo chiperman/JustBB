@@ -11,6 +11,7 @@ import {
   Logout02Icon as LogOut,
   Login03Icon as LogIn,
   Download02Icon as Download,
+  Upload02Icon as Upload,
   Loading01Icon as Loader2,
   ShieldCheck,
   UserCircleIcon as UserCircle,
@@ -43,6 +44,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { UsageModal } from "@/components/admin/UsageModal"
 import { ExportConfigDialog } from "./ExportConfigDialog"
+import { ImportConfigDialog } from "./ImportConfigDialog"
 
 interface SidebarSettingsProps {
   isCollapsed?: boolean
@@ -55,6 +57,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
   const [loggingOut, setLoggingOut] = React.useState(false)
   const [hasMounted, setHasMounted] = React.useState(false)
   const [exportDialogOpen, setExportDialogOpen] = React.useState(false)
+  const [importDialogOpen, setImportDialogOpen] = React.useState(false)
   const [usageModalOpen, setUsageModalOpen] = React.useState(false)
 
   React.useEffect(() => {
@@ -234,6 +237,19 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
             </p>
             <DropdownMenuItem
               className="h-10 disabled:opacity-40"
+              onClick={() => setImportDialogOpen(true)}
+              disabled={!user}
+            >
+              <HugeiconsIcon
+                icon={Upload}
+                size={16}
+                className="mr-2 text-primary"
+              />
+              <span>导入 Memos</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              className="h-10 disabled:opacity-40"
               onClick={() => setExportDialogOpen(true)}
               disabled={!user}
             >
@@ -297,6 +313,10 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
       <ExportConfigDialog
         open={exportDialogOpen}
         onOpenChange={setExportDialogOpen}
+      />
+      <ImportConfigDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
       />
     </>
   )

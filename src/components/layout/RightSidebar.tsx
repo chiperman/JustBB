@@ -267,7 +267,7 @@ export function RightSidebar({
             variant="outline"
             size="icon"
             onClick={() => setCollapsedState(false)}
-            className="rounded-sm border-border bg-background text-muted-foreground transition-all active:scale-95 hover:bg-secondary hover:text-foreground"
+            className="rounded-sm border-border bg-background text-muted-foreground transition-all active:scale-95 hover:bg-secondary hover:text-foreground hover:ring-1 hover:ring-border/40"
             aria-label="展开右侧时间轴"
           >
             <span className="flex items-center justify-center">
@@ -290,7 +290,7 @@ export function RightSidebar({
               variant="ghost"
               size="icon"
               onClick={() => setCollapsedState(true)}
-              className="shrink-0 rounded-sm text-muted-foreground transition-all active:scale-95 hover:bg-secondary hover:text-foreground"
+              className="shrink-0 rounded-sm text-muted-foreground transition-all active:scale-95 hover:bg-secondary hover:text-foreground hover:ring-1 hover:ring-border/40"
               aria-label="收起右侧时间轴"
             >
               <span className="flex items-center justify-center">

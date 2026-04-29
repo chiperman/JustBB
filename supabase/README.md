@@ -127,7 +127,7 @@ npm run types:generate:remote
 
 ## 5. 当前迁移关注点
 
-最近的数据库演进重点包括：
+当前的数据库演进重点包括：
 
 - `owner_id` 引入
 - owner-based RLS

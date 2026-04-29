@@ -101,7 +101,7 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 - Background: `#d97757` (Anthropic Clay)
 - Text: `#ffffff`
 - Padding: 8px 16px
-- Radius: 6px
+- Radius: 8px
 - Border: `1px solid transparent`
 - Hover: background darkens to `#c46648`
 - Active: scale(0.95) transform
@@ -112,7 +112,7 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 - Background: `rgba(29,29,27,0.05)` (translucent warm gray)
 - Text: `#1d1d1b` (Anthropic Black)
 - Padding: 8px 16px
-- Radius: 6px
+- Radius: 8px
 - Hover: scale(1.02)
 - Active: scale(0.95) transform
 - Use: Secondary actions
@@ -137,7 +137,7 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 - Background: `#ffffff`
 - Text: `#1d1d1b`
 - Border: `1px solid #dddddd`
-- Radius: 4px
+- Radius: 8px
 - Focus: Clay outline ring
 
 ## 5. Layout Principles
@@ -154,9 +154,9 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 
 ### Border Radius Scale
 
-- Micro (4px): Inputs
-- Standard (6px): Buttons
-- Comfortable (12px): Standard cards
+- Micro (4px): Inline tags
+- Standard (8px): Buttons, inputs, navigation items, dropdown items
+- Comfortable (12px): Standard cards, popover containers
 - Large (16px): Dialogs and Modals
 
 ## 6. Layout Depth

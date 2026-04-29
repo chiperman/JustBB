@@ -1,6 +1,6 @@
 # JustMemo
 
-> 最后更新：2026-04-19
+> 最后更新：2026-04-29
 > 状态：主入口文档
 
 JustMemo 是一个基于 Next.js 16、React 19 和 Supabase 构建的私密 Memo 系统。
@@ -23,14 +23,14 @@ JustMemo 是一个基于 Next.js 16、React 19 和 Supabase 构建的私密 Memo
 
 ### 技术栈
 
-| 分类 | 技术 |
-|------|------|
-| 前端框架 | Next.js 16.1.6 + React 19 + TypeScript |
-| 样式与动效 | Tailwind CSS 4 + Framer Motion |
-| 编辑器 | Tiptap 3 |
-| 地图 | Leaflet |
-| 后端 | Supabase |
-| 部署 | Vercel |
+| 分类       | 技术                                   |
+| ---------- | -------------------------------------- |
+| 前端框架   | Next.js 16.1.6 + React 19 + TypeScript |
+| 样式与动效 | Tailwind CSS 4 + Framer Motion         |
+| 编辑器     | Tiptap 3                               |
+| 地图       | Leaflet                                |
+| 后端       | Supabase                               |
+| 部署       | Vercel                                 |
 
 完整说明请看：
 

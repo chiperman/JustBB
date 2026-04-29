@@ -33,7 +33,7 @@ export function SidebarNavItem({
           onClick(item.href)
         }}
         className={cn(
-          "group relative flex h-9 w-full cursor-pointer items-center overflow-hidden rounded-md text-left transition-all duration-200",
+          "group relative flex h-9 w-full cursor-pointer items-center overflow-hidden rounded-md text-left transition-colors duration-200",
           isCollapsed ? "mx-auto w-9 justify-center gap-0 px-0" : "px-3 gap-3",
           isActive
             ? "bg-(--badge-clay-bg) text-primary font-medium"

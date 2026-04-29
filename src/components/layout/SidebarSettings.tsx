@@ -100,7 +100,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
 
   const identityLabel = user ? user.email : "未登录"
   const triggerClassName = cn(
-    "h-9 rounded-md overflow-hidden bg-transparent border border-transparent hover:bg-secondary/80 hover:text-accent-foreground focus-visible:ring-0 focus-visible:outline-none transition-colors duration-200",
+    "h-9 rounded-md overflow-hidden bg-transparent border border-transparent hover:bg-background hover:shadow-sm hover:border-border hover:text-accent-foreground focus-visible:ring-0 focus-visible:outline-none transition-all duration-200",
     isCollapsed
       ? "w-9 justify-center px-0"
       : "flex w-full items-center justify-start gap-3 px-3"

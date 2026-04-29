@@ -23,7 +23,7 @@ export function ExportProgressPanel() {
   const percentage = total > 0 ? Math.round((progress / total) * 100) : 0
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-80 overflow-hidden rounded-xl border border-border/40 bg-popover/80 p-4 shadow-notion-deep backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-4 right-4 z-50 w-80 overflow-hidden rounded-xl border border-border/40 bg-popover/80 p-4 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-300">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {status === "exporting" && (

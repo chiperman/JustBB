@@ -116,7 +116,7 @@ export function MemoContent({
                   className="block my-5 group relative max-w-full overflow-hidden"
                 >
                   <div className="flex justify-center items-center">
-                    <div className="relative rounded-md overflow-hidden ring-1 ring-border/70 shadow-sm transition-all duration-500 hover:scale-[1.01]">
+                    <div className="relative rounded-md overflow-hidden ring-1 ring-border/70 transition-all duration-500 hover:scale-[1.01]">
                       <ImageZoom src={token.value}>
                         <div className="relative max-h-[550px] w-full aspect-auto h-[300px]">
                           <Image
@@ -182,11 +182,11 @@ export function MemoContent({
                           <span>{token.title}</span>
                         </a>
                       </HoverCardTrigger>
-                      <HoverCardContent className="w-80 p-0 overflow-hidden border-none shadow-2xl">
+                      <HoverCardContent className="w-80 p-0 overflow-hidden border-none">
                         <LinkPreview
                           url={token.url}
                           customTitle={token.title}
-                          className="m-0 border-none shadow-none rounded-none h-auto"
+                          className="m-0 border-none-none rounded-none h-auto"
                         />
                       </HoverCardContent>
                     </HoverCard>

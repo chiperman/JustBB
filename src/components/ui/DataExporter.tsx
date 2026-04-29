@@ -81,7 +81,7 @@ export function DataExporter() {
   }
 
   return (
-    <section className="bg-card border border-border rounded-xl p-6 shadow-notion-card">
+    <section className="bg-card border border-border rounded-xl p-6">
       <h3 className="card-title mb-4">数据管理</h3>
       <p className="caption mb-4">将所有数据导出为本地文件进行备份。</p>
       <div className="flex gap-4">

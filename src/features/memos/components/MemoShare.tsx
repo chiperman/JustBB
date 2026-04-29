@@ -328,7 +328,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                     className={cn(
                       "px-3 py-0.5 text-[11px] rounded-full",
                       activeThemeId === t.id
-                        ? "bg-background shadow-sm font-medium"
+                        ? "bg-background font-medium"
                         : "text-muted-foreground"
                     )}
                   >
@@ -353,7 +353,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                     className={cn(
                       "w-3 h-3 rounded-sm border",
                       item.state
-                        ? "bg-primary border-primary shadow-[0_0_8px_rgba(var(--primary),0.4)]"
+                        ? "bg-primary border-primary-[0_0_8px_rgba(var(--primary),0.4)]"
                         : "border-muted-foreground/30 bg-transparent"
                     )}
                   />
@@ -398,7 +398,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
             </Button>
 
             <Button
-              className="flex-1 h-11 text-sm font-medium relative overflow-hidden group/btn shadow-notion-card"
+              className="flex-1 h-11 text-sm font-medium relative overflow-hidden group/btn"
               onClick={handleDownload}
               disabled={activeAction !== null}
             >

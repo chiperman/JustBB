@@ -126,7 +126,7 @@ export function LeftSidebar({
                 ? "展开侧边栏"
                 : "收起侧边栏"
           }
-          className="h-9 w-9 shrink-0 rounded-md border border-transparent px-0 text-muted-foreground transition-all duration-200 hover:bg-secondary hover:shadow-sm"
+          className="h-9 w-9 shrink-0 rounded-md border border-transparent px-0 text-muted-foreground transition-all duration-200 hover:bg-secondary"
         >
           <span className="flex items-center justify-center">
             {isMobile ? (

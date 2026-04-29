@@ -134,16 +134,13 @@ export function ImportConfigDialog({
             <Button
               onClick={handleStartImport}
               disabled={!file}
-              className="h-10 px-8 shadow-notion-card font-bold"
+              className="h-10 px-8 font-bold"
             >
               开始导入
             </Button>
           )}
           {(status === "completed" || status === "error") && (
-            <Button
-              onClick={handleClose}
-              className="h-10 px-8 shadow-notion-card font-bold"
-            >
+            <Button onClick={handleClose} className="h-10 px-8 font-bold">
               完成
             </Button>
           )}
@@ -178,7 +175,7 @@ export function ImportConfigDialog({
                   className={cn(
                     "h-7 text-[11px] font-bold uppercase tracking-tight",
                     exampleFormat === f &&
-                      "bg-background shadow-sm border border-border/50"
+                      "bg-background border border-border/50"
                   )}
                 >
                   {f === "jsonl" ? "LeanCloud" : f}
@@ -186,7 +183,7 @@ export function ImportConfigDialog({
               ))}
             </div>
 
-            <div className="bg-background/80 rounded-xl p-4 border border-border/40 font-mono text-[11px] leading-relaxed overflow-x-auto shadow-inner">
+            <div className="bg-background/80 rounded-xl p-4 border border-border/40 font-mono text-[11px] leading-relaxed overflow-x-auto">
               {exampleFormat === "markdown" && (
                 <pre className="text-muted-foreground whitespace-pre-wrap">
                   <span className="text-primary font-bold">
@@ -467,7 +464,7 @@ export function ImportConfigDialog({
                     {result.errors.map((err, idx) => (
                       <div
                         key={idx}
-                        className="p-2.5 bg-background/80 rounded-lg border border-red-100/50 shadow-sm flex flex-col gap-1"
+                        className="p-2.5 bg-background/80 rounded-lg border border-red-100/50 flex flex-col gap-1"
                       >
                         <p className="text-[12px] font-bold text-foreground leading-tight">
                           {err.summary}

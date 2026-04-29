@@ -267,7 +267,7 @@ export function RightSidebar({
             variant="outline"
             size="icon"
             onClick={() => setCollapsedState(false)}
-            className="rounded-sm border-border bg-background text-muted-foreground shadow-sm transition-all active:scale-95 hover:bg-secondary hover:text-foreground"
+            className="rounded-sm border-border bg-background text-muted-foreground transition-all active:scale-95 hover:bg-secondary hover:text-foreground"
             aria-label="展开右侧时间轴"
           >
             <span className="flex items-center justify-center">

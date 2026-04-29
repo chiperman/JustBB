@@ -93,7 +93,7 @@ export function AccessCodeDialog({
               value={accessCode}
               onChange={(e) => setAccessCode(e.target.value)}
               placeholder="请输入访问口令"
-              className="h-11 rounded-md border-border/50 bg-background pr-11 shadow-none focus-visible:ring-primary/20"
+              className="h-11 rounded-md border-border/50 bg-background pr-11-none focus-visible:ring-primary/20"
             />
             <Button
               type="button"
@@ -141,7 +141,7 @@ export function AccessCodeDialog({
             value={accessHint}
             onChange={(e) => setAccessHint(e.target.value)}
             placeholder="例如：我的生日"
-            className="h-11 rounded-md border-border/50 bg-background shadow-none focus-visible:ring-primary/20"
+            className="h-11 rounded-md border-border/50 bg-background-none focus-visible:ring-primary/20"
           />
         </div>
       </div>

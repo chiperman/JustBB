@@ -226,7 +226,7 @@ function StatCard({
   const currentScale = ticks[0] || maxValue
 
   return (
-    <div className="bg-card rounded-lg p-6 shadow-notion-card border border-border flex flex-col gap-6 h-[280px] relative">
+    <div className="bg-card rounded-lg p-6 border border-border flex flex-col gap-6 h-[280px] relative">
       <div className="flex items-baseline gap-1">
         <span className="text-3xl font-bold tracking-tighter text-foreground">
           {total}
@@ -290,7 +290,7 @@ function StatCard({
           {/* Singleton Tooltip */}
           <div
             className={cn(
-              "absolute top-[30%] -translate-x-1/2 -translate-y-full mb-2 bg-card shadow-notion-deep rounded-sm p-3 border border-border z-30 min-w-[90px] pointer-events-none transition-all duration-300 ease-out",
+              "absolute top-[30%] -translate-x-1/2 -translate-y-full mb-2 bg-card rounded-sm p-3 border border-border z-30 min-w-[90px] pointer-events-none transition-all duration-300 ease-out",
               hoveredIdx !== null
                 ? "opacity-100 scale-100"
                 : "opacity-0 scale-95"

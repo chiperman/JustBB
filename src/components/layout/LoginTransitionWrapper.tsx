@@ -51,7 +51,7 @@ export function LoginTransitionWrapper({
       x: "0%",
       opacity: 1,
       borderRadius: "24px",
-      boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.2)", // Slightly lighter shadow
+      boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.2)", // Slightly lighter
       willChange: "transform, opacity",
       transition: {
         type: "spring",
@@ -175,7 +175,7 @@ export function LoginTransitionWrapper({
           onClick={() => viewMode === "SPLIT_VIEW" && setViewMode("CARD_VIEW")}
         >
           <div
-            className="w-full h-full shadow-xl overflow-hidden border border-black/5 dark:border-white/5"
+            className="w-full h-full overflow-hidden border border-black/5 dark:border-white/5"
             style={{ borderRadius: "inherit" }}
           >
             {/* Actual Home Page Content */}

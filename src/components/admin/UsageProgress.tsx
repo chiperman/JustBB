@@ -32,10 +32,10 @@ export function UsageProgress({
 }: UsageProgressProps) {
   // 根据百分比确定颜色
   const getColorClass = (pct: number) => {
-    if (muted) return "bg-muted-foreground/30 shadow-none"
-    if (pct >= 90) return "bg-destructive shadow-[0_0_12px_rgba(239,68,68,0.3)]"
-    if (pct >= 70) return "bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.3)]"
-    return "bg-primary shadow-[0_0_12px_rgba(var(--color-primary-rgb),0.2)]"
+    if (muted) return "bg-muted-foreground/30-none"
+    if (pct >= 90) return "bg-destructive-[0_0_12px_rgba(239,68,68,0.3)]"
+    if (pct >= 70) return "bg-amber-500-[0_0_12px_rgba(245,158,11,0.3)]"
+    return "bg-primary-[0_0_12px_rgba(var(--color-primary-rgb),0.2)]"
   }
 
   const getBgColorClass = (pct: number) => {
@@ -93,7 +93,7 @@ export function UsageProgress({
                     <HugeiconsIcon icon={InformationCircleIcon} size={12} />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="max-w-xs rounded-inner border-border/40 bg-popover/95 px-3 py-2 micro-label font-medium leading-relaxed backdrop-blur-md shadow-notion-card">
+                <TooltipContent className="max-w-xs rounded-inner border-border/40 bg-popover/95 px-3 py-2 micro-label font-medium leading-relaxed backdrop-blur-md">
                   <p>{info}</p>
                 </TooltipContent>
               </Tooltip>
@@ -119,7 +119,7 @@ export function UsageProgress({
 
       <div
         className={cn(
-          "h-1.5 w-full rounded-full overflow-hidden relative border border-white/5 dark:border-white/5 shadow-inner transition-colors duration-500",
+          "h-1.5 w-full rounded-full overflow-hidden relative border border-white/5 dark:border-white/5 transition-colors duration-500",
           getBgColorClass(percentage)
         )}
       >

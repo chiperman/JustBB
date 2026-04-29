@@ -634,7 +634,7 @@ export function MemoEditor({
         height: isActuallyCollapsed ? "auto" : "auto",
         minHeight: isActuallyCollapsed ? 0 : 120,
         padding: 24,
-        boxShadow: isActuallyCollapsed ? "none" : "shadow-notion-card",
+        boxShadow: isActuallyCollapsed ? "none" : "",
       }}
       exit={{
         opacity: 0,
@@ -678,7 +678,7 @@ export function MemoEditor({
       }}
       className={cn(
         "border border-border rounded-lg relative flex flex-col items-stretch selection:bg-primary/30",
-        isActuallyCollapsed && "shadow-none cursor-pointer hover:bg-secondary",
+        isActuallyCollapsed && "-none cursor-pointer hover:bg-secondary",
         className
       )}
       onClick={() => {

@@ -315,7 +315,7 @@ export function LocationPickerDialog({
 
             {/* 搜索建议下拉框 */}
             {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 bg-popover border rounded-md shadow-md py-1">
+              <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 bg-popover border rounded-md py-1">
                 {suggestions.map((s, i) => (
                   <button
                     key={i}
@@ -328,7 +328,7 @@ export function LocationPickerDialog({
               </div>
             )}
             {showSuggestions && suggestions.length === 0 && !isSearching && (
-              <div className="absolute top-[calc(100%+4px)] left-0 right-10 z-50 bg-popover border rounded-md shadow-md py-3 text-center text-xs text-muted-foreground">
+              <div className="absolute top-[calc(100%+4px)] left-0 right-10 z-50 bg-popover border rounded-md py-3 text-center text-xs text-muted-foreground">
                 未找到相关地点
               </div>
             )}
@@ -399,7 +399,7 @@ export function LocationPickerDialog({
                   <div className="relative flex items-center justify-center">
                     <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping duration-[3000ms]" />
                     <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl" />
-                    <div className="relative bg-background/50 border border-primary/20 backdrop-blur-sm p-3 rounded-full text-primary shadow-md flex items-center justify-center">
+                    <div className="relative bg-background/50 border border-primary/20 backdrop-blur-sm p-3 rounded-full text-primary flex items-center justify-center">
                       <HugeiconsIcon
                         icon={Location04Icon}
                         size={24}
@@ -409,7 +409,7 @@ export function LocationPickerDialog({
                   </div>
 
                   {/* 毛玻璃徽章文本 */}
-                  <div className="px-3 py-1.5 bg-background/40 backdrop-blur-md border border-border/50 rounded-full shadow-sm">
+                  <div className="px-3 py-1.5 bg-background/40 backdrop-blur-md border border-border/50 rounded-full">
                     <span className="text-[11px] font-medium text-foreground/70 tracking-wide flex items-center gap-1.5">
                       <HugeiconsIcon
                         icon={LoadingIcon}

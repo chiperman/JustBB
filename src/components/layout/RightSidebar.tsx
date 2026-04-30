@@ -1,6 +1,12 @@
 "use client"
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
@@ -24,6 +30,7 @@ import { useHasMounted } from "@/hooks/useHasMounted"
 import { cn } from "@/lib/utils"
 import { getTimelineStats } from "@/actions/memos/analytics"
 import { Button } from "@/components/ui/button"
+import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
 import {
   RIGHT_SIDEBAR_COOKIE_KEY,
   RIGHT_SIDEBAR_STORAGE_EVENT,
@@ -75,6 +82,13 @@ export function RightSidebar({
 
   const { activeId, setActiveId, setManualClick } = useLayout()
 
+  const refreshTimelineStats = useCallback(async () => {
+    const res = await getTimelineStats()
+    if (res.success && res.data) {
+      setAllDays(res.data.days)
+    }
+  }, [])
+
   const setCollapsedState = (nextCollapsed: boolean) => {
     persistLayoutPreference(
       RIGHT_SIDEBAR_STORAGE_KEY,
@@ -123,6 +137,17 @@ export function RightSidebar({
       })
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useMemoSync(
+    useCallback(
+      (payload) => {
+        if (shouldRefreshMemoDerivedData(payload)) {
+          void refreshTimelineStats()
+        }
+      },
+      [refreshTimelineStats]
+    )
+  )
 
   // 构建时间轴数据结构（始终基于全量数据）
   const fullTimeline = useMemo(() => {

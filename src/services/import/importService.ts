@@ -70,6 +70,7 @@ export async function importMemos(
           const { data } = await supabase
             .from("memos")
             .select("id")
+            .eq("owner_id", user.id)
             .eq("content", memo.content)
             .eq("created_at", memo.created_at)
             .maybeSingle()

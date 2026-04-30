@@ -15,6 +15,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
 import { AdminDialogShell } from "@/components/ui/AdminDialogShell"
+import { useUser } from "@/context/UserContext"
 
 interface ExportConfigDialogProps {
   open: boolean
@@ -26,6 +27,7 @@ export function ExportConfigDialog({
   onOpenChange,
 }: ExportConfigDialogProps) {
   const { startExport, status } = useExport()
+  const { user } = useUser()
   const [format, setFormat] = React.useState<ExportFormat>("markdown")
 
   const handleStart = async () => {
@@ -53,7 +55,10 @@ export function ExportConfigDialog({
           <Button
             onClick={handleStart}
             disabled={
-              status !== "idle" && status !== "completed" && status !== "error"
+              !user ||
+              (status !== "idle" &&
+                status !== "completed" &&
+                status !== "error")
             }
             className="h-10 px-8 font-bold"
           >

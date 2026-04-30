@@ -20,6 +20,7 @@ import {
 } from "@/services/import/parsers"
 import { importMemos, ImportResult } from "@/services/import/importService"
 import { Progress } from "@/components/ui/progress"
+import { useUser } from "@/context/UserContext"
 
 interface ImportConfigDialogProps {
   open: boolean
@@ -30,6 +31,7 @@ export function ImportConfigDialog({
   open,
   onOpenChange,
 }: ImportConfigDialogProps) {
+  const { user } = useUser()
   const [file, setFile] = React.useState<File | null>(null)
   const [status, setStatus] = React.useState<
     "idle" | "parsing" | "importing" | "completed" | "error"
@@ -133,7 +135,7 @@ export function ImportConfigDialog({
           {status === "idle" && (
             <Button
               onClick={handleStartImport}
-              disabled={!file}
+              disabled={!user || !file}
               className="h-10 px-8 font-bold"
             >
               开始导入

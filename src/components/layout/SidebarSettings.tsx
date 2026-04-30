@@ -59,6 +59,8 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
   const [exportDialogOpen, setExportDialogOpen] = React.useState(false)
   const [importDialogOpen, setImportDialogOpen] = React.useState(false)
   const [usageModalOpen, setUsageModalOpen] = React.useState(false)
+  const canUseImportExport = Boolean(user)
+  const canUseUsageMonitor = user?.role === "admin"
 
   React.useEffect(() => {
     setHasMounted(true)
@@ -244,7 +246,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
             <DropdownMenuItem
               className="h-10 disabled:opacity-40"
               onClick={() => setImportDialogOpen(true)}
-              disabled={!user}
+              disabled={!canUseImportExport}
             >
               <HugeiconsIcon
                 icon={Upload}
@@ -257,7 +259,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
             <DropdownMenuItem
               className="h-10 disabled:opacity-40"
               onClick={() => setExportDialogOpen(true)}
-              disabled={!user}
+              disabled={!canUseImportExport}
             >
               <HugeiconsIcon
                 icon={Download}
@@ -267,19 +269,21 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
               <span className="nav-button-text">导出 Memos</span>
             </DropdownMenuItem>
 
-            {user?.role === "admin" && (
-              <DropdownMenuItem
-                className="h-10 group"
-                onClick={() => setUsageModalOpen(true)}
-              >
-                <HugeiconsIcon
-                  icon={FlashIcon}
-                  size={16}
-                  className="mr-2 text-primary group-hover:animate-pulse"
-                />
-                <span className="nav-button-text">服务用量监控</span>
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem
+              className="h-10 group disabled:opacity-40"
+              onClick={() => setUsageModalOpen(true)}
+              disabled={!canUseUsageMonitor}
+            >
+              <HugeiconsIcon
+                icon={FlashIcon}
+                size={16}
+                className={cn(
+                  "mr-2 text-primary",
+                  canUseUsageMonitor && "group-hover:animate-pulse"
+                )}
+              />
+              <span className="nav-button-text">服务用量监控</span>
+            </DropdownMenuItem>
           </div>
 
           <DropdownMenuSeparator />

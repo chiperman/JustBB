@@ -54,6 +54,20 @@ export function ExportProvider({ children }: { children: React.ReactNode }) {
     if (status !== "idle" && status !== "completed" && status !== "error")
       return
 
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      toast({
+        title: "无法导出",
+        description: "未登录，无法导出数据",
+        variant: "destructive",
+      })
+      return
+    }
+
     setFormat(selectedFormat)
     setStatus("exporting")
     setProgress(0)
@@ -65,6 +79,7 @@ export function ExportProvider({ children }: { children: React.ReactNode }) {
       const { count, error: countError } = await supabase
         .from("memos")
         .select("*", { count: "exact", head: true })
+        .eq("owner_id", user.id)
 
       if (countError) throw countError
       const totalCount = count || 0
@@ -91,6 +106,7 @@ export function ExportProvider({ children }: { children: React.ReactNode }) {
         const { data, error } = await supabase
           .from("memos")
           .select("*")
+          .eq("owner_id", user.id)
           .order("created_at", { ascending: false })
           .range(currentOffset, currentOffset + PAGE_SIZE - 1)
           .abortSignal(abortControllerRef.current?.signal)

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback, memo } from "react"
 import {
   format,
   eachMonthOfInterval,
@@ -12,15 +12,7 @@ import {
   endOfWeek,
   isSameMonth,
 } from "date-fns"
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/shared/ui/dialog"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Cancel01Icon as X } from "@hugeicons/core-free-icons"
+import { Calendar02Icon as CalendarIcon } from "@hugeicons/core-free-icons"
 import { Button } from "@/shared/ui/button"
 import {
   Select,
@@ -31,6 +23,7 @@ import {
 } from "@/shared/ui/select"
 import { cn } from "@/shared/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
+import { AdminDialogShell } from "@/shared/ui/AdminDialogShell"
 
 import { YearlyStats } from "./YearlyStats"
 
@@ -76,16 +69,27 @@ const itemVariants = {
   },
 }
 
+type HoveredDay = {
+  date: string
+  count: number
+  wordCount: number
+  left: number
+  top: number
+  align: "left" | "center" | "right"
+}
+
+function getColorClass(count: number) {
+  if (count === 0) return "bg-[var(--heatmap-0)]"
+  if (count <= 2) return "bg-[var(--heatmap-1)]"
+  if (count <= 5) return "bg-[var(--heatmap-2)]"
+  if (count <= 9) return "bg-[var(--heatmap-3)]"
+  return "bg-[var(--heatmap-4)]"
+}
+
 export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
+  const [open, setOpen] = useState(false)
   const [viewMode, setViewMode] = useState<"month" | "year">("month")
-  const [hoveredDay, setHoveredDay] = useState<{
-    date: string
-    count: number
-    wordCount: number
-    left: number
-    top: number
-    align: "left" | "center" | "right"
-  } | null>(null)
+  const [hoveredDay, setHoveredDay] = useState<HoveredDay | null>(null)
 
   // Calculate available years from stats
   const availableYears = useMemo(() => {
@@ -105,210 +109,232 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
     return String(currentYear)
   })
 
-  // 计算颜色等级 (使用 CSS 变量)
-  const getColorClass = (count: number) => {
-    if (count === 0) return "bg-[var(--heatmap-0)]"
-    if (count <= 2) return "bg-[var(--heatmap-1)]"
-    if (count <= 5) return "bg-[var(--heatmap-2)]"
-    if (count <= 9) return "bg-[var(--heatmap-3)]"
-    return "bg-[var(--heatmap-4)]"
-  }
+  const visibleMonths = useMemo(() => {
+    const targetYear = Number(selectedYear)
+    const now = new Date()
+    const isCurrentYear = targetYear === now.getFullYear()
 
-  const handleHover = (
-    e: React.MouseEvent,
-    date: string,
-    count: number,
-    wordCount: number
-  ) => {
-    const target = e.currentTarget as HTMLElement
-    const rect = target.getBoundingClientRect()
-    const container = target.closest(".heatmap-modal-wrapper") as HTMLElement
+    return eachMonthOfInterval({
+      start: startOfMonth(new Date(targetYear, 0, 1)),
+      end: isCurrentYear
+        ? startOfMonth(now)
+        : endOfMonth(new Date(targetYear, 11, 1)),
+    }).reverse()
+  }, [selectedYear])
 
-    if (container) {
-      const containerRect = container.getBoundingClientRect()
-      const relX = rect.left - containerRect.left + rect.width / 2
-      const containerWidth = containerRect.width
+  const clearHoveredDay = useCallback(() => {
+    setHoveredDay(null)
+  }, [])
 
-      let align: "left" | "center" | "right" = "center"
-      // 简单的边界处理
-      if (relX < 60) align = "left"
-      else if (relX > containerWidth - 60) align = "right"
+  const handleHover = useCallback(
+    (e: React.MouseEvent, date: string, count: number, wordCount: number) => {
+      const target = e.currentTarget as HTMLElement
+      const rect = target.getBoundingClientRect()
+      const container = target.closest(
+        ".heatmap-modal-tooltip-wrapper"
+      ) as HTMLElement
 
-      setHoveredDay({
-        date,
-        count,
-        wordCount,
-        left: relX,
-        top: rect.top - containerRect.top,
-        align,
-      })
-    }
-  }
+      if (container) {
+        const containerRect = container.getBoundingClientRect()
+        const relX = rect.left - containerRect.left + rect.width / 2
+        const containerWidth = containerRect.width
+
+        let align: "left" | "center" | "right" = "center"
+        if (relX < 72) align = "left"
+        else if (relX > containerWidth - 72) align = "right"
+
+        setHoveredDay({
+          date,
+          count,
+          wordCount,
+          left: relX,
+          top: rect.top - containerRect.top,
+          align,
+        })
+      }
+    },
+    []
+  )
+
+  const handleViewModeChange = useCallback(
+    (nextViewMode: "month" | "year") => {
+      clearHoveredDay()
+      setViewMode(nextViewMode)
+    },
+    [clearHoveredDay]
+  )
+
+  const handleSelectedYearChange = useCallback(
+    (year: string) => {
+      clearHoveredDay()
+      setSelectedYear(year)
+    },
+    [clearHoveredDay]
+  )
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-6xl h-[90vh] flex flex-col bg-[#F9F9F9] border-none p-0 overflow-hidden text-foreground [&>button]:hidden">
-        <div className="flex-none sticky top-0 z-50 bg-[#F9F9F9]/80 backdrop-blur-xl px-10 py-6 flex items-center justify-between border-b border-black/5">
-          <DialogTitle className="text-lg font-bold tracking-widest font-mono z-10 uppercase">
-            记录统计
-          </DialogTitle>
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="block w-full rounded-md text-left outline-none focus-visible:ring-1 focus-visible:ring-ring"
+      >
+        {trigger}
+      </button>
 
-          {/* Centered Toggle Switch */}
-          <div className="absolute left-0 right-0 top-0 bottom-0 flex items-center justify-center pointer-events-none">
-            <div className="bg-black/5 p-1 rounded-lg pointer-events-auto flex relative">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setViewMode("month")}
-                className={cn(
-                  "relative z-10 px-6 py-1 text-sm h-8 rounded-md transition-colors hover:bg-transparent",
-                  viewMode === "month"
-                    ? "font-bold text-foreground"
-                    : "text-muted-foreground hover:text-foreground font-medium"
-                )}
-              >
-                {viewMode === "month" && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-white rounded-md"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <span className="relative z-10">月</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setViewMode("year")}
-                className={cn(
-                  "relative z-10 px-6 py-1 text-sm h-8 rounded-md transition-colors hover:bg-transparent",
-                  viewMode === "year"
-                    ? "font-bold text-foreground"
-                    : "text-muted-foreground hover:text-foreground font-medium"
-                )}
-              >
-                {viewMode === "year" && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-white rounded-md"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <span className="relative z-10">年</span>
-              </Button>
-            </div>
-          </div>
-
-          <DialogClose asChild>
+      <AdminDialogShell
+        open={open}
+        onOpenChange={setOpen}
+        title="记录统计"
+        subtitle="按月份与年份查看记录节奏"
+        icon={CalendarIcon}
+        maxWidth="max-w-[1100px]"
+        contentClassName="px-8 py-7 max-h-[78vh]"
+        headerActions={
+          <div className="bg-black/5 p-1 rounded-xl pointer-events-auto flex relative">
             <Button
               variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-full hover:bg-black/5 z-10"
+              size="sm"
+              onClick={() => handleViewModeChange("month")}
+              className={cn(
+                "relative z-10 px-4 py-1 text-sm h-8 rounded-lg transition-colors hover:bg-transparent",
+                viewMode === "month"
+                  ? "font-bold text-foreground"
+                  : "text-muted-foreground hover:text-foreground font-medium"
+              )}
             >
-              <HugeiconsIcon icon={X} size={16} />
+              {viewMode === "month" && (
+                <motion.div
+                  layoutId="heatmap-modal-active-tab"
+                  className="absolute inset-0 bg-white rounded-lg border border-black/5"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.45 }}
+                />
+              )}
+              <span className="relative z-10">月</span>
             </Button>
-          </DialogClose>
-        </div>
-
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleViewModeChange("year")}
+              className={cn(
+                "relative z-10 px-4 py-1 text-sm h-8 rounded-lg transition-colors hover:bg-transparent",
+                viewMode === "year"
+                  ? "font-bold text-foreground"
+                  : "text-muted-foreground hover:text-foreground font-medium"
+              )}
+            >
+              {viewMode === "year" && (
+                <motion.div
+                  layoutId="heatmap-modal-active-tab"
+                  className="absolute inset-0 bg-white rounded-lg border border-black/5"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.45 }}
+                />
+              )}
+              <span className="relative z-10">年</span>
+            </Button>
+          </div>
+        }
+      >
         <div
-          className="flex-1 overflow-y-auto px-10 pt-6 pb-10 flex flex-col relative heatmap-modal-wrapper"
-          onMouseLeave={() => setHoveredDay(null)}
+          className="relative flex flex-col gap-6 heatmap-modal-wrapper"
+          onMouseLeave={clearHoveredDay}
         >
           <AnimatePresence mode="wait" initial={false}>
             {viewMode === "month" ? (
               <motion.div
                 key="month-view"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.2 }}
-                className="flex flex-col gap-6"
+                exit={{ opacity: 0, y: -14 }}
+                transition={{ duration: 0.18 }}
+                className="relative flex flex-col gap-6 overflow-visible heatmap-modal-tooltip-wrapper"
               >
-                <div className="flex items-center mb-2">
-                  <Select value={selectedYear} onValueChange={setSelectedYear}>
-                    <SelectTrigger
-                      variant="ghost"
-                      className="w-auto p-0 h-auto text-2xl font-bold tracking-tight gap-2 hover:bg-transparent px-0 data-[state=open]:bg-transparent"
+                <div className="flex flex-col gap-4 rounded-2xl border border-[#1d1d1b]/8 bg-[#f6f5f4]/70 px-5 py-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#d97757]">
+                      浏览范围
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-[#6b6964]">
+                      按月份查看每日记录密度与字数分布
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a39e98]">
+                      年份
+                    </span>
+                    <Select
+                      value={selectedYear}
+                      onValueChange={handleSelectedYearChange}
                     >
-                      <SelectValue placeholder="年份" />
-                    </SelectTrigger>
-                    <SelectContent
-                      position="popper"
-                      side="bottom"
-                      align="start"
-                      sideOffset={4}
-                      className="min-w-[100px]"
-                    >
-                      {availableYears.map((year) => (
-                        <SelectItem key={year} value={String(year)}>
-                          {year}年
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                      <SelectTrigger
+                        variant="ghost"
+                        className="h-9 min-w-[104px] rounded-xl border border-[#1d1d1b]/8 bg-white px-3 text-sm font-semibold text-[#1d1d1b] hover:bg-white data-[state=open]:bg-white"
+                      >
+                        <SelectValue placeholder="年份" />
+                      </SelectTrigger>
+                      <SelectContent
+                        position="popper"
+                        side="bottom"
+                        align="end"
+                        sideOffset={6}
+                        className="min-w-[104px]"
+                      >
+                        {availableYears.map((year) => (
+                          <SelectItem key={year} value={String(year)}>
+                            {year}年
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <motion.div
                   key={selectedYear}
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 pb-20"
+                  className="grid grid-cols-1 gap-5 pb-6 lg:grid-cols-2"
                   variants={containerVariants}
                   initial="hidden"
                   animate="show"
                 >
-                  {(() => {
-                    const targetYear = Number(selectedYear)
-                    const now = new Date()
-                    const isCurrentYear = targetYear === now.getFullYear()
-                    const months: Date[] = eachMonthOfInterval({
-                      start: startOfMonth(new Date(targetYear, 0, 1)),
-                      end: isCurrentYear
-                        ? startOfMonth(now)
-                        : endOfMonth(new Date(targetYear, 11, 1)),
-                    }).reverse()
-                    return months
-                  })().map((month) => {
-                    return (
-                      <motion.div
-                        key={month.toISOString()}
-                        variants={itemVariants}
-                      >
-                        <MonthCalendar
-                          date={month}
-                          stats={stats.days}
-                          colorFn={getColorClass}
-                          onHover={handleHover}
-                        />
-                      </motion.div>
-                    )
-                  })}
+                  {visibleMonths.map((month) => (
+                    <motion.div
+                      key={month.toISOString()}
+                      variants={itemVariants}
+                    >
+                      <MonthCalendar
+                        date={month}
+                        stats={stats.days}
+                        colorFn={getColorClass}
+                        onHover={handleHover}
+                      />
+                    </motion.div>
+                  ))}
                 </motion.div>
 
-                {/* Tooltip */}
                 {hoveredDay && (
                   <div
                     className={cn(
-                      "absolute z-[999] mt-[-15px] rounded-md border border-border/70 bg-popover/95 px-2.5 py-1.5 font-mono text-[10px] text-popover-foreground backdrop-blur-md pointer-events-none animate-in fade-in zoom-in duration-150 whitespace-nowrap transition-all duration-200 ease-out",
+                      "absolute z-[999] mt-[-8px] rounded-md border border-[#1d1d1b]/10 bg-white/96 px-3 py-2 text-[11px] text-[#1d1d1b] backdrop-blur-md pointer-events-none animate-in fade-in zoom-in duration-100 whitespace-nowrap shadow-[0_12px_30px_rgba(29,29,27,0.08)]",
                       hoveredDay.align === "center" &&
                         "-translate-x-1/2 -translate-y-full",
-                      hoveredDay.align === "left" &&
-                        "-translate-y-full ml-[-7px]",
+                      hoveredDay.align === "left" && "-translate-y-full",
                       hoveredDay.align === "right" &&
-                        "-translate-x-full -translate-y-full mr-[-7px]"
+                        "-translate-x-full -translate-y-full"
                     )}
                     style={{ left: hoveredDay.left, top: hoveredDay.top }}
                   >
-                    <div className="flex flex-col items-center">
-                      <div className="flex items-center gap-1.5 tabular-nums">
-                        <span className="font-bold text-primary">
-                          {hoveredDay.count} 笔记
-                        </span>
-                        <span className="opacity-40">/</span>
-                        <span>{hoveredDay.wordCount} 字</span>
-                      </div>
-                      <div className="text-[9px] opacity-40 mt-0.5 tabular-nums">
-                        {hoveredDay.date}
-                      </div>
+                    <div className="flex items-center gap-2 tabular-nums">
+                      <span className="font-bold text-[#d97757]">
+                        {hoveredDay.count} 笔记
+                      </span>
+                      <span className="opacity-30">/</span>
+                      <span className="font-medium text-[#6b6964]">
+                        {hoveredDay.wordCount} 字
+                      </span>
+                    </div>
+                    <div className="mt-1 text-[10px] font-medium text-[#a39e98] tabular-nums">
+                      {hoveredDay.date}
                     </div>
                   </div>
                 )}
@@ -316,10 +342,11 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
             ) : (
               <motion.div
                 key="year-view"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.2 }}
+                exit={{ opacity: 0, y: -14 }}
+                transition={{ duration: 0.18 }}
+                className="rounded-2xl border border-[#1d1d1b]/8 bg-[#f6f5f4]/45 p-5"
               >
                 <YearlyStats
                   stats={stats.days}
@@ -329,12 +356,12 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
             )}
           </AnimatePresence>
         </div>
-      </DialogContent>
-    </Dialog>
+      </AdminDialogShell>
+    </>
   )
 }
 
-function MonthCalendar({
+const MonthCalendar = memo(function MonthCalendar({
   date,
   stats,
   colorFn,
@@ -370,24 +397,26 @@ function MonthCalendar({
   }, [stats, monthStart, monthEnd])
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex h-full flex-col gap-4 rounded-2xl border border-[#1d1d1b]/8 bg-white p-5">
       <div className="flex items-center justify-between">
-        <h3 className="font-bold text-base">
+        <h3 className="text-[22px] font-bold tracking-tight text-[#1d1d1b]">
           {getYear(date) !== new Date().getFullYear()
             ? format(date, "yyyy年 M月")
             : format(date, "M月")}
         </h3>
-        <div className="flex gap-3 text-[10px] text-muted-foreground/60 font-mono font-bold uppercase tracking-tight">
-          <span>{monthStats.count} 笔记</span>
-          <span>{monthStats.daysWithMemos} 记录天数</span>
+        <div className="flex gap-3 text-[11px] font-semibold text-[#a39e98]">
+          <span className="tabular-nums">{monthStats.count} 笔记</span>
+          <span className="tabular-nums">
+            {monthStats.daysWithMemos} 记录天数
+          </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1.5 text-center">
+      <div className="grid grid-cols-7 gap-2 text-center">
         {["一", "二", "三", "四", "五", "六", "日"].map((d) => (
           <span
             key={d}
-            className="text-[10px] pb-1 font-bold text-muted-foreground/40 font-sans"
+            className="pb-1 text-[10px] font-semibold text-[#a39e98]"
           >
             {d}
           </span>
@@ -403,9 +432,9 @@ function MonthCalendar({
               key={dateStr}
               className="relative group/day aspect-square flex items-center justify-center cursor-default"
               whileHover={
-                isCurrentMonth && count > 0 ? { scale: 1.2, zIndex: 10 } : {}
+                isCurrentMonth && count > 0 ? { scale: 1.04, y: -1 } : {}
               }
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              transition={{ type: "spring", stiffness: 360, damping: 24 }}
               onMouseEnter={(e) =>
                 isCurrentMonth &&
                 count > 0 &&
@@ -414,17 +443,22 @@ function MonthCalendar({
             >
               <div
                 className={cn(
-                  "w-full h-full rounded-md transition-colors duration-200",
+                  "h-full w-full rounded-xl border border-transparent transition-colors duration-150",
                   !isCurrentMonth
                     ? "opacity-0 pointer-events-none"
-                    : colorFn(count)
+                    : cn(
+                        colorFn(count),
+                        count === 0
+                          ? "bg-[#f1f2f4] text-[#a39e98]"
+                          : "border-black/0"
+                      )
                 )}
               />
               {isCurrentMonth && (
                 <span
                   className={cn(
-                    "absolute text-[10px] font-bold font-mono pointer-events-none tabular-nums",
-                    count > 5 ? "text-white" : "text-foreground/40"
+                    "pointer-events-none absolute text-[11px] font-semibold tabular-nums",
+                    count > 5 ? "text-white/95" : "text-[#6b6964]"
                   )}
                 >
                   {format(day, "d")}
@@ -436,4 +470,4 @@ function MonthCalendar({
       </div>
     </div>
   )
-}
+})

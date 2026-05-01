@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, memo, useCallback } from "react"
+import { useState, useMemo, memo, useCallback, useEffect } from "react"
 import {
   startOfDay,
   subDays,
@@ -23,6 +23,7 @@ const HeatmapCell = memo(
     count,
     isActive,
     onHover,
+    onBlur,
     onClick,
     shouldReduceMotion,
   }: {
@@ -34,6 +35,7 @@ const HeatmapCell = memo(
       date: string,
       count: number
     ) => void
+    onBlur: () => void
     onClick: (e: React.MouseEvent, date: string) => void
     shouldReduceMotion: boolean
   }) => {
@@ -49,6 +51,7 @@ const HeatmapCell = memo(
 
     return (
       <div
+        data-heatmap-cell="true"
         tabIndex={hasData ? 0 : -1}
         role="gridcell"
         aria-label={`${dateStr}: ${count} 记录`}
@@ -62,6 +65,7 @@ const HeatmapCell = memo(
         )}
         onMouseEnter={(e) => onHover(e, dateStr, count)}
         onFocus={(e) => hasData && onHover(e, dateStr, count)}
+        onBlur={() => hasData && onBlur()}
         onClick={(e) => hasData && onClick(e, dateStr)}
       />
     )
@@ -179,6 +183,29 @@ export const Heatmap = memo(function Heatmap() {
     [router]
   )
 
+  useEffect(() => {
+    if (!hoveredDate) return
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target
+
+      if (!(target instanceof HTMLElement)) {
+        setHoveredDate(null)
+        return
+      }
+
+      if (target.closest("[data-heatmap-cell]")) return
+
+      setHoveredDate(null)
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown)
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown)
+    }
+  }, [hoveredDate])
+
   // If loading, stats will be null, and we'll use placeholder data
   const displayStats = stats || {
     totalMemos: 0,
@@ -264,6 +291,7 @@ export const Heatmap = memo(function Heatmap() {
                   count={displayStats.days[dateStr]?.count || 0}
                   isActive={activeDate === dateStr}
                   onHover={handleCellHover}
+                  onBlur={() => setHoveredDate(null)}
                   onClick={handleCellClick}
                   shouldReduceMotion={!!shouldReduceMotion}
                 />

@@ -54,7 +54,7 @@ export const OnThisDay = memo(function OnThisDay({
           <li
             key={memo.id}
             className={cn(
-              "rounded-md border border-border/70 bg-card/70 p-4 text-sm transition-all outline-none hover:bg-accent/60 focus-visible:ring-0 group lg:last:hidden xl:last:block",
+              "rounded-md border border-border/70 bg-card/70 p-4 text-sm transition-all outline-none hover:bg-accent/60 focus-visible:ring-1 focus-visible:ring-ring group lg:last:hidden xl:last:block",
               !shouldReduceMotion && "hover:translate-x-1"
             )}
             tabIndex={0}

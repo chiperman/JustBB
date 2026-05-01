@@ -45,7 +45,7 @@ export function SidebarCollapseButton({
         onClick={onClick}
         aria-label={label}
         className={cn(
-          "group relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-md transition-all duration-200 hover:scale-102 active:scale-95 hover:bg-secondary hover:text-foreground hover:ring-1 hover:ring-border/40 text-muted-foreground",
+          "group relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-md transition-all duration-200 hover:scale-102 active:scale-95 hover:bg-secondary hover:text-foreground hover:ring-1 hover:ring-border/40 text-muted-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring",
           className
         )}
       >

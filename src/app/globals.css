@@ -75,7 +75,7 @@
   --destructive-foreground: #ffffff;
   --border: rgba(29, 29, 27, 0.1); /* Whisper Border */
   --input: #dddddd;
-  --ring: #d97757;
+  --ring: #e7b8a8;
   --radius: 12px;
 
   --active-clay: #c46648;
@@ -118,7 +118,7 @@
   --destructive-foreground: #ffffff;
   --border: rgba(246, 245, 244, 0.1);
   --input: #6b6964;
-  --ring: #d97757;
+  --ring: #b78676;
 
   --active-clay: #c46648;
   --badge-clay-bg: rgba(217, 119, 87, 0.1);

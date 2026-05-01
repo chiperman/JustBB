@@ -68,7 +68,7 @@ export const LinkNodeView = (props: NodeViewProps) => {
       <DropdownMenuTrigger asChild>
         <button
           onMouseDown={(e) => e.preventDefault()}
-          className="p-1 hover:bg-accent rounded-md transition-colors text-muted-foreground hover:text-foreground"
+          className="p-1 hover:bg-accent rounded-md transition-colors text-muted-foreground hover:text-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
           <HugeiconsIcon icon={MoreHorizontalIcon} size={14} />
         </button>
@@ -140,7 +140,7 @@ export const LinkNodeView = (props: NodeViewProps) => {
             <button
               onMouseDown={(e) => e.preventDefault()}
               onClick={handleCopy}
-              className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors"
+              className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-1 focus-visible:ring-ring"
               title="拷贝链接"
             >
               <HugeiconsIcon icon={Copy01Icon} size={12} />
@@ -148,7 +148,7 @@ export const LinkNodeView = (props: NodeViewProps) => {
             <button
               onMouseDown={(e) => e.preventDefault()}
               onClick={handleEdit}
-              className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors"
+              className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-1 focus-visible:ring-ring"
               title="编辑"
             >
               <HugeiconsIcon icon={PencilEdit02Icon} size={12} />

@@ -84,7 +84,7 @@ export function UsageProgress({
                 <TooltipTrigger asChild>
                   <button
                     type="button"
-                    className="inline-flex h-4 w-4 shrink-0 aspect-square items-center justify-center rounded-full text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-all outline-none"
+                    className="inline-flex h-4 w-4 shrink-0 aspect-square items-center justify-center rounded-full text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-all outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   >
                     <HugeiconsIcon icon={InformationCircleIcon} size={12} />
                   </button>

@@ -61,7 +61,7 @@ function InfoHint({
         <button
           type="button"
           className={cn(
-            "inline-flex h-4 w-4 shrink-0 aspect-square items-center justify-center rounded-full transition-all outline-none",
+            "inline-flex h-4 w-4 shrink-0 aspect-square items-center justify-center rounded-full transition-all outline-none focus-visible:ring-1 focus-visible:ring-ring",
             muted
               ? "text-[#6b6964]/30"
               : "text-[#6b6964]/50 hover:text-[#d97757] hover:bg-[#d97757]/10"

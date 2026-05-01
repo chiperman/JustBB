@@ -86,9 +86,9 @@ export function LoginPanel() {
         toast({ title: "欢迎回来", description: "登录成功" })
         resetForm()
         setUser(res.data.user)
-        setViewMode("CARD_VIEW")
+        setViewMode("HOME_FOCUS")
         // Delay refresh to avoid CPU contention during animation start
-        setTimeout(() => router.refresh(), 100)
+        setTimeout(() => router.refresh(), 180)
       } else {
         toast({
           title: "登录失败",
@@ -126,9 +126,9 @@ export function LoginPanel() {
         toast({ title: "账号已激活", description: "欢迎加入 JustBB" })
         resetForm()
         setUser(res.data.user)
-        setViewMode("CARD_VIEW")
+        setViewMode("HOME_FOCUS")
         // Delay refresh to avoid CPU contention during animation start
-        setTimeout(() => router.refresh(), 100)
+        setTimeout(() => router.refresh(), 180)
       } else {
         toast({
           title: "验证失败",
@@ -197,7 +197,7 @@ export function LoginPanel() {
               <Input
                 type="email"
                 placeholder="name@example.com"
-                className="pl-10 h-11 bg-muted/30 border-transparent focus:bg-background transition-all"
+                className="h-11 border-border/70 bg-background pl-10 transition-all focus:border-primary/30"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -279,7 +279,7 @@ export function LoginPanel() {
                 <Input
                   type={showPassword ? "text" : "password"}
                   placeholder="您的密码"
-                  className="pl-10 pr-10 h-11 bg-muted/30 border-transparent focus:bg-background transition-all"
+                  className="h-11 border-border/70 bg-background pl-10 pr-10 transition-all focus:border-primary/30"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -363,7 +363,7 @@ export function LoginPanel() {
                   <Input
                     type={showPassword ? "text" : "password"}
                     placeholder="设置密码"
-                    className="pl-10 pr-10 h-11 bg-muted/30 border-transparent focus:bg-background transition-all"
+                    className="h-11 border-border/70 bg-background pl-10 pr-10 transition-all focus:border-primary/30"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required

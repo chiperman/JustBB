@@ -9,7 +9,7 @@ import React, {
   useMemo,
 } from "react"
 
-export type ViewMode = "HOME_FOCUS" | "CARD_VIEW" | "SPLIT_VIEW"
+export type ViewMode = "HOME_FOCUS" | "SPLIT_VIEW"
 
 interface LayoutContextType {
   viewMode: ViewMode

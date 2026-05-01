@@ -8,11 +8,6 @@ import {
   useSyncExternalStore,
 } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  PanelRightCloseIcon,
-  PanelRightOpenIcon,
-} from "@hugeicons/core-free-icons"
 import {
   Timeline,
   TimelineContent,
@@ -29,7 +24,7 @@ import { TimelineStats } from "@/types/stats"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { cn } from "@/shared/lib/utils"
 import { getTimelineStats } from "@/server/actions/memos/analytics"
-import { Button } from "@/shared/ui/button"
+import { SidebarCollapseButton } from "./SidebarCollapseButton"
 import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
 import {
   RIGHT_SIDEBAR_COOKIE_KEY,
@@ -288,17 +283,13 @@ export function RightSidebar({
     <div className="relative hidden xl:block h-full shrink-0 overflow-visible">
       {isCollapsed && (
         <div className="absolute top-6 right-6 z-30">
-          <Button
-            variant="outline"
-            size="icon"
+          <SidebarCollapseButton
+            isCollapsed={true}
             onClick={() => setCollapsedState(false)}
-            className="rounded-sm border-border bg-background text-muted-foreground transition-all active:scale-95 hover:bg-secondary hover:text-foreground hover:ring-1 hover:ring-border/40"
-            aria-label="展开右侧时间轴"
-          >
-            <span className="flex items-center justify-center">
-              <HugeiconsIcon icon={PanelRightOpenIcon} size={16} />
-            </span>
-          </Button>
+            side="right"
+            label="展开右侧时间轴"
+            className="bg-background border border-border"
+          />
         </div>
       )}
 
@@ -311,17 +302,12 @@ export function RightSidebar({
       >
         <aside className="flex h-full w-80 flex-col overflow-hidden border-l border-border bg-muted p-6">
           <div className="mb-8 flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
+            <SidebarCollapseButton
+              isCollapsed={false}
               onClick={() => setCollapsedState(true)}
-              className="shrink-0 rounded-sm text-muted-foreground transition-all active:scale-95 hover:bg-secondary hover:text-foreground hover:ring-1 hover:ring-border/40"
-              aria-label="收起右侧时间轴"
-            >
-              <span className="flex items-center justify-center">
-                <HugeiconsIcon icon={PanelRightCloseIcon} size={16} />
-              </span>
-            </Button>
+              side="right"
+              label="收起右侧时间轴"
+            />
             <h3 className="flex-1 badge-text uppercase">时间轴</h3>
           </div>
           <div className="relative flex-1 overflow-y-auto pr-1 scrollbar-hide">

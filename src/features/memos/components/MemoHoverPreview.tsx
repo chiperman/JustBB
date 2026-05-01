@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card"
-import { cn } from "@/lib/utils"
+import { cn } from "@/shared/lib/utils"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Loading01Icon as Loader2 } from "@hugeicons/core-free-icons"
 
@@ -31,8 +31,8 @@ interface MemoHoverPreviewProps {
   children: React.ReactNode
 }
 
-import { useHasMounted } from "@/hooks/useHasMounted"
-import { useUnlockedMemos } from "@/context/UnlockedMemosContext"
+import { useHasMounted } from "@/shared/hooks/useHasMounted"
+import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
 
 export function MemoHoverPreview({
   memoNumber,
@@ -51,7 +51,7 @@ export function MemoHoverPreview({
     if (open && !previewContent) {
       setLoading(true)
       try {
-        const { getMemoByNumber } = await import("@/actions/memos/query")
+        const { getMemoByNumber } = await import("@/server/actions/memos/query")
         const memo = await getMemoByNumber(
           parseInt(memoNumber),
           unlockedMemoIds

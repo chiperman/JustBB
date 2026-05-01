@@ -9,7 +9,7 @@ import {
   signInWithOAuth,
   sendPasswordResetEmail,
 } from "../actions"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/shared/hooks/use-toast"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Mail01Icon as Mail,
@@ -21,14 +21,14 @@ import {
   GithubIcon,
   GoogleIcon,
 } from "@hugeicons/core-free-icons"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
+import { Button } from "@/shared/ui/button"
+import { Input } from "@/shared/ui/input"
+import { Separator } from "@/shared/ui/separator"
 import { motion, Variants, AnimatePresence } from "framer-motion"
-import { useLayout } from "@/context/LayoutContext"
+import { useLayout } from "@/state/LayoutContext"
 import { OtpInput } from "./OtpInput"
 import { PasswordStrength } from "./PasswordStrength"
-import { useUser } from "@/context/UserContext"
+import { useUser } from "@/state/UserContext"
 
 export function LoginPanel() {
   const { setViewMode } = useLayout()

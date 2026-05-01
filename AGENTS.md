@@ -19,7 +19,7 @@
 
 ## 快速导航
 
-- 隐私、搜索、导出、分享：先看 `src/actions/`，再核对 `search_memos_secure` 和 `supabase/migrations/`。
+- 隐私、搜索、导出、分享：先看 `src/server/actions/`，再核对 `search_memos_secure` 和 `supabase/migrations/`。
 - UI、交互、视觉一致性：先看对应 `src/features/` 或 `src/components/`，必要时读 `docs/interface/design.md`。
 - 权限、认证、数据可见性：先确认 RLS/RPC 和 migration，再看前端条件判断。
 - 复杂客户端状态：优先查 `src/context/`、`src/hooks/` 和既有 feature hooks。
@@ -30,7 +30,7 @@
 ## 代码地图
 
 - `src/app/`：Next.js 路由、页面入口和布局。
-- `src/actions/`：主要数据读写入口。
+- `src/server/actions/`：主要数据读写入口。
 - `src/features/`：按功能域组织的 UI、hooks 和局部逻辑。
 - `src/components/`：共享 UI 和布局组件。
 - `src/context/`、`src/hooks/`：应用级状态、Provider 和复用 hooks。

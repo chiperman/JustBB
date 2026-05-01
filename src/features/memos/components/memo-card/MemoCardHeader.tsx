@@ -6,9 +6,9 @@ import {
   ChatLock01Icon as LockIcon,
   Link02Icon,
 } from "@hugeicons/core-free-icons"
-import { cn, formatDate } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import { cn, formatDate } from "@/shared/lib/utils"
+import { Button } from "@/shared/ui/button"
+import { Checkbox } from "@/shared/ui/checkbox"
 import { MemoActions } from "../MemoActions"
 import { Memo } from "@/types/memo"
 

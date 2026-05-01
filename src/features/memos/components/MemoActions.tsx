@@ -5,10 +5,10 @@ import {
   deleteMemo,
   restoreMemo,
   permanentDeleteMemo,
-} from "@/actions/memos/trash"
-import { updateMemoState } from "@/actions/memos/mutate"
+} from "@/server/actions/memos/trash"
+import { updateMemoState } from "@/server/actions/memos/mutate"
 import { dispatchMemoEvent } from "@/lib/memos/events"
-import { memoCache } from "@/lib/memo-cache"
+import { memoCache } from "@/shared/lib/memo-cache"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Delete02Icon,
@@ -26,8 +26,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
+} from "@/shared/ui/dropdown-menu"
+import { Button } from "@/shared/ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,12 +37,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/shared/ui/alert-dialog"
 import { AccessCodeDialog } from "@/features/memos/components/AccessCodeDialog"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/shared/hooks/use-toast"
 import { MemoShare } from "@/features/memos/components/MemoShare"
 import { Memo } from "@/types/memo"
-import { useHasMounted } from "@/hooks/useHasMounted"
+import { useHasMounted } from "@/shared/hooks/useHasMounted"
 
 interface MemoActionsProps {
   id: string

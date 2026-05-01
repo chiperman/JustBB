@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/shared/ui/button"
+import { Input } from "@/shared/ui/input"
+import { Label } from "@/shared/ui/label"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Key01Icon as KeyRound,
@@ -14,7 +14,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import Link from "next/link"
 import { sendPasswordResetEmail } from "@/features/auth/actions"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/shared/hooks/use-toast"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")

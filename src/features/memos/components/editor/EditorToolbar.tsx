@@ -9,9 +9,9 @@ import {
   Location04Icon,
   Link01Icon,
 } from "@hugeicons/core-free-icons"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { spring, ease, duration } from "@/lib/animation"
+import { cn } from "@/shared/lib/utils"
+import { Button } from "@/shared/ui/button"
+import { spring, ease, duration } from "@/shared/lib/animation"
 
 interface EditorToolbarProps {
   isActuallyCollapsed: boolean

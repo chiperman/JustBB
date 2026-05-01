@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
-import { ThemeProvider } from "@/components/providers/ThemeProvider"
-import { AgentationWrapper } from "@/components/AgentationWrapper"
+import { ThemeProvider } from "@/shared/providers/ThemeProvider"
+import { AgentationWrapper } from "@/shared/providers/AgentationWrapper"
 import { env } from "@/lib/env"
 import "./globals.css"
 
@@ -15,9 +15,9 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 }
 
-import { PWARegistration } from "@/components/providers/PWARegistration"
-import { Toaster } from "@/components/ui/toaster"
-import { TooltipProvider } from "@/components/ui/tooltip"
+import { PWARegistration } from "@/shared/providers/PWARegistration"
+import { Toaster } from "@/shared/ui/toaster"
+import { TooltipProvider } from "@/shared/ui/tooltip"
 
 export default function RootLayout({
   children,

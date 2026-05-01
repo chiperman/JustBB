@@ -9,19 +9,19 @@ import {
   Share01Icon as Share2,
   Copy01Icon as Copy,
 } from "@hugeicons/core-free-icons"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/shared/ui/button"
 import { format } from "date-fns"
 import { zhCN } from "date-fns/locale"
 import { Memo } from "@/types/memo"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/shared/hooks/use-toast"
 import { MemoContent } from "@/features/memos/components/MemoContent"
-import { AdminDialogShell } from "@/components/ui/AdminDialogShell"
+import { AdminDialogShell } from "@/shared/ui/AdminDialogShell"
 
-import { useHasMounted } from "@/hooks/useHasMounted"
-import { getMemoShareUrl } from "@/lib/share"
-import { POSTER_THEMES } from "@/lib/export-themes"
-import { getExportFileName } from "@/lib/export-utils"
-import { cn } from "@/lib/utils"
+import { useHasMounted } from "@/shared/hooks/useHasMounted"
+import { getMemoShareUrl } from "@/shared/lib/share"
+import { POSTER_THEMES } from "@/shared/lib/export-themes"
+import { getExportFileName } from "@/shared/lib/export-utils"
+import { cn } from "@/shared/lib/utils"
 
 interface MemoShareProps {
   memo: Memo

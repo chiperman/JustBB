@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/shared/ui/button"
+import { Input } from "@/shared/ui/input"
+import { Label } from "@/shared/ui/label"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   CircleLock01Icon as Lock,
@@ -12,7 +12,7 @@ import {
   CheckmarkCircle01Icon as CheckCircle2,
 } from "@hugeicons/core-free-icons"
 import { updatePassword } from "@/features/auth/actions"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/shared/hooks/use-toast"
 import { useRouter } from "next/navigation"
 
 export default function ResetPasswordPage() {

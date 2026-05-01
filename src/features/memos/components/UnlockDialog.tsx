@@ -8,10 +8,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { unlockWithCode } from "@/actions/memos/mutate"
+} from "@/shared/ui/dialog"
+import { Button } from "@/shared/ui/button"
+import { Input } from "@/shared/ui/input"
+import { unlockWithCode } from "@/server/actions/memos/mutate"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   CircleLock01Icon as Lock,
@@ -19,8 +19,8 @@ import {
   ViewOffSlashIcon as EyeOff,
 } from "@hugeicons/core-free-icons"
 
-import { useHasMounted } from "@/hooks/useHasMounted"
-import { useUnlockedMemos } from "@/context/UnlockedMemosContext"
+import { useHasMounted } from "@/shared/hooks/useHasMounted"
+import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
 
 interface UnlockDialogProps {
   memoId: string

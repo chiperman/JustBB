@@ -1,4 +1,4 @@
-import { MainLayoutClient } from "@/components/layout/MainLayoutClient";
+import { MainLayoutClient } from "@/shared/layout/MainLayoutClient"
 export default function Home() {
-  return <MainLayoutClient />;
+  return <MainLayoutClient />
 }

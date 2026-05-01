@@ -1,58 +1,66 @@
-'use client';
+"use client"
 
-import { useState, useEffect, useMemo } from 'react';
-import { usePageDataCache } from '@/context/PageDataCache';
-import { getAllTags } from '@/actions/memos/analytics';
+import { useState, useEffect, useMemo } from "react"
+import { usePageDataCache } from "@/state/PageDataCache"
+import { getAllTags } from "@/server/actions/memos/analytics"
 
 export interface TagData {
-    tag_name: string;
-    count: number;
+  tag_name: string
+  count: number
 }
 
 export function groupTagsByInitial(tags: TagData[]) {
-    const grouped = tags.reduce((acc, tag) => {
-        const firstChar = tag.tag_name.charAt(0).toUpperCase();
-        const group = /^[A-Z]$/.test(firstChar) ? firstChar : '#';
+  const grouped = tags.reduce(
+    (acc, tag) => {
+      const firstChar = tag.tag_name.charAt(0).toUpperCase()
+      const group = /^[A-Z]$/.test(firstChar) ? firstChar : "#"
 
-        if (!acc[group]) acc[group] = [];
-        acc[group].push(tag);
-        return acc;
-    }, {} as Record<string, TagData[]>);
+      if (!acc[group]) acc[group] = []
+      acc[group].push(tag)
+      return acc
+    },
+    {} as Record<string, TagData[]>
+  )
 
-    const sortedGroups = Object.keys(grouped).sort((a, b) => {
-        if (a === '#') return 1;
-        if (b === '#') return -1;
-        return a.localeCompare(b);
-    });
+  const sortedGroups = Object.keys(grouped).sort((a, b) => {
+    if (a === "#") return 1
+    if (b === "#") return -1
+    return a.localeCompare(b)
+  })
 
-    return { groupedTags: grouped, groups: sortedGroups };
+  return { groupedTags: grouped, groups: sortedGroups }
 }
 
 export function useTagGroups(initialTags?: TagData[]) {
-    const { getCache, setCache } = usePageDataCache();
-    const cached = getCache('/tags');
-    const [tags, setTags] = useState<TagData[]>(initialTags ?? cached?.tags ?? []);
-    const [isLoading, setIsLoading] = useState(!initialTags && !cached);
+  const { getCache, setCache } = usePageDataCache()
+  const cached = getCache("/tags")
+  const [tags, setTags] = useState<TagData[]>(initialTags ?? cached?.tags ?? [])
+  const [isLoading, setIsLoading] = useState(!initialTags && !cached)
 
-    useEffect(() => {
-        if (initialTags) {
-            setCache('/tags', { tags: initialTags });
-            return;
-        }
-        let cancelled = false;
-        (async () => {
-            const res = await getAllTags();
-            if (!cancelled) {
-                const result = res.success ? (res.data || []) : [];
-                setTags(result);
-                setCache('/tags', { tags: result });
-                setIsLoading(false);
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [initialTags, setCache]);
+  useEffect(() => {
+    if (initialTags) {
+      setCache("/tags", { tags: initialTags })
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      const res = await getAllTags()
+      if (!cancelled) {
+        const result = res.success ? res.data || [] : []
+        setTags(result)
+        setCache("/tags", { tags: result })
+        setIsLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [initialTags, setCache])
 
-    const { groupedTags, groups } = useMemo(() => groupTagsByInitial(tags), [tags]);
+  const { groupedTags, groups } = useMemo(
+    () => groupTagsByInitial(tags),
+    [tags]
+  )
 
-    return { tags, groupedTags, groups, isLoading };
+  return { tags, groupedTags, groups, isLoading }
 }

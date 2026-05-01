@@ -7,8 +7,8 @@ import {
   Loading01Icon as Loader2,
 } from "@hugeicons/core-free-icons"
 
-import { Button } from "@/components/ui/button"
-import { ContextPageHeader } from "@/components/layout/ContextPageShell"
+import { Button } from "@/shared/ui/button"
+import { ContextPageHeader } from "@/shared/layout/ContextPageShell"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/shared/ui/alert-dialog"
 
 interface TrashHeaderProps {
   count: number

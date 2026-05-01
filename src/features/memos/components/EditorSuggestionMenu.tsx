@@ -3,8 +3,8 @@
 import React, { useRef, useLayoutEffect } from "react"
 import { createPortal } from "react-dom"
 import { motion } from "framer-motion"
-import { cn, formatDate } from "@/lib/utils"
-import { useHasMounted } from "@/hooks/useHasMounted"
+import { cn, formatDate } from "@/shared/lib/utils"
+import { useHasMounted } from "@/shared/hooks/useHasMounted"
 
 interface SuggestionItem {
   id: string

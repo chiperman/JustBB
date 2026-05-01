@@ -9,19 +9,19 @@ import {
   PencilEdit02Icon,
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons"
-import { LinkPreview } from "@/components/ui/LinkPreview"
+import { LinkPreview } from "@/shared/ui/LinkPreview"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/shared/ui/dropdown-menu"
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "@/components/ui/hover-card"
-import { useToast } from "@/hooks/use-toast"
+} from "@/shared/ui/hover-card"
+import { useToast } from "@/shared/hooks/use-toast"
 import type { LinkRenderMode } from "./smartLink"
 
 export const LinkNodeView = (props: NodeViewProps) => {

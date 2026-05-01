@@ -1,15 +1,15 @@
 "use client"
 
 import * as React from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "@/shared/lib/utils"
 import Link from "next/link"
-import { parseContentTokens } from "@/lib/contentParser"
-import { CodeBlock } from "@/components/ui/CodeBlock"
+import { parseContentTokens } from "@/shared/lib/contentParser"
+import { CodeBlock } from "@/shared/ui/CodeBlock"
 import { MemoHoverPreview } from "./MemoHoverPreview"
-import { LocationHoverPreview } from "@/components/ui/LocationHoverPreview"
+import { LocationHoverPreview } from "@/shared/ui/LocationHoverPreview"
 import { useSearchParams } from "next/navigation"
-import { ImageZoom } from "@/components/ui/ImageZoom"
-import { LinkPreview } from "@/components/ui/LinkPreview"
+import { ImageZoom } from "@/shared/ui/ImageZoom"
+import { LinkPreview } from "@/shared/ui/LinkPreview"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   CheckmarkCircle01Icon as Check,
@@ -20,8 +20,8 @@ import {
   HoverCard,
   HoverCardTrigger,
   HoverCardContent,
-} from "@/components/ui/hover-card"
-import { toast } from "@/hooks/use-toast"
+} from "@/shared/ui/hover-card"
+import { toast } from "@/shared/hooks/use-toast"
 import Image from "next/image"
 
 interface MemoContentProps {

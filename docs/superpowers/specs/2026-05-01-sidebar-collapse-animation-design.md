@@ -1,59 +1,38 @@
-# 设计规范：侧边栏收缩按钮动画优化
+# 设计规范：侧边栏收缩按钮动画优化 (修订版)
 
 ## 1. 目标描述
 
-优化左侧和右侧侧边栏收缩按钮的动画效果，采用“极简呼吸感”风格。确保项目视觉一致性，提升界面“高级感”，并遵循“人文主义极简”的设计哲学。
+优化左右侧边栏收缩按钮，解决因 CSS 缩放与 Motion 动画冲突导致的视觉“怪异感”。通过统一使用 `framer-motion` 接管交互状态，实现高度一致、物理感强且丝滑的“极简呼吸感”动效。
 
 ## 2. 组件架构
 
-提取一个可复用的 `SidebarCollapseButton` 组件，替代目前在 `LeftSidebar.tsx` 和 `RightSidebar.tsx` 中分散的实现。
+提取 `SidebarCollapseButton` 通用组件。
 
-### SidebarCollapseButton 属性定义 (Props)
+### 核心改进 (针对怪异感)
 
-| 属性          | 类型         | 描述                        |
-| :------------ | :----------- | :-------------------------- | -------------------------- |
-| `isCollapsed` | `boolean`    | 当前收缩状态                |
-| `onClick`     | `() => void` | 点击回调                    |
-| `side`        | `'left'      | 'right'`                    | 归属侧边栏（决定图标方向） |
-| `isMobile`    | `boolean`    | (可选) 左侧边栏的移动端模式 |
-| `label`       | `string`     | ARIA 标签                   |
-| `className`   | `string`     | (可选) 自定义样式           |
+- **禁用原生 CSS 缩放**: 覆盖 `Button` 组件的 `hover:scale-102` 和 `active:scale-95` 类，避免双重缩放冲突。
+- **动效统一**: 按钮整体的 Hover/Tap 以及图标的切换全部交由 `framer-motion` 处理，共享同一套缓动参数。
 
-## 3. 动画规范 (方案 A：同步缩放淡入淡出)
+## 3. 动画与交互参数
 
-使用 `framer-motion` 处理所有过渡效果。
-
-### 时间与节奏
+### 全局缓动配置 (Synced Motion)
 
 - **持续时间 (Duration)**: `0.15s`
-- **缓动函数 (Ease)**: `[0.4, 0, 0.2, 1]` (三次贝塞尔曲线)
-- **AnimatePresence 模式**: `wait` (确保图标不会重叠)
+- **缓动曲线 (Ease)**: `[0.23, 1, 0.32, 1]` (更具高级感的缓出曲线，比标准 ease-out 更轻盈)
 
-### 关键帧 (Keyframes)
+### 交互反馈
 
-- **初始/进入 (Initial/Enter)**: `{ opacity: 0, scale: 0.9 }`
-- **动画中 (Animate)**: `{ opacity: 1, scale: 1 }`
-- **退出 (Exit)**: `{ opacity: 0, scale: 0.9 }`
+- **Hover (悬停)**: 整体 `scale: 1.02`
+- **Tap (点击)**: 整体 `scale: 0.95`
+- **Icon Switch (切换)**: 图标 `opacity: 0 -> 1`, `scale: 0.9 -> 1`
 
-### 交互状态
+## 4. 视觉规范
 
-- **悬停 (Hover)**: `scale(1.02)` (继承全局按钮样式)
-- **点击 (whileTap)**: `scale(0.95)` (与 `design.md` 中的全局点击态同步)
+- **圆角**: 统一为 `rounded-md` (8px)。
+- **样式**: `variant="ghost"`，悬停时仅保留 `bg-secondary` 和 `text-foreground`，移除 `ring` 干扰。
 
-## 4. 视觉语言一致性
+## 5. 实施路径
 
-- **图标选择**:
-  - 左侧边栏：`PanelLeftOpenIcon` (收缩时), `PanelLeftCloseIcon` (展开时)
-  - 右侧边栏：`PanelRightOpenIcon` (收缩时), `PanelRightCloseIcon` (展开时)
-  - 移动端左侧边栏：`Cancel01Icon`
-- **颜色**: 使用 `text-muted-foreground`，悬停时切换至 `text-foreground` 并显示 `bg-secondary` 背景。
-- **边框**: 保持无边框，或仅在需要增强对比度时使用“极细边框”。
-
-## 5. 验证计划
-
-### 手动测试
-
-- 验证桌面端左侧边栏按钮（收缩/展开）。
-- 验证移动端左侧边栏按钮（关闭）。
-- 验证桌面端右侧边栏按钮（收缩/展开）。
-- 确保图标切换速度与侧边栏整体滑动节奏协调。
+1. 创建 `SidebarCollapseButton`。
+2. 在组件内部使用 `motion(Button)`。
+3. 替换 `LeftSidebar` 和 `RightSidebar` 的实现。

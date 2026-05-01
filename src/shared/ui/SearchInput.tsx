@@ -97,7 +97,7 @@ export function SearchInput() {
                 <span>{tag}</span>
                 <button
                   onClick={() => removeParam("tag")}
-                  className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5"
+                  className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
                   <HugeiconsIcon icon={Cancel01Icon} size={8} />
                 </button>
@@ -108,7 +108,7 @@ export function SearchInput() {
                 <span>#{num}</span>
                 <button
                   onClick={() => removeParam("num")}
-                  className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5"
+                  className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
                   <HugeiconsIcon icon={Cancel01Icon} size={8} />
                 </button>
@@ -120,7 +120,7 @@ export function SearchInput() {
                 <span>{date}</span>
                 <button
                   onClick={() => removeParam("date")}
-                  className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5"
+                  className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
                   <HugeiconsIcon icon={Cancel01Icon} size={8} />
                 </button>
@@ -139,7 +139,7 @@ export function SearchInput() {
                     params.delete("month")
                     replace(`/?${params.toString()}`)
                   }}
-                  className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5"
+                  className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
                   <HugeiconsIcon icon={Cancel01Icon} size={8} />
                 </button>
@@ -169,7 +169,7 @@ export function SearchInput() {
           {value && (
             <button
               onClick={handleClear}
-              className="p-1 text-muted-foreground/30 hover:text-muted-foreground transition-colors active:scale-90"
+              className="p-1 text-muted-foreground/30 hover:text-muted-foreground transition-colors active:scale-90 outline-none focus-visible:ring-1 focus-visible:ring-ring"
               title="清空搜索"
             >
               <HugeiconsIcon icon={Cancel01Icon} size={14} />
@@ -183,7 +183,7 @@ export function SearchInput() {
           {(value.trim() || searchParams.get("q")) && (
             <button
               onClick={handleGlobalSearch}
-              className="group flex items-center gap-1 px-1.5 h-5 rounded-md bg-primary/[0.03] hover:bg-primary/10 micro-label font-medium text-primary/60 hover:text-primary transition-all border border-primary/10 whitespace-nowrap ml-2"
+              className="group flex items-center gap-1 px-1.5 h-5 rounded-md bg-primary/[0.03] hover:bg-primary/10 micro-label font-medium text-primary/60 hover:text-primary transition-all border border-primary/10 whitespace-nowrap ml-2 outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               <HugeiconsIcon
                 icon={Globe02Icon}

@@ -81,7 +81,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
               onClick={() => {
                 router.push("/")
               }}
-              className="group flex items-center gap-1.5 px-2 py-1 rounded-sm hover:bg-secondary transition-all mr-1 h-full active:scale-95"
+              className="group flex items-center gap-1.5 px-2 py-1 rounded-sm hover:bg-secondary transition-all mr-1 h-full active:scale-95 outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
               title="回到首页"
             >
               {isRefreshing ? (
@@ -134,7 +134,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:bg-secondary rounded-md transition-all focus-visible:ring-0 active:scale-95"
+                  className="h-8 w-8 text-muted-foreground hover:bg-secondary rounded-md transition-all active:scale-95 focus-visible:ring-inset"
                   aria-label="更多选项"
                 >
                   <HugeiconsIcon
@@ -190,7 +190,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-md transition-all focus-visible:ring-0 active:scale-95 invisible"
+              className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-md transition-all active:scale-95 focus-visible:ring-inset invisible"
               aria-label="更多选项"
             >
               <HugeiconsIcon icon={ArrowDown01Icon} size={14} />

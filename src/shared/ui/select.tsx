@@ -13,14 +13,14 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/shared/lib/utils"
 
 const selectTriggerVariants = cva(
-  "flex w-fit items-center justify-between gap-2 rounded-md border text-sm whitespace-nowrap transition-[color,box-] outline-none focus-visible:ring-[3px] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2",
+  "flex w-fit items-center justify-between gap-2 rounded-md border text-sm whitespace-nowrap transition-[color,box-] outline-none focus-visible:ring-[2px] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2",
   {
     variants: {
       variant: {
         default:
           "border-input bg-transparent data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 dark:hover:bg-input/50",
         ghost:
-          "border-none-none bg-transparent hover:bg-accent hover:text-accent-foreground focus-visible:ring-0",
+          "border-none-none bg-transparent hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring/50",
       },
       size: {
         default: "h-9 px-3 py-2",

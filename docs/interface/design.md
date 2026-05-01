@@ -138,7 +138,7 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 - Text: `#1d1d1b`
 - Border: `1px solid #dddddd`
 - Radius: 8px
-- Focus: Clay outline ring
+- Focus: Soft clay outline ring
 
 ## 5. Layout Principles
 
@@ -173,7 +173,7 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 
 ## 8. Accessibility & States
 
-- **Focus System**: 2px solid Focus Clay indicator.
+- **Focus System**: Soft clay indicator, generally 1px on base controls without a white offset halo.
 - **Interactive States**: scale(1.02) on hover, scale(0.95) on active.
 - **Color Contrast**: Anthropic Black on white exceeds 14:1 ratio.
 
@@ -187,4 +187,4 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 - Text: Anthropic Black (`#1d1d1b`)
 - Border: `1px solid rgba(29,29,27,0.1)`
 - Link: Anthropic Clay (`#d97757`)
-- Focus ring: Anthropic Clay (`#d97757`)
+- Focus ring: Soft Clay (`#e7b8a8`)

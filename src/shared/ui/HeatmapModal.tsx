@@ -229,7 +229,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                   <Select value={selectedYear} onValueChange={setSelectedYear}>
                     <SelectTrigger
                       variant="ghost"
-                      className="w-auto p-0 h-auto text-2xl font-bold tracking-tight gap-2 hover:bg-transparent px-0 data-[state=open]:bg-transparent focus:ring-0 focus:ring-offset-0"
+                      className="w-auto p-0 h-auto text-2xl font-bold tracking-tight gap-2 hover:bg-transparent px-0 data-[state=open]:bg-transparent"
                     >
                       <SelectValue placeholder="年份" />
                     </SelectTrigger>

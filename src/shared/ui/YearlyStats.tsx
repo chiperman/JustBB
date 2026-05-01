@@ -126,7 +126,7 @@ function YearlyStatsItem({
         <div className="flex items-center gap-3">
           <h2 className="sub-heading">{year}</h2>
         </div>
-        <button className="p-2 hover:bg-secondary rounded-full transition-colors active:scale-95">
+        <button className="p-2 hover:bg-secondary rounded-full transition-colors active:scale-95 outline-none focus-visible:ring-1 focus-visible:ring-ring">
           <HugeiconsIcon
             icon={Share}
             size={16}

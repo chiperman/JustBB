@@ -31,6 +31,16 @@ export const TagCloud = memo(function TagCloud() {
     router.push(`/?${params.toString()}`)
   }
 
+  const handleTagKeyDown = (
+    event: React.KeyboardEvent<HTMLSpanElement>,
+    tag: string
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      handleTagClick(tag)
+    }
+  }
+
   return (
     <AnimatePresence mode="wait">
       {(!isMounted && tags.length === 0) || (isLoading && tags.length === 0) ? (
@@ -72,13 +82,16 @@ export const TagCloud = memo(function TagCloud() {
                 key={tag_name}
                 variant={isActive ? "default" : "secondary"}
                 onClick={() => handleTagClick(tag_name)}
+                onKeyDown={(event) => handleTagKeyDown(event, tag_name)}
                 className={cn(
-                  "cursor-pointer px-2 py-0.5 nav-button-text font-medium gap-1.5 transition-all active:scale-95",
+                  "cursor-pointer px-2 py-0.5 nav-button-text font-medium gap-1.5 transition-all active:scale-95 outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset",
                   isActive
                     ? ""
                     : "border-border/50 bg-background text-muted-foreground hover:bg-accent"
                 )}
                 aria-label={`标签 #${tag_name}，共有 ${count} 条记录`}
+                role="button"
+                tabIndex={0}
               >
                 <span aria-hidden="true">#{tag_name}</span>
                 <span

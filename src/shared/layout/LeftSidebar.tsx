@@ -96,7 +96,7 @@ export function LeftSidebar({
       {/* Top Area */}
       <div
         className={cn(
-          "flex shrink-0 transition-all duration-200 px-3",
+          "flex shrink-0 px-3 transition-[height,margin,padding] duration-200",
           effectiveIsCollapsed
             ? "h-28 flex-col items-center justify-center gap-2 mb-2"
             : "h-16 items-center justify-between"

@@ -150,7 +150,7 @@ export function MemoEditor({
     !isFocused &&
     !isAnyDialogOpen &&
     mode === "create"
-  const shouldAnimateCollapse = enableCollapseAnimation && !scrollCollapsed
+  const shouldAnimateCollapse = enableCollapseAnimation
   const needsPrivateDialog =
     isPrivate && (mode === "create" || !memo?.is_private)
 

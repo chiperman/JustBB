@@ -3,10 +3,7 @@
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  ArrowRight01Icon,
-  Archive02Icon as Archive,
-} from "@hugeicons/core-free-icons"
+import { ArrowRight01Icon, Delete02Icon } from "@hugeicons/core-free-icons"
 
 import { Button } from "@/shared/ui/button"
 
@@ -18,7 +15,11 @@ export function TrashEmptyState() {
       className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-card/30 px-6 py-16 text-center"
     >
       <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-background/80">
-        <HugeiconsIcon icon={Archive} size={24} className="text-primary/60" />
+        <HugeiconsIcon
+          icon={Delete02Icon}
+          size={24}
+          className="text-primary/60"
+        />
       </div>
 
       <div className="space-y-2">
@@ -35,7 +36,7 @@ export function TrashEmptyState() {
         asChild
         variant="outline"
         size="sm"
-        className="mt-6 border-border/60 bg-background/80-none"
+        className="mt-6 border-border/60 bg-background/80"
       >
         <Link href="/">
           返回首页

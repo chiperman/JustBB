@@ -2,8 +2,7 @@
 
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  Delete02Icon as Trash2,
-  Archive02Icon as Archive,
+  Delete02Icon,
   Loading01Icon as Loader2,
 } from "@hugeicons/core-free-icons"
 
@@ -34,7 +33,7 @@ export function TrashHeader({
 }: TrashHeaderProps) {
   return (
     <ContextPageHeader
-      icon={Archive}
+      icon={Delete02Icon}
       title="回收站"
       showTitle={false}
       description={
@@ -49,7 +48,7 @@ export function TrashHeader({
               <Button
                 variant="outline"
                 size="sm"
-                className="border-border/60 bg-background/80 text-muted-foreground-none hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
+                className="border-border/60 bg-background/80 text-muted-foreground hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
                 disabled={isPending}
               >
                 {isPending ? (
@@ -59,7 +58,7 @@ export function TrashHeader({
                     className="animate-spin"
                   />
                 ) : (
-                  <HugeiconsIcon icon={Trash2} size={14} />
+                  <HugeiconsIcon icon={Delete02Icon} size={15} />
                 )}
                 清空回收站
               </Button>

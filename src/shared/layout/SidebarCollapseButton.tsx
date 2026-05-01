@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { motion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   PanelLeftCloseIcon,
@@ -9,7 +10,6 @@ import {
   PanelRightOpenIcon,
   Cancel01Icon,
 } from "@hugeicons/core-free-icons"
-import { Button } from "@/shared/ui/button"
 import { cn } from "@/shared/lib/utils"
 
 interface SidebarCollapseButtonProps {
@@ -40,19 +40,17 @@ export function SidebarCollapseButton({
   const Icon = getIcon()
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={onClick}
-      aria-label={label}
-      // 彻底复用 Button 组件自带的 hover:scale-102 和 transition-all
-      // 仅添加 hover:ring-1 来对齐菜单按钮的视觉规范
-      className={cn(
-        "rounded-md hover:ring-1 hover:ring-border/40 focus-visible:ring-0",
-        className
-      )}
-    >
-      <HugeiconsIcon icon={Icon} size={16} />
-    </Button>
+    <motion.div layout="position" className="relative z-50">
+      <button
+        onClick={onClick}
+        aria-label={label}
+        className={cn(
+          "group relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-md transition-all duration-200 hover:scale-102 active:scale-95 hover:bg-secondary hover:text-foreground hover:ring-1 hover:ring-border/40 text-muted-foreground",
+          className
+        )}
+      >
+        <HugeiconsIcon icon={Icon} size={14} />
+      </button>
+    </motion.div>
   )
 }

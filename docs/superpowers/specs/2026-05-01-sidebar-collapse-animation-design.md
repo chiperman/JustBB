@@ -1,59 +1,59 @@
-# Design Spec: Sidebar Collapse Animation Optimization
+# 设计规范：侧边栏收缩按钮动画优化
 
-## 1. Goal Description
+## 1. 目标描述
 
-Optimize the sidebar collapse buttons in both Left and Right sidebars to use a "Minimal & Breathing" animation style. This ensures visual consistency across the project and enhances the "premium" feel of the interface while adhering to the "Humanistic Minimalism" design philosophy.
+优化左侧和右侧侧边栏收缩按钮的动画效果，采用“极简呼吸感”风格。确保项目视觉一致性，提升界面“高级感”，并遵循“人文主义极简”的设计哲学。
 
-## 2. Component Architecture
+## 2. 组件架构
 
-Extract a reusable `SidebarCollapseButton` component to replace scattered implementations in `LeftSidebar.tsx` and `RightSidebar.tsx`.
+提取一个可复用的 `SidebarCollapseButton` 组件，替代目前在 `LeftSidebar.tsx` 和 `RightSidebar.tsx` 中分散的实现。
 
-### SidebarCollapseButton Props
+### SidebarCollapseButton 属性定义 (Props)
 
-| Prop          | Type         | Description                            |
-| :------------ | :----------- | :------------------------------------- | ---------------------------------------------- |
-| `isCollapsed` | `boolean`    | Current collapsed state                |
-| `onClick`     | `() => void` | Click handler                          |
-| `side`        | `'left'      | 'right'`                               | Which sidebar it belongs to (determines icons) |
-| `isMobile`    | `boolean`    | (Optional) Mobile mode for LeftSidebar |
-| `label`       | `string`     | ARIA label                             |
-| `className`   | `string`     | (Optional) Custom styling              |
+| 属性          | 类型         | 描述                        |
+| :------------ | :----------- | :-------------------------- | -------------------------- |
+| `isCollapsed` | `boolean`    | 当前收缩状态                |
+| `onClick`     | `() => void` | 点击回调                    |
+| `side`        | `'left'      | 'right'`                    | 归属侧边栏（决定图标方向） |
+| `isMobile`    | `boolean`    | (可选) 左侧边栏的移动端模式 |
+| `label`       | `string`     | ARIA 标签                   |
+| `className`   | `string`     | (可选) 自定义样式           |
 
-## 3. Motion Specs (Scheme A: Sync Scale-Fade)
+## 3. 动画规范 (方案 A：同步缩放淡入淡出)
 
-Using `framer-motion` for all transitions.
+使用 `framer-motion` 处理所有过渡效果。
 
-### Timing
+### 时间与节奏
 
-- **Duration**: `0.15s`
-- **Ease**: `[0.4, 0, 0.2, 1]` (cubic-bezier)
-- **AnimatePresence Mode**: `wait` (to avoid overlapping icons)
+- **持续时间 (Duration)**: `0.15s`
+- **缓动函数 (Ease)**: `[0.4, 0, 0.2, 1]` (三次贝塞尔曲线)
+- **AnimatePresence 模式**: `wait` (确保图标不会重叠)
 
-### Keyframes
+### 关键帧 (Keyframes)
 
-- **Initial/Enter**: `{ opacity: 0, scale: 0.9 }`
-- **Animate**: `{ opacity: 1, scale: 1 }`
-- **Exit**: `{ opacity: 0, scale: 0.9 }`
+- **初始/进入 (Initial/Enter)**: `{ opacity: 0, scale: 0.9 }`
+- **动画中 (Animate)**: `{ opacity: 1, scale: 1 }`
+- **退出 (Exit)**: `{ opacity: 0, scale: 0.9 }`
 
-### Interaction States
+### 交互状态
 
-- **Hover**: `scale(1.02)` (Inherited from global button style)
-- **Active (whileTap)**: `scale(0.95)` (Synchronized with global "Active" state in `design.md`)
+- **悬停 (Hover)**: `scale(1.02)` (继承全局按钮样式)
+- **点击 (whileTap)**: `scale(0.95)` (与 `design.md` 中的全局点击态同步)
 
-## 4. Visual Language Consistency
+## 4. 视觉语言一致性
 
-- **Icons**:
-  - Left Sidebar: `PanelLeftOpenIcon` (collapsed), `PanelLeftCloseIcon` (expanded)
-  - Right Sidebar: `PanelRightOpenIcon` (collapsed), `PanelRightCloseIcon` (expanded)
-  - Mobile Left Sidebar: `Cancel01Icon`
-- **Colors**: `text-muted-foreground` with `hover:text-foreground` and `hover:bg-secondary`.
-- **Borders**: No borders or whisper-weight if needed for contrast.
+- **图标选择**:
+  - 左侧边栏：`PanelLeftOpenIcon` (收缩时), `PanelLeftCloseIcon` (展开时)
+  - 右侧边栏：`PanelRightOpenIcon` (收缩时), `PanelRightCloseIcon` (展开时)
+  - 移动端左侧边栏：`Cancel01Icon`
+- **颜色**: 使用 `text-muted-foreground`，悬停时切换至 `text-foreground` 并显示 `bg-secondary` 背景。
+- **边框**: 保持无边框，或仅在需要增强对比度时使用“极细边框”。
 
-## 5. Verification Plan
+## 5. 验证计划
 
-### Manual Testing
+### 手动测试
 
-- Verify Left Sidebar button on Desktop (collapse/expand).
-- Verify Left Sidebar button on Mobile (close).
-- Verify Right Sidebar button on Desktop (collapse/expand).
-- Ensure animation speed feels consistent with the sidebar sliding duration.
+- 验证桌面端左侧边栏按钮（收缩/展开）。
+- 验证移动端左侧边栏按钮（关闭）。
+- 验证桌面端右侧边栏按钮（收缩/展开）。
+- 确保图标切换速度与侧边栏整体滑动节奏协调。

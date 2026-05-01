@@ -292,7 +292,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
             {!user ? (
               <DropdownMenuItem
                 className="h-10"
-                onClick={() => setViewMode("CARD_VIEW")}
+                onClick={() => setViewMode("SPLIT_VIEW")}
               >
                 <HugeiconsIcon
                   icon={LogIn}

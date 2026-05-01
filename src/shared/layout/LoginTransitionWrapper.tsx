@@ -1,159 +1,95 @@
 "use client"
 
-import { useEffect, useRef } from "react"
 import { motion, Variants } from "framer-motion"
+import { cn } from "@/shared/lib/utils"
 import { useLayout } from "@/state/LayoutContext"
 import { useUser } from "@/state/UserContext"
 import { LoginPanel } from "@/features/auth/components/LoginPanel"
 
+type LoginTransitionWrapperProps = {
+  children: React.ReactNode
+}
+
+const PANEL_TRANSITION = {
+  type: "spring" as const,
+  stiffness: 185,
+  damping: 26,
+  mass: 0.95,
+}
+
+const FADE_TRANSITION = {
+  duration: 0.24,
+  ease: [0.22, 1, 0.36, 1] as const,
+}
+
+const HOME_TRANSITION_VARIANTS: Variants = {
+  home: {
+    scale: 1,
+    x: "0%",
+    opacity: 1,
+    willChange: "transform, opacity",
+    transition: PANEL_TRANSITION,
+  },
+  split: {
+    scale: 0.9,
+    x: "45%",
+    opacity: 1,
+    willChange: "transform, opacity",
+    transition: PANEL_TRANSITION,
+  },
+}
+
+const LOGIN_PANEL_VARIANTS: Variants = {
+  home: {
+    x: "-100%",
+    scale: 0.9,
+    opacity: 1,
+    borderRadius: "24px",
+    zIndex: -1,
+    transition: PANEL_TRANSITION,
+    willChange: "transform, opacity",
+  },
+  split: {
+    x: "0%",
+    scale: 0.9,
+    opacity: 1,
+    zIndex: 20,
+    borderRadius: "24px",
+    transition: {
+      ...PANEL_TRANSITION,
+      delay: 0.04,
+    },
+    willChange: "transform, opacity",
+  },
+}
+
 export function LoginTransitionWrapper({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: LoginTransitionWrapperProps): React.ReactElement {
   const { viewMode, setViewMode } = useLayout()
   const { user } = useUser()
-  const prevViewModeRef = useRef(viewMode)
-
-  // CARD_VIEW 自动过渡逻辑（三段式状态机心跳）
-  useEffect(() => {
-    if (viewMode === "CARD_VIEW") {
-      const timer = setTimeout(() => {
-        // 从 HOME_FOCUS 来 → 推进到 SPLIT_VIEW（展示登录面板）
-        if (prevViewModeRef.current === "HOME_FOCUS") {
-          setViewMode("SPLIT_VIEW")
-        }
-        // 从 SPLIT_VIEW 来 → 回到 HOME_FOCUS（关闭登录面板）
-        else if (prevViewModeRef.current === "SPLIT_VIEW") {
-          setViewMode("HOME_FOCUS")
-        }
-      }, 400)
-      return () => clearTimeout(timer)
-    }
-    prevViewModeRef.current = viewMode
-  }, [viewMode, setViewMode])
-  const homeTransitionVariants: Variants = {
-    home: {
-      scale: 1,
-      x: "0%",
-      opacity: 1,
-      borderRadius: "0px",
-      willChange: "transform, opacity",
-      transition: {
-        type: "spring",
-        stiffness: 260,
-        damping: 26,
-        mass: 1,
-      },
-    },
-    card: {
-      scale: 0.9,
-      x: "0%",
-      opacity: 1,
-      borderRadius: "24px",
-      boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.2)", // Slightly lighter
-      willChange: "transform, opacity",
-      transition: {
-        type: "spring",
-        stiffness: 260,
-        damping: 26,
-        mass: 1,
-      },
-    },
-    split: {
-      scale: 0.9,
-      x: "45%",
-      opacity: 1,
-      borderRadius: "24px",
-      willChange: "transform, opacity",
-      transition: {
-        type: "spring",
-        stiffness: 150,
-        damping: 25,
-      },
-    },
-    hover: {
-      scale: 0.9,
-      x: "45%",
-      opacity: 1,
-      borderRadius: "24px",
-      willChange: "transform, opacity",
-      transition: { duration: 0.4, ease: [0.33, 1, 0.68, 1] },
-    },
-  }
-
-  // 登录面板动画 variants（与首页卡片镜像对称）
-  const loginPanelVariants: Variants = {
-    home: {
-      x: "-100%",
-      scale: 0.9,
-      opacity: 0,
-      borderRadius: "24px",
-      transition: {
-        type: "spring",
-        stiffness: 260,
-        damping: 26,
-        mass: 1,
-      },
-      zIndex: -1,
-    },
-    card: {
-      x: "-100%",
-      scale: 0.9,
-      opacity: 0,
-      borderRadius: "24px",
-      transition: {
-        type: "spring",
-        stiffness: 260,
-        damping: 26,
-        mass: 1,
-      },
-      zIndex: -1,
-    },
-    split: {
-      x: "0%",
-      scale: 0.9,
-      opacity: 1,
-      zIndex: 20,
-      borderRadius: "24px",
-      backgroundColor: "var(--background)",
-      boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.15)",
-      willChange: "transform, opacity",
-      transition: {
-        type: "spring",
-        stiffness: 200,
-        damping: 24,
-        staggerChildren: 0.05,
-        delayChildren: 0.1,
-      },
-    },
-  }
-
-  // Mapping viewMode to variant keys
-  const getVariant = () => {
-    if (viewMode === "HOME_FOCUS") return "home"
-    if (viewMode === "CARD_VIEW") return "card"
-    return "split"
-  }
+  const isSplitView = viewMode === "SPLIT_VIEW"
+  const variant = isSplitView ? "split" : "home"
+  const homeCardBackgroundColor = isSplitView
+    ? "var(--card)"
+    : "var(--background)"
+  const draftOpacity = !user && isSplitView ? 0.025 : 0.05
+  const creditOpacity = !user && isSplitView ? 0.012 : 0.03
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-[#fdfcf9] paper-texture">
+    <div className="fixed inset-0 isolate overflow-hidden bg-[#fdfcf9] paper-texture">
       {/* Background Decorative Text */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
         <motion.span
-          animate={{
-            opacity: !user && viewMode === "SPLIT_VIEW" ? 0.02 : 0.05,
-            x: !user && viewMode === "SPLIT_VIEW" ? 20 : 0,
-          }}
+          animate={{ opacity: draftOpacity }}
+          transition={FADE_TRANSITION}
           className="absolute top-[10%] left-[5%] text-[10vw] font-editorial italic text-black dark:text-white"
         >
           JustMemo Draft
         </motion.span>
         <motion.span
-          animate={{
-            opacity: !user && viewMode === "SPLIT_VIEW" ? 0.01 : 0.03,
-            x: !user && viewMode === "SPLIT_VIEW" ? -20 : 0,
-          }}
+          animate={{ opacity: creditOpacity }}
+          transition={FADE_TRANSITION}
           className="absolute bottom-[15%] right-[10%] text-[4vw] font-editorial text-black dark:text-white"
         >
           with ❤️ by chiperman
@@ -164,27 +100,35 @@ export function LoginTransitionWrapper({
       <div className="relative w-full h-full z-10">
         {/* Home Panel (Main Content) */}
         <motion.div
-          variants={homeTransitionVariants}
+          variants={HOME_TRANSITION_VARIANTS}
           initial="home"
-          animate={getVariant()}
-          whileHover={viewMode === "SPLIT_VIEW" ? "hover" : undefined}
-          className={`absolute inset-0 z-10 origin-center overflow-hidden bg-background ${viewMode === "SPLIT_VIEW" ? "cursor-pointer" : ""}`}
+          animate={variant}
+          className={cn(
+            "absolute inset-0 z-10 origin-center",
+            isSplitView && "cursor-pointer"
+          )}
           style={{
-            borderRadius: viewMode === "HOME_FOCUS" ? 0 : 24,
+            borderRadius: isSplitView ? 24 : 0,
           }}
-          onClick={() => viewMode === "SPLIT_VIEW" && setViewMode("CARD_VIEW")}
+          onClick={() => isSplitView && setViewMode("HOME_FOCUS")}
         >
           <div
-            className="w-full h-full overflow-hidden border border-black/5 dark:border-white/5"
-            style={{ borderRadius: "inherit" }}
+            className={cn(
+              "home-card-shell h-full w-full overflow-hidden border border-black/5 dark:border-white/5",
+              isSplitView &&
+                "rounded-[24px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.12)]"
+            )}
+            style={{
+              borderRadius: "inherit",
+              backgroundColor: homeCardBackgroundColor,
+            }}
           >
             {/* Actual Home Page Content */}
             <div
-              className={
-                viewMode === "SPLIT_VIEW"
-                  ? "pointer-events-none select-none h-full"
-                  : "h-full"
-              }
+              className={cn(
+                "h-full",
+                isSplitView && "pointer-events-none select-none"
+              )}
             >
               {children}
             </div>
@@ -193,10 +137,14 @@ export function LoginTransitionWrapper({
 
         {/* Login Panel (Auth Form) - 50% 对称卡片 */}
         <motion.div
-          variants={loginPanelVariants}
+          variants={LOGIN_PANEL_VARIANTS}
           initial="home"
-          animate={getVariant()}
-          className="fixed left-0 top-0 w-[50%] h-full flex items-center justify-center p-12 overflow-hidden pointer-events-none"
+          animate={variant}
+          className={cn(
+            "login-card-shell fixed left-0 top-0 z-20 flex h-full w-[50%] items-center justify-center overflow-hidden rounded-[24px] border border-black/5 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] p-12 dark:border-white/5",
+            isSplitView ? "pointer-events-auto" : "pointer-events-none"
+          )}
+          style={{ backgroundColor: "var(--card)" }}
         >
           <div className="w-full max-w-[400px] pointer-events-auto">
             <LoginPanel />

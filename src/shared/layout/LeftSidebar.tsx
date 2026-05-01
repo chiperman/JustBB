@@ -3,14 +3,8 @@
 import { Suspense, useEffect, useSyncExternalStore } from "react"
 import { TagCloud } from "../ui/TagCloud"
 import { Heatmap } from "../ui/Heatmap"
-import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  PanelLeftCloseIcon,
-  PanelLeftOpenIcon,
-  Cancel01Icon,
-} from "@hugeicons/core-free-icons"
 import { cn } from "@/shared/lib/utils"
-import { Button } from "@/shared/ui/button"
+import { SidebarCollapseButton } from "./SidebarCollapseButton"
 import { SidebarSettings } from "./SidebarSettings"
 import { motion } from "framer-motion"
 
@@ -116,28 +110,19 @@ export function LeftSidebar({
         >
           <SidebarSettings isCollapsed={effectiveIsCollapsed} />
         </div>
-        <Button
-          variant="ghost"
+        <SidebarCollapseButton
+          isCollapsed={effectiveIsCollapsed}
           onClick={toggleCollapsedState}
-          aria-label={
+          side="left"
+          isMobile={isMobile}
+          label={
             isMobile
               ? "关闭侧边栏"
               : effectiveIsCollapsed
                 ? "展开侧边栏"
                 : "收起侧边栏"
           }
-          className="h-9 w-9 shrink-0 rounded-md px-0 text-muted-foreground transition-all duration-200 hover:bg-secondary hover:ring-1 hover:ring-border/40"
-        >
-          <span className="flex items-center justify-center">
-            {isMobile ? (
-              <HugeiconsIcon icon={Cancel01Icon} size={16} />
-            ) : effectiveIsCollapsed ? (
-              <HugeiconsIcon icon={PanelLeftCloseIcon} size={16} />
-            ) : (
-              <HugeiconsIcon icon={PanelLeftOpenIcon} size={16} />
-            )}
-          </span>
-        </Button>
+        />
       </div>
 
       {/* Heatmap Area */}

@@ -1,0 +1,29 @@
+# Dependencies and build output
+node_modules/
+.next/
+out/
+build/
+coverage/
+test-results/
+playwright-report/
+
+# Large generated or low-signal files
+.git/
+package-lock.json
+tsconfig.tsbuildinfo
+
+# Local secrets and caches
+.env.local
+.env.remote
+.vercel/
+
+# Keep docs out of default agent context; read specific docs on demand
+docs/**
+!docs/README.md
+
+# Keep Supabase details out of default agent context; read on demand
+supabase/**
+!supabase/README.md
+
+# Hide internal agent scratch/spec output by default
+docs/superpowers/

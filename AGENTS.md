@@ -20,21 +20,20 @@
 ## 快速导航
 
 - 隐私、搜索、导出、分享：先看 `src/server/actions/`，再核对 `search_memos_secure` 和 `supabase/migrations/`。
-- UI、交互、视觉一致性：先看对应 `src/features/` 或 `src/components/`，必要时读 `docs/interface/design.md`。
+- UI、交互、视觉一致性：先看对应 `src/features/` 或 `src/shared/ui/`，必要时读 `docs/interface/design.md`。
 - 权限、认证、数据可见性：先确认 RLS/RPC 和 migration，再看前端条件判断。
-- 复杂客户端状态：优先查 `src/context/`、`src/hooks/` 和既有 feature hooks。
-- 脚本、工具或批处理：先查 `scripts/`、`src/lib/`、`src/utils/` 和 `src/services/`。
+- 复杂客户端状态：优先查 `src/state/`、`src/shared/hooks/` 和既有 feature hooks。
+- 脚本、工具或批处理：先查 `scripts/`、`src/shared/lib/`、`src/server/services/`。
 
 理解功能时，优先沿着 `page -> action -> RPC/RLS -> tests/docs` 这条链路看，不要只盯组件树。
 
 ## 代码地图
 
 - `src/app/`：Next.js 路由、页面入口和布局。
-- `src/server/actions/`：主要数据读写入口。
-- `src/features/`：按功能域组织的 UI、hooks 和局部逻辑。
-- `src/components/`：共享 UI 和布局组件。
-- `src/context/`、`src/hooks/`：应用级状态、Provider 和复用 hooks。
-- `src/lib/`、`src/utils/`、`src/services/`：共享逻辑、工具和服务封装。
+- `src/server/`：服务端逻辑，包含 `actions/`（数据读写）和 `services/`（外部集成）。
+- `src/features/`：按业务领域（如 memos, auth）组织的 UI、hooks 和局部逻辑。
+- `src/shared/`：共享基础设施，包含 `ui/`（原子组件）、`layout/`（布局壳）、`hooks/`（通用钩子）和 `lib/`（纯工具）。
+- `src/state/`：应用级全局状态 (Context)。
 - `supabase/migrations/`：schema、RLS、RPC 和数据库权限的权威来源。
 - `e2e/`、`vitest.config.ts`、`playwright.config.ts`：测试入口与配置。
 

@@ -48,16 +48,18 @@ export function SidebarCollapseButton({
       size="icon"
       onClick={onClick}
       aria-label={label}
-      // 关键：覆盖原生的 hover/active 缩放，改用 motion 控制以确保缓动曲线一致
+      // 关键：!transition-none 彻底切断 CSS 引擎干扰，强制由 Framer Motion 独占动画渲染
+      // transform-gpu 开启 3D 加速，消除亚像素抖动
       className={cn(
-        "h-9 w-9 shrink-0 rounded-md px-0 text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground hover:scale-100 active:scale-100",
+        "h-9 w-9 shrink-0 rounded-md px-0 text-muted-foreground hover:bg-secondary hover:text-foreground !transition-none transform-gpu",
         className
       )}
+      style={{ backfaceVisibility: "hidden" }}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.95 }}
       transition={{
         duration: 0.15,
-        ease: [0.23, 1, 0.32, 1],
+        ease: [0.25, 0.1, 0.25, 1], // 使用更稳定的贝塞尔曲线
       }}
     >
       <AnimatePresence mode="wait">

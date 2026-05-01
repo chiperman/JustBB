@@ -7,9 +7,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+} from "@/shared/ui/dialog"
+import { Button } from "@/shared/ui/button"
+import { Input } from "@/shared/ui/input"
 import {
   Search01Icon as SearchIcon,
   Loading03Icon as LoadingIcon,
@@ -17,9 +17,9 @@ import {
   Navigation03Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useToast } from "@/hooks/use-toast"
-import type { MapView as MapViewType } from "@/components/ui/MapView"
-import { useHasMounted } from "@/hooks/useHasMounted"
+import { useToast } from "@/shared/hooks/use-toast"
+import type { MapView as MapViewType } from "@/shared/ui/MapView"
+import { useHasMounted } from "@/shared/hooks/useHasMounted"
 
 interface NominatimResult {
   display_name: string
@@ -79,9 +79,7 @@ export function LocationPickerDialog({
   // 懒加载 MapView
   React.useEffect(() => {
     if (open && !MapView) {
-      import("@/components/ui/MapView").then((mod) =>
-        setMapView(() => mod.MapView)
-      )
+      import("@/shared/ui/MapView").then((mod) => setMapView(() => mod.MapView))
     }
   }, [open, MapView])
 

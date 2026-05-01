@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { cn } from "@/lib/utils"
-import { useHasMounted } from "@/hooks/useHasMounted"
+import { cn } from "@/shared/lib/utils"
+import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import {
   Link01Icon,

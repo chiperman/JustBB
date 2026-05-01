@@ -4,8 +4,8 @@ import { Memo } from "@/types/memo"
 import { format, parseISO } from "date-fns"
 import { zhCN } from "date-fns/locale"
 import { motion } from "framer-motion"
-import { cn } from "@/lib/utils"
-import { ImageZoom } from "@/components/ui/ImageZoom"
+import { cn } from "@/shared/lib/utils"
+import { ImageZoom } from "@/shared/ui/ImageZoom"
 import Image from "next/image"
 
 interface GalleryGridProps {

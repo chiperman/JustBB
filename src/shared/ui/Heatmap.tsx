@@ -1,0 +1,324 @@
+"use client"
+
+import { useState, useMemo, memo, useCallback } from "react"
+import {
+  startOfDay,
+  subDays,
+  format,
+  eachDayOfInterval,
+  differenceInDays,
+  startOfWeek,
+} from "date-fns"
+import { cn, formatDate } from "@/shared/lib/utils"
+import { HeatmapModal } from "./HeatmapModal"
+import { ClientOnly } from "./ClientOnly"
+import { useReducedMotion } from "framer-motion"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useStats } from "@/state/StatsContext"
+
+// 提取单元格组件以减少重渲染范围
+const HeatmapCell = memo(
+  ({
+    dateStr,
+    count,
+    isActive,
+    onHover,
+    onClick,
+    shouldReduceMotion,
+  }: {
+    dateStr: string
+    count: number
+    isActive?: boolean
+    onHover: (
+      e: React.MouseEvent | React.FocusEvent,
+      date: string,
+      count: number
+    ) => void
+    onClick: (e: React.MouseEvent, date: string) => void
+    shouldReduceMotion: boolean
+  }) => {
+    const getColorClass = (c: number) => {
+      if (c === 0) return "bg-[var(--heatmap-0)]"
+      if (c <= 2) return "bg-[var(--heatmap-1)]"
+      if (c <= 5) return "bg-[var(--heatmap-2)]"
+      if (c <= 9) return "bg-[var(--heatmap-3)]"
+      return "bg-[var(--heatmap-4)]"
+    }
+
+    const hasData = count > 0
+
+    return (
+      <div
+        tabIndex={hasData ? 0 : -1}
+        role="gridcell"
+        aria-label={`${dateStr}: ${count} 记录`}
+        className={cn(
+          "w-[14px] h-[14px] rounded transition-all outline-none",
+          hasData &&
+            "cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+          hasData && !shouldReduceMotion && "hover:scale-110",
+          isActive && "ring-2 ring-primary ring-offset-1 z-10",
+          getColorClass(count)
+        )}
+        onMouseEnter={(e) => onHover(e, dateStr, count)}
+        onFocus={(e) => hasData && onHover(e, dateStr, count)}
+        onClick={(e) => hasData && onClick(e, dateStr)}
+      />
+    )
+  }
+)
+
+HeatmapCell.displayName = "HeatmapCell"
+
+type HoveredDate = {
+  date: string
+  count: number
+  left: number
+  top: number
+  align: "left" | "center" | "right"
+}
+
+export const Heatmap = memo(function Heatmap() {
+  const { stats, isLoading: contextLoading } = useStats()
+  const [hoveredDate, setHoveredDate] = useState<HoveredDate | null>(null)
+  const shouldReduceMotion = useReducedMotion()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const activeDate = searchParams.get("date")
+
+  const loading = contextLoading
+
+  // 获取关键日期以计算
+  const firstMemoDate = stats.firstMemoDate
+
+  // 计算总天数
+  const totalActiveDays = useMemo(() => {
+    if (!firstMemoDate) return 0
+    const parts = firstMemoDate.split("-")
+    if (parts.length < 3) return 0
+    const firstDate = new Date(
+      parseInt(parts[0]),
+      parseInt(parts[1]) - 1,
+      parseInt(parts[2])
+    )
+    return differenceInDays(new Date(), firstDate) + 1
+  }, [firstMemoDate])
+
+  // 生成对齐到周日的日期数据 (约 12-13 周)
+  const heatmapDays = useMemo(() => {
+    // 使用上海时区获取“今天”的起始时间
+    const now = new Date()
+    const today = startOfDay(now)
+
+    // 计算约 12 周前的参考起点 (83天前)
+    const candidateStart = subDays(today, 83)
+    // 强制回退到该周的周日 (weekStartsOn: 0)，确保 grid 第一行始终是周日
+    const startDate = startOfWeek(candidateStart, { weekStartsOn: 0 })
+
+    return eachDayOfInterval({ start: startDate, end: today }).map((d) =>
+      format(d, "yyyy-MM-dd")
+    )
+  }, [])
+
+  // 动态计算月份标签及其所在列的索引
+  const monthLabels = useMemo(() => {
+    const labels: { name: string; colIndex: number }[] = []
+    let lastMonth = -1
+
+    heatmapDays.forEach((dateStr, index) => {
+      const parts = dateStr.split("-")
+      const month = parseInt(parts[1])
+      const day = parseInt(parts[2])
+      const colIndex = Math.floor(index / 7)
+
+      // 当发生跨月，且该日期位于该列的起始附近
+      if (month !== lastMonth && day <= 14) {
+        const monthName = formatDate(dateStr, "MMM")
+        labels.push({ name: monthName, colIndex })
+        lastMonth = month
+      }
+    })
+    return labels
+  }, [heatmapDays])
+
+  const handleCellHover = useCallback(
+    (e: React.MouseEvent | React.FocusEvent, date: string, count: number) => {
+      const target = e.currentTarget as HTMLElement
+      const rect = target.getBoundingClientRect()
+      const container = target.closest(
+        ".heatmap-content-wrapper"
+      ) as HTMLElement
+
+      if (container) {
+        const containerRect = container.getBoundingClientRect()
+        const relX = rect.left - containerRect.left + 7
+        const containerWidth = containerRect.width
+
+        let align: "left" | "center" | "right" = "center"
+        if (relX < 60) align = "left"
+        else if (relX > containerWidth - 60) align = "right"
+
+        setHoveredDate({
+          date,
+          count,
+          left: relX,
+          top: rect.top - containerRect.top,
+          align,
+        })
+      }
+    },
+    []
+  )
+
+  const handleCellClick = useCallback(
+    (e: React.MouseEvent, date: string) => {
+      e.preventDefault()
+      e.stopPropagation()
+      router.push(`/?date=${date}`)
+    },
+    [router]
+  )
+
+  // If loading, stats will be null, and we'll use placeholder data
+  const displayStats = stats || {
+    totalMemos: 0,
+    totalTags: 0,
+    firstMemoDate: null,
+    days: {},
+  }
+
+  const displayTotalActiveDays = stats ? totalActiveDays : 0
+
+  // 顶栏统计触发器
+  const StatsTrigger = (
+    <div className="grid grid-cols-3 gap-8 w-full max-w-sm mx-auto px-4 cursor-pointer hover:bg-accent/50 hover:ring-1 hover:ring-border/40 transition-all rounded-md py-2">
+      <div className="flex flex-col items-center">
+        <span className="text-3xl tracking-tighter leading-none font-bold tabular-nums text-foreground">
+          {displayStats.totalMemos}
+        </span>
+        <span className="text-[12px] font-medium text-muted-foreground mt-1">
+          记录
+        </span>
+      </div>
+      <div className="flex flex-col items-center border-x border-border/50">
+        <span className="text-3xl tracking-tighter leading-none font-bold tabular-nums text-foreground">
+          {displayStats.totalTags}
+        </span>
+        <span className="text-[12px] font-medium text-muted-foreground mt-1">
+          标签
+        </span>
+      </div>
+      <div className="flex flex-col items-center">
+        <span className="text-3xl tracking-tighter leading-none font-bold tabular-nums text-foreground">
+          {displayTotalActiveDays}
+        </span>
+        <span className="text-[12px] font-medium text-muted-foreground mt-1">
+          天
+        </span>
+      </div>
+    </div>
+  )
+
+  const Skeleton = (
+    <div className="w-full space-y-4 px-1 relative overflow-visible h-[240px] flex flex-col items-center justify-center bg-muted/5 rounded-card border border-border/50">
+      <div className="grid grid-cols-3 gap-8 w-full max-w-sm px-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex flex-col items-center gap-2">
+            <div className="h-8 w-12 bg-muted/40 rounded animate-pulse" />
+            <div className="h-3 w-8 bg-muted/20 rounded animate-pulse" />
+          </div>
+        ))}
+      </div>
+      <div className="mt-8 grid grid-rows-7 grid-flow-col gap-[4px] opacity-20">
+        {Array.from({ length: 84 }).map((_, i) => (
+          <div key={i} className="w-[14px] h-[14px] bg-muted rounded" />
+        ))}
+      </div>
+    </div>
+  )
+
+  return (
+    <ClientOnly fallback={Skeleton}>
+      <div className="w-full space-y-4 px-1 relative overflow-visible">
+        {/* 顶栏统计 - 加载时不响应点击 */}
+        {loading ? (
+          StatsTrigger
+        ) : (
+          <HeatmapModal stats={displayStats} trigger={StatsTrigger} />
+        )}
+
+        {/* 热力图主体 */}
+        <div
+          className="relative pt-2"
+          onMouseLeave={() => setHoveredDate(null)}
+        >
+          <div className="relative overflow-visible heatmap-content-wrapper">
+            <div
+              className="grid grid-rows-7 grid-flow-col gap-[4px] justify-center"
+              style={{ gridTemplateRows: "repeat(7, 14px)" }}
+            >
+              {heatmapDays.map((dateStr) => (
+                <HeatmapCell
+                  key={dateStr}
+                  dateStr={dateStr}
+                  count={displayStats.days[dateStr]?.count || 0}
+                  isActive={activeDate === dateStr}
+                  onHover={handleCellHover}
+                  onClick={handleCellClick}
+                  shouldReduceMotion={!!shouldReduceMotion}
+                />
+              ))}
+            </div>
+
+            {loading && (
+              <div className="absolute inset-0 bg-transparent animate-pulse pointer-events-none" />
+            )}
+
+            {/* Tooltip */}
+            {hoveredDate && (
+              <div
+                className={cn(
+                  "absolute z-[999] mt-[-15px] rounded-md border border-border bg-card px-2.5 py-1.5 font-sans text-[11px] text-foreground-[var(--)] pointer-events-none animate-in fade-in zoom-in duration-150 whitespace-nowrap hover:ring-1 hover:ring-border/40",
+                  hoveredDate.align === "center" &&
+                    "-translate-x-1/2 -translate-y-full",
+                  hoveredDate.align === "left" && "-translate-y-full ml-[-7px]",
+                  hoveredDate.align === "right" &&
+                    "-translate-x-full -translate-y-full mr-[-7px]"
+                )}
+                style={{ left: hoveredDate.left, top: hoveredDate.top }}
+              >
+                <span className="font-bold tabular-nums text-primary">
+                  {hoveredDate.count} 笔记
+                </span>
+                <span className="mx-1.5 opacity-40">/</span>
+                <span className="tabular-nums font-medium">
+                  {hoveredDate.date}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* 月份标签 */}
+          <div className="relative h-4 mt-2 text-[10px] text-stone-400 font-normal opacity-60 max-w-fit mx-auto">
+            <div
+              className="relative"
+              style={{
+                width: `${Math.ceil(heatmapDays.length / 7) * 18 - 4}px`,
+              }}
+            >
+              {monthLabels.map(({ name, colIndex }, i) => (
+                <span
+                  key={`${name}-${i}`}
+                  className="absolute -translate-x-1"
+                  style={{ left: `${colIndex * 18}px` }}
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </ClientOnly>
+  )
+})

@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useEffect, useMemo } from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "@/shared/lib/utils"
 import { EditorContent, useEditor, type Editor } from "@tiptap/react"
 import { motion } from "framer-motion"
 import { TextSelection } from "@tiptap/pm/state"
@@ -15,7 +15,7 @@ import {
   getExtensions,
   textToTiptapHtml,
 } from "@/features/memos/components/editor/extensions"
-import { fetchLinkMetadata } from "@/lib/link-preview"
+import { fetchLinkMetadata } from "@/shared/lib/link-preview"
 import { LinkPasteMenu } from "@/features/memos/components/editor/LinkPasteMenu"
 import {
   findPendingMarkupLink,

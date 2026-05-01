@@ -8,7 +8,7 @@ import {
   Archive02Icon as Archive,
 } from "@hugeicons/core-free-icons"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/shared/ui/button"
 
 export function TrashEmptyState() {
   return (

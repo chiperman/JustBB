@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { cn } from "@/lib/utils"
-import { useSelection } from "@/context/UIContext"
+import { cn } from "@/shared/lib/utils"
+import { useSelection } from "@/state/UIContext"
 import { Memo } from "@/types/memo"
 import { MemoContent } from "../MemoContent"
 import { UnlockDialog } from "../UnlockDialog"
@@ -10,8 +10,8 @@ import { MemoCardHeader } from "./MemoCardHeader"
 import { MemoCardBacklinks } from "./MemoCardBacklinks"
 import { MemoCardLockOverlay } from "./MemoCardLockOverlay"
 import { useMemoBacklinks } from "../../hooks/useMemoBacklinks"
-import { ExpandableContent } from "@/components/ui/expandable-content"
-import { useUnlockedMemos } from "@/context/UnlockedMemosContext"
+import { ExpandableContent } from "@/shared/ui/expandable-content"
+import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
 
 interface MemoCardViewProps {
   memo: Memo

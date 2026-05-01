@@ -1,0 +1,208 @@
+"use client"
+
+import { useEffect, useRef } from "react"
+import { motion, Variants } from "framer-motion"
+import { useLayout } from "@/state/LayoutContext"
+import { useUser } from "@/state/UserContext"
+import { LoginPanel } from "@/features/auth/components/LoginPanel"
+
+export function LoginTransitionWrapper({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const { viewMode, setViewMode } = useLayout()
+  const { user } = useUser()
+  const prevViewModeRef = useRef(viewMode)
+
+  // CARD_VIEW 自动过渡逻辑（三段式状态机心跳）
+  useEffect(() => {
+    if (viewMode === "CARD_VIEW") {
+      const timer = setTimeout(() => {
+        // 从 HOME_FOCUS 来 → 推进到 SPLIT_VIEW（展示登录面板）
+        if (prevViewModeRef.current === "HOME_FOCUS") {
+          setViewMode("SPLIT_VIEW")
+        }
+        // 从 SPLIT_VIEW 来 → 回到 HOME_FOCUS（关闭登录面板）
+        else if (prevViewModeRef.current === "SPLIT_VIEW") {
+          setViewMode("HOME_FOCUS")
+        }
+      }, 400)
+      return () => clearTimeout(timer)
+    }
+    prevViewModeRef.current = viewMode
+  }, [viewMode, setViewMode])
+  const homeTransitionVariants: Variants = {
+    home: {
+      scale: 1,
+      x: "0%",
+      opacity: 1,
+      borderRadius: "0px",
+      willChange: "transform, opacity",
+      transition: {
+        type: "spring",
+        stiffness: 260,
+        damping: 26,
+        mass: 1,
+      },
+    },
+    card: {
+      scale: 0.9,
+      x: "0%",
+      opacity: 1,
+      borderRadius: "24px",
+      boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.2)", // Slightly lighter
+      willChange: "transform, opacity",
+      transition: {
+        type: "spring",
+        stiffness: 260,
+        damping: 26,
+        mass: 1,
+      },
+    },
+    split: {
+      scale: 0.9,
+      x: "45%",
+      opacity: 1,
+      borderRadius: "24px",
+      willChange: "transform, opacity",
+      transition: {
+        type: "spring",
+        stiffness: 150,
+        damping: 25,
+      },
+    },
+    hover: {
+      scale: 0.9,
+      x: "45%",
+      opacity: 1,
+      borderRadius: "24px",
+      willChange: "transform, opacity",
+      transition: { duration: 0.4, ease: [0.33, 1, 0.68, 1] },
+    },
+  }
+
+  // 登录面板动画 variants（与首页卡片镜像对称）
+  const loginPanelVariants: Variants = {
+    home: {
+      x: "-100%",
+      scale: 0.9,
+      opacity: 0,
+      borderRadius: "24px",
+      transition: {
+        type: "spring",
+        stiffness: 260,
+        damping: 26,
+        mass: 1,
+      },
+      zIndex: -1,
+    },
+    card: {
+      x: "-100%",
+      scale: 0.9,
+      opacity: 0,
+      borderRadius: "24px",
+      transition: {
+        type: "spring",
+        stiffness: 260,
+        damping: 26,
+        mass: 1,
+      },
+      zIndex: -1,
+    },
+    split: {
+      x: "0%",
+      scale: 0.9,
+      opacity: 1,
+      zIndex: 20,
+      borderRadius: "24px",
+      backgroundColor: "var(--background)",
+      boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.15)",
+      willChange: "transform, opacity",
+      transition: {
+        type: "spring",
+        stiffness: 200,
+        damping: 24,
+        staggerChildren: 0.05,
+        delayChildren: 0.1,
+      },
+    },
+  }
+
+  // Mapping viewMode to variant keys
+  const getVariant = () => {
+    if (viewMode === "HOME_FOCUS") return "home"
+    if (viewMode === "CARD_VIEW") return "card"
+    return "split"
+  }
+
+  return (
+    <div className="fixed inset-0 overflow-hidden bg-[#fdfcf9] paper-texture">
+      {/* Background Decorative Text */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
+        <motion.span
+          animate={{
+            opacity: !user && viewMode === "SPLIT_VIEW" ? 0.02 : 0.05,
+            x: !user && viewMode === "SPLIT_VIEW" ? 20 : 0,
+          }}
+          className="absolute top-[10%] left-[5%] text-[10vw] font-editorial italic text-black dark:text-white"
+        >
+          JustMemo Draft
+        </motion.span>
+        <motion.span
+          animate={{
+            opacity: !user && viewMode === "SPLIT_VIEW" ? 0.01 : 0.03,
+            x: !user && viewMode === "SPLIT_VIEW" ? -20 : 0,
+          }}
+          className="absolute bottom-[15%] right-[10%] text-[4vw] font-editorial text-black dark:text-white"
+        >
+          with ❤️ by chiperman
+        </motion.span>
+      </div>
+
+      {/* Split View Container */}
+      <div className="relative w-full h-full z-10">
+        {/* Home Panel (Main Content) */}
+        <motion.div
+          variants={homeTransitionVariants}
+          initial="home"
+          animate={getVariant()}
+          whileHover={viewMode === "SPLIT_VIEW" ? "hover" : undefined}
+          className={`absolute inset-0 z-10 origin-center overflow-hidden bg-background ${viewMode === "SPLIT_VIEW" ? "cursor-pointer" : ""}`}
+          style={{
+            borderRadius: viewMode === "HOME_FOCUS" ? 0 : 24,
+          }}
+          onClick={() => viewMode === "SPLIT_VIEW" && setViewMode("CARD_VIEW")}
+        >
+          <div
+            className="w-full h-full overflow-hidden border border-black/5 dark:border-white/5"
+            style={{ borderRadius: "inherit" }}
+          >
+            {/* Actual Home Page Content */}
+            <div
+              className={
+                viewMode === "SPLIT_VIEW"
+                  ? "pointer-events-none select-none h-full"
+                  : "h-full"
+              }
+            >
+              {children}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Login Panel (Auth Form) - 50% 对称卡片 */}
+        <motion.div
+          variants={loginPanelVariants}
+          initial="home"
+          animate={getVariant()}
+          className="fixed left-0 top-0 w-[50%] h-full flex items-center justify-center p-12 overflow-hidden pointer-events-none"
+        >
+          <div className="w-full max-w-[400px] pointer-events-auto">
+            <LoginPanel />
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  )
+}

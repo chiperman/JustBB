@@ -8,10 +8,10 @@ import {
   ViewOffSlashIcon as EyeOff,
 } from "@hugeicons/core-free-icons"
 
-import { Button } from "@/components/ui/button"
-import { DialogFooter } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { AdminDialogShell } from "@/components/ui/AdminDialogShell"
+import { Button } from "@/shared/ui/button"
+import { DialogFooter } from "@/shared/ui/dialog"
+import { Input } from "@/shared/ui/input"
+import { AdminDialogShell } from "@/shared/ui/AdminDialogShell"
 
 interface AccessCodeDialogProps {
   open: boolean

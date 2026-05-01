@@ -38,7 +38,7 @@
 
 说明：
 
-- 当前时间轴相关逻辑同样应优先以 `supabase/migrations/` 和 `src/actions/memos/analytics.ts` 为准
+- 当前时间轴相关逻辑同样应优先以 `supabase/migrations/` 和 `src/server/actions/memos/analytics.ts` 为准
 
 ## 2. 使用原则
 

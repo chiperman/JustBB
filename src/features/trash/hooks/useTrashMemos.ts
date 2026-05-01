@@ -1,72 +1,72 @@
-'use client';
+"use client"
 
-import { useState, useEffect, useTransition, useCallback } from 'react';
-import { getTrashMemos, emptyTrash } from "@/actions/memos/trash";
-import { Memo } from "@/types/memo";
-import { usePageDataCache } from "@/context/PageDataCache";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect, useTransition, useCallback } from "react"
+import { getTrashMemos, emptyTrash } from "@/server/actions/memos/trash"
+import { Memo } from "@/types/memo"
+import { usePageDataCache } from "@/state/PageDataCache"
+import { useToast } from "@/shared/hooks/use-toast"
 
 export function useTrashMemos() {
-    const { getCache, setCache } = usePageDataCache();
-    const cached = getCache('/trash');
-    
-    const [memos, setMemos] = useState<Memo[]>(cached?.memos ?? []);
-    const [isLoading, setIsLoading] = useState(!cached);
-    const [isPending, startTransition] = useTransition();
-    const { toast } = useToast();
+  const { getCache, setCache } = usePageDataCache()
+  const cached = getCache("/trash")
 
-    useEffect(() => {
-        let isMounted = true;
+  const [memos, setMemos] = useState<Memo[]>(cached?.memos ?? [])
+  const [isLoading, setIsLoading] = useState(!cached)
+  const [isPending, startTransition] = useTransition()
+  const { toast } = useToast()
 
-        const load = async () => {
-            try {
-                const res = await getTrashMemos();
-                if (isMounted && res.success) {
-                    const result = res.data || [];
-                    setMemos(result);
-                    setCache('/trash', { memos: result });
-                }
-            } catch (error) {
-                console.error('[Trash Hook] Load failed:', error);
-            } finally {
-                if (isMounted) {
-                    setIsLoading(false);
-                }
-            }
-        };
+  useEffect(() => {
+    let isMounted = true
 
-        load();
-        
-        return () => {
-            isMounted = false;
-        };
-    }, [setCache]);
+    const load = async () => {
+      try {
+        const res = await getTrashMemos()
+        if (isMounted && res.success) {
+          const result = res.data || []
+          setMemos(result)
+          setCache("/trash", { memos: result })
+        }
+      } catch (error) {
+        console.error("[Trash Hook] Load failed:", error)
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
 
-    const handleEmptyTrash = useCallback(() => {
-        startTransition(async () => {
-            const result = await emptyTrash();
-            if (result.success) {
-                toast({
-                    title: "回收站已清空",
-                    description: "所有记录已永久删除",
-                    variant: "destructive",
-                });
-                setMemos([]);
-                setCache('/trash', { memos: [] });
-            } else {
-                toast({
-                    title: "操作失败",
-                    description: result.error,
-                    variant: "destructive",
-                });
-            }
-        });
-    }, [setCache, toast]);
+    load()
 
-    return {
-        memos,
-        isLoading,
-        isPending,
-        handleEmptyTrash
-    };
+    return () => {
+      isMounted = false
+    }
+  }, [setCache])
+
+  const handleEmptyTrash = useCallback(() => {
+    startTransition(async () => {
+      const result = await emptyTrash()
+      if (result.success) {
+        toast({
+          title: "回收站已清空",
+          description: "所有记录已永久删除",
+          variant: "destructive",
+        })
+        setMemos([])
+        setCache("/trash", { memos: [] })
+      } else {
+        toast({
+          title: "操作失败",
+          description: result.error,
+          variant: "destructive",
+        })
+      }
+    })
+  }, [setCache, toast])
+
+  return {
+    memos,
+    isLoading,
+    isPending,
+    handleEmptyTrash,
+  }
 }

@@ -46,15 +46,15 @@
 
 典型文件包括：
 
-- `src/actions/fetchMemos.integrated.test.ts`
-- `src/actions/security.test.ts`
+- `src/server/actions/memos/query.integrated.test.ts`
+- `src/server/actions/memos/security.test.ts`
 
 ### 2.3 业务回归测试
 
 还有一类测试位于 action 层，用于验证当前业务规则是否退化，例如：
 
-- `src/actions/fetchMemos.test.ts`
-- `src/actions/usage.test.ts`
+- `src/server/actions/memos/query.test.ts`
+- `src/server/actions/usage/index.test.ts`
 
 ## 3. 当前命令
 

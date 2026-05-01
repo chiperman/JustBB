@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   PanelLeftCloseIcon,
@@ -12,8 +11,6 @@ import {
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/shared/ui/button"
 import { cn } from "@/shared/lib/utils"
-
-const MotionButton = motion(Button)
 
 interface SidebarCollapseButtonProps {
   isCollapsed: boolean
@@ -48,27 +45,14 @@ export function SidebarCollapseButton({
       size="icon"
       onClick={onClick}
       aria-label={label}
-      // 回归原生：移除 !transition-none 和 whileHover，使用 Button 组件默认的 CSS 缩放
+      // 彻底复用 Button 组件自带的 hover:scale-102 和 transition-all
+      // 仅添加 hover:ring-1 来对齐菜单按钮的视觉规范
       className={cn(
-        "h-9 w-9 shrink-0 rounded-md px-0 text-muted-foreground hover:bg-secondary hover:text-foreground",
+        "rounded-md hover:ring-1 hover:ring-border/40 focus-visible:ring-0",
         className
       )}
     >
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={isCollapsed ? "collapsed" : "expanded"}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          transition={{
-            duration: 0.15,
-            ease: [0.23, 1, 0.32, 1],
-          }}
-          className="grid place-items-center"
-        >
-          <HugeiconsIcon icon={Icon} size={16} />
-        </motion.span>
-      </AnimatePresence>
+      <HugeiconsIcon icon={Icon} size={16} />
     </Button>
   )
 }

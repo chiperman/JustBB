@@ -130,15 +130,15 @@ JustMemo 当前采用的是：
 
 ## 6. 关键 Context
 
-| Context | 职责 |
-|------|------|
-| `UserContext` | 当前用户身份与权限 |
+| Context                | 职责                     |
+| ---------------------- | ------------------------ |
+| `UserContext`          | 当前用户身份与权限       |
 | `UnlockedMemosContext` | 当前页面已解锁 Memo 集合 |
-| `PageDataCache` | 按页面条件缓存查询结果 |
-| `StatsContext` | 热力图与统计数据 |
-| `TagsContext` | 标签集合与计数 |
-| `LayoutContext` | 登录转场、布局状态 |
-| `UIContext` | 多选与批量操作状态 |
+| `PageDataCache`        | 按页面条件缓存查询结果   |
+| `StatsContext`         | 热力图与统计数据         |
+| `TagsContext`          | 标签集合与计数           |
+| `LayoutContext`        | 登录转场、布局状态       |
+| `UIContext`            | 多选与批量操作状态       |
 
 ## 7. 关键页面协同
 
@@ -195,8 +195,8 @@ JustMemo 当前采用的是：
 复杂 UI 再按功能继续拆为子组件，例如：
 
 - `memo-card/*`
-- `components/layout/*`
-- `components/ui/*`
+- `shared/layout/*`
+- `shared/ui/*`
 
 这样做的目的是降低单组件复杂度，并让文档与代码结构更容易对应。
 

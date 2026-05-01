@@ -25,8 +25,8 @@
 
 典型文件包括：
 
-- `src/lib/contentParser.test.ts`
-- `src/lib/memo-cache.test.ts`
+- `src/shared/lib/contentParser.test.ts`
+- `src/shared/lib/memo-cache.test.ts`
 - `src/lib/memos/parser.test.ts`
 - `src/features/memos/hooks/useMemoFeed.test.ts`
 

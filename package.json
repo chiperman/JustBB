@@ -20,7 +20,7 @@
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
     "types:generate": "npx supabase gen types typescript --local > src/types/database.ts",
-    "types:generate:remote": "dotenv -e .env.remote -- npx supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/database.ts",
+    "types:generate:remote": "dotenv -e .env.remote -- npx supabase gen types typescript --project-id $SUPABASE_PROJECT_REF > src/types/database.ts",
     "supabase:push": "npx supabase db push",
     "release": "standard-version",
     "prepare": "husky"

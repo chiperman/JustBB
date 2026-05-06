@@ -1,6 +1,6 @@
 # JustMemo
 
-> 最后更新：2026-04-29
+> 最后更新：2026-05-06
 > 状态：主入口文档
 
 JustMemo 是一个基于 Next.js 16、React 19 和 Supabase 构建的私密 Memo 系统。
@@ -56,7 +56,7 @@ JustMemo 是一个基于 Next.js 16、React 19 和 Supabase 构建的私密 Memo
 - Node.js 20+
 - Docker Desktop
 - Supabase CLI
-- 项目根目录下的 `.env.local`
+- **配置环境变量**：复制 `.env.example` 为 `.env.local` 并根据需要修改（项目内置了 Zod 驱动的严格环境变量校验，缺失核心变量将无法启动）。
 
 ### 安装依赖
 
@@ -74,6 +74,12 @@ npm run dev
 
 - `npm run supabase:start`
 - 再启动 Next.js 开发服务器
+
+如果要连接远程数据库进行开发，请使用：
+
+```bash
+npm run dev:remote
+```
 
 其中 `scripts/dev-setup.sh` 内置了 Supabase 本地环境的自愈逻辑，用于修复 Docker 异常关停后 CLI 与容器状态不同步的问题。
 

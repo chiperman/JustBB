@@ -1,21 +1,18 @@
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { getMemoShareUrl, getPublicAppUrl } from "./share"
 
+// 模拟 env 模块
+vi.mock("@/lib/env", () => ({
+  env: {
+    NEXT_PUBLIC_SITE_URL: undefined,
+  },
+}))
+
 describe("share helpers", () => {
-  const originalAppUrl = process.env.NEXT_PUBLIC_APP_URL
-
-  afterEach(() => {
-    if (originalAppUrl === undefined) {
-      delete process.env.NEXT_PUBLIC_APP_URL
-    } else {
-      process.env.NEXT_PUBLIC_APP_URL = originalAppUrl
-    }
-
-    vi.unstubAllGlobals()
-  })
-
-  it("prefers NEXT_PUBLIC_APP_URL for share links", () => {
-    process.env.NEXT_PUBLIC_APP_URL = "https://memo.example.com/"
+  it("prefers NEXT_PUBLIC_SITE_URL for share links", async () => {
+    // 动态修改 mock 值
+    const { env } = await import("@/lib/env")
+    env.NEXT_PUBLIC_SITE_URL = "https://memo.example.com/"
 
     expect(getPublicAppUrl()).toBe("https://memo.example.com")
     expect(getMemoShareUrl("memo-123")).toBe(
@@ -23,8 +20,10 @@ describe("share helpers", () => {
     )
   })
 
-  it("falls back to window origin when public app url is not configured", () => {
-    delete process.env.NEXT_PUBLIC_APP_URL
+  it("falls back to window origin when public app url is not configured", async () => {
+    const { env } = await import("@/lib/env")
+    env.NEXT_PUBLIC_SITE_URL = undefined
+
     vi.stubGlobal("window", {
       location: {
         origin: "https://local-preview.example.com/",
@@ -35,10 +34,13 @@ describe("share helpers", () => {
     expect(getMemoShareUrl("memo-456")).toBe(
       "https://local-preview.example.com/share/memo-456"
     )
+
+    vi.unstubAllGlobals()
   })
 
-  it("returns a relative share path on the server without public app url", () => {
-    delete process.env.NEXT_PUBLIC_APP_URL
+  it("returns a relative share path on the server without public app url", async () => {
+    const { env } = await import("@/lib/env")
+    env.NEXT_PUBLIC_SITE_URL = undefined
 
     expect(getPublicAppUrl()).toBe("")
     expect(getMemoShareUrl("memo-789")).toBe("/share/memo-789")

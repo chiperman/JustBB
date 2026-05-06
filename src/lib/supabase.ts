@@ -11,14 +11,25 @@ const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY
  */
 export const supabase =
   typeof window !== "undefined"
-    ? createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
+    ? (() => {
+        if (!supabaseUrl || !supabaseAnonKey) {
+          console.error("Supabase 客户端初始化失败: 缺少环境变量")
+          return null as unknown as ReturnType<
+            typeof createBrowserClient<Database>
+          >
+        }
+        return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
+      })()
     : (null as unknown as ReturnType<typeof createBrowserClient<Database>>)
 
 /**
  * 服务端使用的匿名实例 (Server Components/Actions)
  */
 export async function getClient() {
-  // 动态导入，避免在客户端捆绑包中引发 next/headers 错误
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Supabase 服务端客户端初始化失败: 缺少环境变量")
+  }
+
   const { cookies } = await import("next/headers")
   const cookieStore = await cookies()
 
@@ -44,6 +55,10 @@ export async function getClient() {
  * 服务端使用的管理实例 (绕过 RLS)
  */
 export const getAdminClient = () => {
+  if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Supabase 管理客户端初始化失败: 缺少环境变量")
+  }
+
   return createClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL as string,
     env.SUPABASE_SERVICE_ROLE_KEY as string,

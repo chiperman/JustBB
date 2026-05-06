@@ -114,7 +114,7 @@ export async function signInWithOAuth(
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      redirectTo: `${env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
     },
   })
 
@@ -170,7 +170,7 @@ export async function sendPasswordResetEmail(
 ): Promise<ActionResponse> {
   const supabase = await getClient()
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${env.NEXT_PUBLIC_APP_URL}/reset-password`,
+    redirectTo: `${env.NEXT_PUBLIC_SITE_URL}/reset-password`,
   })
 
   if (error) {

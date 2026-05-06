@@ -2,6 +2,7 @@
 
 import { getCurrentUser, isAdmin } from "@/features/auth/actions"
 import { getAdminClient } from "@/lib/supabase"
+import { env } from "@/lib/env"
 import { ActionResponse } from "../shared/types"
 
 const FREE_PLAN_LIMITS = {
@@ -299,8 +300,8 @@ export async function getSupabaseUsageStats(): Promise<SupabaseUsageResult> {
     }
   }
 
-  const projectRef = process.env.SUPABASE_PROJECT_REF
-  const managementApiKey = process.env.SUPABASE_MANAGEMENT_API_KEY
+  const projectRef = env.SUPABASE_PROJECT_REF
+  const managementApiKey = env.SUPABASE_MANAGEMENT_API_KEY
   const managementApiConfigured = Boolean(projectRef && managementApiKey)
 
   if (projectRef && managementApiKey) {

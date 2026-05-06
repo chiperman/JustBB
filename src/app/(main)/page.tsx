@@ -1,4 +1,10 @@
 import { MainLayoutClient } from "@/shared/layout/MainLayoutClient"
+import { Suspense } from "react"
+
 export default function Home() {
-  return <MainLayoutClient />
+  return (
+    <Suspense fallback={null}>
+      <MainLayoutClient />
+    </Suspense>
+  )
 }

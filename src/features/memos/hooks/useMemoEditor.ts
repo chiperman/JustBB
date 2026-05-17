@@ -48,8 +48,18 @@ export function useMemoEditor({
   const [showLocationPicker, setShowLocationPicker] = useState(false)
   const [showLinkPicker, setShowLinkPicker] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [pasteMenuPosition, setPasteMenuPosition] = useState<{
+    top: number
+    left: number
+  } | null>(null)
   const isAnyDialogOpen =
-    showPrivateDialog || showLocationPicker || showLinkPicker || isMenuOpen
+    showPrivateDialog ||
+    showLocationPicker ||
+    showLinkPicker ||
+    isMenuOpen ||
+    showSuggestions ||
+    !!pasteMenuPosition
 
   // Draft Loading Effect
   useEffect(() => {
@@ -230,6 +240,10 @@ export function useMemoEditor({
     setShowLinkPicker,
     isMenuOpen,
     setIsMenuOpen,
+    showSuggestions,
+    setShowSuggestions,
+    pasteMenuPosition,
+    setPasteMenuPosition,
     isAnyDialogOpen,
     handleTogglePrivate,
     performPublish,

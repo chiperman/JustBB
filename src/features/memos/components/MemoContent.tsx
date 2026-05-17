@@ -174,10 +174,12 @@ export function MemoContent({
                           href={token.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 rounded-md hover:bg-primary/20 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 rounded-md hover:bg-primary/20 transition-colors cursor-pointer overflow-hidden"
                         >
                           <span>🔗</span>
-                          <span>{token.title}</span>
+                          <span className="truncate max-w-[200px]">
+                            {token.title}
+                          </span>
                         </a>
                       </HoverCardTrigger>
                       <HoverCardContent className="w-80 p-0 overflow-hidden border-none">

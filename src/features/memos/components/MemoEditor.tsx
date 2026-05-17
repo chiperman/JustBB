@@ -46,6 +46,33 @@ interface MemoEditorProps {
   className?: string
 }
 
+const IMAGE_URL_RE =
+  /\.(?:jpe?g|png|gif|webp|avif|svg|bmp|ico|tiff?)(?:\?|#|$)/i
+
+function isImageUrl(url: string): boolean {
+  try {
+    const pathname = new URL(url).pathname
+    return IMAGE_URL_RE.test(pathname)
+  } catch {
+    return IMAGE_URL_RE.test(url)
+  }
+}
+
+function deriveTitleFromUrl(url: string): string {
+  try {
+    const { hostname, pathname } = new URL(url)
+    const path = pathname.replace(/\/+$/, "")
+    if (path && path !== "/") {
+      const last = path.split("/").pop() || ""
+      const cleaned = last.replace(/\.\w+$/, "").replace(/[-_]/g, " ")
+      if (cleaned) return cleaned
+    }
+    return hostname.replace(/^www\./, "")
+  } catch {
+    return url
+  }
+}
+
 const PLACEHOLDER_TEXT = "Wanna memo something? JustMemo it!"
 
 function isPristineEmptyEditor(editor: Editor | null) {
@@ -76,6 +103,8 @@ export function MemoEditor({
   const relativeGroupRef = useRef<HTMLDivElement>(null)
   const previousPendingRef = useRef(false)
   const suppressSuggestionRestoreRef = useRef(true)
+  const mousedownInsideEditorRef = useRef(false)
+  const collapseAfterPopupCloseRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const editorRef = useRef<Editor | null>(null)
 
@@ -153,16 +182,16 @@ export function MemoEditor({
     setShowLinkPicker,
     isAnyDialogOpen,
     setIsMenuOpen,
+    showSuggestions,
+    setShowSuggestions,
+    pasteMenuPosition,
+    setPasteMenuPosition,
     handleTogglePrivate,
     performPublish,
     handleCancel,
   } = useMemoEditor({ mode, initialMemo: memo, onSuccess, onCancel })
 
   // 智能链接系统相关状态
-  const [pasteMenuPosition, setPasteMenuPosition] = useState<{
-    top: number
-    left: number
-  } | null>(null)
   const [pendingPasteUrl, setPendingPasteUrl] = useState<string | null>(null)
   const [pendingPastePos, setPendingPastePos] = useState<number | null>(null)
   const [fetchedMeta, setFetchedMeta] = useState<{
@@ -180,8 +209,6 @@ export function MemoEditor({
 
   const {
     suggestions,
-    showSuggestions,
-    setShowSuggestions,
     selectedIndex,
     setSelectedIndex,
     mentionQuery,
@@ -196,20 +223,57 @@ export function MemoEditor({
     updateSuggestionPosition,
     handleSelectSuggestion,
     handleSuggestionScroll,
-  } = useEditorSuggestions()
+  } = useEditorSuggestions({ setShowSuggestions })
 
   const isActuallyCollapsed =
     (isPropCollapsed || scrollCollapsed) &&
     !isFocused &&
     !isAnyDialogOpen &&
+    !content.trim() &&
     mode === "create"
   const shouldAnimateCollapse = enableCollapseAnimation
   const needsPrivateDialog =
     isPrivate && (mode === "create" || !memo?.is_private)
 
+  // 将 pending 的 markupLink 节点转为默认 mention 模式
+  const convertPendingToMention = useCallback(
+    (view?: Editor["view"] | null) => {
+      if (!pendingPasteUrl || !view) return
+      const pendingLink = findPendingMarkupLink(view.state.doc, {
+        url: pendingPasteUrl,
+        pos: pendingPastePos,
+      })
+      if (pendingLink) {
+        const node = view.state.doc.nodeAt(pendingLink.pos)
+        if (node) {
+          const finalTitle =
+            fetchedMeta?.title ||
+            fetchedMeta?.domain ||
+            deriveTitleFromUrl(pendingPasteUrl)
+          view.dispatch(
+            view.state.tr.setNodeMarkup(pendingLink.pos, undefined, {
+              ...node.attrs,
+              isPending: false,
+              mode: "mention",
+              label: finalTitle,
+            })
+          )
+        }
+      }
+    },
+    [pendingPasteUrl, pendingPastePos, fetchedMeta]
+  )
+
+  // 关闭粘贴菜单并清理状态
+  const closePasteMenu = useCallback(() => {
+    setPasteMenuPosition(null)
+    setPendingPasteUrl(null)
+    setPendingPastePos(null)
+    setFetchedMeta(null)
+  }, [])
+
   const extensions = useMemo(
     () =>
-       
       getExtensions({
         shouldAllowMentionSuggestion: () =>
           !suppressSuggestionRestoreRef.current,
@@ -369,6 +433,7 @@ export function MemoEditor({
     },
     onFocus: () => {
       setIsFocused(true)
+      collapseAfterPopupCloseRef.current = false
 
       if (suppressSuggestionRestoreRef.current) {
         return
@@ -413,10 +478,17 @@ export function MemoEditor({
     },
     onBlur: () => {
       // 只有当页面仍然拥有焦点时（即：用户点击了页面内其他地方），才执行收起逻辑
-      // 如果是因为切换程序导致的窗口失焦，则保持展开状态，避免用户切回时看到“跳动”
+      // 如果是因为切换程序导致的窗口失焦，则保持展开状态，避免用户切回时看到"跳动"
       if (document.hasFocus()) {
-        setIsFocused(false)
+        convertPendingToMention(editor?.view)
+        closePasteMenu()
         setShowSuggestions(false)
+        // 点击外部关闭弹窗时，只关闭弹窗不收缩编辑器
+        if (isAnyDialogOpen || collapseAfterPopupCloseRef.current) {
+          collapseAfterPopupCloseRef.current = false
+          return
+        }
+        setIsFocused(false)
       }
     },
     editorProps: {
@@ -427,12 +499,33 @@ export function MemoEditor({
         ),
       },
       handleDOMEvents: {
-        mousedown: () => {
+        mousedown: (_view, event) => {
           suppressSuggestionRestoreRef.current = false
+          // 记录点击位置，供 onBlur 判断是否需要收缩
+          mousedownInsideEditorRef.current = _view.dom.contains(
+            event.target as Node
+          )
+          // 点击编辑器外部时，关闭弹窗但标记不收缩
+          if (!mousedownInsideEditorRef.current && isAnyDialogOpen) {
+            collapseAfterPopupCloseRef.current = true
+            convertPendingToMention(_view)
+            closePasteMenu()
+            setShowSuggestions(false)
+          }
           return false
         },
-        keydown: () => {
+        keydown: (_view, event) => {
           suppressSuggestionRestoreRef.current = false
+
+          // ESC 关闭所有弹窗，不触发编辑器收缩
+          if (event.key === "Escape" && isAnyDialogOpen) {
+            event.preventDefault()
+            convertPendingToMention(_view)
+            closePasteMenu()
+            setShowSuggestions(false)
+            return true
+          }
+
           return false
         },
       },
@@ -486,6 +579,23 @@ export function MemoEditor({
         // 立即开始预获取元数据，节省时间
         fetchLinkMetadata(url).then((meta) => {
           setFetchedMeta(meta)
+          const bestTitle =
+            meta?.title || meta?.domain || deriveTitleFromUrl(url)
+          if (editor) {
+            // 更新节点显示标题（无论是否仍在 pending 状态）
+            editor.state.doc.descendants((node, pos) => {
+              if (node.type.name === "markupLink" && node.attrs.id === url) {
+                editor.view.dispatch(
+                  editor.state.tr.setNodeMarkup(pos, undefined, {
+                    ...node.attrs,
+                    label: bestTitle,
+                  })
+                )
+                return false
+              }
+              return true
+            })
+          }
         })
 
         // 获取粘贴位置的坐标显示菜单
@@ -564,7 +674,7 @@ export function MemoEditor({
 
   // 监听滚动收缩信号，如果在聚焦状态下发生深滚，主动失焦以触发收缩
   useEffect(() => {
-    // 只有当 scrollCollapsed 从 false 变为 true 的“入场瞬间”且正在聚焦时才触发 blur
+    // 只有当 scrollCollapsed 从 false 变为 true 的"入场瞬间"且正在聚焦时才触发 blur
     if (
       scrollCollapsed &&
       !prevScrollCollapsed.current &&
@@ -572,6 +682,10 @@ export function MemoEditor({
       mode === "create" &&
       editor
     ) {
+      // 滚动时强制关闭所有弹窗并允许收缩
+      collapseAfterPopupCloseRef.current = false
+      closePasteMenu()
+      setShowSuggestions(false)
       editor.commands.blur()
     }
     prevScrollCollapsed.current = scrollCollapsed
@@ -846,6 +960,7 @@ export function MemoEditor({
 
           <LinkPasteMenu
             position={pasteMenuPosition}
+            isImageUrl={pendingPasteUrl ? isImageUrl(pendingPasteUrl) : false}
             onClose={() => {
               // 如果关闭了菜单但没有选择，则保持 pending 状态或者转为默认
               // 这里我们选择转为默认 mention 模式并取消 pending
@@ -856,12 +971,17 @@ export function MemoEditor({
                 })
 
                 if (pendingLink) {
+                  const finalTitle =
+                    fetchedMeta?.title ||
+                    fetchedMeta?.domain ||
+                    deriveTitleFromUrl(pendingPasteUrl)
                   editor
                     .chain()
                     .setNodeSelection(pendingLink.pos)
                     .updateAttributes("markupLink", {
                       isPending: false,
                       mode: "mention",
+                      label: finalTitle,
                     })
                     .focus()
                     .run()
@@ -908,7 +1028,9 @@ export function MemoEditor({
 
                 if (pendingLink) {
                   const finalTitle =
-                    fetchedMeta?.title || fetchedMeta?.domain || pendingPasteUrl
+                    fetchedMeta?.title ||
+                    fetchedMeta?.domain ||
+                    deriveTitleFromUrl(pendingPasteUrl)
 
                   editor
                     .chain()
@@ -916,35 +1038,12 @@ export function MemoEditor({
                     .updateAttributes("markupLink", {
                       isPending: false,
                       mode,
-                      label: finalTitle, // 如果已经获取到了，直接填入
+                      label: finalTitle,
                     })
                     .setTextSelection(pendingLink.pos + 2)
                     .focus()
                     .run()
-
-                  // 如果还没获取到，则等待并更新
-                  if (!fetchedMeta) {
-                    fetchLinkMetadata(pendingPasteUrl).then((meta) => {
-                      const asyncTitle =
-                        meta?.title || meta?.domain || pendingPasteUrl
-                      editor.state.doc.descendants((node, pos) => {
-                        if (
-                          node.type.name === "markupLink" &&
-                          node.attrs.id === pendingPasteUrl &&
-                          !node.attrs.isPending
-                        ) {
-                          editor.view.dispatch(
-                            editor.state.tr.setNodeMarkup(pos, undefined, {
-                              ...node.attrs,
-                              label: asyncTitle,
-                            })
-                          )
-                          return false
-                        }
-                        return true
-                      })
-                    })
-                  }
+                  // 标题异步更新由 handlePaste 的 metadata 回调统一处理，此处不重复 fetch
                 }
               }
               setPasteMenuPosition(null)
@@ -976,11 +1075,14 @@ export function MemoEditor({
           onShowLinkPicker={() => setShowLinkPicker(true)}
           onImageUpload={handleImageButtonClick}
           onCancel={handleToolbarCancel}
-          onPublish={() =>
-            needsPrivateDialog
-              ? setShowPrivateDialog(true)
-              : performPublish(editor)
-          }
+          onPublish={() => {
+            if (needsPrivateDialog) {
+              setShowPrivateDialog(true)
+            } else {
+              convertPendingToMention(editor?.view)
+              performPublish(editor)
+            }
+          }}
         />
         <input
           ref={fileInputRef}
@@ -1010,7 +1112,10 @@ export function MemoEditor({
         setAccessCode={setAccessCode}
         accessHint={accessHint}
         setAccessHint={setAccessHint}
-        onConfirm={() => performPublish(editor)}
+        onConfirm={() => {
+          convertPendingToMention(editor?.view)
+          performPublish(editor)
+        }}
       />
 
       <LocationPickerDialog

@@ -43,10 +43,13 @@ const generateSnippet = (content?: string, query?: string): string => {
   return "..." + text.substring(start, end)
 }
 
-export function useEditorSuggestions() {
+export function useEditorSuggestions({
+  setShowSuggestions,
+}: {
+  setShowSuggestions: (show: boolean) => void
+}) {
   const { unlockedMemoIds } = useUnlockedMemos()
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [mentionQuery, setMentionQuery] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -325,8 +328,6 @@ export function useEditorSuggestions() {
   return {
     suggestions,
     setSuggestions,
-    showSuggestions,
-    setShowSuggestions,
     selectedIndex,
     setSelectedIndex,
     mentionQuery,

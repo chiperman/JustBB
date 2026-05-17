@@ -18,6 +18,7 @@ interface LinkPasteMenuProps {
   position: { top: number; left: number } | null
   onSelect: (mode: LinkRenderMode) => void
   onClose: () => void
+  isImageUrl?: boolean
 }
 
 const OPTIONS: { mode: LinkRenderMode; label: string; icon: IconSvgElement }[] =
@@ -32,6 +33,7 @@ export function LinkPasteMenu({
   position,
   onSelect,
   onClose,
+  isImageUrl = false,
 }: LinkPasteMenuProps) {
   if (!position) return null
 
@@ -41,6 +43,7 @@ export function LinkPasteMenu({
       position={position}
       onSelect={onSelect}
       onClose={onClose}
+      isImageUrl={isImageUrl}
     />
   )
 }
@@ -49,34 +52,42 @@ function LinkPasteMenuContent({
   position,
   onSelect,
   onClose,
+  isImageUrl = false,
 }: {
   position: { top: number; left: number }
   onSelect: (mode: LinkRenderMode) => void
   onClose: () => void
+  isImageUrl?: boolean
 }) {
   const hasMounted = useHasMounted()
   const [selectedIndex, setSelectedIndex] = useState(0)
+
+  const options = isImageUrl
+    ? OPTIONS.filter((opt) => opt.mode === "image").concat(
+        OPTIONS.filter((opt) => opt.mode !== "image")
+      )
+    : OPTIONS.filter((opt) => opt.mode !== "image")
+
+  const clampedIndex = Math.min(selectedIndex, options.length - 1)
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowDown") {
         e.preventDefault()
-        setSelectedIndex((prev) => (prev + 1) % OPTIONS.length)
+        setSelectedIndex((prev) => (prev + 1) % options.length)
       } else if (e.key === "ArrowUp") {
         e.preventDefault()
-        setSelectedIndex((prev) => (prev + OPTIONS.length - 1) % OPTIONS.length)
+        setSelectedIndex((prev) => (prev + options.length - 1) % options.length)
       } else if (e.key === "Enter") {
         e.preventDefault()
-        onSelect(OPTIONS[selectedIndex].mode)
-      } else if (e.key === "Escape") {
-        e.preventDefault()
-        onClose()
+        onSelect(options[clampedIndex].mode)
       }
+      // ESC 已由 MemoEditor 的 handleDOMEvents.keydown 处理，此处不再重复
     }
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [selectedIndex, onSelect, onClose])
+  }, [selectedIndex, onSelect, onClose, options])
 
   if (!hasMounted) return null
 
@@ -100,14 +111,14 @@ function LinkPasteMenuContent({
           <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium border-b border-border/40 mb-1">
             粘贴为
           </div>
-          {OPTIONS.map((opt, index) => (
+          {options.map((opt, index) => (
             <button
               key={opt.mode}
               onClick={() => onSelect(opt.mode)}
               onMouseEnter={() => setSelectedIndex(index)}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 transition-colors outline-none w-full text-left relative",
-                index === selectedIndex
+                index === clampedIndex
                   ? "bg-accent text-accent-foreground"
                   : "text-foreground/80 hover:bg-accent/50"
               )}
@@ -115,7 +126,7 @@ function LinkPasteMenuContent({
               <div
                 className={cn(
                   "flex items-center justify-center w-5 h-5 rounded transition-colors",
-                  index === selectedIndex
+                  index === clampedIndex
                     ? "text-primary bg-primary/10"
                     : "text-muted-foreground/60"
                 )}

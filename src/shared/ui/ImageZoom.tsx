@@ -219,7 +219,7 @@ function PreviewContent({
           {Math.round(currentScale * 100)}%
         </span>
         <span className="text-[10px] text-white/40 mx-2">
-          Ctrl+滚轮缩放 · 拖拽平移
+          Ctrl + 滚轮缩放 · 双指缩放 · 拖拽平移
         </span>
       </motion.div>
 

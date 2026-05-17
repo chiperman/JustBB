@@ -38,18 +38,18 @@ export function SmartImage({
   return (
     <div
       className={cn(
-        "relative overflow-hidden bg-muted/20 flex items-center justify-center",
+        "relative overflow-hidden bg-muted/20 flex items-center justify-center min-h-[140px]",
         containerClassName
       )}
     >
-      <AnimatePresence mode="popLayout">
+      <AnimatePresence>
         {status === "loading" && (
           <motion.div
             key="loading"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 flex items-center justify-center"
+            className="absolute inset-0 flex items-center justify-center z-10"
           >
             <div className="w-full h-full animate-pulse bg-muted/40" />
           </motion.div>
@@ -61,7 +61,7 @@ export function SmartImage({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className={cn(
-              "absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-muted-foreground/40",
+              "absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-muted-foreground/40 z-10",
               fallbackClassName
             )}
           >
@@ -76,30 +76,30 @@ export function SmartImage({
             </span>
           </motion.div>
         )}
-
-        {src && status !== "error" && (
-          <motion.div
-            key="image"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: status === "success" ? 1 : 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="w-full h-full"
-          >
-            <img
-              src={src}
-              alt={alt}
-              onLoad={() => setStatus("success")}
-              onError={() => setStatus("error")}
-              className={cn(
-                "w-full h-full transition-transform duration-700",
-                status === "success" ? "scale-100" : "scale-105",
-                className
-              )}
-              {...props}
-            />
-          </motion.div>
-        )}
       </AnimatePresence>
+
+      {src && (
+        <motion.div
+          key="image"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: status === "success" ? 1 : 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className={cn("w-full h-full", status !== "success" && "invisible")}
+        >
+          <img
+            src={src}
+            alt={alt}
+            onLoad={() => setStatus("success")}
+            onError={() => setStatus("error")}
+            className={cn(
+              "w-full h-full transition-transform duration-700",
+              status === "success" ? "scale-100" : "scale-105",
+              className
+            )}
+            {...props}
+          />
+        </motion.div>
+      )}
     </div>
   )
 }

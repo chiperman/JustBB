@@ -235,8 +235,8 @@ export function MemoEditor({
   const needsPrivateDialog =
     isPrivate && (mode === "create" || !memo?.is_private)
 
-  // 将 pending 的 markupLink 节点转为默认 mention 模式
-  const convertPendingToMention = useCallback(
+  // 将 pending 的 markupLink 节点转为默认模式（图片 URL 转图片，普通 URL 转提及）
+  const resolvePendingLink = useCallback(
     (view?: Editor["view"] | null) => {
       if (!pendingPasteUrl || !view) return
       const pendingLink = findPendingMarkupLink(view.state.doc, {
@@ -244,20 +244,31 @@ export function MemoEditor({
         pos: pendingPastePos,
       })
       if (pendingLink) {
-        const node = view.state.doc.nodeAt(pendingLink.pos)
-        if (node) {
-          const finalTitle =
-            fetchedMeta?.title ||
-            fetchedMeta?.domain ||
-            deriveTitleFromUrl(pendingPasteUrl)
+        const isImg = isImageUrl(pendingPasteUrl)
+
+        if (isImg) {
+          // 如果是图片，默认直接转为图片语法
           view.dispatch(
-            view.state.tr.setNodeMarkup(pendingLink.pos, undefined, {
-              ...node.attrs,
-              isPending: false,
-              mode: "mention",
-              label: finalTitle,
-            })
+            view.state.tr
+              .delete(pendingLink.pos, pendingLink.pos + 1)
+              .insertText(`![图片](${pendingPasteUrl}) `, pendingLink.pos)
           )
+        } else {
+          const node = view.state.doc.nodeAt(pendingLink.pos)
+          if (node) {
+            const finalTitle =
+              fetchedMeta?.title ||
+              fetchedMeta?.domain ||
+              deriveTitleFromUrl(pendingPasteUrl)
+            view.dispatch(
+              view.state.tr.setNodeMarkup(pendingLink.pos, undefined, {
+                ...node.attrs,
+                isPending: false,
+                mode: "mention",
+                label: finalTitle,
+              })
+            )
+          }
         }
       }
     },
@@ -480,7 +491,7 @@ export function MemoEditor({
       // 只有当页面仍然拥有焦点时（即：用户点击了页面内其他地方），才执行收起逻辑
       // 如果是因为切换程序导致的窗口失焦，则保持展开状态，避免用户切回时看到"跳动"
       if (document.hasFocus()) {
-        convertPendingToMention(editor?.view)
+        resolvePendingLink(editor?.view)
         closePasteMenu()
         setShowSuggestions(false)
         // 点击外部关闭弹窗时，只关闭弹窗不收缩编辑器
@@ -508,7 +519,7 @@ export function MemoEditor({
           // 点击编辑器外部时，关闭弹窗但标记不收缩
           if (!mousedownInsideEditorRef.current && isAnyDialogOpen) {
             collapseAfterPopupCloseRef.current = true
-            convertPendingToMention(_view)
+            resolvePendingLink(_view)
             closePasteMenu()
             setShowSuggestions(false)
           }
@@ -520,7 +531,7 @@ export function MemoEditor({
           // ESC 关闭所有弹窗，不触发编辑器收缩
           if (event.key === "Escape" && isAnyDialogOpen) {
             event.preventDefault()
-            convertPendingToMention(_view)
+            resolvePendingLink(_view)
             closePasteMenu()
             setShowSuggestions(false)
             return true
@@ -963,7 +974,6 @@ export function MemoEditor({
             isImageUrl={pendingPasteUrl ? isImageUrl(pendingPasteUrl) : false}
             onClose={() => {
               // 如果关闭了菜单但没有选择，则保持 pending 状态或者转为默认
-              // 这里我们选择转为默认 mention 模式并取消 pending
               if (pendingPasteUrl && editor) {
                 const pendingLink = findPendingMarkupLink(editor.state.doc, {
                   url: pendingPasteUrl,
@@ -971,20 +981,38 @@ export function MemoEditor({
                 })
 
                 if (pendingLink) {
-                  const finalTitle =
-                    fetchedMeta?.title ||
-                    fetchedMeta?.domain ||
-                    deriveTitleFromUrl(pendingPasteUrl)
-                  editor
-                    .chain()
-                    .setNodeSelection(pendingLink.pos)
-                    .updateAttributes("markupLink", {
-                      isPending: false,
-                      mode: "mention",
-                      label: finalTitle,
-                    })
-                    .focus()
-                    .run()
+                  const isImg = isImageUrl(pendingPasteUrl)
+
+                  if (isImg) {
+                    // 如果是图片，默认直接转为图片语法
+                    editor
+                      .chain()
+                      .deleteRange({
+                        from: pendingLink.pos,
+                        to: pendingLink.pos + 1,
+                      })
+                      .insertContentAt(
+                        pendingLink.pos,
+                        `![图片](${pendingPasteUrl}) `
+                      )
+                      .focus()
+                      .run()
+                  } else {
+                    const finalTitle =
+                      fetchedMeta?.title ||
+                      fetchedMeta?.domain ||
+                      deriveTitleFromUrl(pendingPasteUrl)
+                    editor
+                      .chain()
+                      .setNodeSelection(pendingLink.pos)
+                      .updateAttributes("markupLink", {
+                        isPending: false,
+                        mode: "mention",
+                        label: finalTitle,
+                      })
+                      .focus()
+                      .run()
+                  }
                 }
               }
               setPasteMenuPosition(null)
@@ -1079,7 +1107,7 @@ export function MemoEditor({
             if (needsPrivateDialog) {
               setShowPrivateDialog(true)
             } else {
-              convertPendingToMention(editor?.view)
+              resolvePendingLink(editor?.view)
               performPublish(editor)
             }
           }}
@@ -1113,7 +1141,7 @@ export function MemoEditor({
         accessHint={accessHint}
         setAccessHint={setAccessHint}
         onConfirm={() => {
-          convertPendingToMention(editor?.view)
+          resolvePendingLink(editor?.view)
           performPublish(editor)
         }}
       />

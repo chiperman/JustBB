@@ -28,21 +28,12 @@ import {
   DropdownMenuSeparator,
 } from "@/shared/ui/dropdown-menu"
 import { Button } from "@/shared/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/shared/ui/alert-dialog"
 import { AccessCodeDialog } from "@/features/memos/components/AccessCodeDialog"
 import { useToast } from "@/shared/hooks/use-toast"
 import { MemoShare } from "@/features/memos/components/MemoShare"
 import { Memo } from "@/types/memo"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
+import { useConfirm } from "@/state/ConfirmContext"
 
 interface MemoActionsProps {
   id: string
@@ -70,14 +61,11 @@ export function MemoActions({
   isOwner = false,
 }: MemoActionsProps) {
   const [isPending, setIsPending] = useState(false)
-  const [showDeleteAlert, setShowDeleteAlert] = useState(false)
-  const [showPermanentDeleteAlert, setShowPermanentDeleteAlert] =
-    useState(false)
-  const [showPublicConfirm, setShowPublicConfirm] = useState(false)
   const [showPrompt, setShowPrompt] = useState(false)
   const [accessCode, setAccessCode] = useState("")
   const [accessHint, setAccessHint] = useState("")
   const { toast } = useToast()
+  const { confirm } = useConfirm()
   const hasMounted = useHasMounted()
 
   if (!hasMounted) {
@@ -85,6 +73,14 @@ export function MemoActions({
   }
 
   const handleDelete = async () => {
+    const ok = await confirm({
+      title: "删除这条记录？",
+      description: "删除后会移至回收站，之后仍可恢复。",
+      confirmLabel: "删除",
+      variant: "destructive",
+    })
+    if (!ok) return
+
     setIsPending(true)
     await deleteMemo(id)
     memoCache.removeItem(id)
@@ -108,6 +104,14 @@ export function MemoActions({
   }
 
   const handlePermanentDelete = async () => {
+    const ok = await confirm({
+      title: "彻底删除这条记录？",
+      description: "删除后将直接从数据库移除，无法恢复。",
+      confirmLabel: "彻底删除",
+      variant: "destructive",
+    })
+    if (!ok) return
+
     setIsPending(true)
     await permanentDeleteMemo(id)
     setIsPending(false)
@@ -132,28 +136,35 @@ export function MemoActions({
     })
   }
 
-  const confirmMakePublic = async () => {
-    setIsPending(true)
-    const formData = new FormData()
-    formData.append("id", id)
-    formData.append("is_private", "false")
-    const result = await updateMemoState(formData)
-    if (result?.error) {
-      toast({
-        title: "错误",
-        description: result.error,
-        variant: "destructive",
-      })
-    } else {
-      dispatchMemoEvent({ type: "update", id, updates: { is_private: false } })
-      toast({ title: "已公开", description: "该记录现在所有人可见" })
-    }
-    setIsPending(false)
-  }
-
   const handleTogglePrivate = async () => {
     if (isPrivate) {
-      setShowPublicConfirm(true)
+      const ok = await confirm({
+        title: "设为公开？",
+        description: "设为公开后，所有人都可以看到此内容。",
+        confirmLabel: "设为公开",
+      })
+      if (!ok) return
+
+      setIsPending(true)
+      const formData = new FormData()
+      formData.append("id", id)
+      formData.append("is_private", "false")
+      const result = await updateMemoState(formData)
+      if (result?.error) {
+        toast({
+          title: "错误",
+          description: result.error,
+          variant: "destructive",
+        })
+      } else {
+        dispatchMemoEvent({
+          type: "update",
+          id,
+          updates: { is_private: false },
+        })
+        toast({ title: "已公开", description: "该记录现在所有人可见" })
+      }
+      setIsPending(false)
     } else {
       setShowPrompt(true)
     }
@@ -217,36 +228,13 @@ export function MemoActions({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setShowPermanentDeleteAlert(true)}
+              onClick={handlePermanentDelete}
               disabled={isPending}
               className="rounded-md text-destructive hover:bg-destructive/10 active:scale-95 transition-all"
               title="彻底删除"
             >
               <HugeiconsIcon icon={Delete02Icon} size={16} />
             </Button>
-
-            <AlertDialog
-              open={showPermanentDeleteAlert}
-              onOpenChange={setShowPermanentDeleteAlert}
-            >
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>彻底删除这条记录？</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    删除后将直接从数据库移除，无法恢复。
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>取消</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handlePermanentDelete}
-                    className="bg-destructive hover:brightness-110 rounded-md"
-                  >
-                    彻底删除
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
           </>
         )}
       </div>
@@ -332,7 +320,7 @@ export function MemoActions({
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
-                onClick={() => setShowDeleteAlert(true)}
+                onClick={handleDelete}
                 className="text-destructive focus:text-destructive focus:bg-destructive/5"
               >
                 <HugeiconsIcon icon={Delete02Icon} size={16} className="mr-2" />
@@ -342,46 +330,6 @@ export function MemoActions({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>删除这条记录？</AlertDialogTitle>
-            <AlertDialogDescription>
-              删除后会移至回收站，之后仍可恢复。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-md">取消</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive hover:brightness-110 rounded-md"
-            >
-              删除
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={showPublicConfirm} onOpenChange={setShowPublicConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>设为公开？</AlertDialogTitle>
-            <AlertDialogDescription>
-              设为公开后，所有人都可以看到此内容。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-md">取消</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmMakePublic}
-              className="rounded-md"
-            >
-              设为公开
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <AccessCodeDialog
         open={showPrompt}

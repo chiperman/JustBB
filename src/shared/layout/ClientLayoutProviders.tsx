@@ -14,6 +14,7 @@ import { PageDataCacheProvider } from "@/state/PageDataCache"
 import { UnlockedMemosProvider } from "@/state/UnlockedMemosContext"
 import { ExportProvider } from "@/state/ExportContext"
 import { ExportProgressPanel } from "@/shared/layout/ExportProgressPanel"
+import { ConfirmProvider } from "@/state/ConfirmContext"
 
 interface ClientLayoutProvidersProps {
   children: React.ReactNode
@@ -29,27 +30,29 @@ export function ClientLayoutProviders({
 }: ClientLayoutProvidersProps & { initialUser?: UserInfo | null }) {
   return (
     <UserProvider initialUser={initialUser}>
-      <UnlockedMemosProvider>
-        <PageDataCacheProvider>
-          <ExportProvider>
-            <StatsProvider initialData={initialStats}>
-              <LayoutProvider>
-                <UIProvider>
-                  <TagsProvider initialData={initialTags}>
-                    <LoginTransitionWrapper>
-                      <MobileLayoutWrapper>
-                        {children}
-                        <SelectionToolbar />
-                        <ExportProgressPanel />
-                      </MobileLayoutWrapper>
-                    </LoginTransitionWrapper>
-                  </TagsProvider>
-                </UIProvider>
-              </LayoutProvider>
-            </StatsProvider>
-          </ExportProvider>
-        </PageDataCacheProvider>
-      </UnlockedMemosProvider>
+      <ConfirmProvider>
+        <UnlockedMemosProvider>
+          <PageDataCacheProvider>
+            <ExportProvider>
+              <StatsProvider initialData={initialStats}>
+                <LayoutProvider>
+                  <UIProvider>
+                    <TagsProvider initialData={initialTags}>
+                      <LoginTransitionWrapper>
+                        <MobileLayoutWrapper>
+                          {children}
+                          <SelectionToolbar />
+                          <ExportProgressPanel />
+                        </MobileLayoutWrapper>
+                      </LoginTransitionWrapper>
+                    </TagsProvider>
+                  </UIProvider>
+                </LayoutProvider>
+              </StatsProvider>
+            </ExportProvider>
+          </PageDataCacheProvider>
+        </UnlockedMemosProvider>
+      </ConfirmProvider>
     </UserProvider>
   )
 }

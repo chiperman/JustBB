@@ -27,6 +27,7 @@ import { useTags } from "@/state/TagsContext"
 import { useStats } from "@/state/StatsContext"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { BaseFloatingCapsule } from "./BaseFloatingCapsule"
+import { useConfirm } from "@/state/ConfirmContext"
 
 export function SelectionToolbar() {
   const pathname = usePathname()
@@ -36,6 +37,7 @@ export function SelectionToolbar() {
   const { refreshTags } = useTags()
   const { refreshStats } = useStats()
   const { toast } = useToast()
+  const { confirm } = useConfirm()
   const [isTagDialogOpen, setIsTagDialogOpen] = useState(false)
   const [isPending, setIsPending] = useState(false)
   const hasMounted = useHasMounted()
@@ -47,8 +49,13 @@ export function SelectionToolbar() {
 
   const handleBatchDelete = async () => {
     if (!hasSelection) return
-    if (!window.confirm(`将选中的 ${selectedIds.size} 条笔记移至回收站？`))
-      return
+    const ok = await confirm({
+      title: "移至回收站？",
+      description: `将选中的 ${selectedIds.size} 条笔记移至回收站？`,
+      confirmLabel: "删除",
+      variant: "destructive",
+    })
+    if (!ok) return
 
     setIsPending(true)
     try {
@@ -103,12 +110,13 @@ export function SelectionToolbar() {
 
   const handleBatchPermanentDelete = async () => {
     if (!hasSelection) return
-    if (
-      !window.confirm(
-        `彻底删除选中的 ${selectedIds.size} 条笔记？此操作不可恢复。`
-      )
-    )
-      return
+    const ok = await confirm({
+      title: "彻底删除？",
+      description: `彻底删除选中的 ${selectedIds.size} 条笔记？此操作不可恢复。`,
+      confirmLabel: "彻底删除",
+      variant: "destructive",
+    })
+    if (!ok) return
 
     setIsPending(true)
     try {

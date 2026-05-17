@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { TrashHeader } from "../TrashHeader"
-import { Delete02Icon, Archive02Icon } from "@hugeicons/core-free-icons"
+import { Delete02Icon } from "@hugeicons/core-free-icons"
 import { expect, it, describe, vi } from "vitest"
 import React from "react"
 
@@ -20,40 +20,22 @@ vi.mock("@/shared/layout/ContextPageShell", () => ({
 
 // 模拟 Button
 vi.mock("@/shared/ui/button", () => ({
-  Button: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
+  Button: ({
+    children,
+    onClick,
+  }: {
+    children: React.ReactNode
+    onClick?: () => void
+  }) => <div onClick={onClick}>{children}</div>,
 }))
 
-// 模拟 AlertDialog 相关组件
-vi.mock("@/shared/ui/alert-dialog", () => ({
-  AlertDialog: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  AlertDialogTrigger: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  AlertDialogContent: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  AlertDialogHeader: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  AlertDialogTitle: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  AlertDialogDescription: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  AlertDialogFooter: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  AlertDialogCancel: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  AlertDialogAction: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
+// 模拟 useConfirm
+vi.mock("@/state/ConfirmContext", () => ({
+  useConfirm: () => ({
+    confirm: vi.fn(),
+    alert: vi.fn(),
+    prompt: vi.fn(),
+  }),
 }))
 
 describe("TrashHeader", () => {

@@ -163,7 +163,9 @@ function PreviewContent({
             <SmartImage
               src={src}
               alt={alt || "大图"}
+              isFullPage={true}
               containerClassName={cn(
+                "w-full h-full",
                 fitMode === "fit"
                   ? "max-w-[80vw] max-h-[70vh]"
                   : "max-w-[95vw] max-h-[95vh]"

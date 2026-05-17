@@ -12,6 +12,43 @@ interface SmartImageProps extends Omit<
 > {
   containerClassName?: string
   fallbackClassName?: string
+  isFullPage?: boolean
+}
+
+function ImageErrorState({
+  isFullPage = false,
+  className,
+}: {
+  isFullPage?: boolean
+  className?: string
+}) {
+  return (
+    <motion.div
+      key="error"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className={cn(
+        "absolute inset-0 flex flex-col items-center justify-center gap-4 p-4 text-muted-foreground/60 z-10",
+        isFullPage && "bg-muted/10 backdrop-blur-sm",
+        className
+      )}
+    >
+      <HugeiconsIcon
+        icon={Image01Icon}
+        size={isFullPage ? 48 : 32}
+        strokeWidth={1.5}
+        className="opacity-40"
+      />
+      <span
+        className={cn(
+          "font-medium tracking-[0.2em] uppercase text-center",
+          isFullPage ? "text-xs" : "text-[10px]"
+        )}
+      >
+        图片不可用
+      </span>
+    </motion.div>
+  )
 }
 
 export function SmartImage({
@@ -20,6 +57,7 @@ export function SmartImage({
   className,
   containerClassName,
   fallbackClassName,
+  isFullPage,
   ...props
 }: SmartImageProps) {
   const [status, setStatus] = React.useState<"loading" | "error" | "success">(
@@ -56,25 +94,10 @@ export function SmartImage({
         )}
 
         {status === "error" && (
-          <motion.div
-            key="error"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className={cn(
-              "absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-muted-foreground/40 z-10",
-              fallbackClassName
-            )}
-          >
-            <HugeiconsIcon
-              icon={Image01Icon}
-              size={32}
-              strokeWidth={1.5}
-              className="opacity-50"
-            />
-            <span className="text-[10px] font-medium tracking-wider uppercase">
-              图片不可用
-            </span>
-          </motion.div>
+          <ImageErrorState
+            isFullPage={isFullPage}
+            className={fallbackClassName}
+          />
         )}
       </AnimatePresence>
 

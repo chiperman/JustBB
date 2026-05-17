@@ -6,6 +6,7 @@ import { zhCN } from "date-fns/locale"
 import { motion } from "framer-motion"
 import { cn } from "@/shared/lib/utils"
 import { ImageZoom } from "@/shared/ui/ImageZoom"
+import { SmartImage } from "@/shared/ui/SmartImage"
 
 interface GalleryGridProps {
   memos: Memo[]
@@ -85,14 +86,14 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
                       src={item.imageUrl || ""}
                       alt="Memo multimedia content"
                     >
-                      <img
+                      <SmartImage
                         src={item.imageUrl || ""}
                         alt="Memo multimedia content"
-                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                        containerClassName="w-full h-full"
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                         loading="lazy"
                       />
                     </ImageZoom>
-
                     {/* Premium Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-4">
                       <p className="text-white text-[11px] line-clamp-2 mb-2 leading-relaxed tracking-wide opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">

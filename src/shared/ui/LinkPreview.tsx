@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from "react"
 import { fetchLinkMetadata, LinkMetadata } from "@/shared/lib/link-preview"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Copy01Icon, Link01Icon } from "@hugeicons/core-free-icons"
+import { Link01Icon, Copy01Icon } from "@hugeicons/core-free-icons"
 import { cn } from "@/shared/lib/utils"
 import { useToast } from "@/shared/hooks/use-toast"
+import { SmartImage } from "./SmartImage"
 
 interface LinkPreviewProps {
   url: string
@@ -199,28 +200,12 @@ export function LinkPreview({
         title={url}
       >
         {metadata.image ? (
-          <div className="relative w-24 self-stretch shrink-0 overflow-hidden bg-muted border-r border-border flex items-center justify-center sm:w-[120px]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={metadata.image}
-              alt={displayTitle || "Link preview"}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover/link-preview:scale-105"
-              onError={(e) => {
-                e.currentTarget.style.display = "none"
-                e.currentTarget.parentElement?.classList.add(
-                  "flex",
-                  "items-center",
-                  "justify-center"
-                )
-                const icon = document.createElement("div")
-                icon.innerHTML =
-                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground/30"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>'
-                e.currentTarget.parentElement?.appendChild(
-                  icon.firstChild as Node
-                )
-              }}
-            />
-          </div>
+          <SmartImage
+            src={metadata.image}
+            alt={displayTitle || "Link preview"}
+            containerClassName="w-24 self-stretch shrink-0 bg-muted border-r border-border sm:w-[120px]"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover/link-preview:scale-105"
+          />
         ) : (
           <div className="relative w-24 self-stretch shrink-0 overflow-hidden bg-primary/5 border-r border-border flex items-center justify-center sm:w-[120px]">
             <HugeiconsIcon

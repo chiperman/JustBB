@@ -12,6 +12,7 @@ import { Dialog, DialogTrigger, DialogPortal } from "./dialog"
 import { cn } from "@/shared/lib/utils"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Cancel01Icon } from "@hugeicons/core-free-icons"
+import { SmartImage } from "./SmartImage"
 
 interface ImageZoomProps {
   src: string
@@ -159,9 +160,14 @@ function PreviewContent({
               fitMode === "fit" && "overflow-hidden"
             )}
           >
-            <img
+            <SmartImage
               src={src}
               alt={alt || "大图"}
+              containerClassName={cn(
+                fitMode === "fit"
+                  ? "max-w-[80vw] max-h-[70vh]"
+                  : "max-w-[95vw] max-h-[95vh]"
+              )}
               className={cn(
                 "object-contain select-none",
                 fitMode === "fit"
@@ -274,13 +280,12 @@ export function ImageZoom({ src, alt, className, children }: ImageZoomProps) {
         )}
       >
         {children || (
-          <div className="relative aspect-square w-full">
-            <img
-              src={src}
-              alt={alt || "图片预览"}
-              className="w-full h-full object-cover"
-            />
-          </div>
+          <SmartImage
+            src={src}
+            alt={alt || "图片预览"}
+            containerClassName="aspect-square w-full"
+            className="w-full h-full object-cover"
+          />
         )}
       </div>
     )
@@ -304,13 +309,12 @@ export function ImageZoom({ src, alt, className, children }: ImageZoomProps) {
           )}
         >
           {children || (
-            <div className="relative aspect-square w-full">
-              <img
-                src={src}
-                alt={alt || "图片预览"}
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <SmartImage
+              src={src}
+              alt={alt || "图片预览"}
+              containerClassName="aspect-square w-full"
+              className="w-full h-full object-cover"
+            />
           )}
         </motion.div>
       </DialogTrigger>

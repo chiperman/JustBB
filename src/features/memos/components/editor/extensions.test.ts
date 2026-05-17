@@ -40,7 +40,7 @@ describe("getExtensions", () => {
     )
 
     // 使用类型断言访问自定义配置项
-    const options = markupLink?.options as Record<string, unknown>
+    const options = markupLink?.options as unknown as Record<string, unknown>
     expect(options.deleteTriggerWithBackspace).toBe(true)
   })
 })

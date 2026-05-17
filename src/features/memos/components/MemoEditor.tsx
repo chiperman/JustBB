@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useEffect, useMemo } from "react"
+import { useRef, useEffect, useMemo, useCallback } from "react"
 import { cn } from "@/shared/lib/utils"
 import { EditorContent, useEditor, type Editor } from "@tiptap/react"
 import { motion } from "framer-motion"
@@ -23,11 +23,13 @@ import {
   type LinkRenderMode,
 } from "@/features/memos/components/editor/smartLink"
 import { useState } from "react"
+import { toast } from "@/shared/hooks/use-toast"
 
 import {
   useMemoEditor,
   DRAFT_CONTENT_KEY,
 } from "@/features/memos/hooks/useMemoEditor"
+import { useImageUpload } from "@/features/memos/hooks/useImageUpload"
 import {
   useEditorSuggestions,
   CustomSuggestionProps,
@@ -74,6 +76,57 @@ export function MemoEditor({
   const relativeGroupRef = useRef<HTMLDivElement>(null)
   const previousPendingRef = useRef(false)
   const suppressSuggestionRestoreRef = useRef(true)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const editorRef = useRef<Editor | null>(null)
+
+  const { uploadFile, isUploading } = useImageUpload()
+  const r2ConfiguredRef = useRef<boolean | null>(null)
+
+  const handleImageFile = useCallback(
+    async (file: File) => {
+      if (!file.type.startsWith("image/")) return
+      const result = await uploadFile(file)
+      if (result.url && editorRef.current) {
+        editorRef.current
+          .chain()
+          .focus()
+          .insertContent(`![图片](${result.url}) `)
+          .run()
+      } else if (result.error) {
+        toast({
+          title: "图片上传失败",
+          description: result.error,
+          variant: "destructive",
+        })
+      }
+    },
+    [uploadFile]
+  )
+
+  const handleImageButtonClick = useCallback(async () => {
+    if (r2ConfiguredRef.current === false) {
+      toast({
+        title: "请先配置图片存储",
+        description: "在设置菜单中配置 Cloudflare R2 后即可上传图片",
+        variant: "destructive",
+      })
+      return
+    }
+    if (r2ConfiguredRef.current === null) {
+      const { getR2Config } = await import("@/server/actions/settings/r2")
+      const res = await getR2Config()
+      r2ConfiguredRef.current = !!res.data
+      if (!res.data) {
+        toast({
+          title: "请先配置图片存储",
+          description: "在设置菜单中配置 Cloudflare R2 后即可上传图片",
+          variant: "destructive",
+        })
+        return
+      }
+    }
+    fileInputRef.current?.click()
+  }, [])
 
   const {
     content,
@@ -156,7 +209,7 @@ export function MemoEditor({
 
   const extensions = useMemo(
     () =>
-      // eslint-disable-next-line react-hooks/refs
+       
       getExtensions({
         shouldAllowMentionSuggestion: () =>
           !suppressSuggestionRestoreRef.current,
@@ -384,6 +437,19 @@ export function MemoEditor({
         },
       },
       handlePaste: (view, event) => {
+        // 优先处理剪贴板中的图片文件
+        const files = event.clipboardData?.files
+        if (files && files.length > 0) {
+          const imageFile = Array.from(files).find((f) =>
+            f.type.startsWith("image/")
+          )
+          if (imageFile) {
+            event.preventDefault()
+            handleImageFile(imageFile)
+            return true
+          }
+        }
+
         const text = event.clipboardData?.getData("text/plain")
         if (!text) return false
 
@@ -431,8 +497,26 @@ export function MemoEditor({
 
         return true
       },
+      handleDrop: (view, event) => {
+        const files = event.dataTransfer?.files
+        if (files && files.length > 0) {
+          const imageFile = Array.from(files).find((f) =>
+            f.type.startsWith("image/")
+          )
+          if (imageFile) {
+            event.preventDefault()
+            handleImageFile(imageFile)
+            return true
+          }
+        }
+        return false
+      },
     },
   })
+
+  useEffect(() => {
+    editorRef.current = editor
+  }, [editor])
 
   useEffect(() => {
     if (!editor) {
@@ -790,6 +874,33 @@ export function MemoEditor({
             }}
             onSelect={(mode) => {
               if (pendingPasteUrl && editor) {
+                // 图片模式：删除 pending 节点，插入 markdown 图片语法
+                if (mode === "image") {
+                  const pendingLink = findPendingMarkupLink(editor.state.doc, {
+                    url: pendingPasteUrl,
+                    pos: pendingPastePos,
+                  })
+                  if (pendingLink) {
+                    editor
+                      .chain()
+                      .deleteRange({
+                        from: pendingLink.pos,
+                        to: pendingLink.pos + 1,
+                      })
+                      .insertContentAt(
+                        pendingLink.pos,
+                        `![图片](${pendingPasteUrl}) `
+                      )
+                      .focus()
+                      .run()
+                  }
+                  setPasteMenuPosition(null)
+                  setPendingPasteUrl(null)
+                  setPendingPastePos(null)
+                  setFetchedMeta(null)
+                  return
+                }
+
                 const pendingLink = findPendingMarkupLink(editor.state.doc, {
                   url: pendingPasteUrl,
                   pos: pendingPastePos,
@@ -856,18 +967,33 @@ export function MemoEditor({
           isPrivate={isPrivate}
           isPinned={isPinned}
           isPending={isPending}
+          isUploadingImage={isUploading}
           content={content}
           mode={mode}
           onTogglePrivate={handleTogglePrivate}
           onTogglePinned={() => setIsPinned(!isPinned)}
           onShowLocationPicker={() => setShowLocationPicker(true)}
           onShowLinkPicker={() => setShowLinkPicker(true)}
+          onImageUpload={handleImageButtonClick}
           onCancel={handleToolbarCancel}
           onPublish={() =>
             needsPrivateDialog
               ? setShowPrivateDialog(true)
               : performPublish(editor)
           }
+        />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) {
+              handleImageFile(file)
+              e.target.value = ""
+            }
+          }}
         />
       </div>
 

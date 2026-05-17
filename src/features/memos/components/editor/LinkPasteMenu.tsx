@@ -10,6 +10,7 @@ import {
   Link01Icon,
   Bookmark01Icon,
   UserIcon,
+  Image01Icon,
 } from "@hugeicons/core-free-icons"
 import type { LinkRenderMode } from "./smartLink"
 
@@ -24,6 +25,7 @@ const OPTIONS: { mode: LinkRenderMode; label: string; icon: IconSvgElement }[] =
     { mode: "mention", label: "提及", icon: UserIcon },
     { mode: "pill", label: "URL", icon: Link01Icon },
     { mode: "card", label: "书签", icon: Bookmark01Icon },
+    { mode: "image", label: "图片", icon: Image01Icon },
   ]
 
 export function LinkPasteMenu({

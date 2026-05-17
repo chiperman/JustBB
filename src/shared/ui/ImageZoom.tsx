@@ -12,7 +12,6 @@ import { Dialog, DialogTrigger, DialogPortal } from "./dialog"
 import { cn } from "@/shared/lib/utils"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Cancel01Icon } from "@hugeicons/core-free-icons"
-import Image from "next/image"
 
 interface ImageZoomProps {
   src: string
@@ -42,10 +41,31 @@ function PreviewContent({
   const rawScale = useMotionValue(1)
   const scale = useSpring(rawScale, { stiffness: 350, damping: 35 })
 
+  const containerRef = React.useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = React.useState(false)
   const [currentScale, setCurrentScale] = React.useState(1)
+  const [fitMode, setFitMode] = React.useState<"fit" | "original">("fit")
   const isResettingRef = React.useRef(false)
   const [viewport, setViewport] = React.useState({ width: 1000, height: 1000 })
+
+  // 非 passive wheel 监听，阻止浏览器页面缩放：仅 Ctrl+滚轮 或 双指捏合缩放图片
+  React.useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const onWheel = (e: Event) => {
+      const we = e as WheelEvent
+      if (!we.ctrlKey) return
+      we.preventDefault()
+      we.stopPropagation()
+      const delta = -we.deltaY
+      const factor = 0.01
+      let nextScale = rawScale.get() + delta * factor
+      nextScale = Math.min(Math.max(nextScale, 0.25), 3)
+      rawScale.set(nextScale)
+    }
+    el.addEventListener("wheel", onWheel, { passive: false })
+    return () => el.removeEventListener("wheel", onWheel)
+  })
 
   // 初始化视口大小
   React.useEffect(() => {
@@ -61,15 +81,16 @@ function PreviewContent({
     return scale.on("change", (v) => {
       setCurrentScale(v)
 
-      // 当缩放回到 1.0 附近且不在重置中时，触发复位动画
+      // 当从放大状态回到 1.0 附近时，触发位置复位
       if (
+        v >= 0.95 &&
         v <= 1.01 &&
         !isResettingRef.current &&
         (Math.abs(x.get()) > 1 || Math.abs(y.get()) > 1)
       ) {
         isResettingRef.current = true
 
-        // 使用更具阻尼感的 spring 配置，彻底消除“闪过头”
+        // 使用更具阻尼感的 spring 配置，彻底消除"闪过头"
         const springConfig = {
           type: "spring" as const,
           stiffness: 260,
@@ -80,24 +101,12 @@ function PreviewContent({
         animate(x, 0, springConfig)
         animate(y, 0, springConfig)
       }
-      // 如果又放大了，解锁状态位
-      else if (v > 1.1) {
+      // 如果偏离了 1.0 附近，解锁状态位
+      else if (v > 1.05 || v < 0.9) {
         isResettingRef.current = false
       }
     })
   }, [scale, x, y])
-
-  // 滚轮缩放处理
-  const handleWheel = (e: React.WheelEvent) => {
-    e.stopPropagation()
-    const delta = -e.deltaY
-    const factor = 0.002 // 缩放灵敏度
-    let nextScale = rawScale.get() + delta * factor
-
-    // 限制缩放范围 [1.0, 3.0]
-    nextScale = Math.min(Math.max(nextScale, 1), 3)
-    rawScale.set(nextScale)
-  }
 
   // 统一点击处理：无论缩放与否，点击均关闭（最快交互路径）
   const handleBackgroundClick = () => {
@@ -114,8 +123,8 @@ function PreviewContent({
 
   return (
     <div
+      ref={containerRef}
       className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden"
-      onWheel={handleWheel}
     >
       {/* 背景遮罩 */}
       <motion.div
@@ -126,7 +135,7 @@ function PreviewContent({
       />
 
       {/* 稳定布局容器 */}
-      <motion.div className="relative z-10 w-[95vw] h-[90vh] flex items-center justify-center pointer-events-none">
+      <motion.div className="relative z-10 w-[92vw] h-[80vh] flex items-center justify-center pointer-events-none">
         {/* 缩放与平移层 */}
         <motion.div
           className="relative flex items-center justify-center pointer-events-auto cursor-grab active:cursor-grabbing"
@@ -146,34 +155,72 @@ function PreviewContent({
         >
           <div
             className={cn(
-              "relative w-full h-full max-w-[95vw] max-h-[90vh] rounded-[2px] overflow-hidden-[0_20px_40px_-10px_rgba(0,0,0,0.4)]"
+              "relative rounded-[2px]",
+              fitMode === "fit" && "overflow-hidden"
             )}
           >
-            <Image
+            <img
               src={src}
               alt={alt || "大图"}
-              fill
-              className="object-contain"
+              className={cn(
+                "object-contain select-none",
+                fitMode === "fit"
+                  ? "max-w-[80vw] max-h-[70vh]"
+                  : "max-w-none max-h-none"
+              )}
               draggable={false}
-              priority
-              unoptimized={src.startsWith("data:")}
             />
           </div>
         </motion.div>
       </motion.div>
 
-      {/* 交互提示 */}
+      {/* 底部工具栏 */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-white/10 backdrop-blur-2xl rounded-full border border-white/10 text-white/80 text-[10px] uppercase tracking-[0.25em] font-bold pointer-events-none whitespace-nowrap z-20 flex items-center gap-3"
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 px-2 py-1.5 bg-black/60 backdrop-blur-2xl rounded-full border border-white/10 pointer-events-auto whitespace-nowrap z-20 flex items-center gap-1"
       >
-        <span className="text-primary font-mono text-xs bg-primary/20 px-2 py-0.5 rounded-full ring-1 ring-primary/30">
+        <button
+          onClick={() => {
+            setFitMode("fit")
+            rawScale.set(1)
+            x.set(0)
+            y.set(0)
+          }}
+          className={cn(
+            "px-3 py-1 rounded-full text-[11px] font-medium transition-all",
+            fitMode === "fit"
+              ? "bg-white/25 text-white"
+              : "text-white/40 hover:text-white/70"
+          )}
+        >
+          适应
+        </button>
+        <button
+          onClick={() => {
+            setFitMode("original")
+            rawScale.set(1)
+            x.set(0)
+            y.set(0)
+          }}
+          className={cn(
+            "px-3 py-1 rounded-full text-[11px] font-medium transition-all",
+            fitMode === "original"
+              ? "bg-white/25 text-white"
+              : "text-white/40 hover:text-white/70"
+          )}
+        >
+          100%
+        </button>
+        <div className="w-px h-4 bg-white/10 mx-1" />
+        <span className="text-primary font-mono text-[11px] bg-primary/20 px-2 py-0.5 rounded-full ring-1 ring-primary/30">
           {Math.round(currentScale * 100)}%
         </span>
-        <span>滚轮缩放 • 拖拽平移 • 点击背景关闭</span>
+        <span className="text-[10px] text-white/40 mx-2">
+          Ctrl+滚轮缩放 · 拖拽平移
+        </span>
       </motion.div>
 
       {/* 关闭按钮 */}
@@ -228,11 +275,10 @@ export function ImageZoom({ src, alt, className, children }: ImageZoomProps) {
       >
         {children || (
           <div className="relative aspect-square w-full">
-            <Image
+            <img
               src={src}
               alt={alt || "图片预览"}
-              fill
-              className="object-cover"
+              className="w-full h-full object-cover"
             />
           </div>
         )}
@@ -259,11 +305,10 @@ export function ImageZoom({ src, alt, className, children }: ImageZoomProps) {
         >
           {children || (
             <div className="relative aspect-square w-full">
-              <Image
+              <img
                 src={src}
                 alt={alt || "图片预览"}
-                fill
-                className="object-cover"
+                className="w-full h-full object-cover"
               />
             </div>
           )}

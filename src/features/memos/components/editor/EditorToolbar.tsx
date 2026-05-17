@@ -8,6 +8,8 @@ import {
   CircleUnlock01Icon as LockOpen,
   Location04Icon,
   Link01Icon,
+  Image01Icon,
+  Loading03Icon as Loader2,
 } from "@hugeicons/core-free-icons"
 import { cn } from "@/shared/lib/utils"
 import { Button } from "@/shared/ui/button"
@@ -19,12 +21,14 @@ interface EditorToolbarProps {
   isPrivate: boolean
   isPinned: boolean
   isPending: boolean
+  isUploadingImage: boolean
   content: string
   mode: "create" | "edit"
   onTogglePrivate: () => void
   onTogglePinned: () => void
   onShowLocationPicker: () => void
   onShowLinkPicker: () => void
+  onImageUpload: () => void
   onCancel: () => void
   onPublish: () => void
 }
@@ -35,12 +39,14 @@ export function EditorToolbar({
   isPrivate,
   isPinned,
   isPending,
+  isUploadingImage,
   content,
   mode,
   onTogglePrivate,
   onTogglePinned,
   onShowLocationPicker,
   onShowLinkPicker,
+  onImageUpload,
   onCancel,
   onPublish,
 }: EditorToolbarProps) {
@@ -125,6 +131,24 @@ export function EditorToolbar({
           >
             <HugeiconsIcon icon={Link01Icon} size={16} />
             <span className="text-xs font-medium">链接</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onImageUpload}
+            disabled={isUploadingImage}
+            className="h-8 px-2 gap-1.5 text-muted-foreground transition-all hover:text-foreground"
+            aria-label="上传图片"
+          >
+            <HugeiconsIcon
+              icon={isUploadingImage ? Loader2 : Image01Icon}
+              size={16}
+              className={isUploadingImage ? "animate-spin" : ""}
+            />
+            <span className="text-xs font-medium">
+              {isUploadingImage ? "上传中" : "图片"}
+            </span>
           </Button>
         </div>
 

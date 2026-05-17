@@ -22,7 +22,6 @@ import {
   HoverCardContent,
 } from "@/shared/ui/hover-card"
 import { toast } from "@/shared/hooks/use-toast"
-import Image from "next/image"
 
 interface MemoContentProps {
   content: string
@@ -118,13 +117,12 @@ export function MemoContent({
                   <div className="flex justify-center items-center">
                     <div className="relative rounded-md overflow-hidden ring-1 ring-border/70 transition-all duration-500 hover:scale-[1.01]">
                       <ImageZoom src={token.value}>
-                        <div className="relative max-h-[550px] w-full aspect-auto h-[300px]">
-                          <Image
+                        <div className="relative max-h-[550px] w-full h-[300px] flex items-center justify-center bg-muted/30">
+                          <img
                             src={token.value}
                             alt="Memo attachment"
-                            fill
-                            className="object-contain select-none"
-                            sizes="(max-width: 768px) 100vw, 800px"
+                            className="max-h-full max-w-full object-contain select-none"
+                            loading="lazy"
                           />
                         </div>
                       </ImageZoom>

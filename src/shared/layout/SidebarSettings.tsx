@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   UserCircleIcon as UserCircle,
   FlashIcon,
+  Image01Icon,
 } from "@hugeicons/core-free-icons"
 import { useTheme } from "next-themes"
 import { logout } from "@/features/auth/actions"
@@ -45,6 +46,7 @@ import { Button } from "@/shared/ui/button"
 import { UsageModal } from "@/features/admin/components/UsageModal"
 import { ExportConfigDialog } from "./ExportConfigDialog"
 import { ImportConfigDialog } from "./ImportConfigDialog"
+import { R2ConfigDialog } from "@/features/settings/components/R2ConfigDialog"
 
 interface SidebarSettingsProps {
   isCollapsed?: boolean
@@ -59,6 +61,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
   const [exportDialogOpen, setExportDialogOpen] = React.useState(false)
   const [importDialogOpen, setImportDialogOpen] = React.useState(false)
   const [usageModalOpen, setUsageModalOpen] = React.useState(false)
+  const [r2ConfigOpen, setR2ConfigOpen] = React.useState(false)
   const canUseImportExport = Boolean(user)
   const canUseUsageMonitor = user?.role === "admin"
 
@@ -284,6 +287,19 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
               />
               <span className="nav-button-text">服务用量监控</span>
             </DropdownMenuItem>
+
+            <DropdownMenuItem
+              className="h-10 disabled:opacity-40"
+              onClick={() => setR2ConfigOpen(true)}
+              disabled={!canUseImportExport}
+            >
+              <HugeiconsIcon
+                icon={Image01Icon}
+                size={16}
+                className="mr-2 text-primary"
+              />
+              <span className="nav-button-text">图片存储配置</span>
+            </DropdownMenuItem>
           </div>
 
           <DropdownMenuSeparator />
@@ -328,6 +344,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
       />
+      <R2ConfigDialog open={r2ConfigOpen} onOpenChange={setR2ConfigOpen} />
     </>
   )
 }

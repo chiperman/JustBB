@@ -130,7 +130,7 @@ export default function ResetPasswordPage() {
                 placeholder="请输入新密码"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 h-12 rounded-xl border-border/50 focus:ring-primary/20"
+                className="pl-10 h-12 rounded-xl border-border/50 focus:border-primary/30"
                 required
               />
             </div>
@@ -149,7 +149,7 @@ export default function ResetPasswordPage() {
                 placeholder="请再次输入新密码"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="pl-10 h-12 rounded-xl border-border/50 focus:ring-primary/20"
+                className="pl-10 h-12 rounded-xl border-border/50 focus:border-primary/30"
                 required
               />
             </div>

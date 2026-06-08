@@ -73,7 +73,7 @@ export function OtpInput({
             type="text"
             inputMode="numeric"
             maxLength={1}
-            className="w-10 h-12 text-center text-lg font-bold p-0 focus:ring-1 focus:ring-primary/30"
+            className="w-10 h-12 text-center text-lg font-bold p-0 focus:border-primary/30"
             value={value[i] || ""}
             onChange={(e) => handleChange(e, i)}
             onKeyDown={(e) => handleKeyDown(e, i)}

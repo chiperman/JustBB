@@ -76,7 +76,7 @@ export function SearchInput() {
 
   return (
     <div className="relative w-full group">
-      <div className="relative flex items-center min-h-[36px] bg-background border border-border rounded-xs px-2 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30 transition-all hover:bg-secondary/50 group">
+      <div className="relative flex items-center min-h-[36px] bg-background border border-border rounded-xs px-2 focus-within:border-primary/30 transition-all hover:bg-secondary/50 group">
         <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0 pr-8 py-1.5">
           <HugeiconsIcon
             icon={Search01Icon}

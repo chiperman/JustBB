@@ -131,7 +131,6 @@ export async function getGalleryMemos(
   const viewerId = await getCurrentUserId()
   const { query: qBuilder } = await getMemosQuery()
   let q = MemoFilters.active(qBuilder)
-  q = MemoFilters.publicOnly(q)
   q = MemoFilters.withImages(q)
   q = MemoFilters.paginate(q, offset, limit)
 
@@ -143,7 +142,7 @@ export async function getGalleryMemos(
     data: ((data as unknown as Memo[]) || []).map((memo) => ({
       ...memo,
       is_owner: memo.owner_id === viewerId,
-      is_locked: false,
+      is_locked: memo.is_private && memo.owner_id !== viewerId,
     })),
   }
 }
@@ -161,7 +160,6 @@ export async function getArchivedMemos(
 
   const { query: qBuilder } = await getMemosQuery()
   let q = MemoFilters.active(qBuilder)
-  q = MemoFilters.publicOnly(q)
   q = MemoFilters.dateRange(q, startDate, endDate)
   q = q.order("created_at", { ascending: false })
 
@@ -177,7 +175,7 @@ export async function getArchivedMemos(
     data: ((data || []) as Memo[]).map((memo) => ({
       ...memo,
       is_owner: memo.owner_id === viewerId,
-      is_locked: false,
+      is_locked: memo.is_private && memo.owner_id !== viewerId,
     })),
   }
 }
@@ -253,7 +251,6 @@ export async function getBacklinks(
 
   const { query: qBuilder } = await getMemosQuery()
   let q = MemoFilters.active(qBuilder)
-  q = MemoFilters.publicOnly(q)
   q = q
     .ilike("content", `%@${memoNumber}%`)
     .order("created_at", { ascending: false })
@@ -343,7 +340,6 @@ export async function getOnThisDayMemos(): Promise<ActionResponse<Memo[]>> {
 
   const { query: qBuilder } = await getMemosQuery()
   let q = MemoFilters.active(qBuilder)
-  q = MemoFilters.publicOnly(q)
   q = MemoFilters.dateRange(q, startDate, endDate)
   q = q.order("created_at", { ascending: false })
 
@@ -362,7 +358,7 @@ export async function getOnThisDayMemos(): Promise<ActionResponse<Memo[]>> {
     data: filteredMemos.map((memo) => ({
       ...memo,
       is_owner: memo.owner_id === viewerId,
-      is_locked: false,
+      is_locked: memo.is_private && memo.owner_id !== viewerId,
     })),
   }
 }

@@ -64,24 +64,23 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
             </span>
           </div>
 
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {groupedItems[month].map((item, idx) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05, duration: 0.5 }}
-                className="break-inside-avoid"
+                className="w-full"
               >
                 <div
                   tabIndex={0}
                   className={cn(
-                    "group relative overflow-hidden rounded-md border border-border/60 bg-card/85 p-2-[0_12px_30px_-22px_rgba(0,0,0,0.25)] transition-all duration-500 hover:border-primary/30 hover:bg-card focus:outline-none focus:ring-1 focus:ring-primary/30 hover:"
+                    "group relative overflow-hidden rounded-xl border border-border/40 bg-card transition-all duration-300 hover:border-border/80 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   )}
                   aria-label={`查看由 ${format(item.dateObj, "yyyy-MM-dd")} 发布的图片 Memo`}
                 >
-                  {/* Frame Effect - Inner Padding */}
-                  <div className="relative overflow-hidden aspect-[4/3] rounded-[1px]">
+                  <div className="relative overflow-hidden aspect-[4/3] w-full h-full">
                     <ImageZoom
                       src={item.imageUrl || ""}
                       alt="Memo multimedia content"
@@ -95,19 +94,19 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
                       />
                     </ImageZoom>
                     {/* Premium Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-4">
-                      <p className="text-white text-[11px] line-clamp-2 mb-2 leading-relaxed tracking-wide opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 pointer-events-none">
+                      <p className="text-white/95 text-[11px] line-clamp-2 mb-2.5 leading-relaxed tracking-wide opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
                         {item.content
                           .replace(/!\[.*?\]\((.*?)\)/g, "")
                           .trim() || "图片分享"}
                       </p>
-                      <div className="flex justify-between items-center text-[9px] text-white/50 font-mono tracking-tighter uppercase">
+                      <div className="flex justify-between items-center text-[9px] text-white/60 font-mono tracking-wider uppercase">
                         <span>{format(item.dateObj, "yyyy.MM.dd")}</span>
                         <span
-                          className="px-2 py-0.5 bg-white/10 border border-white/10 rounded-md"
+                          className="px-2.5 py-1 bg-white/10 border border-white/15 rounded-md backdrop-blur-md transition-colors"
                           aria-hidden="true"
                         >
-                          Detail
+                          DETAIL
                         </span>
                       </div>
                     </div>

@@ -25,24 +25,25 @@ function ImageErrorState({
   return (
     <motion.div
       key="error"
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       className={cn(
-        "absolute inset-0 flex flex-col items-center justify-center gap-4 p-4 text-muted-foreground/60 z-10",
+        "absolute inset-0 flex flex-col items-center justify-center gap-2.5 p-4 text-muted-foreground/40 z-10 select-none bg-[linear-gradient(45deg,rgba(29,29,27,0.015)_25%,transparent_25%,transparent_50%,rgba(29,29,27,0.015)_50%,rgba(29,29,27,0.015)_75%,transparent_75%,transparent)] dark:bg-[linear-gradient(45deg,rgba(255,255,255,0.01)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.01)_50%,rgba(255,255,255,0.01)_75%,transparent_75%,transparent)] bg-[size:16px_16px]",
         isFullPage && "bg-muted/10 backdrop-blur-sm",
         className
       )}
     >
+      <div className="absolute inset-2 border border-dashed border-border/30 rounded-lg pointer-events-none" />
       <HugeiconsIcon
         icon={Image01Icon}
-        size={isFullPage ? 48 : 32}
-        strokeWidth={1.5}
-        className="opacity-40"
+        size={isFullPage ? 36 : 24}
+        strokeWidth={1.2}
+        className="opacity-30 text-muted-foreground/50"
       />
       <span
         className={cn(
-          "font-medium tracking-[0.2em] uppercase text-center",
-          isFullPage ? "text-xs" : "text-[10px]"
+          "font-mono tracking-[0.3em] uppercase text-center text-muted-foreground/40",
+          isFullPage ? "text-[10px]" : "text-[9px]"
         )}
       >
         图片不可用

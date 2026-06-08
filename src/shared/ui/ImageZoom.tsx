@@ -165,16 +165,15 @@ function PreviewContent({
               alt={alt || "大图"}
               isFullPage={true}
               containerClassName={cn(
-                "w-full h-full",
                 fitMode === "fit"
-                  ? "max-w-[80vw] max-h-[70vh]"
-                  : "max-w-[95vw] max-h-[95vh]"
+                  ? "w-full h-full max-w-[80vw] max-h-[70vh]"
+                  : "w-auto h-auto max-w-none max-h-none"
               )}
               className={cn(
                 "object-contain select-none",
                 fitMode === "fit"
                   ? "max-w-[80vw] max-h-[70vh]"
-                  : "max-w-none max-h-none"
+                  : "w-auto h-auto max-w-none max-h-none"
               )}
               draggable={false}
             />

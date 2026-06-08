@@ -2,7 +2,6 @@
 
 import { Memo } from "@/types/memo"
 import { format, parseISO } from "date-fns"
-import { zhCN } from "date-fns/locale"
 import { motion } from "framer-motion"
 import { cn } from "@/shared/lib/utils"
 import { ImageZoom } from "@/shared/ui/ImageZoom"
@@ -37,85 +36,60 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
     })
     .filter((item) => item.imageUrl)
 
-  // Group items by "YYYY年MM月"
-  const groupedItems = galleryItems.reduce(
-    (groups: Record<string, typeof galleryItems>, item) => {
-      const month = format(item.dateObj, "yyyy年MM月", { locale: zhCN })
-      if (!groups[month]) groups[month] = []
-      groups[month].push(item)
-      return groups
-    },
-    {}
-  )
-
-  const months = Object.keys(groupedItems).sort((a, b) => b.localeCompare(a))
-
   return (
-    <div className="space-y-16">
-      {months.map((month) => (
-        <div key={month} className="space-y-8">
-          <div className="flex items-center gap-4">
-            <h3 className="text-xl font-bold italic tracking-tight text-primary/80">
-              {month}
-            </h3>
-            <div className="h-px flex-1 bg-border/20" />
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.2em] opacity-50">
-              {groupedItems[month].length} 片段
-            </span>
-          </div>
+    <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
+      {galleryItems.map((item, idx) => (
+        <motion.div
+          key={item.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: idx * 0.03, duration: 0.5 }}
+          className="break-inside-avoid mb-6"
+        >
+          <div
+            tabIndex={0}
+            className={cn(
+              "group relative overflow-hidden rounded-xl border border-border/40 bg-card transition-all duration-300 hover:border-border/80 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            )}
+            aria-label={`查看由 ${format(item.dateObj, "yyyy-MM-dd")} 发布的图片 Memo`}
+          >
+            <div className="relative overflow-hidden w-full h-auto">
+              {/* Premium Date Tag */}
+              <div className="absolute top-3 left-3 px-2 py-0.5 rounded bg-background/50 backdrop-blur-md border border-border/30 text-muted-foreground text-[9px] font-mono tracking-widest select-none z-20 pointer-events-none uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                {format(item.dateObj, "yy/MM")}
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {groupedItems[month].map((item, idx) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05, duration: 0.5 }}
-                className="w-full"
+              <ImageZoom
+                src={item.imageUrl || ""}
+                alt="Memo multimedia content"
               >
-                <div
-                  tabIndex={0}
-                  className={cn(
-                    "group relative overflow-hidden rounded-xl border border-border/40 bg-card transition-all duration-300 hover:border-border/80 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  )}
-                  aria-label={`查看由 ${format(item.dateObj, "yyyy-MM-dd")} 发布的图片 Memo`}
-                >
-                  <div className="relative overflow-hidden aspect-[4/3] w-full h-full">
-                    <ImageZoom
-                      src={item.imageUrl || ""}
-                      alt="Memo multimedia content"
-                    >
-                      <SmartImage
-                        src={item.imageUrl || ""}
-                        alt="Memo multimedia content"
-                        containerClassName="w-full h-full"
-                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                        loading="lazy"
-                      />
-                    </ImageZoom>
-                    {/* Premium Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 pointer-events-none">
-                      <p className="text-white/95 text-[11px] line-clamp-2 mb-2.5 leading-relaxed tracking-wide opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
-                        {item.content
-                          .replace(/!\[.*?\]\((.*?)\)/g, "")
-                          .trim() || "图片分享"}
-                      </p>
-                      <div className="flex justify-between items-center text-[9px] text-white/60 font-mono tracking-wider uppercase">
-                        <span>{format(item.dateObj, "yyyy.MM.dd")}</span>
-                        <span
-                          className="px-2.5 py-1 bg-white/10 border border-white/15 rounded-md backdrop-blur-md transition-colors"
-                          aria-hidden="true"
-                        >
-                          DETAIL
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                <SmartImage
+                  src={item.imageUrl || ""}
+                  alt="Memo multimedia content"
+                  containerClassName="w-full h-auto min-h-[140px]"
+                  className="w-full h-auto object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+                  loading="lazy"
+                />
+              </ImageZoom>
+              {/* Premium Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 pointer-events-none">
+                <p className="text-white/95 text-[11px] line-clamp-2 mb-2.5 leading-relaxed tracking-wide opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
+                  {item.content.replace(/!\[.*?\]\((.*?)\)/g, "").trim() ||
+                    "图片分享"}
+                </p>
+                <div className="flex justify-between items-center text-[9px] text-white/60 font-mono tracking-wider uppercase">
+                  <span>{format(item.dateObj, "yyyy.MM.dd")}</span>
+                  <span
+                    className="px-2.5 py-1 bg-white/10 border border-white/15 rounded-md backdrop-blur-md transition-colors"
+                    aria-hidden="true"
+                  >
+                    DETAIL
+                  </span>
                 </div>
-              </motion.div>
-            ))}
+              </div>
+            </div>
           </div>
-        </div>
+        </motion.div>
       ))}
     </div>
   )

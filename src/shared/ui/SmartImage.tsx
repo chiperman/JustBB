@@ -108,7 +108,11 @@ export function SmartImage({
           initial={{ opacity: 0 }}
           animate={{ opacity: status === "success" ? 1 : 0 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className={cn("w-full h-full", status !== "success" && "invisible")}
+          className={cn(
+            "w-full",
+            containerClassName?.includes("h-auto") ? "h-auto" : "h-full",
+            status !== "success" && "invisible"
+          )}
         >
           <img
             src={src}
@@ -116,7 +120,8 @@ export function SmartImage({
             onLoad={() => setStatus("success")}
             onError={() => setStatus("error")}
             className={cn(
-              "w-full h-full transition-transform duration-700",
+              "w-full transition-transform duration-700",
+              containerClassName?.includes("h-auto") ? "h-auto" : "h-full",
               status === "success" ? "scale-100" : "scale-105",
               className
             )}

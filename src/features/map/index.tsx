@@ -4,22 +4,33 @@ import { AnimatePresence, motion } from "framer-motion"
 import { useMapMemos } from "./hooks/useMapMemos"
 import { MapLoadingScreen } from "./components/MapLoadingScreen"
 import { MapErrorScreen } from "./components/MapErrorScreen"
+import {
+  ContextPageShell,
+  ContextPageHeader,
+} from "@/shared/layout/ContextPageShell"
+import { Location04Icon } from "@hugeicons/core-free-icons"
 
 export function MapPageContent() {
   const { markers, isLoading, MapView } = useMapMemos()
 
   return (
-    <div className="flex flex-col gap-4 h-full min-h-0">
-      <div className="px-6 pt-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h1 className="text-base font-semibold text-foreground">地图</h1>
-        </div>
-        <span className="text-xs text-muted-foreground font-mono tabular-nums">
-          {markers.length} 个定位点
-        </span>
-      </div>
-
-      <div className="flex-1 min-h-0 px-6 pb-6 relative">
+    <ContextPageShell
+      scrollable={false}
+      maxWidthClassName="max-w-screen-xl h-full flex flex-col min-h-0"
+      contentClassName="flex-1 h-full min-h-0 pt-4 pb-6 flex flex-col"
+      header={
+        <ContextPageHeader
+          icon={Location04Icon}
+          title="地图"
+          actions={
+            <span className="text-xs text-muted-foreground font-mono tabular-nums bg-secondary/80 px-2 py-1 rounded border border-border/40">
+              {markers.length} 个定位点
+            </span>
+          }
+        />
+      }
+    >
+      <div className="flex-1 min-h-0 relative">
         <div className="relative h-full w-full overflow-hidden rounded-inner bg-card ring-1 ring-border/70">
           <AnimatePresence mode="wait">
             {isLoading ? (
@@ -44,6 +55,6 @@ export function MapPageContent() {
           </AnimatePresence>
         </div>
       </div>
-    </div>
+    </ContextPageShell>
   )
 }

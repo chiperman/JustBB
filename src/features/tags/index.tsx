@@ -53,12 +53,6 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
         <ContextPageHeader
           icon={TagIcon}
           title="标签"
-          showTitle={false}
-          description={
-            tags.length > 0
-              ? `共 ${tags.length} 个标签，点开后直接进入首页过滤结果。`
-              : "写下带标签的 Memo 后，这里会自动生成索引。"
-          }
           actions={
             <div className="w-full max-w-sm">
               <div className="relative w-full group">

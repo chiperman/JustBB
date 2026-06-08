@@ -5,8 +5,15 @@ import { GalleryGrid } from "./components/GalleryGrid"
 import { Memo } from "@/types/memo"
 import { getGalleryMemos } from "@/server/actions/memos/query"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
+import {
+  Image01Icon as GalleryIcon,
+  Loading03Icon as Loader2,
+} from "@hugeicons/core-free-icons"
 import { motion } from "framer-motion"
+import {
+  ContextPageShell,
+  ContextPageHeader,
+} from "@/shared/layout/ContextPageShell"
 
 interface GalleryPageContentProps {
   memos?: Memo[]
@@ -115,61 +122,52 @@ export function GalleryPageContent({
   }, [loadMore, isLoading, hasMore])
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-6 py-10">
-        <div className="max-w-screen-xl mx-auto space-y-12">
-          <section>
-            <header className="mb-10">
-              <h2 className="text-3xl font-bold tracking-tight mb-2 italic text-foreground/80">
-                画廊
-              </h2>
-              <p className="text-muted-foreground text-sm tracking-wide opacity-70 italic whitespace-pre-line">
-                Visual fragments of memory. {"\n"}
-                每一张图片都是凝固的时间锚点。
-              </p>
-            </header>
+    <ContextPageShell
+      maxWidthClassName="max-w-screen-xl"
+      header={<ContextPageHeader icon={GalleryIcon} title="画廊" />}
+    >
+      <div className="space-y-12">
+        <section>
+          <GalleryGrid memos={memos} />
 
-            <GalleryGrid memos={memos} />
-
-            {/* Bottom Sentry/Loader */}
-            <div
-              ref={observerTarget}
-              className="py-12 flex flex-col items-center justify-center min-h-[100px]"
-            >
-              {isLoading ? (
-                <div className="flex items-center">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      repeat: Infinity,
-                      duration: 1,
-                      ease: "linear",
-                    }}
-                    className="flex items-center justify-center"
-                  >
-                    <HugeiconsIcon
-                      icon={Loader2}
-                      size={24}
-                      className="text-muted-foreground/50 transform-gpu will-change-transform"
-                    />
-                  </motion.div>
-                  <span className="ml-2 text-xs text-muted-foreground/60 tracking-widest uppercase">
-                    Fetching...
-                  </span>
-                </div>
-              ) : !hasMore && memos.length > 0 ? (
-                <div className="text-center text-xs text-muted-foreground/30 font-mono tracking-[0.2em] uppercase">
-                  --- End of Collection ---
-                </div>
-              ) : memos.length === 0 && !isLoading ? (
-                <div className="text-center text-muted-foreground/60 py-12">
-                  暂无影像记录
-                </div>
-              ) : null}
-            </div>
-          </section>
-        </div>
+          {/* Bottom Sentry/Loader */}
+          <div
+            ref={observerTarget}
+            className="py-12 flex flex-col items-center justify-center min-h-[100px]"
+          >
+            {isLoading ? (
+              <div className="flex items-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 1,
+                    ease: "linear",
+                  }}
+                  className="flex items-center justify-center"
+                >
+                  <HugeiconsIcon
+                    icon={Loader2}
+                    size={24}
+                    className="text-muted-foreground/50 transform-gpu will-change-transform"
+                  />
+                </motion.div>
+                <span className="ml-2 text-xs text-muted-foreground/60 tracking-widest uppercase">
+                  Fetching...
+                </span>
+              </div>
+            ) : !hasMore && memos.length > 0 ? (
+              <div className="text-center text-xs text-muted-foreground/30 font-mono tracking-[0.2em] uppercase">
+                --- End of Collection ---
+              </div>
+            ) : memos.length === 0 && !isLoading ? (
+              <div className="text-center text-muted-foreground/60 py-12">
+                暂无影像记录
+              </div>
+            ) : null}
+          </div>
+        </section>
       </div>
-    </div>
+    </ContextPageShell>
   )
 }

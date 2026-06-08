@@ -12,6 +12,7 @@ interface ContextPageShellProps {
   children: ReactNode
   maxWidthClassName?: string
   contentClassName?: string
+  scrollable?: boolean
 }
 
 interface ContextPageHeaderProps {
@@ -30,18 +31,39 @@ export function ContextPageShell({
   children,
   maxWidthClassName = "max-w-screen-md",
   contentClassName,
+  scrollable = true,
 }: ContextPageShellProps) {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background">
       <div className="flex-none z-30 border-b border-border/20 bg-background/78 backdrop-blur-md">
-        <div className={cn("mx-auto w-full", maxWidthClassName)}>
-          <div className="px-6 py-6">{header}</div>
+        <div className="mx-auto w-full max-w-screen-xl">
+          <div className="px-6 py-5">{header}</div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-stable">
-        <div className={cn("mx-auto w-full", maxWidthClassName)}>
-          <div className={cn("px-6 pt-4 pb-20", contentClassName)}>
+      <div
+        className={cn(
+          "flex-1 min-h-0",
+          scrollable
+            ? "overflow-y-auto scrollbar-stable"
+            : "overflow-hidden flex flex-col"
+        )}
+      >
+        <div
+          className={cn(
+            "mx-auto w-full",
+            maxWidthClassName,
+            !scrollable && "flex-1 flex flex-col min-h-0"
+          )}
+        >
+          <div
+            className={cn(
+              scrollable
+                ? "px-6 pt-4 pb-20"
+                : "px-6 pt-4 pb-6 flex-1 flex flex-col min-h-0",
+              contentClassName
+            )}
+          >
             {children}
           </div>
         </div>
@@ -56,7 +78,7 @@ export function ContextPageHeader({
   description,
   breadcrumbLabel,
   actions,
-  showTitle = true,
+  showTitle = false,
   className,
   contentClassName,
 }: ContextPageHeaderProps) {
@@ -103,7 +125,7 @@ export function ContextPageHeader({
         <div className={cn("pb-2", contentClassName)}>
           <div className="space-y-2">
             {showTitle ? (
-              <h1 className="text-xl font-semibold tracking-tight text-foreground">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
                 {title}
               </h1>
             ) : null}

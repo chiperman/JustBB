@@ -39,12 +39,6 @@ export function TrashHeader({
     <ContextPageHeader
       icon={Delete02Icon}
       title="回收站"
-      showTitle={false}
-      description={
-        count > 0
-          ? `这里按最近删除排序，共 ${count} 条记录。`
-          : "这里暂时没有已删除记录。"
-      }
       actions={
         count > 0 ? (
           <Button

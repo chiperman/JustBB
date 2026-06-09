@@ -55,7 +55,6 @@ interface ExportState {
   progress: number // 当前抓取条数
   total: number // 总条数
   format: "md" | "json"
-  data: any[] // 暂存的数据分片
 }
 ```
 
@@ -68,12 +67,13 @@ interface ExportState {
     - 每次请求 100 条数据。
     - 在循环头部检查 `isPaused` 标志，若为 true 则通过 `Promise` 挂起。
     - 使用 `AbortController` 支持物理取消网络请求。
+    - 数据通过 `accumulatedDataRef`（Memo[] ref）在循环中累积。
 3.  **拼装与下载**：
     - **JSON**：`JSON.stringify` 整个数组。
-    - **Markdown**：使用特定的 `Template` 字符串拼接每条 Memo。
+    - **Markdown**：直接通过 `map` 生成 Markdown 字符串，拼接每条 Memo 内容。
     - **下载**：创建 `Blob` 对象并利用虚拟 `<a>` 标签触发。
 
 ### 4.3 异常处理
 
-- **网络中断**：检测到错误时自动重试 3 次。
+- **错误处理**：检测到错误时直接设置 `status: "error"`，无自动重试逻辑。
 - **内存安全**：纯文本数据（1万条约 10MB）在现代浏览器内存中极其安全，无需担心溢出。

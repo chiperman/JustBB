@@ -102,7 +102,6 @@ npm run supabase:status
 ### 仓库级文档
 
 - [文档中心](./docs/README.md)
-- [变更日志](./CHANGELOG.md)
 - [脚本目录说明](./scripts/README.md)
 - [Supabase 目录说明](./supabase/README.md)
 
@@ -121,6 +120,9 @@ npm run supabase:status
 - [画廊功能](./docs/features/gallery.md)
 - [内容体验](./docs/features/content-experience.md)
 - [多选与批量操作](./docs/features/selection.md)
+- [备份与恢复](./docs/features/backup-recovery.md)
+- [导出与分享规格](./docs/features/export-spec.md)
+- [Supabase 用量监控](./docs/features/usage-monitoring.md)
 
 ## 5. 开发与提交流程
 

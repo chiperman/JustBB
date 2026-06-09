@@ -1,6 +1,6 @@
 # JustMemo 文档体系与维护规范
 
-> 最后更新：2026-04-19
+> 最后更新：2026-06-09
 > 状态：当前项目文档结构基线
 
 ## 1. 作用
@@ -36,16 +36,25 @@
 放在仓库根目录或独立子目录下，用于解释整个项目或某个子系统目录：
 
 - `README.md`
-- `CHANGELOG.md`
+- `CLAUDE.md`（符号链接 → `AGENTS.md`）
 - `scripts/README.md`
 - `supabase/README.md`
 
 适合承载：
 
 - 项目概览
-- 本地启动方式
-- 发布记录
+- AI agent 工作指令
 - 特定目录的使用说明
+
+### L0b：不进入 Git 的过程文档
+
+开发过程中产生的临时文件，属于过程产物，不应进入版本库。这些文件放在 `docs/` 下但已加入 `.gitignore`：
+
+- `docs/reviews/` — 代码审查报告
+- `docs/planning/` — 开发计划、配置参考（如 Vercel 环境变量清单）
+- 未来新增的过程文档统一放在 `docs/proc/` 或 `docs/dev/`，并通过 `.gitignore` 排除
+
+判断一条信息是否应该进入 Git，问自己：**三个月后、一个新开发者接手时，这条信息还有参考价值吗？** 如果答案是"否"，就不要 commit。
 
 ### L1：领域级文档目录
 
@@ -133,7 +142,7 @@
 - `docs/core/api.md`
 - `docs/core/database.md`
 - `docs/core/security.md`
-- `docs/interface/system.md`
+- `docs/interface/design.md`
 
 规则：
 
@@ -198,13 +207,12 @@
 
 ### `docs/interface/`
 
-- `system.md`：设计系统
-- `interactions.md`：动效与交互规范
+- `design.md`：设计系统与交互规范
 
 结论：
 
 - 分类合理
-- 这两篇职责边界清晰，建议继续保持
+- 当前只有单一设计系统文档，后续拆分为 system + interactions 时再更新此处
 
 ### `docs/features/`
 
@@ -214,6 +222,8 @@
 - `timeline.md`：时间轴、归档与那年今日
 - `selection.md`：多选与批量操作
 - `content-experience.md`：正文解析、链接预览、邮件交互与缓存预热
+- `backup-recovery.md`：备份与恢复流程
+- `export-spec.md`：海报生成与二维码分享规格
 - `usage-monitoring.md`：管理员侧监控功能专项说明
 
 结论：
@@ -417,8 +427,7 @@ docs/
 │   ├── database.md
 │   └── security.md
 ├── interface/
-│   ├── system.md
-│   └── interactions.md
+│   └── design.md
 ├── features/
 │   ├── features-guide.md
 │   ├── gallery.md

@@ -1,6 +1,6 @@
 # JustMemo 业务逻辑架构
 
-> 最后更新：2026-04-26
+> 最后更新：2026-06-09
 > 状态：与当前代码同步
 
 ## 1. 作用
@@ -34,6 +34,8 @@ JustMemo 当前采用的是：
 - `StatsProvider`
 - `LayoutProvider`
 - `UIProvider`
+- `ExportProvider`
+- `ConfirmProvider`
 - `TagsProvider`
 
 这意味着：
@@ -130,15 +132,17 @@ JustMemo 当前采用的是：
 
 ## 6. 关键 Context
 
-| Context                | 职责                     |
-| ---------------------- | ------------------------ |
-| `UserContext`          | 当前用户身份与权限       |
-| `UnlockedMemosContext` | 当前页面已解锁 Memo 集合 |
-| `PageDataCache`        | 按页面条件缓存查询结果   |
-| `StatsContext`         | 热力图与统计数据         |
-| `TagsContext`          | 标签集合与计数           |
-| `LayoutContext`        | 登录转场、布局状态       |
-| `UIContext`            | 多选与批量操作状态       |
+| Context                        | 职责                     |
+| ------------------------------ | ------------------------ |
+| `UserContext`                  | 当前用户身份与权限       |
+| `UnlockedMemosContext`         | 当前页面已解锁 Memo 集合 |
+| `PageDataCache`                | 按页面条件缓存查询结果   |
+| `StatsContext`                 | 热力图与统计数据         |
+| `TagsContext`                  | 标签集合与计数           |
+| `LayoutContext`                | 登录转场、布局状态       |
+| `UIContext` (SelectionContext) | 多选与批量操作状态       |
+| `ExportProvider`               | 备份导出流程状态         |
+| `ConfirmProvider`              | 全局确认对话框状态       |
 
 ## 7. 关键页面协同
 

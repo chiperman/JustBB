@@ -61,3 +61,33 @@
 - 涉及系统行为或数据规则时，读 `docs/core/architecture.md`、`docs/core/security.md`、`docs/core/api.md`、`docs/core/database.md` 和 `supabase/README.md`。
 - 涉及开发流程或质量要求时，读 `docs/guide/testing.md` 和 `docs/guide/standards.md`。
 - 涉及 UI、交互或视觉一致性时，读 `docs/interface/design.md`。
+
+## 文档分类规则
+
+项目文档分三类，AI 在生成内容时必须遵守：
+
+### 进入 Git（用户文档 + Agent 指令）
+
+- `docs/core/` — 架构、安全、数据库、API（只写当前真实规则，不写历史叙事）
+- `docs/features/` — 功能说明
+- `docs/interface/` — 设计规范
+- `docs/guide/` — 开发规范、测试、文档治理
+- `docs/README.md` — 文档导航入口
+- `README.md` — 项目总入口
+- `CLAUDE.md` → `AGENTS.md` — AI 工作指令
+- `scripts/README.md`、`supabase/README.md` — 子系统说明
+
+### 不进入 Git（过程产物）
+
+- `docs/reviews/` — 代码审查报告
+- `docs/planning/` — 开发计划、配置参考
+
+> `CHANGELOG.md` 目前仍在仓库中但属于自动化生成的变更日志，从 git log 可推导。如保留则在 `.gitignore` 中排除，或直接从仓库移除。
+
+判断标准：**三个月后、新开发者接手时，这条信息还有参考价值吗？** 如果是否，就不要 commit。
+
+### 文档格式约定
+
+- 所有 `docs/` 下文件统一头部格式：`> 最后更新：YYYY-MM-DD` + 可选 `> 状态：已实现/草案/待确认`
+- 文件名：小写 kebab-case，不带日期和版本号
+- 标题层级：H1 → H2 → H3，不超过三层

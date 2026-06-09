@@ -44,3 +44,5 @@ next-env.d.ts
 
 # docs
 legacy_v3/
+docs/reviews/       # 代码审查报告（过程产物）
+docs/planning/      # 开发计划与配置参考（过程产物）

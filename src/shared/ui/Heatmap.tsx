@@ -40,11 +40,11 @@ const HeatmapCell = memo(
     shouldReduceMotion: boolean
   }) => {
     const getColorClass = (c: number) => {
-      if (c === 0) return "bg-[var(--heatmap-0)]"
-      if (c <= 2) return "bg-[var(--heatmap-1)]"
-      if (c <= 5) return "bg-[var(--heatmap-2)]"
-      if (c <= 9) return "bg-[var(--heatmap-3)]"
-      return "bg-[var(--heatmap-4)]"
+      if (c === 0) return "bg-(--heatmap-0)"
+      if (c <= 2) return "bg-(--heatmap-1)"
+      if (c <= 5) return "bg-(--heatmap-2)"
+      if (c <= 9) return "bg-(--heatmap-3)"
+      return "bg-(--heatmap-4)"
     }
 
     const hasData = count > 0

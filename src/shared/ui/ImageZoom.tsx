@@ -197,7 +197,7 @@ function PreviewContent({
             y.set(0)
           }}
           className={cn(
-            "px-3 py-1 rounded-full text-[11px] font-medium transition-all",
+            "px-3 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer",
             fitMode === "fit"
               ? "bg-white/25 text-white"
               : "text-white/40 hover:text-white/70"
@@ -213,7 +213,7 @@ function PreviewContent({
             y.set(0)
           }}
           className={cn(
-            "px-3 py-1 rounded-full text-[11px] font-medium transition-all",
+            "px-3 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer",
             fitMode === "original"
               ? "bg-white/25 text-white"
               : "text-white/40 hover:text-white/70"
@@ -305,7 +305,7 @@ export function ImageZoom({ src, alt, className, children }: ImageZoomProps) {
           whileHover={{ scale: 1.015, transition: { duration: 0.2 } }}
           whileTap={{ scale: 0.985 }}
           className={cn(
-            "cursor-zoom-in group/zoom relative overflow-hidden rounded-inner ring-1 ring-black/5",
+            "cursor-pointer group/zoom relative overflow-hidden rounded-inner ring-1 ring-black/5",
             className
           )}
         >

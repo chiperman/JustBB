@@ -323,8 +323,8 @@ export function RightSidebar({
                 >
                   {[1, 2, 3, 4].map((i) => (
                     <div key={i} className="relative">
-                      <TimelineLine className="bg-[var(--heatmap-0)]" />
-                      <TimelineDot className="border-[var(--heatmap-0)] bg-[var(--heatmap-0)]" />
+                      <TimelineLine className="bg-(--heatmap-0)" />
+                      <TimelineDot className="border-(--heatmap-0) bg-(--heatmap-0)" />
                       <Skeleton
                         className={cn(
                           "mb-6 h-4",

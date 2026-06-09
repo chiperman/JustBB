@@ -28,21 +28,26 @@ function ImageErrorState({
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       className={cn(
-        "absolute inset-0 flex flex-col items-center justify-center gap-2.5 p-4 text-muted-foreground/40 z-10 select-none bg-[linear-gradient(45deg,rgba(29,29,27,0.015)_25%,transparent_25%,transparent_50%,rgba(29,29,27,0.015)_50%,rgba(29,29,27,0.015)_75%,transparent_75%,transparent)] dark:bg-[linear-gradient(45deg,rgba(255,255,255,0.01)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.01)_50%,rgba(255,255,255,0.01)_75%,transparent_75%,transparent)] bg-[size:16px_16px]",
-        isFullPage && "bg-muted/10 backdrop-blur-sm",
+        "absolute inset-0 z-10 flex select-none flex-col items-center justify-center gap-2.5 overflow-hidden p-4 text-muted-foreground/45",
+        "bg-[#f6f5f4]/75 backdrop-blur-md backdrop-saturate-125",
+        "shadow-[inset_0_1px_0_rgba(255,255,255,0.72),inset_0_-18px_40px_rgba(29,29,27,0.035)]",
+        "before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_50%_32%,rgba(255,255,255,0.62),rgba(255,255,255,0.18)_44%,rgba(29,29,27,0.025)_100%)]",
+        "after:absolute after:inset-0 after:bg-[repeating-radial-gradient(circle_at_18%_22%,rgba(29,29,27,0.035)_0_1px,transparent_1px_4px),linear-gradient(135deg,rgba(255,255,255,0.28),rgba(255,255,255,0)_48%,rgba(29,29,27,0.04))] after:opacity-35",
+        "dark:bg-background/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-18px_40px_rgba(0,0,0,0.28)] dark:before:bg-[radial-gradient(circle_at_50%_32%,rgba(255,255,255,0.1),rgba(255,255,255,0.03)_44%,rgba(0,0,0,0.18)_100%)] dark:after:bg-[repeating-radial-gradient(circle_at_18%_22%,rgba(255,255,255,0.05)_0_1px,transparent_1px_4px),linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0)_48%,rgba(0,0,0,0.18))]",
+        isFullPage && "bg-background/65",
         className
       )}
     >
-      <div className="absolute inset-2 border border-dashed border-border/30 rounded-lg pointer-events-none" />
+      <div className="pointer-events-none absolute inset-2 rounded-lg shadow-[inset_0_0_0_1px_rgba(29,29,27,0.055),inset_0_0_30px_rgba(255,255,255,0.34)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),inset_0_0_30px_rgba(255,255,255,0.04)]" />
       <HugeiconsIcon
         icon={Image01Icon}
         size={isFullPage ? 36 : 24}
         strokeWidth={1.2}
-        className="opacity-30 text-muted-foreground/50"
+        className="relative z-10 text-muted-foreground/45"
       />
       <span
         className={cn(
-          "font-mono tracking-[0.3em] uppercase text-center text-muted-foreground/40",
+          "relative z-10 text-center font-mono uppercase tracking-[0.3em] text-muted-foreground/45",
           isFullPage ? "text-[10px]" : "text-[9px]"
         )}
       >

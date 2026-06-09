@@ -176,6 +176,12 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 - **Focus System**: Soft clay indicator, generally 1px on base controls without a white offset halo.
 - **Interactive States**: scale(1.02) on hover, scale(0.95) on active.
 - **Color Contrast**: Anthropic Black on white exceeds 14:1 ratio.
+- **Cursor Interaction Guidelines**:
+  - **Standard Action / Nav (`cursor: pointer`)**: Applied to all interactive triggers where clicking performs an action, transitions pages, opens menus, toggles state, or closes dialogs. Examples: buttons, hyperlinks, custom clickable tags, dropdown menu items, tabs, and interactive card covers.
+  - **Text Editing / Entry (`cursor: text`)**: Applied to search inputs, rich-text editors, and editable textareas. Keeps the text-beam cursor to signify an input state rather than a simple click action.
+  - **Static / Read-only (`cursor: default`)**: Default arrow pointer for raw text copy, display-only info tags, and static components with hover tooltips only. Avoids tricking the user into clicking.
+  - **Disabled State (`cursor: not-allowed`)**: Combined with reduced opacity for any interactive elements temporarily locked or undergoing asynchronous loading.
+  - **Draggable Content (`cursor: grab` / `active:cursor-grabbing`)**: Used for draggable elements such as large image zoom detail panels or drag-and-drop sortable items.
 
 ## 9. Agent Prompt Guide
 

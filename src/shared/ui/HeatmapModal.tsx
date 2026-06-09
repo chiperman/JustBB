@@ -79,11 +79,11 @@ type HoveredDay = {
 }
 
 function getColorClass(count: number) {
-  if (count === 0) return "bg-[var(--heatmap-0)]"
-  if (count <= 2) return "bg-[var(--heatmap-1)]"
-  if (count <= 5) return "bg-[var(--heatmap-2)]"
-  if (count <= 9) return "bg-[var(--heatmap-3)]"
-  return "bg-[var(--heatmap-4)]"
+  if (count === 0) return "bg-(--heatmap-0)"
+  if (count <= 2) return "bg-(--heatmap-1)"
+  if (count <= 5) return "bg-(--heatmap-2)"
+  if (count <= 9) return "bg-(--heatmap-3)"
+  return "bg-(--heatmap-4)"
 }
 
 export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {

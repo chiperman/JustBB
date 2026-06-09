@@ -75,7 +75,7 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
           {[1, 2, 3].map((i) => (
             <TimelineItem key={i} className="pb-4 overflow-visible">
               <TimelineLine />
-              <TimelineDot className="bg-[var(--heatmap-0)] border-[var(--heatmap-0)]" />
+              <TimelineDot className="bg-(--heatmap-0) border-(--heatmap-0)" />
               <TimelineHeading className="mb-6">
                 <Skeleton
                   className={cn("h-4", i % 2 === 0 ? "w-32" : "w-28")}

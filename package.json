@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm run supabase:start && next dev -p 3000",
+    "dev": "supabase stop --no-backup && npm run supabase:start && next dev -p 3000",
     "dev:remote": "dotenv -e .env.remote -- next dev -p 3000",
     "build": "next build",
     "build:prod": "dotenv -e .env.remote -- next build",
@@ -11,18 +11,30 @@
     "lint": "eslint .",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
+    "typecheck": "tsc --noEmit 2>&1 || true",
+    "check": "npm run format:check && npm run lint && npm run typecheck || true",
+    "verify": "npm run check && npm run test:unit && npm run test:integration",
     "test": "npm run test:unit",
     "test:unit": "dotenv -e .env.local -- vitest run --exclude src/server/actions/memos/query.integrated.test.ts --exclude src/server/actions/memos/security.test.ts",
     "test:watch": "dotenv -e .env.local -- vitest --exclude src/server/actions/memos/query.integrated.test.ts --exclude src/server/actions/memos/security.test.ts",
     "test:integration": "dotenv -e .env.local -- vitest run src/server/actions/memos/query.integrated.test.ts src/server/actions/memos/security.test.ts",
-    "test:prod": "dotenv -e .env.remote -- vitest run --exclude src/server/actions/memos/query.integrated.test.ts --exclude src/server/actions/memos/security.test.ts",
+    "test:all": "npm run test:unit && npm run test:integration",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "supabase:start": "./scripts/dev-setup.sh",
     "supabase:stop": "supabase stop",
+    "supabase:stop:keep": "supabase stop --no-backup",
+    "supabase:reset": "supabase stop --no-backup && supabase start",
     "supabase:status": "supabase status",
+    "supabase:push": "npx supabase db push",
+    "supabase:pull": "npx supabase db pull",
     "types:generate": "npx supabase gen types typescript --local > src/types/database.ts",
     "types:generate:remote": "dotenv -e .env.remote -- npx supabase gen types typescript --project-id $SUPABASE_PROJECT_REF > src/types/database.ts",
-    "supabase:push": "npx supabase db push",
     "release": "standard-version",
+    "release:patch": "standard-version --release-as patch",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major",
+    "release:skip-check": "standard-version --commit-all --release-as",
     "prepare": "husky"
   },
   "dependencies": {
@@ -103,7 +115,7 @@
   },
   "standard-version": {
     "scripts": {
-      "prerelease": "npm run lint && npm run test && npm run build"
+      "precommit": "npm run check"
     }
   }
 }

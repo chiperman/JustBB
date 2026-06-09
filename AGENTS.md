@@ -81,6 +81,8 @@
 
 - `docs/reviews/` — 代码审查报告
 - `docs/planning/` — 开发计划、配置参考
+- `docs/tracker/` — 审查追踪、TODO 跟踪等过程产物
+- `docs/generated/` — AI 生成文档
 
 > `CHANGELOG.md` 目前仍在仓库中但属于自动化生成的变更日志，从 git log 可推导。如保留则在 `.gitignore` 中排除，或直接从仓库移除。
 

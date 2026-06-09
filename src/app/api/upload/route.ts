@@ -7,7 +7,33 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const RATE_LIMIT_WINDOW_MS = 60_000
 const RATE_LIMIT_MAX_REQUESTS = 10
 
+const TYPE_TO_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
+}
+
 const uploadTimestamps = new Map<string, number[]>()
+
+const r2ClientMap = new Map<string, S3Client>()
+
+function getR2Client(
+  accountId: string,
+  accessKey: string,
+  secretKey: string
+): S3Client {
+  const cacheKey = `${accountId}:${accessKey}:${secretKey}`
+  const cached = r2ClientMap.get(cacheKey)
+  if (cached) return cached
+  const client = new S3Client({
+    region: "auto",
+    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    credentials: { accessKeyId: accessKey, secretAccessKey: secretKey },
+  })
+  r2ClientMap.set(cacheKey, client)
+  return client
+}
 
 export function checkRateLimit(userId: string): boolean {
   const now = Date.now()
@@ -75,21 +101,17 @@ export async function POST(request: NextRequest) {
   }
 
   // 生成文件路径
-  const ext = file.name.split(".").pop() || "png"
+  const ext = TYPE_TO_EXT[file.type] ?? "jpg"
   const timestamp = Date.now()
   const random = Math.random().toString(36).slice(2, 8)
-  const username = user.email?.split("@")[0] || user.id
-  const key = `JustMemo/${username}/${timestamp}-${random}.${ext}`
+  const key = `JustMemo/${user.id}/${timestamp}-${random}.${ext}`
 
   // 上传到 R2
-  const client = new S3Client({
-    region: "auto",
-    endpoint: `https://${config.account_id}.r2.cloudflarestorage.com`,
-    credentials: {
-      accessKeyId: config.access_key_id,
-      secretAccessKey: config.secret_access_key,
-    },
-  })
+  const client = getR2Client(
+    config.account_id,
+    config.access_key_id,
+    config.secret_access_key
+  )
 
   const buffer = Buffer.from(await file.arrayBuffer())
 

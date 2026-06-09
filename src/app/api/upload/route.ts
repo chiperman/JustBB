@@ -4,6 +4,23 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const RATE_LIMIT_WINDOW_MS = 60_000
+const RATE_LIMIT_MAX_REQUESTS = 10
+
+const uploadTimestamps = new Map<string, number[]>()
+
+export function checkRateLimit(userId: string): boolean {
+  const now = Date.now()
+  const timestamps = uploadTimestamps.get(userId) ?? []
+  const recent = timestamps.filter((t) => now - t < RATE_LIMIT_WINDOW_MS)
+  if (recent.length >= RATE_LIMIT_MAX_REQUESTS) {
+    uploadTimestamps.set(userId, recent)
+    return false
+  }
+  recent.push(now)
+  uploadTimestamps.set(userId, recent)
+  return true
+}
 
 export async function POST(request: NextRequest) {
   const supabase = await getClient()
@@ -37,6 +54,10 @@ export async function POST(request: NextRequest) {
 
   if (!file) {
     return NextResponse.json({ error: "未选择文件" }, { status: 400 })
+  }
+
+  if (!checkRateLimit(user.id)) {
+    return NextResponse.json({ error: "上传过于频繁" }, { status: 429 })
   }
 
   if (!ALLOWED_TYPES.includes(file.type)) {
@@ -82,8 +103,12 @@ export async function POST(request: NextRequest) {
       })
     )
   } catch (err) {
+    const isDev = process.env.NODE_ENV === "development"
     const message = err instanceof Error ? err.message : "上传失败"
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json(
+      { error: isDev ? message : "上传失败，请稍后重试" },
+      { status: 500 }
+    )
   }
 
   const publicUrl = config.public_url.replace(/\/+$/, "")

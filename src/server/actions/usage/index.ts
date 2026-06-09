@@ -190,22 +190,22 @@ async function getDatabaseUsageMb() {
     return bytesToMb(rpcResult.data)
   }
 
-  const { data, error } = await supabase
-    .from("memos")
-    .select("content, tags, access_code_hint, locations")
-    .is("deleted_at", null)
-
-  if (error || !data) {
+  // Fallback: 使用 pg_total_relation_size 只查表元数据，避免全表扫描
+  try {
+    const { data, error } = (await (
+      supabase as unknown as RpcCapableAdminClient
+    ).rpc("run_sql", {
+      sql: "SELECT pg_total_relation_size('public.memos') / 1024 / 1024",
+    })) as unknown as { data: number | null; error: unknown }
+    if (error || typeof data !== "number") {
+      console.warn("[Usage] pg_total_relation_size fallback failed")
+      return 0
+    }
+    return data
+  } catch (error) {
     console.warn("[Usage] Database size fallback failed:", error)
     return 0
   }
-
-  const encoder = new TextEncoder()
-  const approximateBytes = data.reduce((total, memo) => {
-    return total + encoder.encode(JSON.stringify(memo)).length
-  }, 0)
-
-  return bytesToMb(approximateBytes)
 }
 
 async function getStorageUsageMb() {

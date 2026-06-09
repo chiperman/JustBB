@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { getMemoStats, exportMemos } from "../memos/analytics"
 import { getSupabaseUsageStats } from "./index"
+import { getAdminClient } from "@/lib/supabase"
 import {
   getCurrentUser,
   getCurrentUserId,
@@ -157,6 +158,35 @@ describe("getMemoStats", () => {
 
     expect(result.success).toBe(false)
     expect(result.error).toBe("未登录，无法查看服务用量")
+  })
+
+  it("当 RPC 失败时使用 pg_total_relation_size 而非全表扫描", async () => {
+    vi.mocked(getCurrentUserId).mockResolvedValueOnce(null)
+    vi.mocked(isAdmin).mockResolvedValueOnce(true)
+    process.env.SUPABASE_MANAGEMENT_API_KEY = ""
+    process.env.SUPABASE_PROJECT_REF = ""
+
+    // 模拟 get_database_size RPC 失败
+    vi.mocked(getAdminClient).mockImplementationOnce(() => ({
+      ...mockSupabase,
+      rpc: vi
+        .fn()
+        .mockResolvedValue({ data: null, error: new Error("rpc failed") }),
+    }))
+
+    const result = await getSupabaseUsageStats()
+
+    expect(result.success).toBe(true)
+    // 不应有 .from("memos").select("content, tags, ...") 全表扫描
+    const fromCalls = mockSupabase.from.mock.calls
+    const memoScanCalls = fromCalls.filter(
+      (call) => Array.isArray(call) && call[0] === "memos"
+    )
+    const selectContentCalls = mockSupabase.select.mock.calls.filter(
+      (call) => Array.isArray(call) && call.includes("content")
+    )
+    expect(memoScanCalls.length).toBe(0)
+    expect(selectContentCalls.length).toBe(0)
   })
 
   it("非管理员不应该获取 Supabase 用量", async () => {

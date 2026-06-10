@@ -116,8 +116,8 @@ export async function createMemo(
   }
 
   if (is_private && access_code) {
-    const salt = bcrypt.genSaltSync(10)
-    payload.access_code_hash = bcrypt.hashSync(access_code, salt)
+    const salt = await bcrypt.genSalt(10)
+    payload.access_code_hash = await bcrypt.hash(access_code, salt)
     payload.access_code_hint = access_code_hint || null
   }
 
@@ -246,8 +246,8 @@ export async function updateMemoState(
   if (is_private !== undefined) {
     updatePayload.is_private = is_private
     if (is_private && access_code) {
-      const salt = bcrypt.genSaltSync(10)
-      updatePayload.access_code_hash = bcrypt.hashSync(access_code, salt)
+      const salt = await bcrypt.genSalt(10)
+      updatePayload.access_code_hash = await bcrypt.hash(access_code, salt)
       updatePayload.access_code_hint = access_code_hint || null
     } else if (!is_private) {
       updatePayload.access_code_hash = null
@@ -425,7 +425,7 @@ export async function verifyUnlockCode(
     return { success: false, error: "未设置访问口令" }
   }
 
-  const isValid = bcrypt.compareSync(code, data.access_code_hash)
+  const isValid = await bcrypt.compare(code, data.access_code_hash)
   if (!isValid) {
     return { success: false, error: "口令错误" }
   }

@@ -7,11 +7,31 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const RATE_LIMIT_WINDOW_MS = 60_000
 const RATE_LIMIT_MAX_REQUESTS = 10
 
-const TYPE_TO_EXT: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/gif": "gif",
-  "image/webp": "webp",
+// Magic bytes: [signature] -> { ext, type }
+const MAGIC_BYTES: Record<string, { ext: string; type: string }> = {
+  // JPEG: FF D8 FF
+  ffd8ff: { ext: "jpg", type: "image/jpeg" },
+  // PNG: 89 50 4E 47
+  "89504e47": { ext: "png", type: "image/png" },
+  // GIF87a: 47 49 46 38 37 61 / GIF89a: 47 49 46 38 39 61
+  "474946383761": { ext: "gif", type: "image/gif" },
+  "474946383961": { ext: "gif", type: "image/gif" },
+  // WebP: 52 49 46 46 __ __ __ __ 57 45 42 50
+  "52494646": { ext: "webp", type: "image/webp" },
+}
+
+function validateMagicBytes(
+  buffer: Buffer
+): { ext: string; type: string } | null {
+  if (buffer.length < 4) return null
+
+  const hex = buffer.toString("hex").slice(0, 14)
+
+  for (const [magic, info] of Object.entries(MAGIC_BYTES)) {
+    if (hex.startsWith(magic)) return info
+  }
+
+  return null
 }
 
 const uploadTimestamps = new Map<string, number[]>()
@@ -93,6 +113,16 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  const buffer = Buffer.from(await file.arrayBuffer())
+  const magicInfo = validateMagicBytes(buffer)
+
+  if (!magicInfo) {
+    return NextResponse.json(
+      { error: "文件内容不是有效的图片" },
+      { status: 400 }
+    )
+  }
+
   if (file.size > MAX_FILE_SIZE) {
     return NextResponse.json(
       { error: "文件大小不能超过 10MB" },
@@ -101,7 +131,8 @@ export async function POST(request: NextRequest) {
   }
 
   // 生成文件路径
-  const ext = TYPE_TO_EXT[file.type] ?? "jpg"
+  const ext = magicInfo.ext
+  const finalContentType = magicInfo.type
   const timestamp = Date.now()
   const random = Math.random().toString(36).slice(2, 8)
   const key = `JustMemo/${user.id}/${timestamp}-${random}.${ext}`
@@ -113,15 +144,13 @@ export async function POST(request: NextRequest) {
     config.secret_access_key
   )
 
-  const buffer = Buffer.from(await file.arrayBuffer())
-
   try {
     await client.send(
       new PutObjectCommand({
         Bucket: config.bucket_name,
         Key: key,
         Body: buffer,
-        ContentType: file.type,
+        ContentType: finalContentType,
       })
     )
   } catch (err) {

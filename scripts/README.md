@@ -61,4 +61,4 @@
 
 - [仓库 README](../README.md)
 - [Supabase 本地开发说明](../supabase/README.md)
-- [数据库设计](../docs/core/database.md)
+- [数据与隐私参考](../docs/reference/privacy-and-data.md)

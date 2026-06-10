@@ -42,13 +42,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# docs
+# 过程产物（不进入 Git）
 legacy_v3/
-# 代码审查报告（过程产物）
 docs/reviews/
-# 开发计划与配置参考（过程产物）
 docs/planning/
-# 审查追踪、TODO 跟踪等过程产物
 docs/tracker/
-# AI 生成文档（不进入追踪）
 docs/generated/

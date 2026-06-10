@@ -19,7 +19,11 @@
 
 ## 快速导航
 
-- 隐私、搜索、导出、分享：先看 `src/server/actions/`，再核对 `search_memos_secure` 和 `supabase/migrations/`。
+- 系统结构、页面、Provider、缓存、Context、路由协同：读 `docs/reference/architecture.md`。
+- 私密 Memo、RLS、RPC、API、数据库规则：读 `docs/reference/privacy-and-data.md`。
+- 时间轴、地图、画廊、导出、备份、内容体验：读 `docs/reference/product.md`。
+- 技术栈、目录结构、开发规范、文档治理：读 `docs/reference/development.md`。
+- 测试命令、测试分层、回归策略：读 `docs/reference/testing.md`。
 - UI、交互、视觉一致性：先看对应 `src/features/` 或 `src/shared/ui/`，必要时读 `docs/interface/design.md`。
 - 权限、认证、数据可见性：先确认 RLS/RPC 和 migration，再看前端条件判断。
 - 复杂客户端状态：优先查 `src/state/`、`src/shared/hooks/` 和既有 feature hooks。
@@ -51,45 +55,36 @@
 - 优先运行与变更最相关的现有测试；需要更广验证时再扩大范围。
 - 前端或交互变更在环境支持时，应实际验证关键 UI 路径。
 - 不要修复与当前任务无关的失败测试；只在最终说明中标出。
-- 具体测试约定见 `docs/guide/testing.md`。
+- 具体测试约定见 `docs/reference/testing.md`。
 
 ## 按需阅读
 
 保持 agent 上下文尽量小，只在任务需要时继续读更多文档。
 
 - 仓库背景不清楚时，读 `README.md`。
-- 涉及系统行为或数据规则时，读 `docs/core/architecture.md`、`docs/core/security.md`、`docs/core/api.md`、`docs/core/database.md` 和 `supabase/README.md`。
-- 涉及开发流程或质量要求时，读 `docs/guide/testing.md` 和 `docs/guide/standards.md`。
+- 涉及系统行为或页面协同时，读 `docs/reference/architecture.md`。
+- 涉及权限、数据可见性、API、RLS、RPC 或数据库时，读 `docs/reference/privacy-and-data.md` 和 `supabase/README.md`。
+- 涉及开发流程或质量要求时，读 `docs/reference/development.md` 和 `docs/reference/testing.md`。
 - 涉及 UI、交互或视觉一致性时，读 `docs/interface/design.md`。
 
-## 文档分类规则
+## 文档分类
 
-项目文档分三类，AI 在生成内容时必须遵守：
+完整规则见 [`docs/reference/development.md`](docs/reference/development.md)。简要分类：
 
-### 进入 Git（用户文档 + Agent 指令）
+### 进入 Git
 
-- `docs/core/` — 架构、安全、数据库、API（只写当前真实规则，不写历史叙事）
-- `docs/features/` — 功能说明
+- `docs/reference/` — 架构、数据隐私、产品能力、开发与测试参考
 - `docs/interface/` — 设计规范
-- `docs/guide/` — 开发规范、测试、文档治理
 - `docs/README.md` — 文档导航入口
-- `README.md` — 项目总入口
-- `CLAUDE.md` → `AGENTS.md` — AI 工作指令
+- `README.md`、`CHANGELOG.md` — 项目入口与变更记录
 - `scripts/README.md`、`supabase/README.md` — 子系统说明
+- `CLAUDE.md` — AI 工作指令（即本文件）
 
 ### 不进入 Git（过程产物）
 
 - `docs/reviews/` — 代码审查报告
 - `docs/planning/` — 开发计划、配置参考
-- `docs/tracker/` — 审查追踪、TODO 跟踪等过程产物
+- `docs/tracker/` — 审查追踪、TODO 跟踪
 - `docs/generated/` — AI 生成文档
 
-> `CHANGELOG.md` 目前仍在仓库中但属于自动化生成的变更日志，从 git log 可推导。如保留则在 `.gitignore` 中排除，或直接从仓库移除。
-
 判断标准：**三个月后、新开发者接手时，这条信息还有参考价值吗？** 如果是否，就不要 commit。
-
-### 文档格式约定
-
-- 所有 `docs/` 下文件统一头部格式：`> 最后更新：YYYY-MM-DD` + 可选 `> 状态：已实现/草案/待确认`
-- 文件名：小写 kebab-case，不带日期和版本号
-- 标题层级：H1 → H2 → H3，不超过三层

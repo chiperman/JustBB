@@ -1,6 +1,6 @@
 # JustMemo
 
-> 最后更新：2026-05-06
+> 最后更新：2026-06-10
 > 状态：主入口文档
 
 JustMemo 是一个基于 Next.js 16、React 19 和 Supabase 构建的私密 Memo 系统。
@@ -34,7 +34,7 @@ JustMemo 是一个基于 Next.js 16、React 19 和 Supabase 构建的私密 Memo
 
 完整说明请看：
 
-- [技术选型总览](./docs/guide/tech-stack.md)
+- [开发参考](./docs/reference/development.md)
 
 ### 核心能力
 
@@ -47,7 +47,7 @@ JustMemo 是一个基于 Next.js 16、React 19 和 Supabase 构建的私密 Memo
 
 私密 Memo 的规则说明请看：
 
-- [私密 Memo 规则](./docs/core/security.md)
+- [数据与隐私参考](./docs/reference/privacy-and-data.md)
 
 ## 3. 快速开始
 
@@ -107,30 +107,22 @@ npm run supabase:status
 
 ### 核心系统文档
 
-- [业务逻辑架构](./docs/core/architecture.md)
-- [接口与数据访问](./docs/core/api.md)
-- [数据库设计](./docs/core/database.md)
-- [私密 Memo 规则](./docs/core/security.md)
+- [架构参考](./docs/reference/architecture.md)
+- [数据与隐私参考](./docs/reference/privacy-and-data.md)
 
-### 功能文档
+### 产品与开发文档
 
-- [功能模块总览](./docs/features/features-guide.md)
-- [时间轴与归档](./docs/features/timeline.md)
-- [地图功能](./docs/features/map.md)
-- [画廊功能](./docs/features/gallery.md)
-- [内容体验](./docs/features/content-experience.md)
-- [多选与批量操作](./docs/features/selection.md)
-- [备份与恢复](./docs/features/backup-recovery.md)
-- [导出与分享规格](./docs/features/export-spec.md)
-- [Supabase 用量监控](./docs/features/usage-monitoring.md)
+- [产品能力参考](./docs/reference/product.md)
+- [开发参考](./docs/reference/development.md)
+- [测试参考](./docs/reference/testing.md)
+- [设计系统](./docs/interface/design.md)
 
 ## 5. 开发与提交流程
 
 项目的工程规范、测试策略和文档维护规则统一写在：
 
-- [工程化标准与开发规范](./docs/guide/standards.md)
-- [测试与质量保证方案](./docs/guide/testing.md)
-- [文档体系与维护规范](./docs/guide/documentation.md)
+- [开发参考](./docs/reference/development.md)
+- [测试参考](./docs/reference/testing.md)
 
 提交前建议至少执行：
 

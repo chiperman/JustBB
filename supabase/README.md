@@ -136,8 +136,7 @@ npm run types:generate:remote
 
 对应说明请看：
 
-- [数据库设计](../docs/core/database.md)
-- [私密 Memo 规则](../docs/core/security.md)
+- [数据与隐私参考](../docs/reference/privacy-and-data.md)
 
 ## 6. 开发守则
 
@@ -149,5 +148,5 @@ npm run types:generate:remote
 ## 7. 相关文档
 
 - [仓库 README](../README.md)
-- [接口与数据访问](../docs/core/api.md)
-- [测试与质量保证方案](../docs/guide/testing.md)
+- [数据与隐私参考](../docs/reference/privacy-and-data.md)
+- [测试参考](../docs/reference/testing.md)

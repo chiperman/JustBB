@@ -41,7 +41,23 @@ const mockSupabase = {
   order: vi.fn().mockResolvedValue({ data: [], error: null }),
   eq: vi.fn().mockReturnThis(),
   single: vi.fn().mockResolvedValue({ data: null, error: null }),
-  rpc: vi.fn().mockResolvedValue({ data: 100 * 1024 * 1024, error: null }),
+  rpc: vi.fn().mockImplementation((name) => {
+    if (name === "get_memo_stats_v2") {
+      return {
+        data: {
+          totalMemos: 2,
+          totalTags: 3,
+          firstMemoDate: "2024-01-01",
+          days: {
+            "2024-01-01": { count: 1, wordCount: 10 },
+            "2024-01-02": { count: 1, wordCount: 20 },
+          },
+        },
+        error: null,
+      }
+    }
+    return { data: 100 * 1024 * 1024, error: null }
+  }),
   schema: vi.fn(() => ({
     from: vi.fn(() => ({
       select: vi.fn().mockResolvedValue({
@@ -79,8 +95,27 @@ vi.mock("@/features/auth/actions", () => ({
 describe("getMemoStats", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.clearAllMocks()
     process.env.SUPABASE_MANAGEMENT_API_KEY = ""
     process.env.SUPABASE_PROJECT_REF = ""
+    // Reset rpc mock to default implementation
+    mockSupabase.rpc = vi.fn().mockImplementation((name) => {
+      if (name === "get_memo_stats_v2") {
+        return {
+          data: {
+            totalMemos: 2,
+            totalTags: 3,
+            firstMemoDate: "2024-01-01",
+            days: {
+              "2024-01-01": { count: 1, wordCount: 10 },
+              "2024-01-02": { count: 1, wordCount: 20 },
+            },
+          },
+          error: null,
+        }
+      }
+      return { data: 100 * 1024 * 1024, error: null }
+    })
   })
 
   it("应该能正确获取基础统计数据", async () => {
@@ -92,10 +127,12 @@ describe("getMemoStats", () => {
   })
 
   it("当数据库报错时应该返回零值对象", async () => {
-    mockSupabase.is = vi.fn().mockResolvedValueOnce({
-      data: null,
-      error: { message: "Database failure" },
-    })
+    mockSupabase.rpc = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: null,
+        error: { message: "Database failure" },
+      })
 
     const result = await getMemoStats()
 

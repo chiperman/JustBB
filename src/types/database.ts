@@ -133,8 +133,10 @@ export type Database = {
         }[]
       }
       get_timeline_stats: {
-        Args: Record<string, never>
-        Returns: Json
+        Args: { include_private?: boolean }
+        Returns: {
+          days: Record<string, { count: number; wordCount: number }>
+        }
       }
       get_distinct_tags: {
         Args: Record<string, never>

@@ -1,7 +1,6 @@
 "use server"
 import { getClient } from "@/lib/supabase"
 import { TimelineStats, HeatmapStats } from "@/types/stats"
-import { getAdminClient } from "@/lib/supabase"
 import { getCurrentUserId } from "@/features/auth/actions"
 import { ActionResponse } from "../shared/types"
 
@@ -9,14 +8,10 @@ import { ActionResponse } from "../shared/types"
  * 获取统计数据 (V2 - RPC 驱动)
  */
 export async function getMemoStats(): Promise<ActionResponse<HeatmapStats>> {
-  const viewerId = await getCurrentUserId()
-  const supabase = getAdminClient()
-  const { data, error } = await supabase
-    .from("memos")
-    .select("created_at, word_count, tags, is_private, owner_id")
-    .is("deleted_at", null)
+  const supabase = await getClient()
+  const { data, error } = await supabase.rpc("get_memo_stats_v2")
 
-  if (error || !data) {
+  if (error) {
     console.error("Error fetching memo stats:", error?.message, error)
     return {
       success: false,
@@ -30,41 +25,8 @@ export async function getMemoStats(): Promise<ActionResponse<HeatmapStats>> {
     }
   }
 
-  const accessible = data.filter(
-    (memo) => !memo.is_private || memo.owner_id === viewerId
-  )
-  const tagSet = new Set<string>()
-  const days = accessible.reduce<
-    Record<string, { count: number; wordCount: number }>
-  >((acc, memo) => {
-    const day = new Date(memo.created_at).toISOString().split("T")[0]
-    const current = acc[day] || { count: 0, wordCount: 0 }
-    acc[day] = {
-      count: current.count + 1,
-      wordCount: current.wordCount + (memo.word_count || 0),
-    }
-    ;(memo.tags || []).forEach((tag) => tagSet.add(tag))
-    return acc
-  }, {})
-
-  const firstMemoDate =
-    accessible.length > 0
-      ? accessible
-          .map((memo) => memo.created_at)
-          .sort()[0]
-          ?.split("T")[0] || null
-      : null
-
-  return {
-    success: true,
-    error: null,
-    data: {
-      totalMemos: accessible.length,
-      totalTags: tagSet.size,
-      firstMemoDate,
-      days,
-    },
-  }
+  const stats = data as HeatmapStats
+  return { success: true, error: null, data: stats }
 }
 
 /**
@@ -94,14 +56,12 @@ export async function getAllTags(): Promise<
 export async function getTimelineStats(): Promise<
   ActionResponse<TimelineStats>
 > {
-  const viewerId = await getCurrentUserId()
-  const supabase = getAdminClient()
-  const { data, error } = await supabase
-    .from("memos")
-    .select("created_at, word_count, is_private, owner_id")
-    .is("deleted_at", null)
+  const supabase = await getClient()
+  const { data, error } = await supabase.rpc("get_timeline_stats", {
+    include_private: true,
+  })
 
-  if (error || !data) {
+  if (error) {
     console.error("Error fetching timeline stats:", error?.message, error)
     return {
       success: false,
@@ -110,23 +70,7 @@ export async function getTimelineStats(): Promise<
     }
   }
 
-  const days = data.reduce<
-    Record<string, { count: number; wordCount: number }>
-  >((acc, memo) => {
-    if (memo.is_private && memo.owner_id !== viewerId) {
-      return acc
-    }
-
-    const day = new Date(memo.created_at).toISOString().split("T")[0]
-    const current = acc[day] || { count: 0, wordCount: 0 }
-    acc[day] = {
-      count: current.count + 1,
-      wordCount: current.wordCount + (memo.word_count || 0),
-    }
-    return acc
-  }, {})
-
-  return { success: true, error: null, data: { days } }
+  return { success: true, error: null, data: data as TimelineStats }
 }
 
 /**

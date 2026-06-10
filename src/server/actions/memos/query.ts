@@ -1,6 +1,6 @@
 "use server"
 
-import { getAdminClient, getClient } from "@/lib/supabase"
+import { getClient } from "@/lib/supabase"
 import { Json } from "@/types/database"
 import { Memo, Location } from "@/types/memo"
 import { ActionResponse } from "../shared/types"
@@ -182,31 +182,36 @@ export async function getArchivedMemos(
 
 /**
  * 根据编号获取笔记 (用于预览/引用)
+ * 使用 search_memos_secure RPC，RPC 内部已通过 SECURITY DEFINER + auth.uid() 实现 RLS
  */
 export async function getMemoByNumber(
   memoNumber: number,
   unlockedMemoIds: string[] = []
 ): Promise<ActionResponse<Memo | null>> {
-  const viewerId = await getCurrentUserId()
-  const supabase = getAdminClient()
-  const { data, error } = await supabase
-    .from("memos")
-    .select(BASE_MEMO_SELECT)
-    .eq("memo_number", memoNumber)
-    .is("deleted_at", null)
-    .single()
+  const supabase = await getClient()
+  const { data, error } = await supabase.rpc("search_memos_secure", {
+    query_text: "",
+    input_code: null,
+    limit_val: 1,
+    offset_val: 0,
+    filters: { num: String(memoNumber) },
+    sort_order: "newest",
+  })
 
   if (error) {
-    if (error.code === "PGRST116")
-      return { success: true, error: null, data: null }
-    return { success: false, error: error.message, data: null }
+    console.error("Error fetching memo by number via RPC:", error)
+    return { success: false, error: "查询失败", data: null }
   }
 
-  const memo = withViewerAccess(data as Memo, viewerId, unlockedMemoIds)
+  if (!data || data.length === 0) {
+    return { success: true, error: null, data: null }
+  }
+
+  const memo = data[0] as Memo
   return {
     success: true,
     error: null,
-    data: memo && !memo.is_locked ? memo : null,
+    data: memo.is_locked ? null : memo,
   }
 }
 
@@ -218,8 +223,7 @@ export async function getMemoById(
     return { success: false, error: "缺少 Memo ID", data: null }
   }
 
-  const viewerId = await getCurrentUserId()
-  const supabase = getAdminClient()
+  const supabase = await getClient()
   const { data, error } = await supabase
     .from("memos")
     .select(BASE_MEMO_SELECT)
@@ -233,11 +237,11 @@ export async function getMemoById(
     return { success: false, error: error.message, data: null }
   }
 
-  const memo = withViewerAccess(data as Memo, viewerId, unlockedMemoIds)
+  const memo = data as Memo
   return {
     success: true,
     error: null,
-    data: memo && !memo.is_locked ? memo : null,
+    data: memo.is_locked ? null : memo,
   }
 }
 
@@ -274,7 +278,7 @@ export async function getMemosWithLocations(
   unlockedMemoIds: string[] = []
 ): Promise<ActionResponse<(Memo & { locations: Location[] })[]>> {
   const viewerId = await getCurrentUserId()
-  const supabase = getAdminClient()
+  const supabase = await getClient()
   const { data, error } = await supabase
     .from("memos")
     .select(BASE_MEMO_SELECT)

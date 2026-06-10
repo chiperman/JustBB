@@ -44,6 +44,7 @@ export function ExportProvider({ children }: { children: React.ReactNode }) {
   const statusRef = React.useRef<ExportStatus>("idle")
   const accumulatedDataRef = React.useRef<Memo[]>([])
   const abortControllerRef = React.useRef<AbortController | null>(null)
+  const exportVersionRef = React.useRef(0)
 
   // 同步 ref 状态
   React.useEffect(() => {
@@ -69,6 +70,7 @@ export function ExportProvider({ children }: { children: React.ReactNode }) {
     }
 
     setFormat(selectedFormat)
+    const currentVersion = ++exportVersionRef.current
     setStatus("exporting")
     setProgress(0)
     accumulatedDataRef.current = []
@@ -124,7 +126,7 @@ export function ExportProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (statusRef.current === "exporting" || statusRef.current === "paused") {
-        await processAndDownload(selectedFormat)
+        await processAndDownload(selectedFormat, currentVersion)
       }
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") {
@@ -142,7 +144,13 @@ export function ExportProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const processAndDownload = async (currentFormat: ExportFormat) => {
+  const processAndDownload = async (
+    currentFormat: ExportFormat,
+    version: number
+  ) => {
+    // 如果在数据抓取期间用户启动了新导出，跳过这次过期的导出
+    if (version !== exportVersionRef.current) return
+
     setStatus("completed")
     const data = accumulatedDataRef.current
     const timestamp = new Date().toISOString().split("T")[0]
@@ -188,7 +196,12 @@ export function ExportProvider({ children }: { children: React.ReactNode }) {
     toast({ title: "导出成功", description: `备份文件 ${filename} 已下载` })
 
     // 3秒后自动恢复到空闲状态
-    setTimeout(() => setStatus("idle"), 3000)
+    setTimeout(() => {
+      // 只有当前版本仍匹配时才恢复到空闲，避免中断新导出
+      if (version === exportVersionRef.current) {
+        setStatus("idle")
+      }
+    }, 3000)
   }
 
   const pauseExport = () => setStatus("paused")

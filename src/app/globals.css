@@ -247,7 +247,7 @@ body {
 
 /* Global Elements */
 @layer base {
-  * {
+  :focus-visible {
     @apply border-border outline-ring/50;
   }
 

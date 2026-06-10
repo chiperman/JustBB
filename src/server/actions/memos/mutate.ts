@@ -365,6 +365,11 @@ const VERIFY_RATE_MAX = 5
 
 const verifyTimestamps = new Map<string, number[]>()
 
+// 仅用于测试：清除速率限制状态
+export function _resetVerifyTimestamps() {
+  verifyTimestamps.clear()
+}
+
 function checkVerifyRateLimit(userId: string): boolean {
   const now = Date.now()
   const timestamps = verifyTimestamps.get(userId) ?? []

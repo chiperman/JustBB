@@ -1,7 +1,8 @@
 import { Memo } from '@/types/memo';
 
-export function canViewMemoContent(memo: Pick<Memo, 'id' | 'is_private' | 'owner_id'>, viewerId: string | null, unlockedMemoIds: string[] = []) {
+export function canViewMemoContent(memo: Pick<Memo, 'id' | 'is_private' | 'owner_id' | 'is_owner'>, viewerId: string | null, unlockedMemoIds: string[] = []) {
     if (!memo.is_private) return true;
+    if (memo.is_owner) return true;
     if (viewerId && memo.owner_id === viewerId) return true;
     return unlockedMemoIds.includes(memo.id);
 }
@@ -35,7 +36,7 @@ export function withViewerAccess<T extends Memo>(
         return {
             ...enrichedMemo,
             is_locked: false,
-            is_owner: isOwner,
+            is_owner: memo.is_owner ?? isOwner,
         };
     }
 

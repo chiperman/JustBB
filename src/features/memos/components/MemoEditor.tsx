@@ -2,26 +2,20 @@
 
 import { useRef, useEffect, useMemo, useCallback } from "react"
 import { cn } from "@/shared/lib/utils"
-import { EditorContent, useEditor, type Editor } from "@tiptap/react"
-import { motion } from "framer-motion"
-import { TextSelection } from "@tiptap/pm/state"
-
-import { EditorSuggestionMenu } from "@/features/memos/components/EditorSuggestionMenu"
-import { MemoPrivateDialog } from "@/features/memos/components/MemoPrivateDialog"
-import { LocationPickerDialog } from "@/features/memos/components/LocationPickerDialog"
-import { LinkPickerDialog } from "@/features/memos/components/LinkPickerDialog"
-import { EditorToolbar } from "@/features/memos/components/editor/EditorToolbar"
+import { useEditor, type Editor } from "@tiptap/react"
 import {
   getExtensions,
   textToTiptapHtml,
 } from "@/features/memos/components/editor/extensions"
 import { fetchLinkMetadata } from "@/shared/lib/link-preview"
-import { LinkPasteMenu } from "@/features/memos/components/editor/LinkPasteMenu"
 import {
   findPendingMarkupLink,
   replaceSmartLinkToken,
   type LinkRenderMode,
 } from "@/features/memos/components/editor/smartLink"
+import { TextSelection } from "@tiptap/pm/state"
+
+import { MemoEditorLayout } from "@/features/memos/components/MemoEditorLayout"
 import { useState } from "react"
 import { toast } from "@/shared/hooks/use-toast"
 
@@ -73,7 +67,7 @@ function deriveTitleFromUrl(url: string): string {
   }
 }
 
-const PLACEHOLDER_TEXT = "Wanna memo something? JustMemo it!"
+export const PLACEHOLDER_TEXT = "Wanna memo something? JustMemo it!"
 
 function isPristineEmptyEditor(editor: Editor | null) {
   if (!editor) {
@@ -836,374 +830,210 @@ export function MemoEditor({
   }
 
   return (
-    <motion.section
-      initial={false}
-      animate={{
-        opacity: 1,
-        height: isActuallyCollapsed ? "auto" : "auto",
-        minHeight: isActuallyCollapsed ? 0 : 120,
-        padding: 24,
-        boxShadow: isActuallyCollapsed ? "none" : "",
-      }}
-      exit={{
-        opacity: 0,
-        height: 0,
-        paddingTop: 0,
-        paddingBottom: 0,
-        paddingLeft: 0,
-        paddingRight: 0,
-        marginTop: -24,
-        marginBottom: -24,
-        borderWidth: 0,
-        boxShadow: "none",
-        transition: {
-          opacity: { duration: shouldAnimateCollapse ? 0.2 : 0 },
-          height: {
-            duration: shouldAnimateCollapse ? 0.3 : 0,
-            ease: [0.22, 1, 0.36, 1],
-          },
-          paddingTop: { duration: shouldAnimateCollapse ? 0.3 : 0 },
-          paddingBottom: { duration: shouldAnimateCollapse ? 0.3 : 0 },
-          marginTop: { duration: shouldAnimateCollapse ? 0.3 : 0 },
-          marginBottom: { duration: shouldAnimateCollapse ? 0.3 : 0 },
-          borderWidth: { duration: shouldAnimateCollapse ? 0.3 : 0 },
-        },
-      }}
-      transition={{
-        height: isActuallyCollapsed
-          ? shouldAnimateCollapse
-            ? { type: "spring", stiffness: 350, damping: 40 }
-            : { duration: 0 }
-          : shouldAnimateCollapse
-            ? { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
-            : { duration: 0 },
-        opacity: { duration: shouldAnimateCollapse ? 0.2 : 0 },
-      }}
-      onAnimationStart={() => setIsAnimating(true)}
-      onAnimationComplete={() => setIsAnimating(false)}
-      style={{
-        willChange: "transform, height, opacity",
-        overflow: isActuallyCollapsed || isAnimating ? "hidden" : "visible",
-      }}
-      className={cn(
-        "border border-border rounded-lg relative flex flex-col items-stretch selection:bg-primary/30",
-        isActuallyCollapsed && "-none cursor-pointer hover:bg-secondary",
-        className
-      )}
-      onClick={() => {
-        if (isActuallyCollapsed && editor) {
-          const selection = window.getSelection()
-          if (!selection || selection.toString().length === 0) {
-            editor.commands.focus("end")
-          }
-        }
-      }}
-    >
-      <motion.div
-        className="absolute inset-0 bg-card rounded-lg pointer-events-none"
-        animate={{ opacity: isActuallyCollapsed ? 0 : 1 }}
-        transition={{ duration: shouldAnimateCollapse ? 0.2 : 0 }}
-      />
-
-      <div className="w-full flex-1 flex flex-col min-h-0">
-        <div
-          ref={relativeGroupRef}
-          className="relative group w-full flex-1 flex flex-col min-h-0"
-        >
-          <motion.div
-            ref={editorContainerRef}
-            animate={{
-              height: isActuallyCollapsed ? 26 : "auto",
-              minHeight: isActuallyCollapsed ? 0 : 120,
-            }}
-            transition={{
-              height: shouldAnimateCollapse
-                ? { duration: 0.35, ease: [0.22, 1, 0.36, 1] }
-                : { duration: 0 },
-              minHeight: { duration: shouldAnimateCollapse ? 0.35 : 0 },
-            }}
-            className={cn(
-              "relative",
-              isActuallyCollapsed
-                ? "min-h-0 scrollbar-hide overflow-hidden"
-                : "overflow-y-auto scrollbar-hover"
-            )}
-            style={{
-              maxHeight: 500,
-              maskImage: isActuallyCollapsed
-                ? "linear-gradient(to bottom, black 90%, transparent 100%)"
-                : "none",
-            }}
-          >
-            {/* 占位符 Overlay - 仅在编辑器处于初始空白态时显示 */}
-            {showPlaceholder && (
-              <div className="absolute inset-x-0 top-0 h-[26px] flex items-center px-0 pointer-events-none z-10 transition-opacity duration-200">
-                <span
-                  className={cn(
-                    "text-sm font-medium transition-colors duration-200",
-                    isActuallyCollapsed
-                      ? "text-muted-foreground/30"
-                      : "text-muted-foreground/40"
-                  )}
-                >
-                  {PLACEHOLDER_TEXT}
-                </span>
-              </div>
-            )}
-            <EditorContent
-              editor={editor}
-              className="flex-1 flex flex-col min-h-0"
-            />
-          </motion.div>
-
-          {showSuggestions && (
-            <EditorSuggestionMenu
-              suggestions={suggestions}
-              selectedIndex={selectedIndex}
-              isLoading={isLoading}
-              hasMore={hasMoreMentions}
-              query={mentionQuery}
-              position={suggestionPosition}
-              onSelect={(item) => handleSelectSuggestion(item, editor)}
-              onScroll={handleSuggestionScroll}
-            />
-          )}
-
-          <LinkPasteMenu
-            position={pasteMenuPosition}
-            isImageUrl={pendingPasteUrl ? isImageUrl(pendingPasteUrl) : false}
-            onClose={() => {
-              // 如果关闭了菜单但没有选择，则保持 pending 状态或者转为默认
-              if (pendingPasteUrl && editor) {
-                const pendingLink = findPendingMarkupLink(editor.state.doc, {
-                  url: pendingPasteUrl,
-                  pos: pendingPastePos,
-                })
-
-                if (pendingLink) {
-                  const isImg = isImageUrl(pendingPasteUrl)
-
-                  if (isImg) {
-                    // 如果是图片，默认直接转为图片语法
-                    editor
-                      .chain()
-                      .deleteRange({
-                        from: pendingLink.pos,
-                        to: pendingLink.pos + 1,
-                      })
-                      .insertContentAt(
-                        pendingLink.pos,
-                        `![图片](${pendingPasteUrl}) `
-                      )
-                      .focus()
-                      .run()
-                  } else {
-                    const finalTitle =
-                      fetchedMeta?.title ||
-                      fetchedMeta?.domain ||
-                      deriveTitleFromUrl(pendingPasteUrl)
-                    editor
-                      .chain()
-                      .setNodeSelection(pendingLink.pos)
-                      .updateAttributes("markupLink", {
-                        isPending: false,
-                        mode: "mention",
-                        label: finalTitle,
-                      })
-                      .focus()
-                      .run()
-                  }
-                }
-              }
-              setPasteMenuPosition(null)
-              setPendingPasteUrl(null)
-              setPendingPastePos(null)
-              setFetchedMeta(null)
-            }}
-            onSelect={(mode) => {
-              if (pendingPasteUrl && editor) {
-                // 图片模式：删除 pending 节点，插入 markdown 图片语法
-                if (mode === "image") {
-                  const pendingLink = findPendingMarkupLink(editor.state.doc, {
-                    url: pendingPasteUrl,
-                    pos: pendingPastePos,
-                  })
-                  if (pendingLink) {
-                    editor
-                      .chain()
-                      .deleteRange({
-                        from: pendingLink.pos,
-                        to: pendingLink.pos + 1,
-                      })
-                      .insertContentAt(
-                        pendingLink.pos,
-                        `![图片](${pendingPasteUrl}) `
-                      )
-                      .focus()
-                      .run()
-                  }
-                  setPasteMenuPosition(null)
-                  setPendingPasteUrl(null)
-                  setPendingPastePos(null)
-                  setFetchedMeta(null)
-                  return
-                }
-
-                const pendingLink = findPendingMarkupLink(editor.state.doc, {
-                  url: pendingPasteUrl,
-                  pos: pendingPastePos,
-                })
-
-                if (pendingLink) {
-                  const finalTitle =
-                    fetchedMeta?.title ||
-                    fetchedMeta?.domain ||
-                    deriveTitleFromUrl(pendingPasteUrl)
-
-                  editor
-                    .chain()
-                    .setNodeSelection(pendingLink.pos)
-                    .updateAttributes("markupLink", {
-                      isPending: false,
-                      mode,
-                      label: finalTitle,
-                    })
-                    .setTextSelection(pendingLink.pos + 2)
-                    .focus()
-                    .run()
-                  // 标题异步更新由 handlePaste 的 metadata 回调统一处理，此处不重复 fetch
-                }
-              }
-              setPasteMenuPosition(null)
-              setPendingPasteUrl(null)
-              setPendingPastePos(null)
-              setFetchedMeta(null)
-            }}
-          />
-        </div>
-
-        {error && (
-          <div className="mt-3 text-xs text-red-500 bg-red-500/5 px-3 py-2 rounded-lg border border-red-500/10">
-            {error}
-          </div>
-        )}
-
-        <EditorToolbar
-          isActuallyCollapsed={isActuallyCollapsed}
-          animateStateChanges={shouldAnimateCollapse}
-          isPrivate={isPrivate}
-          isPinned={isPinned}
-          isPending={isPending}
-          isUploadingImage={isUploading}
-          content={content}
-          mode={mode}
-          onTogglePrivate={handleTogglePrivate}
-          onTogglePinned={() => setIsPinned(!isPinned)}
-          onShowLocationPicker={() => setShowLocationPicker(true)}
-          onShowLinkPicker={() => setShowLinkPicker(true)}
-          onImageUpload={handleImageButtonClick}
-          onCancel={handleToolbarCancel}
-          onPublish={() => {
-            if (needsPrivateDialog) {
-              setShowPrivateDialog(true)
-            } else {
-              resolvePendingLink(editor?.view)
-              performPublish(editor)
-            }
-          }}
-        />
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/gif,image/webp"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) {
-              handleImageFile(file)
-              e.target.value = ""
-            }
-          }}
-        />
-      </div>
-
-      <MemoPrivateDialog
-        open={showPrivateDialog}
-        onOpenChange={(open) => {
-          setShowPrivateDialog(open)
-          if (!open) {
-            setIsFocused(true)
-            editor?.commands.focus()
-          }
-        }}
-        accessCode={accessCode}
-        setAccessCode={setAccessCode}
-        accessHint={accessHint}
-        setAccessHint={setAccessHint}
-        onConfirm={() => {
+    <MemoEditorLayout
+      isActuallyCollapsed={isActuallyCollapsed}
+      shouldAnimateCollapse={shouldAnimateCollapse}
+      isFocused={isFocused}
+      isPrivate={isPrivate}
+      isPinned={isPinned}
+      isPending={isPending}
+      isUploadingImage={isUploading}
+      content={content}
+      mode={mode}
+      showPlaceholder={showPlaceholder}
+      showSuggestions={showSuggestions}
+      showPrivateDialog={showPrivateDialog}
+      showLocationPicker={showLocationPicker}
+      showLinkPicker={showLinkPicker}
+      error={error}
+      suggestions={suggestions}
+      selectedIndex={selectedIndex}
+      isLoading={isLoading}
+      hasMoreMentions={hasMoreMentions}
+      mentionQuery={mentionQuery}
+      suggestionPosition={suggestionPosition}
+      pasteMenuPosition={pasteMenuPosition}
+      pendingPasteUrl={pendingPasteUrl}
+      isPendingPasteImageUrl={
+        pendingPasteUrl ? isImageUrl(pendingPasteUrl) : false
+      }
+      fetchedMeta={fetchedMeta}
+      editingLinkInfo={editingLinkInfo}
+      editorContainerRef={editorContainerRef}
+      relativeGroupRef={relativeGroupRef}
+      fileInputRef={fileInputRef}
+      editor={editor}
+      onEditorClick={() => editor?.commands.focus()}
+      onImageFileSelect={handleImageFile}
+      onShowLocationPicker={() => setShowLocationPicker(true)}
+      onShowLinkPicker={() => setShowLinkPicker(true)}
+      onTogglePrivate={handleTogglePrivate}
+      onTogglePinned={() => setIsPinned(!isPinned)}
+      onImageUpload={handleImageButtonClick}
+      onCancel={handleToolbarCancel}
+      onPublish={() => {
+        if (needsPrivateDialog) {
+          setShowPrivateDialog(true)
+        } else {
           resolvePendingLink(editor?.view)
           performPublish(editor)
-        }}
-      />
+        }
+      }}
+      onSelectSuggestion={(item) => handleSelectSuggestion(item, editor)}
+      onSuggestionScroll={handleSuggestionScroll}
+      onLinkPasteClose={() => {
+        if (pendingPasteUrl && editor) {
+          const pendingLink = findPendingMarkupLink(editor.state.doc, {
+            url: pendingPasteUrl,
+            pos: pendingPastePos,
+          })
 
-      <LocationPickerDialog
-        open={showLocationPicker}
-        onOpenChange={(open) => {
-          setShowLocationPicker(open)
-          if (!open) {
-            setIsFocused(true)
-            editor?.commands.focus()
+          if (pendingLink) {
+            const isImg = isImageUrl(pendingPasteUrl)
+
+            if (isImg) {
+              editor
+                .chain()
+                .deleteRange({
+                  from: pendingLink.pos,
+                  to: pendingLink.pos + 1,
+                })
+                .insertContentAt(
+                  pendingLink.pos,
+                  `![图片](${pendingPasteUrl}) `
+                )
+                .focus()
+                .run()
+            } else {
+              const finalTitle =
+                fetchedMeta?.title ||
+                fetchedMeta?.domain ||
+                deriveTitleFromUrl(pendingPasteUrl)
+              editor
+                .chain()
+                .setNodeSelection(pendingLink.pos)
+                .updateAttributes("markupLink", {
+                  isPending: false,
+                  mode: "mention",
+                  label: finalTitle,
+                })
+                .focus()
+                .run()
+            }
           }
-        }}
-        onConfirm={(loc) =>
+        }
+        closePasteMenu()
+      }}
+      onLinkPasteSelect={(linkMode) => {
+        if (pendingPasteUrl && editor) {
+          if (linkMode === "image") {
+            const pendingLink = findPendingMarkupLink(editor.state.doc, {
+              url: pendingPasteUrl,
+              pos: pendingPastePos,
+            })
+            if (pendingLink) {
+              editor
+                .chain()
+                .deleteRange({
+                  from: pendingLink.pos,
+                  to: pendingLink.pos + 1,
+                })
+                .insertContentAt(
+                  pendingLink.pos,
+                  `![图片](${pendingPasteUrl}) `
+                )
+                .focus()
+                .run()
+            }
+            closePasteMenu()
+            return
+          }
+
+          const pendingLink = findPendingMarkupLink(editor.state.doc, {
+            url: pendingPasteUrl,
+            pos: pendingPastePos,
+          })
+
+          if (pendingLink) {
+            const finalTitle =
+              fetchedMeta?.title ||
+              fetchedMeta?.domain ||
+              deriveTitleFromUrl(pendingPasteUrl)
+
+            editor
+              .chain()
+              .setNodeSelection(pendingLink.pos)
+              .updateAttributes("markupLink", {
+                isPending: false,
+                mode: linkMode,
+                label: finalTitle,
+              })
+              .setTextSelection(pendingLink.pos + 2)
+              .focus()
+              .run()
+          }
+        }
+        closePasteMenu()
+      }}
+      onPrivateDialogOpenChange={(open) => {
+        setShowPrivateDialog(open)
+        if (!open) {
+          setIsFocused(true)
+          editor?.commands.focus()
+        }
+      }}
+      onPrivateConfirm={() => {
+        resolvePendingLink(editor?.view)
+        performPublish(editor)
+      }}
+      onLocationPickerOpenChange={(open) => {
+        setShowLocationPicker(open)
+        if (!open) {
+          setIsFocused(true)
+          editor?.commands.focus()
+        }
+      }}
+      onLocationConfirm={(loc) =>
+        editor
+          ?.chain()
+          .focus()
+          .insertContent(loc + " ")
+          .run()
+      }
+      onLinkPickerOpenChange={(open) => {
+        setShowLinkPicker(open)
+        if (!open) {
+          setIsFocused(true)
+          editor?.commands.focus()
+          setEditingLinkInfo(null)
+        }
+      }}
+      onLinkPickerConfirm={(title, url) => {
+        if (editingLinkInfo) {
+          const docText = editor?.getText({ blockSeparator: "\n" }) || ""
+          const newDocText = replaceSmartLinkToken(docText, editingLinkInfo, {
+            title,
+            url,
+          })
+
+          if (newDocText) {
+            editor?.commands.setContent(textToTiptapHtml(newDocText))
+          }
+        } else {
           editor
             ?.chain()
             .focus()
-            .insertContent(loc + " ")
+            .insertContent([
+              {
+                type: "markupLink",
+                attrs: { id: url, label: title },
+              },
+              { type: "text", text: " " },
+            ])
             .run()
         }
-      />
-
-      <LinkPickerDialog
-        open={showLinkPicker}
-        onOpenChange={(open) => {
-          setShowLinkPicker(open)
-          if (!open) {
-            setIsFocused(true)
-            editor?.commands.focus()
-            setEditingLinkInfo(null)
-          }
-        }}
-        mode={editingLinkInfo ? "edit" : "create"}
-        initialTitle={editingLinkInfo?.title}
-        initialUrl={editingLinkInfo?.url}
-        onConfirm={(title, url) => {
-          if (editingLinkInfo) {
-            // 编辑模式下更新属性
-            const docText = editor?.getText({ blockSeparator: "\n" }) || ""
-            const newDocText = replaceSmartLinkToken(docText, editingLinkInfo, {
-              title,
-              url,
-            })
-
-            if (newDocText) {
-              editor?.commands.setContent(textToTiptapHtml(newDocText))
-            }
-          } else {
-            editor
-              ?.chain()
-              .focus()
-              .insertContent([
-                {
-                  type: "markupLink",
-                  attrs: { id: url, label: title },
-                },
-                { type: "text", text: " " },
-              ])
-              .run()
-          }
-        }}
-      />
-    </motion.section>
+      }}
+      className={className}
+    />
   )
 }

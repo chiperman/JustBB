@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 import { PWARegistration } from "@/shared/providers/PWARegistration"
 import { Toaster } from "@/shared/ui/toaster"
 import { TooltipProvider } from "@/shared/ui/tooltip"
+import { EnvErrorBanner } from "@/shared/ui/EnvErrorBanner"
 import { Suspense } from "react"
 
 export default function RootLayout({
@@ -55,6 +56,7 @@ export default function RootLayout({
           <TooltipProvider delayDuration={0}>
             {children}
             <Toaster />
+            <EnvErrorBanner />
             <PWARegistration />
             <Suspense fallback={null}>
               <AgentationWrapper />

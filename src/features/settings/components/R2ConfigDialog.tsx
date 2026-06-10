@@ -41,6 +41,7 @@ export function R2ConfigDialog({ open, onOpenChange }: R2ConfigDialogProps) {
   const [testResult, setTestResult] = React.useState<
     "success" | "error" | null
   >(null)
+  const [showSecret, setShowSecret] = React.useState(false)
 
   React.useEffect(() => {
     if (!open) return
@@ -224,10 +225,21 @@ export function R2ConfigDialog({ open, onOpenChange }: R2ConfigDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="r2-secret-key">Secret Access Key</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="r2-secret-key">Secret Access Key</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                onClick={() => setShowSecret((v) => !v)}
+              >
+                {showSecret ? "隐藏" : "显示"}
+              </Button>
+            </div>
             <Input
               id="r2-secret-key"
-              type="password"
+              type={showSecret ? "text" : "password"}
               placeholder="R2 API Token Secret Access Key"
               value={config.secret_access_key}
               onChange={(e) => updateField("secret_access_key", e.target.value)}

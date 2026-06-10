@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      { protocol: "https", hostname: "**/*" }, // 允许所有 HTTPS 图片域名（R2 / 外部链接）
     ],
   },
   turbopack: {

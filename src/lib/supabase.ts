@@ -6,6 +6,9 @@ import { env } from "./env"
 const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+/** 管理客户端模块级缓存 */
+let cachedAdminClient: ReturnType<typeof createClient<Database>> | null = null
+
 /**
  * 客户端使用的匿名实例 (浏览器环境专用)
  */
@@ -55,18 +58,20 @@ export async function getClient() {
  * 服务端使用的管理实例 (绕过 RLS)
  */
 export const getAdminClient = () => {
-  if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error("Supabase 管理客户端初始化失败: 缺少环境变量")
-  }
-
-  return createClient<Database>(
-    env.NEXT_PUBLIC_SUPABASE_URL as string,
-    env.SUPABASE_SERVICE_ROLE_KEY as string,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
+  if (!cachedAdminClient) {
+    if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Supabase 管理客户端初始化失败: 缺少环境变量")
     }
-  )
+    cachedAdminClient = createClient<Database>(
+      env.NEXT_PUBLIC_SUPABASE_URL as string,
+      env.SUPABASE_SERVICE_ROLE_KEY as string,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    )
+  }
+  return cachedAdminClient
 }

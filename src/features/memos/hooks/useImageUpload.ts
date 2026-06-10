@@ -6,7 +6,7 @@ const MAX_SIZE = 2 * 1024 * 1024 // 超过 2MB 压缩
 const MAX_DIMENSION = 2048 // 最大宽/高
 
 async function compressImage(file: File): Promise<File> {
-  if (file.size <= MAX_SIZE && file.type !== "image/png") {
+  if (file.size <= MAX_SIZE) {
     return file
   }
 

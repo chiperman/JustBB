@@ -356,6 +356,29 @@ export async function batchAddTagsToMemos(
 }
 
 /**
+ * 解锁口令速率限制
+ * 注意：这是进程内内存 Map，多实例部署时每个实例独立计数，
+ * 不适合需要严格全局限流的场景。对于个人应用已足够。
+ */
+const VERIFY_RATE_WINDOW_MS = 60_000
+const VERIFY_RATE_MAX = 5
+
+const verifyTimestamps = new Map<string, number[]>()
+
+function checkVerifyRateLimit(userId: string): boolean {
+  const now = Date.now()
+  const timestamps = verifyTimestamps.get(userId) ?? []
+  const recent = timestamps.filter((t) => now - t < VERIFY_RATE_WINDOW_MS)
+  if (recent.length >= VERIFY_RATE_MAX) {
+    verifyTimestamps.set(userId, recent)
+    return false
+  }
+  recent.push(now)
+  verifyTimestamps.set(userId, recent)
+  return true
+}
+
+/**
  * 验证解锁口令
  */
 export async function verifyUnlockCode(
@@ -367,6 +390,14 @@ export async function verifyUnlockCode(
   }
 
   const viewerId = await getCurrentUserId()
+  // 使用认证用户 ID 或未认证 IP（Server Action 中无法直接获取 IP，
+  // 所以未认证用户共享全局限流键）来限速
+  const rateKey = viewerId ?? "anonymous"
+
+  if (!checkVerifyRateLimit(rateKey)) {
+    return { success: false, error: "尝试次数过多，请稍后再试" }
+  }
+
   const supabase = await getAdminClient()
   const { data, error } = await supabase
     .from("memos")

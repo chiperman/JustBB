@@ -49,6 +49,7 @@ export function MapView({
   const isFirstLoadRef = useRef(true)
   // 聚合弹窗 Toggle 状态：记录上次打开弹窗的坐标 key，用于可靠的 toggle 关闭判断
   const lastClusterPopupKeyRef = useRef<string | null>(null)
+  const popupRootRef = useRef<React.Root | null>(null)
 
   const invalidateMapSize = React.useCallback(() => {
     if (!mapInstance.current) return
@@ -228,10 +229,14 @@ export function MapView({
         container.classList.remove("map-intro-active")
       }, 2500)
 
-      // 监听 popupclose 事件，延迟清理聚合弹窗的 toggle 状态
+      // 监听 popupclose 事件，清理 React root 并延迟清理聚合弹窗的 toggle 状态
       // 延迟原因：Leaflet 的 closeOnClick 会在 clusterclick 之前触发 popupclose，
       // 如果同步清空 ref，clusterclick handler 中的 toggle 判断会失效
       map.on("popupclose", () => {
+        if (popupRootRef.current) {
+          popupRootRef.current.unmount()
+          popupRootRef.current = null
+        }
         setTimeout(() => {
           lastClusterPopupKeyRef.current = null
         }, 100)
@@ -277,6 +282,7 @@ export function MapView({
             "w-[340px] max-h-[480px] overflow-hidden flex flex-col"
 
           const root = createRoot(popupEl)
+          popupRootRef.current = root
           root.render(
             <UnlockedMemosProvider>
               <UIProvider currentPathname={pathname}>
@@ -328,6 +334,10 @@ export function MapView({
       dialogContent?.removeEventListener("transitionend", scheduleInvalidate)
       dialogContent?.removeEventListener("animationend", scheduleInvalidate)
       window.removeEventListener("resize", scheduleInvalidate)
+      if (popupRootRef.current) {
+        popupRootRef.current.unmount()
+        popupRootRef.current = null
+      }
       map.off()
       map.remove()
       mapInstance.current = null

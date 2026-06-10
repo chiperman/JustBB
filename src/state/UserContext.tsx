@@ -60,10 +60,8 @@ export function UserProvider({
   useEffect(() => {
     setIsMounted(true)
 
-    // 如果没有提供初始用户数据，挂载后立即刷新一次确认状态
-    if (initialUser === undefined) {
-      fetchUser()
-    }
+    // Always verify auth state on mount
+    fetchUser()
 
     // 监听实时认证状态变化 (SIGNED_IN, SIGNED_OUT, USER_UPDATED)
     // 这确保了在登录成功后，前端相关的 UI 能够立即更新，而不需要 F5 刷新
@@ -89,7 +87,7 @@ export function UserProvider({
     return () => {
       subscription.unsubscribe()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [fetchUser]) // 移除 initialUser 依赖，防止服务端 layout 刷新导致对象引用变动触发循环
 
   const isAdmin = user?.role === "admin"

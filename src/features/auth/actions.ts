@@ -47,6 +47,20 @@ export async function login(
   return { success: true, error: null, data: { user: userInfo } }
 }
 
+/**
+ * Validate password against all 5 criteria used in PasswordStrength.tsx.
+ * Returns a list of failed criteria; empty means password is valid.
+ */
+function validatePassword(password: string): string[] {
+  const failed: string[] = []
+  if (password.length < 8) failed.push("至少 8 位")
+  if (!/[A-Z]/.test(password)) failed.push("至少 1 个大写字母")
+  if (!/[a-z]/.test(password)) failed.push("至少 1 个小写字母")
+  if (!/[0-9]/.test(password)) failed.push("至少 1 位数字")
+  if (!/[^A-Za-z0-9]/.test(password)) failed.push("至少 1 个特殊符号")
+  return failed
+}
+
 export async function signup(formData: FormData): Promise<ActionResponse> {
   const rawData = Object.fromEntries(formData.entries())
   const validation = signupSchema.safeParse(rawData)
@@ -56,6 +70,15 @@ export async function signup(formData: FormData): Promise<ActionResponse> {
   }
 
   const { email, password } = validation.data
+
+  const failed = validatePassword(password)
+  if (failed.length > 0) {
+    return {
+      success: false,
+      error: `密码不符合要求：${failed.join("、")}。`,
+    }
+  }
+
   const supabase = await getClient()
 
   const { error } = await supabase.auth.signUp({
@@ -184,8 +207,12 @@ export async function sendPasswordResetEmail(
 export async function updatePassword(
   password: string
 ): Promise<ActionResponse> {
-  if (!password || password.length < 6) {
-    return { success: false, error: "新密码长度至少为 6 位" }
+  const failed = validatePassword(password)
+  if (failed.length > 0) {
+    return {
+      success: false,
+      error: `密码不符合要求：${failed.join("、")}。`,
+    }
   }
 
   const supabase = await getClient()

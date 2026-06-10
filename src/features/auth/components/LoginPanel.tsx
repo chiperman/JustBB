@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useEffect } from "react"
+import { useState, useTransition, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import {
   login,
@@ -48,6 +48,18 @@ export function LoginPanel() {
   )
   const [otpCode, setOtpCode] = useState("")
 
+  // Mirror PasswordStrength's criteria for button disabled state
+  const passwordScore = useMemo(() => {
+    if (!password) return 0
+    let score = 0
+    if (password.length >= 8) score++
+    if (/[A-Z]/.test(password)) score++
+    if (/[a-z]/.test(password)) score++
+    if (/[0-9]/.test(password)) score++
+    if (/[^A-Za-z0-9]/.test(password)) score++
+    return score
+  }, [password])
+
   const resetForm = () => {
     setStep("email")
     setEmail("")
@@ -77,71 +89,78 @@ export function LoginPanel() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    startTransition(async () => {
+    startTransition(() => {
       const formData = new FormData()
       formData.append("email", email)
       formData.append("password", password)
-      const res = await login(formData)
-      if (res.success && res.data) {
-        toast({ title: "欢迎回来", description: "登录成功" })
-        resetForm()
-        setUser(res.data.user)
-        setViewMode("HOME_FOCUS")
-        // Delay refresh to avoid CPU contention during animation start
-        setTimeout(() => router.refresh(), 180)
-      } else {
-        toast({
-          title: "登录失败",
-          description: res.error,
-          variant: "destructive",
-        })
-      }
+      login(formData).then((res) => {
+        if (res.success && res.data) {
+          toast({ title: "欢迎回来", description: "登录成功" })
+          resetForm()
+          setUser(res.data.user)
+          setViewMode("HOME_FOCUS")
+          setTimeout(() => router.refresh(), 180)
+        } else {
+          toast({
+            title: "登录失败",
+            description: res.error,
+            variant: "destructive",
+          })
+        }
+      })
     })
   }
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    startTransition(async () => {
+    startTransition(() => {
       const formData = new FormData()
       formData.append("email", email)
       formData.append("password", password)
-      const res = await signup(formData)
-      if (res.success) {
-        setStep("otp")
-      } else {
-        toast({
-          title: "注册失败",
-          description: res.error,
-          variant: "destructive",
-        })
-      }
+      signup(formData).then((res) => {
+        if (res.success) {
+          setStep("otp")
+        } else {
+          toast({
+            title: "注册失败",
+            description: res.error,
+            variant: "destructive",
+          })
+        }
+      })
     })
   }
 
   const handleVerifyOtp = async () => {
     if (otpCode.length !== 6) return
-    startTransition(async () => {
-      const res = await verifyOtp(email, otpCode)
-      if (res.success && res.data) {
-        toast({ title: "账号已激活", description: "欢迎加入 JustBB" })
-        resetForm()
-        setUser(res.data.user)
-        setViewMode("HOME_FOCUS")
-        // Delay refresh to avoid CPU contention during animation start
-        setTimeout(() => router.refresh(), 180)
-      } else {
-        toast({
-          title: "验证失败",
-          description: res.error,
-          variant: "destructive",
-        })
-      }
+    startTransition(() => {
+      verifyOtp(email, otpCode).then((res) => {
+        if (res.success && res.data) {
+          toast({ title: "账号已激活", description: "欢迎加入 JustBB" })
+          resetForm()
+          setUser(res.data.user)
+          setViewMode("HOME_FOCUS")
+          setTimeout(() => router.refresh(), 180)
+        } else {
+          toast({
+            title: "验证失败",
+            description: res.error,
+            variant: "destructive",
+          })
+        }
+      })
     })
   }
 
   const handleOAuth = (provider: "github" | "google") => {
-    startTransition(async () => {
-      await signInWithOAuth(provider)
+    startTransition(() => {
+      signInWithOAuth(provider).catch((err) => {
+        toast({
+          title: "三方登录失败",
+          description: String(err),
+          variant: "destructive",
+        })
+      })
     })
   }
 
@@ -150,20 +169,21 @@ export function LoginPanel() {
       toast({ title: "提示", description: "请先输入您的邮箱地址" })
       return
     }
-    startTransition(async () => {
-      const res = await sendPasswordResetEmail(email)
-      if (res.success) {
-        toast({
-          title: "重置邮件已发送",
-          description: "请前往您的邮箱查收重置链接",
-        })
-      } else {
-        toast({
-          title: "发送失败",
-          description: res.error,
-          variant: "destructive",
-        })
-      }
+    startTransition(() => {
+      sendPasswordResetEmail(email).then((res) => {
+        if (res.success) {
+          toast({
+            title: "重置邮件已发送",
+            description: "请前往您的邮箱查收重置链接",
+          })
+        } else {
+          toast({
+            title: "发送失败",
+            description: res.error,
+            variant: "destructive",
+          })
+        }
+      })
     })
   }
 
@@ -384,7 +404,7 @@ export function LoginPanel() {
               </div>
               <Button
                 className="w-full h-11"
-                disabled={isPending || password.length < 6}
+                disabled={isPending || passwordScore === 0}
               >
                 {isPending ? (
                   <HugeiconsIcon

@@ -1,7 +1,6 @@
 "use client"
 
 import { Memo } from "@/types/memo"
-import { format, parseISO } from "date-fns"
 import { motion } from "framer-motion"
 import { cn } from "@/shared/lib/utils"
 import { ImageZoom } from "@/shared/ui/ImageZoom"
@@ -11,14 +10,20 @@ interface GalleryGridProps {
   memos: Memo[]
 }
 
+function formatDate(date: Date | string): string {
+  const d = new Date(date)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${year}.${month}.${day}`
+}
+
 export function GalleryGrid({ memos }: GalleryGridProps) {
   if (!memos || memos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-20 text-muted-foreground bg-muted/5 rounded-md border border-dashed border-border/50">
         <p className="italic text-lg opacity-60">暂无图片内容</p>
-        <p className="text-xs opacity-40 mt-2">
-          发布包含图片的 Memo 即可在此展示
-        </p>
+        <p className="text-xs opacity-40 mt-2">发布包含图片的 Memo 即可在此展示</p>
       </div>
     )
   }
@@ -31,7 +36,6 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
       return {
         ...memo,
         imageUrl: match ? match[1] : null,
-        dateObj: parseISO(memo.created_at),
       }
     })
     .filter((item) => item.imageUrl)
@@ -49,16 +53,11 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
           <div
             tabIndex={0}
             className={cn(
-              "group relative overflow-hidden rounded-xl border border-border/40 bg-card transition-all duration-300 hover:border-border/80 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              "group gallery-archive relative overflow-hidden rounded-xl border border-border/40 bg-card transition-all duration-300 focus-visible:ring-1 focus-visible:ring-ring"
             )}
-            aria-label={`查看由 ${format(item.dateObj, "yyyy-MM-dd")} 发布的图片 Memo`}
+            aria-label="查看图片 Memo"
           >
             <div className="relative overflow-hidden w-full h-auto">
-              {/* 日期玻璃标签 */}
-              <div className="absolute top-3 left-3 z-20 rounded-md bg-[#f6f5f4]/72 px-2.5 py-1 font-mono text-[9px] uppercase tracking-widest text-[#31302e]/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.72),inset_0_0_0_1px_rgba(255,255,255,0.42),0_8px_24px_rgba(29,29,27,0.10)] backdrop-blur-xl backdrop-saturate-150 select-none pointer-events-none opacity-[0.001] will-change-[opacity] transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100">
-                {format(item.dateObj, "yy/MM")}
-              </div>
-
               <ImageZoom
                 src={item.imageUrl || ""}
                 alt="Memo multimedia content"
@@ -69,27 +68,27 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
                     src={item.imageUrl || ""}
                     alt="Memo multimedia content"
                     containerClassName="w-full h-auto min-h-[140px]"
-                    className="w-full h-auto object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+                    className="w-full h-auto object-cover transition-transform duration-700 ease-out group-hover:scale-[1.025]"
                     loading="lazy"
                   />
-                  {/* 磨砂胶片蒙版 */}
-                  <div className="pointer-events-none absolute inset-0 flex flex-col justify-end px-4 pb-4 pt-16 opacity-[0.001] will-change-[opacity] transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100">
-                    <div className="absolute inset-x-0 bottom-0 h-[46%] border-t border-white/26 bg-[#f6f5f4]/18 shadow-[inset_0_1px_0_rgba(255,255,255,0.46),inset_0_-56px_72px_rgba(29,29,27,0.30)] backdrop-blur-[28px] backdrop-saturate-[1.75] backdrop-brightness-105 [mask-image:linear-gradient(to_top,black_0%,black_72%,rgba(0,0,0,0.62)_88%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_0%,black_72%,rgba(0,0,0,0.62)_88%,transparent_100%)]" />
-                    <div className="absolute inset-x-0 bottom-[46%] h-7 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.30),rgba(255,255,255,0.10)_42%,transparent)] opacity-70" />
-                    <p className="relative z-10 mb-2.5 line-clamp-2 translate-y-2 text-[11px] leading-relaxed tracking-wide text-white/95 opacity-0 drop-shadow-[0_1px_12px_rgba(0,0,0,0.56)] transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100 group-focus:translate-y-0 group-focus:opacity-100">
-                      {item.content.replace(/!\[.*?\]\((.*?)\)/g, "").trim() ||
-                        "图片分享"}
+
+                  {/* Gradient wash overlay — visible on hover */}
+                  <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(29,29,27,0.72)_0%,rgba(29,29,27,0.34)_42%,rgba(29,29,27,0.04)_72%),linear-gradient(135deg,rgba(217,119,87,0.18),transparent_45%)] opacity-0 transition-opacity duration-260 group-hover:opacity-100 group-focus:opacity-100" />
+
+                  {/* Glassy bottom panel */}
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[48%] border-t border-white/20 bg-[linear-gradient(to_top,rgba(29,29,27,0.44)_0%,rgba(246,245,244,0.14)_58%,rgba(246,245,244,0.02)_82%,transparent_100%)] opacity-0 backdrop-blur-[22px] backdrop-saturate-[1.35] [-webkit-backdrop-filter:blur(22px)_saturate(1.35)] [mask-image:linear-gradient(to_top,black_0%,black_62%,rgba(0,0,0,0.62)_80%,transparent_100%)] transition-all duration-260 ease-out group-hover:opacity-100 group-focus:opacity-100" />
+
+                  {/* Content — slides up on hover */}
+                  <div className="pointer-events-none absolute inset-x-[18px] bottom-[18px] z-10 grid translate-y-3 gap-3 opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus:translate-y-0 group-focus:opacity-100">
+                    <p className="line-clamp-2 text-[15px] font-semibold leading-normal text-white drop-shadow-[0_1px_18px_rgba(0,0,0,0.42)]">
+                      {item.content.replace(/!\[.*?\]\((.*?)\)/g, "").trim() || "图片分享"}
                     </p>
-                    <div className="relative z-10 flex items-center justify-between font-mono text-[9px] uppercase tracking-wider text-white/78">
-                      <span className="drop-shadow-[0_1px_10px_rgba(0,0,0,0.52)]">
-                        {format(item.dateObj, "yyyy.MM.dd")}
-                      </span>
-                      <span
-                        className="pointer-events-auto cursor-pointer rounded-lg bg-[#f6f5f4]/24 px-3 py-1.5 text-white/82 shadow-[inset_0_1px_0_rgba(255,255,255,0.34),inset_0_0_0_1px_rgba(255,255,255,0.22),0_8px_22px_rgba(29,29,27,0.14)] backdrop-blur-xl backdrop-saturate-150 transition-all hover:bg-[#f6f5f4]/32 active:scale-95"
-                        aria-hidden="true"
-                      >
-                        DETAIL
-                      </span>
+                    <div className="flex items-center justify-between gap-3">
+                      {item.created_at && (
+                        <span className="font-mono text-[11px] tracking-[0.1em] text-white/82">
+                          {formatDate(item.created_at)}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

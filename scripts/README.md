@@ -1,6 +1,6 @@
 # scripts 目录说明
 
-> 最后更新：2026-04-19
+> 最后更新：2026-06-11
 > 状态：与当前仓库内容同步
 
 `scripts/` 目录只存放少量脚本型辅助文件，不承载主要业务逻辑。
@@ -18,6 +18,7 @@
 对应入口：
 
 - `package.json` 中的 `supabase:start`
+- 日常开发入口仍然是 `npm run dev`
 
 ### `rpc-search-memos.sql`
 

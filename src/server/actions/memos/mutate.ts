@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs"
 import { getClient, getAdminClient } from "@/lib/supabase"
 import { ActionResponse } from "../shared/types"
 import { Memo } from "@/types/memo"
-import { getCurrentUserId } from "@/features/auth/actions"
+import { getCurrentUserId, isAdmin } from "@/features/auth/actions"
 import {
   calculateWordCount,
   extractLocations,
@@ -92,6 +92,9 @@ function logValidationFailure(
 export async function createMemo(
   formData: FormData
 ): Promise<ActionResponse<Memo>> {
+  if (!(await isAdmin())) {
+    return { success: false, error: "权限不足，仅管理员可进行此操作" }
+  }
   const viewerId = await getCurrentUserId()
   if (!viewerId) return { success: false, error: "请先登录" }
 
@@ -146,6 +149,9 @@ export async function createMemo(
 export async function updateMemoContent(
   formData: FormData
 ): Promise<ActionResponse<Memo>> {
+  if (!(await isAdmin())) {
+    return { success: false, error: "权限不足，仅管理员可进行此操作" }
+  }
   const viewerId = await getCurrentUserId()
   if (!viewerId) return { success: false, error: "请先登录" }
 
@@ -219,6 +225,9 @@ export async function updateMemoContent(
 export async function updateMemoState(
   formData: FormData
 ): Promise<ActionResponse<Memo>> {
+  if (!(await isAdmin())) {
+    return { success: false, error: "权限不足，仅管理员可进行此操作" }
+  }
   const viewerId = await getCurrentUserId()
   if (!viewerId) return { success: false, error: "请先登录" }
 
@@ -296,6 +305,9 @@ export async function updateMemoState(
 export async function batchAddTagsToMemos(
   formData: FormData
 ): Promise<ActionResponse> {
+  if (!(await isAdmin())) {
+    return { success: false, error: "权限不足，仅管理员可进行此操作" }
+  }
   const viewerId = await getCurrentUserId()
   if (!viewerId) return { success: false, error: "请先登录" }
 
@@ -366,7 +378,7 @@ const VERIFY_RATE_MAX = 5
 const verifyTimestamps = new Map<string, number[]>()
 
 // 仅用于测试：清除速率限制状态
-export function _resetVerifyTimestamps() {
+export async function _resetVerifyTimestamps() {
   verifyTimestamps.clear()
 }
 

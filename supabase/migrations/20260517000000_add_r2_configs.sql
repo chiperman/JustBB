@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS public.r2_configs (
 CREATE TRIGGER handle_r2_configs_updated_at
     BEFORE UPDATE ON public.r2_configs
     FOR EACH ROW
-    EXECUTE FUNCTION handle_updated_at();
+    EXECUTE FUNCTION update_updated_at_column();
 
 -- RLS：用户只能操作自己的配置
 ALTER TABLE r2_configs ENABLE ROW LEVEL SECURITY;

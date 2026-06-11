@@ -1,7 +1,7 @@
 "use server"
 
-import { getClient } from "@/lib/supabase"
-import { Json } from "@/types/database"
+import { getClient, getAdminClient } from "@/lib/supabase"
+import { Json, Database } from "@/types/database"
 import { Memo, Location } from "@/types/memo"
 import { ActionResponse } from "../shared/types"
 import { fetchMemosSchema, FetchMemosInput } from "@/lib/memos/schemas"
@@ -126,25 +126,48 @@ export async function getMemoIndex(): Promise<ActionResponse<Partial<Memo>[]>> {
  */
 export async function getGalleryMemos(
   limit: number = 20,
-  offset: number = 0
+  offset: number = 0,
+  unlockedMemoIds: string[] = []
 ): Promise<ActionResponse<Memo[]>> {
   const viewerId = await getCurrentUserId()
-  const { query: qBuilder } = await getMemosQuery()
-  let q = MemoFilters.active(qBuilder)
-  q = MemoFilters.withImages(q)
-  q = MemoFilters.paginate(q, offset, limit)
+  const supabase = await getClient()
+  const { data, error } = await supabase.rpc("search_memos_secure", {
+    query_text: "",
+    unlocked_ids: unlockedMemoIds,
+    limit_val: limit,
+    offset_val: offset,
+    filters: { has_image: "true" } as unknown as Json,
+    sort_order: "newest",
+  })
 
-  const { data, error } = await q
-  if (error) return { success: false, error: error.message, data: [] }
-  return {
-    success: true,
-    error: null,
-    data: ((data as unknown as Memo[]) || []).map((memo) => ({
-      ...memo,
-      is_owner: memo.owner_id === viewerId,
-      is_locked: memo.is_private && memo.owner_id !== viewerId,
-    })),
+  if (error) {
+    console.error("Error fetching gallery memos via RPC:", error)
+    return { success: false, error: error.message, data: [] }
   }
+
+  const memos = (
+    (data ||
+      []) as Database["public"]["Functions"]["search_memos_secure"]["Returns"]
+  ).map((memo) => {
+    const isOwner = Boolean(viewerId && memo.owner_id === viewerId)
+    const canView =
+      !memo.is_private || isOwner || unlockedMemoIds.includes(memo.id)
+    const isLocked = memo.is_locked ?? !canView
+
+    let content = memo.content || ""
+    if (isLocked && !isOwner) {
+      content = "![Locked](/images/locked-placeholder.png)"
+    }
+
+    return {
+      ...memo,
+      content,
+      is_owner: isOwner,
+      is_locked: isLocked,
+    } as unknown as Memo
+  })
+
+  return { success: true, error: null, data: memos }
 }
 
 /**
@@ -191,10 +214,10 @@ export async function getMemoByNumber(
   const supabase = await getClient()
   const { data, error } = await supabase.rpc("search_memos_secure", {
     query_text: "",
-    input_code: null,
+    unlocked_ids: unlockedMemoIds,
     limit_val: 1,
     offset_val: 0,
-    filters: { num: String(memoNumber) },
+    filters: { num: String(memoNumber) } as unknown as Json,
     sort_order: "newest",
   })
 
@@ -223,7 +246,8 @@ export async function getMemoById(
     return { success: false, error: "缺少 Memo ID", data: null }
   }
 
-  const supabase = await getClient()
+  const viewerId = await getCurrentUserId()
+  const supabase = getAdminClient()
   const { data, error } = await supabase
     .from("memos")
     .select(BASE_MEMO_SELECT)
@@ -238,10 +262,14 @@ export async function getMemoById(
   }
 
   const memo = data as Memo
+  const viewerMemo = withViewerAccess(memo, viewerId, unlockedMemoIds, {
+    allowLockedPlaceholder: true,
+  })
+
   return {
     success: true,
     error: null,
-    data: memo.is_locked ? null : memo,
+    data: viewerMemo,
   }
 }
 
@@ -279,22 +307,26 @@ export async function getMemosWithLocations(
 ): Promise<ActionResponse<(Memo & { locations: Location[] })[]>> {
   const viewerId = await getCurrentUserId()
   const supabase = await getClient()
-  const { data, error } = await supabase
-    .from("memos")
-    .select(BASE_MEMO_SELECT)
-    .is("deleted_at", null)
-    .not("locations", "eq", "[]")
-    .not("locations", "is", null)
-    .order("created_at", { ascending: false })
+  const { data, error } = await supabase.rpc("search_memos_secure", {
+    query_text: "",
+    unlocked_ids: unlockedMemoIds,
+    limit_val: 1000,
+    offset_val: 0,
+    filters: { has_location: "true" } as unknown as Json,
+    sort_order: "newest",
+  })
 
   if (error) {
-    console.error("Error fetching memos with locations:", error)
+    console.error("Error fetching memos with locations via RPC:", error)
     return { success: false, error: "获取定位数据失败", data: [] }
   }
 
-  const memosWithLocations = ((data || []) as Memo[])
+  const memosWithLocations = (
+    (data ||
+      []) as Database["public"]["Functions"]["search_memos_secure"]["Returns"]
+  )
     .map((memo) =>
-      withViewerAccess(memo, viewerId, unlockedMemoIds, {
+      withViewerAccess(memo as unknown as Memo, viewerId, unlockedMemoIds, {
         allowLockedPlaceholder: true,
       })
     )

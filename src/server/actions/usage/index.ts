@@ -82,7 +82,10 @@ const emptyUsageData = (): SupabaseUsageData => ({
 })
 
 interface RpcCapableAdminClient {
-  rpc: (fn: string) => Promise<{ data: unknown; error: unknown }>
+  rpc: (
+    fn: string,
+    args?: Record<string, unknown>
+  ) => Promise<{ data: unknown; error: unknown }>
 }
 
 interface StorageObjectRecord {

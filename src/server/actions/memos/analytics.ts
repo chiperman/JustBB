@@ -25,7 +25,7 @@ export async function getMemoStats(): Promise<ActionResponse<HeatmapStats>> {
     }
   }
 
-  const stats = data as HeatmapStats
+  const stats = data as unknown as HeatmapStats
   return { success: true, error: null, data: stats }
 }
 
@@ -70,7 +70,7 @@ export async function getTimelineStats(): Promise<
     }
   }
 
-  return { success: true, error: null, data: data as TimelineStats }
+  return { success: true, error: null, data: data as unknown as TimelineStats }
 }
 
 /**

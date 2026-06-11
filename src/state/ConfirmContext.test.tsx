@@ -11,7 +11,10 @@ function TestConsumer() {
       <button
         data-testid="btn-confirm"
         onClick={() =>
-          confirm({ title: "Are you sure?", description: "This action cannot be undone" })
+          confirm({
+            title: "Are you sure?",
+            description: "This action cannot be undone",
+          })
         }
       >
         Confirm
@@ -59,7 +62,11 @@ describe("ConfirmProvider", () => {
       return <TestConsumer />
     }
 
-    const { getByText } = render(<ConfirmProvider><TestWrapper /></ConfirmProvider>)
+    const { getByText } = render(
+      <ConfirmProvider>
+        <TestWrapper />
+      </ConfirmProvider>
+    )
 
     await waitFor(() => resolved)
     fireEvent.click(getByText("确定"))
@@ -84,7 +91,11 @@ describe("ConfirmProvider", () => {
       return <TestConsumer />
     }
 
-    const { getByText } = render(<ConfirmProvider><TestWrapper /></ConfirmProvider>)
+    const { getByText } = render(
+      <ConfirmProvider>
+        <TestWrapper />
+      </ConfirmProvider>
+    )
 
     await waitFor(() => resolved)
     fireEvent.click(getByText("取消"))
@@ -103,10 +114,14 @@ describe("ConfirmProvider", () => {
       return <TestConsumer />
     }
 
-    render(<ConfirmProvider><TestWrapper /></ConfirmProvider>)
+    render(
+      <ConfirmProvider>
+        <TestWrapper />
+      </ConfirmProvider>
+    )
 
-    expect(screen.getByText("Alert title")).toBeInTheDocument()
-    expect(screen.getByText("Alert description")).toBeInTheDocument()
-    expect(screen.getByText("确定")).toBeInTheDocument()
+    expect(screen.getByText("Alert title")).toBeDefined()
+    expect(screen.getByText("Alert description")).toBeDefined()
+    expect(screen.getByText("确定")).toBeDefined()
   })
 })

@@ -110,8 +110,10 @@ describe("getMemos TDD", () => {
 describe("Derivative Memo Queries TDD", () => {
   const mockSelect = vi.fn()
   const mockFrom = vi.fn()
+  const mockRpc = vi.fn()
   const mockSupabase = {
     from: mockFrom,
+    rpc: mockRpc,
   }
 
   // 辅助函数：构造链式调用的 mock
@@ -162,13 +164,21 @@ describe("Derivative Memo Queries TDD", () => {
         },
       ]
 
-      const mockQuery = makeMockQuery(mockMemos)
-      mockSelect.mockReturnValue(mockQuery)
+      mockRpc.mockResolvedValue({ data: mockMemos, error: null })
       vi.mocked(getCurrentUserId).mockResolvedValue("user-1")
 
       const result = await getGalleryMemos(20, 0)
       expect(result.success).toBe(true)
       expect(result.data).toHaveLength(3)
+
+      expect(mockRpc).toHaveBeenCalledWith("search_memos_secure", {
+        query_text: "",
+        unlocked_ids: [],
+        limit_val: 20,
+        offset_val: 0,
+        filters: { has_image: "true" },
+        sort_order: "newest",
+      })
 
       // 验证 is_owner 和 is_locked 动态计算结果
       const memo1 = result.data.find((m) => m.id === "1")
@@ -183,6 +193,7 @@ describe("Derivative Memo Queries TDD", () => {
 
       expect(memo3?.is_owner).toBe(false)
       expect(memo3?.is_locked).toBe(true) // 私密且所有者是别人，锁定
+      expect(memo3?.content).toContain("locked-placeholder.png")
     })
   })
 

@@ -7,7 +7,7 @@ import { cn } from "@/shared/lib/utils"
 import type { MapMarker } from "@/shared/lib/location-cache"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Location04Icon } from "@hugeicons/core-free-icons"
-import { createRoot } from "react-dom/client"
+import { createRoot, Root } from "react-dom/client"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 import { motion, AnimatePresence } from "framer-motion"
@@ -49,7 +49,7 @@ export function MapView({
   const isFirstLoadRef = useRef(true)
   // 聚合弹窗 Toggle 状态：记录上次打开弹窗的坐标 key，用于可靠的 toggle 关闭判断
   const lastClusterPopupKeyRef = useRef<string | null>(null)
-  const popupRootRef = useRef<React.Root | null>(null)
+  const popupRootRef = useRef<Root | null>(null)
 
   const invalidateMapSize = React.useCallback(() => {
     if (!mapInstance.current) return

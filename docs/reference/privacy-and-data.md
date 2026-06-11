@@ -58,15 +58,15 @@ JustMemo 的 Memo 只有两种可见性：
 
 ## 5. RLS 与权限
 
-当前策略是 owner-based：
+当前策略是 owner-based 并增加了管理员角色限制：
 
 - 公开且未删除 Memo：任何人可读。
-- 已登录作者：可读写删自己的全部 Memo，包括私密 Memo。
-- 非作者：不能通过普通表查询直接读取他人私密 Memo。
-- 插入时必须满足 `owner_id = auth.uid()`。
-- 更新与删除时必须满足 `owner_id = auth.uid()`。
+- 已登录管理员 (Role = 'admin')：可读写删自己的全部 Memo，包括私密 Memo。
+- 非作者/非管理员：不能通过普通表查询直接读取他人私密 Memo，且无权进行任何写操作（Insert/Update/Delete）。
+- 插入时必须满足 `owner_id = auth.uid() AND (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'`。
+- 更新与删除时必须满足 `owner_id = auth.uid() AND (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'`。
 
-权限真相在数据库层。前端判断只能收敛体验，不能扩大可见范围。
+权限真相在数据库层。前端判断只能收敛体验，不能扩大可见范围。在 Server Actions 写操作中也进行了 `isAdmin()` 的强卡门校验。
 
 ## 6. 核心 RPC：`search_memos_secure`
 
@@ -95,15 +95,18 @@ search_memos_secure(
 - `is_locked`
 - `is_owner`
 - `word_count`
+- `locations` (JSONB)
 
 可见性规则：
 
 - 公开 Memo：返回正文。
 - 作者本人：返回自己的私密 Memo 正文。
 - `unlocked_ids` 包含该 Memo：返回该条私密 Memo 正文。
-- 其他情况：按查询场景返回锁定占位或过滤掉。
+- 其他情况：按查询场景返回锁定占位或过滤掉。对于未解锁的他人私密 Memo：
+  - 若原本包含定位，保留 `locations` 字段，以正常画出灰色锁定的定位图钉，但 `content` 置为空字符串。
+  - 若原本包含图片，`content` 会被替换为模糊占位 Markdown `![Locked](/images/locked-placeholder.png)`，以便画廊可以展示锁定占位卡片，同时阻止原始图片的读取。
 
-锁定占位只允许用于浏览上下文，例如主列表和地图。搜索、标签过滤、导出、分享和 AI 摘要不能消费未解锁正文。
+锁定占位只允许用于浏览上下文，例如主列表、地图和画廊。搜索、标签过滤、导出、分享和 AI 摘要不能消费未解锁正文。
 
 ## 7. Server Actions 边界
 

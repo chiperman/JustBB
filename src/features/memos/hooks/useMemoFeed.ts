@@ -26,10 +26,18 @@ export function reconcileInitialMemoWindow(
   previousInitialIds: Set<string>,
   nextInitialMemos: Memo[]
 ) {
+  const alignedNextInitialMemos = nextInitialMemos.map((nextMemo) => {
+    const existing = currentMemos.find((m) => m.id === nextMemo.id)
+    if (existing && !existing.is_locked && nextMemo.is_locked) {
+      return existing
+    }
+    return nextMemo
+  })
+
   const olderMemos = currentMemos.filter(
     (memo) => !previousInitialIds.has(memo.id)
   )
-  return mergeMemos(olderMemos, nextInitialMemos)
+  return mergeMemos(olderMemos, alignedNextInitialMemos)
 }
 
 export function reconcileHasMoreOlder(

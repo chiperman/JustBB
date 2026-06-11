@@ -119,7 +119,7 @@ export function UnlockDialog({
                 placeholder="请输入访问口令"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className="h-11 rounded-md border-border/50 bg-background pr-11-none focus-visible:ring-primary/20"
+                className="h-11 rounded-md border-border/50 bg-background pr-11 focus-visible:ring-primary/20"
                 autoFocus
                 onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
               />

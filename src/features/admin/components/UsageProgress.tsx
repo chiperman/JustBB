@@ -28,7 +28,7 @@ export function UsageProgress({
 }: UsageProgressProps) {
   // 根据百分比确定颜色
   const getColorClass = (pct: number) => {
-    if (muted) return "bg-muted-foreground/30-none"
+    if (muted) return "bg-muted-foreground/30"
     if (pct >= 90) return "bg-destructive-[0_0_12px_rgba(239,68,68,0.3)]"
     if (pct >= 70) return "bg-amber-500-[0_0_12px_rgba(245,158,11,0.3)]"
     return "bg-primary-[0_0_12px_rgba(var(--color-primary-rgb),0.2)]"

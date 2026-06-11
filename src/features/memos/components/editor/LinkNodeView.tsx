@@ -116,7 +116,7 @@ export const LinkNodeView = (props: NodeViewProps) => {
               <LinkPreview
                 url={url}
                 customTitle={title}
-                className="m-0 border-none-none rounded-none h-auto"
+                className="m-0 border-none rounded-none h-auto"
               />
             </HoverCardContent>
           </HoverCard>

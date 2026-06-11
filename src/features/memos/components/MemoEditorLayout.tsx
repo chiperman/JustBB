@@ -33,6 +33,10 @@ export interface MemoEditorLayoutProps {
   showPlaceholder: boolean
   showSuggestions: boolean
   showPrivateDialog: boolean
+  accessCode: string
+  setAccessCode: (code: string) => void
+  accessHint: string
+  setAccessHint: (hint: string) => void
   showLocationPicker: boolean
   showLinkPicker: boolean
   error: string | null
@@ -97,6 +101,10 @@ export function MemoEditorLayout({
   showPlaceholder,
   showSuggestions,
   showPrivateDialog,
+  accessCode,
+  setAccessCode,
+  accessHint,
+  setAccessHint,
   showLocationPicker,
   showLinkPicker,
   error,
@@ -188,7 +196,7 @@ export function MemoEditorLayout({
       }}
       className={cn(
         "border border-border rounded-lg relative flex flex-col items-stretch selection:bg-primary/30",
-        isActuallyCollapsed && "-none cursor-pointer hover:bg-secondary",
+        isActuallyCollapsed && "border-none cursor-pointer hover:bg-secondary",
         className
       )}
       onClick={() => {
@@ -324,10 +332,10 @@ export function MemoEditorLayout({
             // MemoEditor 不传 setIsFocused 给 Layout，此处回调由 MemoEditor 处理
           }
         }}
-        accessCode=""
-        setAccessCode={() => {}}
-        accessHint=""
-        setAccessHint={() => {}}
+        accessCode={accessCode}
+        setAccessCode={setAccessCode}
+        accessHint={accessHint}
+        setAccessHint={setAccessHint}
         onConfirm={onPrivateConfirm}
       />
 

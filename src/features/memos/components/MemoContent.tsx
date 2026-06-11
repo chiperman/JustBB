@@ -186,7 +186,7 @@ export function MemoContent({
                         <LinkPreview
                           url={token.url}
                           customTitle={token.title}
-                          className="m-0 border-none-none rounded-none h-auto"
+                          className="m-0 border-none rounded-none h-auto"
                         />
                       </HoverCardContent>
                     </HoverCard>

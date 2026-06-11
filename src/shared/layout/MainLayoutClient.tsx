@@ -24,6 +24,10 @@ export function MainLayoutClient() {
   const { getCache, setCache } = usePageDataCache()
   const { user } = useUser()
   const { unlockedMemoIds } = useUnlockedMemos()
+  const unlockedMemoIdsRef = useRef(unlockedMemoIds)
+  useEffect(() => {
+    unlockedMemoIdsRef.current = unlockedMemoIds
+  }, [unlockedMemoIds])
 
   // 滚动与吸顶状态管理
   const containerRef = useRef<HTMLDivElement>(null)
@@ -72,8 +76,7 @@ export function MainLayoutClient() {
   )
   const baseCacheKey = generateCacheKey(flattenedParams)
   const viewerScope = user?.id ?? "anonymous"
-  const unlockedScope = unlockedMemoIds.join(",")
-  const cacheKey = `${baseCacheKey}::viewer=${viewerScope}::unlocked=${unlockedScope}`
+  const cacheKey = `${baseCacheKey}::viewer=${viewerScope}`
   const cachedData = getCache(cacheKey)
   const latestRequestIdRef = useRef(0)
 
@@ -102,7 +105,7 @@ export function MainLayoutClient() {
         const res = await getMemos({
           ...flattenedParams,
           limit: 30,
-          unlockedMemoIds,
+          unlockedMemoIds: unlockedMemoIdsRef.current,
         })
 
         if (cancelled || latestRequestIdRef.current !== requestId) {
@@ -131,7 +134,7 @@ export function MainLayoutClient() {
     return () => {
       cancelled = true
     }
-  }, [cacheKey, flattenedParams, getCache, setCache, unlockedMemoIds])
+  }, [cacheKey, flattenedParams, getCache, setCache])
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background">

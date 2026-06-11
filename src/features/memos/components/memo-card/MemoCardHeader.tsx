@@ -56,7 +56,7 @@ export function MemoCardHeader({
               checked={isSelected}
               onCheckedChange={onToggleSelection}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              className="h-4 w-4 rounded-[4px] border-border bg-background-none transition-all cursor-pointer data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+              className="h-4 w-4 rounded-[4px] border-border bg-background transition-all cursor-pointer data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
             />
           </div>
         )}

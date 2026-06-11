@@ -843,6 +843,10 @@ export function MemoEditor({
       showPlaceholder={showPlaceholder}
       showSuggestions={showSuggestions}
       showPrivateDialog={showPrivateDialog}
+      accessCode={accessCode}
+      setAccessCode={setAccessCode}
+      accessHint={accessHint}
+      setAccessHint={setAccessHint}
       showLocationPicker={showLocationPicker}
       showLinkPicker={showLinkPicker}
       error={error}

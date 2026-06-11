@@ -50,15 +50,17 @@ npm run dev
 
 命令分层：
 
-| 场景       | 命令                       | 说明                         |
-| ---------- | -------------------------- | ---------------------------- |
-| 日常启动   | `npm run dev`              | 启动本地 Supabase 和 Next.js |
-| 远程库调试 | `npm run dev:remote`       | 使用 `.env.remote` 启动      |
-| 格式化     | `npm run format`           | 自动修复格式                 |
-| 提交前检查 | `npm run check`            | 构建和单元测试               |
-| 集成测试   | `npm run test:integration` | 涉及数据库语义时使用         |
-| 本地发版   | `npm run release`          | 仅发版时使用                 |
-| 数据库维护 | `npm run db:reset`         | 重放本地迁移和 seed          |
+| 场景           | 命令                       | 说明                         |
+| -------------- | -------------------------- | ---------------------------- |
+| 日常启动       | `npm run dev`              | 启动本地 Supabase 和 Next.js |
+| 远程库调试     | `npm run dev:remote`       | 使用 `.env.remote` 启动      |
+| 本次改动格式化 | `npm run format:staged`    | 只处理已暂存文件             |
+| 提交前检查     | `npm run check`            | 构建和单元测试               |
+| 集成测试       | `npm run test:integration` | 涉及数据库语义时使用         |
+| 本地发版       | `npm run release`          | 仅发版时使用                 |
+| 数据库维护     | `npm run db:reset`         | 重放本地迁移和 seed          |
+
+提交时 Husky 会自动执行 `lint-staged`，只格式化和检查本次已暂存文件。全仓格式化只在刻意整理格式时使用：`npm run format:all`。
 
 复杂需求按以下顺序执行：
 

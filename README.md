@@ -92,15 +92,17 @@ npm run dev
 
 提交、push、发版、数据库迁移和完整校验默认交给 AI 按需执行。需要你自己判断问题时，可以按下面的分层看：
 
-| 场景       | 命令                 | 谁常用        |
-| ---------- | -------------------- | ------------- |
-| 日常启动   | `npm run dev`        | 你            |
-| 远程库调试 | `npm run dev:remote` | 你偶尔用      |
-| 代码格式化 | `npm run format`     | AI 或你偶尔用 |
-| 提交前检查 | `npm run check`      | AI            |
-| 单元测试   | `npm run test`       | AI            |
-| 构建验证   | `npm run build`      | AI            |
-| 生产构建   | `npm run build:prod` | 发布时用      |
+| 场景           | 命令                    | 谁常用        |
+| -------------- | ----------------------- | ------------- |
+| 日常启动       | `npm run dev`           | 你            |
+| 远程库调试     | `npm run dev:remote`    | 你偶尔用      |
+| 本次改动格式化 | `npm run format:staged` | AI 或你偶尔用 |
+| 提交前检查     | `npm run check`         | AI            |
+| 单元测试       | `npm run test`          | AI            |
+| 构建验证       | `npm run build`         | AI            |
+| 生产构建       | `npm run build:prod`    | 发布时用      |
+
+全仓格式化只在刻意整理格式时使用：`npm run format:all`。
 
 本地 Supabase 排障时再看这些：
 

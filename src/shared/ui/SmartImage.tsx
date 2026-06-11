@@ -100,10 +100,7 @@ export function SmartImage({
         )}
 
         {status === "error" && (
-          <ImageErrorState
-            isFullPage={isFullPage}
-            className={fallbackClassName}
-          />
+          <ImageErrorState isFullPage={isFullPage} className={fallbackClassName} />
         )}
       </AnimatePresence>
 
@@ -122,6 +119,7 @@ export function SmartImage({
           <img
             src={src}
             alt={alt}
+            referrerPolicy="no-referrer"
             onLoad={() => setStatus("success")}
             onError={() => setStatus("error")}
             className={cn(

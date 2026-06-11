@@ -38,9 +38,7 @@ export function R2ConfigDialog({ open, onOpenChange }: R2ConfigDialogProps) {
   const [saving, setSaving] = React.useState(false)
   const [testing, setTesting] = React.useState(false)
   const [hasExistingConfig, setHasExistingConfig] = React.useState(false)
-  const [testResult, setTestResult] = React.useState<
-    "success" | "error" | null
-  >(null)
+  const [testResult, setTestResult] = React.useState<"success" | "error" | null>(null)
   const [showSecret, setShowSecret] = React.useState(false)
 
   React.useEffect(() => {
@@ -153,23 +151,11 @@ export function R2ConfigDialog({ open, onOpenChange }: R2ConfigDialogProps) {
               className="gap-2"
             >
               {testing ? (
-                <HugeiconsIcon
-                  icon={Loader2}
-                  size={14}
-                  className="animate-spin"
-                />
+                <HugeiconsIcon icon={Loader2} size={14} className="animate-spin" />
               ) : testResult === "success" ? (
-                <HugeiconsIcon
-                  icon={CheckIcon}
-                  size={14}
-                  className="text-green-500"
-                />
+                <HugeiconsIcon icon={CheckIcon} size={14} className="text-green-500" />
               ) : testResult === "error" ? (
-                <HugeiconsIcon
-                  icon={ErrorIcon}
-                  size={14}
-                  className="text-red-500"
-                />
+                <HugeiconsIcon icon={ErrorIcon} size={14} className="text-red-500" />
               ) : null}
               <span className="text-xs">测试连接</span>
             </Button>
@@ -194,82 +180,82 @@ export function R2ConfigDialog({ open, onOpenChange }: R2ConfigDialogProps) {
         </div>
       }
     >
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <HugeiconsIcon
-            icon={Loader2}
-            size={24}
-            className="animate-spin text-muted-foreground"
+      <div
+        className={`space-y-5 transition-opacity duration-200 ${
+          loading ? "opacity-30 pointer-events-none" : "opacity-100"
+        }`}
+      >
+        <div className="space-y-2">
+          <Label htmlFor="r2-account-id">Account ID</Label>
+          <Input
+            id="r2-account-id"
+            placeholder="Cloudflare Account ID"
+            value={config.account_id}
+            onChange={(e) => updateField("account_id", e.target.value)}
+            disabled={loading}
           />
         </div>
-      ) : (
-        <div className="space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="r2-account-id">Account ID</Label>
-            <Input
-              id="r2-account-id"
-              placeholder="Cloudflare Account ID"
-              value={config.account_id}
-              onChange={(e) => updateField("account_id", e.target.value)}
-            />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="r2-access-key">Access Key ID</Label>
-            <Input
-              id="r2-access-key"
-              placeholder="R2 API Token Access Key ID"
-              value={config.access_key_id}
-              onChange={(e) => updateField("access_key_id", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="r2-secret-key">Secret Access Key</Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-                onClick={() => setShowSecret((v) => !v)}
-              >
-                {showSecret ? "隐藏" : "显示"}
-              </Button>
-            </div>
-            <Input
-              id="r2-secret-key"
-              type={showSecret ? "text" : "password"}
-              placeholder="R2 API Token Secret Access Key"
-              value={config.secret_access_key}
-              onChange={(e) => updateField("secret_access_key", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="r2-bucket">Bucket 名称</Label>
-            <Input
-              id="r2-bucket"
-              placeholder="my-bucket"
-              value={config.bucket_name}
-              onChange={(e) => updateField("bucket_name", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="r2-public-url">公开访问 URL</Label>
-            <Input
-              id="r2-public-url"
-              placeholder="https://pub-xxx.r2.dev 或自定义域名"
-              value={config.public_url}
-              onChange={(e) => updateField("public_url", e.target.value)}
-            />
-            <p className="text-[11px] text-muted-foreground">
-              R2 Bucket 的公开访问地址，用于生成图片链接
-            </p>
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="r2-access-key">Access Key ID</Label>
+          <Input
+            id="r2-access-key"
+            placeholder="R2 API Token Access Key ID"
+            value={config.access_key_id}
+            onChange={(e) => updateField("access_key_id", e.target.value)}
+            disabled={loading}
+          />
         </div>
-      )}
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="r2-secret-key">Secret Access Key</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+              onClick={() => setShowSecret((v) => !v)}
+              disabled={loading}
+            >
+              {showSecret ? "隐藏" : "显示"}
+            </Button>
+          </div>
+          <Input
+            id="r2-secret-key"
+            type={showSecret ? "text" : "password"}
+            placeholder="R2 API Token Secret Access Key"
+            value={config.secret_access_key}
+            onChange={(e) => updateField("secret_access_key", e.target.value)}
+            disabled={loading}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="r2-bucket">Bucket 名称</Label>
+          <Input
+            id="r2-bucket"
+            placeholder="my-bucket"
+            value={config.bucket_name}
+            onChange={(e) => updateField("bucket_name", e.target.value)}
+            disabled={loading}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="r2-public-url">公开访问 URL</Label>
+          <Input
+            id="r2-public-url"
+            placeholder="https://pub-xxx.r2.dev 或自定义域名"
+            value={config.public_url}
+            onChange={(e) => updateField("public_url", e.target.value)}
+            disabled={loading}
+          />
+          <p className="text-[11px] text-muted-foreground">
+            R2 Bucket 的公开访问地址，用于生成图片链接
+          </p>
+        </div>
+      </div>
     </AdminDialogShell>
   )
 }

@@ -1,6 +1,6 @@
 # Supabase 本地开发与迁移说明
 
-> 最后更新：2026-04-19
+> 最后更新：2026-06-11
 > 状态：与当前仓库结构同步
 
 `supabase/` 目录是 JustMemo 的数据库与本地基础设施描述目录。
@@ -32,11 +32,21 @@
 
 本地开发种子数据。
 
-执行 `supabase db reset` 时会自动写入。
+执行 `npm run supabase:db:reset` 时会自动写入。
 
 ## 2. 本地开发流程
 
-### 启动
+### 日常启动
+
+日常开发只需要在项目根目录执行：
+
+```bash
+npm run dev
+```
+
+这个命令会先检查并启动本地 Supabase，再启动 Next.js 开发服务器。
+
+### 只启动 Supabase
 
 在项目根目录执行：
 
@@ -44,11 +54,11 @@
 npm run supabase:start
 ```
 
-或直接：
+这个入口会调用 `scripts/dev-setup.sh`，在 Docker 或 Supabase CLI 状态不一致时尝试自愈。
 
-```bash
-supabase start
-```
+项目使用 `package.json` 中的本地 Supabase CLI 依赖，不要求全局安装 `supabase` 命令。
+
+## 3. 排障命令
 
 ### 查看状态
 
@@ -56,16 +66,24 @@ supabase start
 npm run supabase:status
 ```
 
-### 停止
+### 停止本地 Supabase
 
 ```bash
 npm run supabase:stop
 ```
 
-### 重置数据库
+### 干净重启本地 Supabase
 
 ```bash
-supabase db reset
+npm run supabase:restart:clean
+```
+
+这个命令会停止本地 Supabase 并丢弃本地备份，再重新启动。它适合处理本地容器状态异常，不等同于数据库迁移重放。
+
+### 重放迁移和 seed
+
+```bash
+npm run supabase:db:reset
 ```
 
 这个命令会：
@@ -73,12 +91,12 @@ supabase db reset
 - 重放全部迁移文件
 - 重新执行 `seed.sql`
 
-## 3. 数据库变更流程
+## 4. 数据库变更流程
 
 ### 创建新迁移
 
 ```bash
-supabase migration new <name>
+npx supabase migration new <name>
 ```
 
 ### 在迁移中编写 SQL
@@ -90,7 +108,7 @@ supabase migration new <name>
 ### 本地验证
 
 ```bash
-supabase db reset
+npm run supabase:db:reset
 ```
 
 必要时再配合运行：
@@ -105,7 +123,7 @@ npm run test:integration
 npm run supabase:push
 ```
 
-## 4. 类型生成
+## 5. 类型生成
 
 当数据库结构变化后，需要同步更新 TypeScript 类型：
 
@@ -115,17 +133,11 @@ npm run supabase:push
 npm run types:generate
 ```
 
-### 生成远端类型
-
-```bash
-npm run types:generate:remote
-```
-
 当前本地类型文件输出到：
 
 - `src/types/database.ts`
 
-## 5. 当前迁移关注点
+## 6. 当前迁移关注点
 
 当前的数据库演进重点包括：
 
@@ -138,14 +150,14 @@ npm run types:generate:remote
 
 - [数据与隐私参考](../docs/reference/privacy-and-data.md)
 
-## 6. 开发守则
+## 7. 开发守则
 
 - 不要直接修改已经进入生产历史的旧迁移文件
 - 新变更一律通过新增迁移完成
 - 表级权限必须显式考虑 RLS
 - 涉及私密 Memo 的查询与权限调整，必须同时更新文档与测试
 
-## 7. 相关文档
+## 8. 相关文档
 
 - [仓库 README](../README.md)
 - [数据与隐私参考](../docs/reference/privacy-and-data.md)

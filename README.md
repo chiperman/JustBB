@@ -55,7 +55,6 @@ JustMemo 是一个基于 Next.js 16、React 19 和 Supabase 构建的私密 Memo
 
 - Node.js 20+
 - Docker Desktop
-- Supabase CLI
 - **配置环境变量**：复制 `.env.example` 为 `.env.local` 并根据需要修改（项目内置了 Zod 驱动的严格环境变量校验，缺失核心变量将无法启动）。
 
 ### 安装依赖
@@ -70,10 +69,10 @@ npm install
 npm run dev
 ```
 
-这个命令会先执行：
+日常开发只需要记这个命令。它会：
 
-- `npm run supabase:start`
-- 再启动 Next.js 开发服务器
+- 检查并启动本地 Supabase
+- 启动 Next.js 开发服务器
 
 如果要连接远程数据库进行开发，请使用：
 
@@ -81,16 +80,36 @@ npm run dev
 npm run dev:remote
 ```
 
-其中 `scripts/dev-setup.sh` 内置了 Supabase 本地环境的自愈逻辑，用于修复 Docker 异常关停后 CLI 与容器状态不同步的问题。
+本地 Supabase 由项目依赖里的 CLI 提供，不要求全局安装 `supabase` 命令。`scripts/dev-setup.sh` 内置了 Supabase 本地环境的自愈逻辑，用于修复 Docker 异常关停后 CLI 与容器状态不同步的问题。
 
-### 常用命令
+### 命令怎么记
+
+你日常只需要记一个命令：
 
 ```bash
-npm run lint
-npm run test
-npm run test:integration
-npm run build
+npm run dev
+```
+
+提交、push、发版、数据库迁移和完整校验默认交给 AI 按需执行。需要你自己判断问题时，可以按下面的分层看：
+
+| 场景         | 命令                 | 谁常用        |
+| ------------ | -------------------- | ------------- |
+| 日常启动     | `npm run dev`        | 你            |
+| 远程库调试   | `npm run dev:remote` | 你偶尔用      |
+| 代码格式化   | `npm run format`     | AI 或你偶尔用 |
+| 提交前检查   | `npm run check`      | AI            |
+| 单元测试     | `npm run test`       | AI            |
+| 构建验证     | `npm run build`      | AI            |
+| 完整核心验证 | `npm run verify`     | AI            |
+| 生产构建     | `npm run build:prod` | 发布时用      |
+
+本地 Supabase 排障时再看这些：
+
+```bash
 npm run supabase:status
+npm run supabase:stop
+npm run supabase:restart:clean
+npm run supabase:db:reset
 ```
 
 数据库与本地 Supabase 工作流请看：
@@ -127,7 +146,7 @@ npm run supabase:status
 提交前建议至少执行：
 
 ```bash
-npm run lint
+npm run check
 npm run test
 npm run build
 ```

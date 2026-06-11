@@ -58,12 +58,22 @@ Action 层测试用于防止业务规则退化，例如：
 
 ## 3. 当前命令
 
+日常人工开发不需要记完整测试矩阵，通常只需要启动项目：
+
+```bash
+npm run dev
+```
+
+AI 在改代码、提交前或排障时按风险选择以下命令：
+
 ```bash
 npm run test
 npm run test:unit
 npm run test:watch
 npm run test:integration
 npm run lint
+npm run check
+npm run verify
 npm run build
 ```
 
@@ -76,7 +86,7 @@ npm run build
 普通代码改动：
 
 ```bash
-npm run lint
+npm run check
 npm run test
 npm run build
 ```

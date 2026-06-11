@@ -5,7 +5,6 @@ out/
 build/
 coverage/
 test-results/
-playwright-report/
 
 # Large generated or low-signal files
 .git/

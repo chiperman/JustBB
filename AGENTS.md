@@ -39,7 +39,7 @@
 - `src/shared/`：共享基础设施，包含 `ui/`（原子组件）、`layout/`（布局壳）、`hooks/`（通用钩子）和 `lib/`（纯工具）。
 - `src/state/`：应用级全局状态 (Context)。
 - `supabase/migrations/`：schema、RLS、RPC 和数据库权限的权威来源。
-- `e2e/`、`vitest.config.ts`、`playwright.config.ts`：测试入口与配置。
+- `vitest.config.ts`：测试入口与配置。
 
 ## 工作规则
 

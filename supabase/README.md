@@ -32,7 +32,7 @@
 
 本地开发种子数据。
 
-执行 `npm run supabase:db:reset` 时会自动写入。
+执行 `npm run db:reset` 时会自动写入。
 
 ## 2. 本地开发流程
 
@@ -51,7 +51,7 @@ npm run dev
 在项目根目录执行：
 
 ```bash
-npm run supabase:start
+./scripts/dev-setup.sh
 ```
 
 这个入口会调用 `scripts/dev-setup.sh`，在 Docker 或 Supabase CLI 状态不一致时尝试自愈。
@@ -63,19 +63,19 @@ npm run supabase:start
 ### 查看状态
 
 ```bash
-npm run supabase:status
+npx supabase status
 ```
 
 ### 停止本地 Supabase
 
 ```bash
-npm run supabase:stop
+npx supabase stop
 ```
 
 ### 干净重启本地 Supabase
 
 ```bash
-npm run supabase:restart:clean
+npx supabase stop --no-backup && npx supabase start
 ```
 
 这个命令会停止本地 Supabase 并丢弃本地备份，再重新启动。它适合处理本地容器状态异常，不等同于数据库迁移重放。
@@ -83,7 +83,7 @@ npm run supabase:restart:clean
 ### 重放迁移和 seed
 
 ```bash
-npm run supabase:db:reset
+npm run db:reset
 ```
 
 这个命令会：
@@ -108,7 +108,7 @@ npx supabase migration new <name>
 ### 本地验证
 
 ```bash
-npm run supabase:db:reset
+npm run db:reset
 ```
 
 必要时再配合运行：
@@ -120,7 +120,7 @@ npm run test:integration
 ### 推送到远端
 
 ```bash
-npm run supabase:push
+npx supabase db push
 ```
 
 ## 5. 类型生成

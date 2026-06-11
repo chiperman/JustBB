@@ -92,24 +92,23 @@ npm run dev
 
 提交、push、发版、数据库迁移和完整校验默认交给 AI 按需执行。需要你自己判断问题时，可以按下面的分层看：
 
-| 场景         | 命令                 | 谁常用        |
-| ------------ | -------------------- | ------------- |
-| 日常启动     | `npm run dev`        | 你            |
-| 远程库调试   | `npm run dev:remote` | 你偶尔用      |
-| 代码格式化   | `npm run format`     | AI 或你偶尔用 |
-| 提交前检查   | `npm run check`      | AI            |
-| 单元测试     | `npm run test`       | AI            |
-| 构建验证     | `npm run build`      | AI            |
-| 完整核心验证 | `npm run verify`     | AI            |
-| 生产构建     | `npm run build:prod` | 发布时用      |
+| 场景       | 命令                 | 谁常用        |
+| ---------- | -------------------- | ------------- |
+| 日常启动   | `npm run dev`        | 你            |
+| 远程库调试 | `npm run dev:remote` | 你偶尔用      |
+| 代码格式化 | `npm run format`     | AI 或你偶尔用 |
+| 提交前检查 | `npm run check`      | AI            |
+| 单元测试   | `npm run test`       | AI            |
+| 构建验证   | `npm run build`      | AI            |
+| 生产构建   | `npm run build:prod` | 发布时用      |
 
 本地 Supabase 排障时再看这些：
 
 ```bash
-npm run supabase:status
-npm run supabase:stop
-npm run supabase:restart:clean
-npm run supabase:db:reset
+npx supabase status
+npx supabase stop
+npx supabase stop --no-backup && npx supabase start
+npm run db:reset
 ```
 
 数据库与本地 Supabase 工作流请看：
@@ -147,8 +146,6 @@ npm run supabase:db:reset
 
 ```bash
 npm run check
-npm run test
-npm run build
 ```
 
 ## 6. 参考与致谢

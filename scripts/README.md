@@ -17,8 +17,8 @@
 
 对应入口：
 
-- `package.json` 中的 `supabase:start`
-- 日常开发入口仍然是 `npm run dev`
+- `package.json` 中的 `dev`
+- 日常开发入口是 `npm run dev`
 
 ### `rpc-search-memos.sql`
 

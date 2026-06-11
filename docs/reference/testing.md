@@ -67,14 +67,10 @@ npm run dev
 AI 在改代码、提交前或排障时按风险选择以下命令：
 
 ```bash
-npm run test
-npm run test:unit
-npm run test:watch
-npm run test:integration
-npm run lint
 npm run check
-npm run verify
 npm run build
+npm run test
+npm run test:integration
 ```
 
 ## 4. 最小校验
@@ -87,8 +83,6 @@ npm run build
 
 ```bash
 npm run check
-npm run test
-npm run build
 ```
 
 涉及以下内容时，加跑：

@@ -50,15 +50,15 @@ npm run dev
 
 命令分层：
 
-| 场景       | 命令                 | 说明                         |
-| ---------- | -------------------- | ---------------------------- |
-| 日常启动   | `npm run dev`        | 启动本地 Supabase 和 Next.js |
-| 远程库调试 | `npm run dev:remote` | 使用 `.env.remote` 启动      |
-| 格式化     | `npm run format`     | 自动修复格式                 |
-| 提交前检查 | `npm run check`      | 格式、lint、类型检查         |
-| 核心验证   | `npm run verify`     | check、单元测试、集成测试    |
-| 本地发版   | `npm run release`    | 仅发版时使用                 |
-| 数据库维护 | `npm run supabase:*` | 迁移、类型、排障时使用       |
+| 场景       | 命令                       | 说明                         |
+| ---------- | -------------------------- | ---------------------------- |
+| 日常启动   | `npm run dev`              | 启动本地 Supabase 和 Next.js |
+| 远程库调试 | `npm run dev:remote`       | 使用 `.env.remote` 启动      |
+| 格式化     | `npm run format`           | 自动修复格式                 |
+| 提交前检查 | `npm run check`            | 构建和单元测试               |
+| 集成测试   | `npm run test:integration` | 涉及数据库语义时使用         |
+| 本地发版   | `npm run release`          | 仅发版时使用                 |
+| 数据库维护 | `npm run db:reset`         | 重放本地迁移和 seed          |
 
 复杂需求按以下顺序执行：
 

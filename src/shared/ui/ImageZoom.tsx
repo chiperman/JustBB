@@ -1,13 +1,7 @@
 "use client"
 
 import * as React from "react"
-import {
-  motion,
-  AnimatePresence,
-  useMotionValue,
-  useSpring,
-  animate,
-} from "framer-motion"
+import { motion, AnimatePresence, useMotionValue, useSpring, animate } from "framer-motion"
 import { Dialog, DialogTrigger, DialogPortal } from "./dialog"
 import { cn } from "@/shared/lib/utils"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -19,21 +13,14 @@ interface ImageZoomProps {
   alt?: string
   className?: string
   children?: React.ReactNode
+  noHoverScale?: boolean
 }
 
 /**
  * 独立的预览内容组件
  * 每次通过 key 重新挂载，确保 useMotionValue/useSpring 彻底重置
  */
-function PreviewContent({
-  src,
-  alt,
-  onClose,
-}: {
-  src: string
-  alt?: string
-  onClose: () => void
-}) {
+function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onClose: () => void }) {
   // 基础运动值：x, y 平移 - 直接使用 MotionValue 以获得极致跟手感
   const x = useMotionValue(0)
   const y = useMotionValue(0)
@@ -71,8 +58,7 @@ function PreviewContent({
   // 初始化视口大小
   React.useEffect(() => {
     setViewport({ width: window.innerWidth, height: window.innerHeight })
-    const handleResize = () =>
-      setViewport({ width: window.innerWidth, height: window.innerHeight })
+    const handleResize = () => setViewport({ width: window.innerWidth, height: window.innerHeight })
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [])
@@ -154,12 +140,7 @@ function PreviewContent({
             setTimeout(() => setIsDragging(false), 100)
           }}
         >
-          <div
-            className={cn(
-              "relative rounded-[2px]",
-              fitMode === "fit" && "overflow-hidden"
-            )}
-          >
+          <div className={cn("relative rounded-[2px]", fitMode === "fit" && "overflow-hidden")}>
             <SmartImage
               src={src}
               alt={alt || "大图"}
@@ -198,9 +179,7 @@ function PreviewContent({
           }}
           className={cn(
             "px-3 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer",
-            fitMode === "fit"
-              ? "bg-white/25 text-white"
-              : "text-white/40 hover:text-white/70"
+            fitMode === "fit" ? "bg-white/25 text-white" : "text-white/40 hover:text-white/70"
           )}
         >
           适应
@@ -214,9 +193,7 @@ function PreviewContent({
           }}
           className={cn(
             "px-3 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer",
-            fitMode === "original"
-              ? "bg-white/25 text-white"
-              : "text-white/40 hover:text-white/70"
+            fitMode === "original" ? "bg-white/25 text-white" : "text-white/40 hover:text-white/70"
           )}
         >
           100%
@@ -260,7 +237,7 @@ function PreviewContent({
 
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
 
-export function ImageZoom({ src, alt, className, children }: ImageZoomProps) {
+export function ImageZoom({ src, alt, className, children, noHoverScale }: ImageZoomProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const [openCount, setOpenCount] = React.useState(0)
   const hasMounted = useHasMounted()
@@ -274,12 +251,7 @@ export function ImageZoom({ src, alt, className, children }: ImageZoomProps) {
 
   if (!hasMounted) {
     return (
-      <div
-        className={cn(
-          "relative overflow-hidden rounded-inner ring-1 ring-black/5",
-          className
-        )}
-      >
+      <div className={cn("relative overflow-hidden rounded-inner ring-1 ring-black/5", className)}>
         {children || (
           <SmartImage
             src={src}
@@ -302,8 +274,13 @@ export function ImageZoom({ src, alt, className, children }: ImageZoomProps) {
     >
       <DialogTrigger asChild>
         <motion.div
-          whileHover={{ scale: 1.015, transition: { duration: 0.2 } }}
-          whileTap={{ scale: 0.985 }}
+          style={{ scale: noHoverScale ? undefined : undefined }}
+          {...(noHoverScale
+            ? {}
+            : {
+                whileHover: { scale: 1.015, transition: { duration: 0.2 } },
+                whileTap: { scale: 0.985 },
+              })}
           className={cn(
             "cursor-pointer group/zoom relative overflow-hidden rounded-inner ring-1 ring-black/5",
             className
@@ -322,14 +299,7 @@ export function ImageZoom({ src, alt, className, children }: ImageZoomProps) {
 
       <DialogPortal>
         <AnimatePresence mode="wait">
-          {isOpen && (
-            <PreviewContent
-              key={openCount}
-              src={src}
-              alt={alt}
-              onClose={handleClose}
-            />
-          )}
+          {isOpen && <PreviewContent key={openCount} src={src} alt={alt} onClose={handleClose} />}
         </AnimatePresence>
       </DialogPortal>
     </Dialog>

@@ -52,47 +52,47 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
         >
           <div
             tabIndex={0}
-            className={cn(
-              "group gallery-archive relative overflow-hidden rounded-xl border border-border/40 bg-card transition-all duration-300 focus-visible:ring-1 focus-visible:ring-ring"
-            )}
+            className="group relative overflow-hidden rounded-xl border border-border/40 bg-card focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
             aria-label="查看图片 Memo"
           >
-            <div className="relative overflow-hidden w-full h-auto">
-              <ImageZoom
+            <ImageZoom
+              src={item.imageUrl || ""}
+              alt="Memo multimedia content"
+              className="w-full h-auto border-none bg-transparent rounded-none ring-0 shadow-none"
+              noHoverScale
+            >
+              <SmartImage
                 src={item.imageUrl || ""}
                 alt="Memo multimedia content"
-                className="w-full h-auto"
-              >
-                <div className="relative overflow-hidden w-full h-auto">
-                  <SmartImage
-                    src={item.imageUrl || ""}
-                    alt="Memo multimedia content"
-                    containerClassName="w-full h-auto min-h-[140px]"
-                    className="w-full h-auto object-cover transition-transform duration-700 ease-out group-hover:scale-[1.025]"
-                    loading="lazy"
-                  />
+                containerClassName="w-full h-auto min-h-[140px]"
+                className="w-full h-auto object-cover"
+                loading="lazy"
+              />
+            </ImageZoom>
 
-                  {/* Gradient wash overlay — visible on hover */}
-                  <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(29,29,27,0.72)_0%,rgba(29,29,27,0.34)_42%,rgba(29,29,27,0.04)_72%),linear-gradient(135deg,rgba(217,119,87,0.18),transparent_45%)] opacity-0 transition-opacity duration-260 group-hover:opacity-100 group-focus:opacity-100" />
+            {/* Gradient wash overlay — visible on hover (pointer-events-none lets clicks through to ImageZoom) */}
+            <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(to_top,rgba(29,29,27,0.72)_0%,rgba(29,29,27,0.34)_42%,rgba(29,29,27,0.04)_72%),linear-gradient(135deg,rgba(217,119,87,0.18),transparent_45%)] opacity-0 group-hover:opacity-100 group-focus:opacity-100" />
 
-                  {/* Glassy bottom panel */}
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[48%] border-t border-white/20 bg-[linear-gradient(to_top,rgba(29,29,27,0.44)_0%,rgba(246,245,244,0.14)_58%,rgba(246,245,244,0.02)_82%,transparent_100%)] opacity-0 backdrop-blur-[22px] backdrop-saturate-[1.35] [-webkit-backdrop-filter:blur(22px)_saturate(1.35)] [mask-image:linear-gradient(to_top,black_0%,black_62%,rgba(0,0,0,0.62)_80%,transparent_100%)] transition-all duration-260 ease-out group-hover:opacity-100 group-focus:opacity-100" />
+            {/* Glassy bottom panel — visible on hover (pointer-events-none lets clicks through to ImageZoom) */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[48%] border-t border-white/[0.22] bg-[linear-gradient(to_top,rgba(29,29,27,0.44)_0%,rgba(246,245,244,0.14)_58%,rgba(246,245,244,0.02)_82%,transparent_100%),rgba(246,245,244,0.08)] opacity-0 backdrop-blur-[22px] backdrop-saturate-[1.35] [-webkit-backdrop-filter:blur(22px)_saturate(1.35)] [mask-image:linear-gradient(to_top,black_0%,black_62%,rgba(0,0,0,0.62)_80%,transparent_100%)] group-hover:opacity-100 group-focus:opacity-100" />
 
-                  {/* Content — slides up on hover */}
-                  <div className="pointer-events-none absolute inset-x-[18px] bottom-[18px] z-10 grid translate-y-3 gap-3 opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus:translate-y-0 group-focus:opacity-100">
-                    <p className="line-clamp-2 text-[15px] font-semibold leading-normal text-white drop-shadow-[0_1px_18px_rgba(0,0,0,0.42)]">
-                      {item.content.replace(/!\[.*?\]\((.*?)\)/g, "").trim() || "图片分享"}
-                    </p>
-                    <div className="flex items-center justify-between gap-3">
-                      {item.created_at && (
-                        <span className="font-mono text-[11px] tracking-[0.1em] text-white/82">
-                          {formatDate(item.created_at)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </ImageZoom>
+            {/* Content — visible on hover (pointer-events-none lets clicks through to ImageZoom) */}
+            <div className="pointer-events-none absolute inset-x-[18px] bottom-[18px] z-20 grid gap-3 opacity-0 group-hover:opacity-100 group-focus:opacity-100">
+              <p className="line-clamp-2 text-[15px] font-semibold leading-normal text-white drop-shadow-[0_1px_18px_rgba(0,0,0,0.42)]">
+                {item.content.replace(/!\[.*?\]\((.*?)\)/g, "").trim() || "图片分享"}
+              </p>
+              <div className="flex items-center justify-between">
+                {item.created_at && (
+                  <span className="font-mono text-[11px] tracking-[0.1em] text-white/82">
+                    {formatDate(item.created_at)}
+                  </span>
+                )}
+                {item.memo_number && (
+                  <span className="badge-text bg-[#fdf5f2] text-primary px-1.5 py-0.5 rounded-sm text-[10px] font-semibold tracking-normal">
+                    #{item.memo_number}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </motion.div>

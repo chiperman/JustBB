@@ -14,13 +14,7 @@ import {
 } from "date-fns"
 import { Calendar02Icon as CalendarIcon } from "@hugeicons/core-free-icons"
 import { Button } from "@/shared/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 import { cn } from "@/shared/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import { AdminDialogShell } from "@/shared/ui/AdminDialogShell"
@@ -116,9 +110,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
 
     return eachMonthOfInterval({
       start: startOfMonth(new Date(targetYear, 0, 1)),
-      end: isCurrentYear
-        ? startOfMonth(now)
-        : endOfMonth(new Date(targetYear, 11, 1)),
+      end: isCurrentYear ? startOfMonth(now) : endOfMonth(new Date(targetYear, 11, 1)),
     }).reverse()
   }, [selectedYear])
 
@@ -130,9 +122,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
     (e: React.MouseEvent, date: string, count: number, wordCount: number) => {
       const target = e.currentTarget as HTMLElement
       const rect = target.getBoundingClientRect()
-      const container = target.closest(
-        ".heatmap-modal-tooltip-wrapper"
-      ) as HTMLElement
+      const container = target.closest(".heatmap-modal-tooltip-wrapper") as HTMLElement
 
       if (container) {
         const containerRect = container.getBoundingClientRect()
@@ -191,22 +181,22 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
         maxWidth="max-w-[1100px]"
         contentClassName="px-8 py-7 max-h-[78vh]"
         headerActions={
-          <div className="bg-black/5 p-1 rounded-xl pointer-events-auto flex relative">
+          <div className="flex items-center rounded-md bg-secondary/80 p-0.5 whisper-border pointer-events-auto relative">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => handleViewModeChange("month")}
               className={cn(
-                "relative z-10 px-4 py-1 text-sm h-8 rounded-lg transition-colors hover:bg-transparent",
+                "relative z-10 px-3.5 text-xs h-7 rounded-[6px] transition-colors hover:bg-transparent",
                 viewMode === "month"
-                  ? "font-bold text-foreground"
+                  ? "text-foreground font-semibold"
                   : "text-muted-foreground hover:text-foreground font-medium"
               )}
             >
               {viewMode === "month" && (
                 <motion.div
                   layoutId="heatmap-modal-active-tab"
-                  className="absolute inset-0 bg-white rounded-lg border border-black/5"
+                  className="absolute inset-0 bg-card rounded-[6px] shadow-[0_1px_2px_rgba(29,29,27,0.05)] whisper-border"
                   transition={{ type: "spring", bounce: 0.2, duration: 0.45 }}
                 />
               )}
@@ -217,16 +207,16 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
               size="sm"
               onClick={() => handleViewModeChange("year")}
               className={cn(
-                "relative z-10 px-4 py-1 text-sm h-8 rounded-lg transition-colors hover:bg-transparent",
+                "relative z-10 px-3.5 text-xs h-7 rounded-[6px] transition-colors hover:bg-transparent",
                 viewMode === "year"
-                  ? "font-bold text-foreground"
+                  ? "text-foreground font-semibold"
                   : "text-muted-foreground hover:text-foreground font-medium"
               )}
             >
               {viewMode === "year" && (
                 <motion.div
                   layoutId="heatmap-modal-active-tab"
-                  className="absolute inset-0 bg-white rounded-lg border border-black/5"
+                  className="absolute inset-0 bg-card rounded-[6px] shadow-[0_1px_2px_rgba(29,29,27,0.05)] whisper-border"
                   transition={{ type: "spring", bounce: 0.2, duration: 0.45 }}
                 />
               )}
@@ -263,10 +253,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                     <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a39e98]">
                       年份
                     </span>
-                    <Select
-                      value={selectedYear}
-                      onValueChange={handleSelectedYearChange}
-                    >
+                    <Select value={selectedYear} onValueChange={handleSelectedYearChange}>
                       <SelectTrigger
                         variant="ghost"
                         className="h-9 min-w-[104px] rounded-xl border border-[#1d1d1b]/8 bg-white px-3 text-sm font-semibold text-[#1d1d1b] hover:bg-white data-[state=open]:bg-white"
@@ -298,10 +285,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                   animate="show"
                 >
                   {visibleMonths.map((month) => (
-                    <motion.div
-                      key={month.toISOString()}
-                      variants={itemVariants}
-                    >
+                    <motion.div key={month.toISOString()} variants={itemVariants}>
                       <MonthCalendar
                         date={month}
                         stats={stats.days}
@@ -316,22 +300,16 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                   <div
                     className={cn(
                       "absolute z-[999] mt-[-8px] rounded-md border border-[#1d1d1b]/10 bg-white/96 px-3 py-2 text-[11px] text-[#1d1d1b] backdrop-blur-md pointer-events-none animate-in fade-in zoom-in duration-100 whitespace-nowrap shadow-[0_12px_30px_rgba(29,29,27,0.08)]",
-                      hoveredDay.align === "center" &&
-                        "-translate-x-1/2 -translate-y-full",
+                      hoveredDay.align === "center" && "-translate-x-1/2 -translate-y-full",
                       hoveredDay.align === "left" && "-translate-y-full",
-                      hoveredDay.align === "right" &&
-                        "-translate-x-full -translate-y-full"
+                      hoveredDay.align === "right" && "-translate-x-full -translate-y-full"
                     )}
                     style={{ left: hoveredDay.left, top: hoveredDay.top }}
                   >
                     <div className="flex items-center gap-2 tabular-nums">
-                      <span className="font-bold text-[#d97757]">
-                        {hoveredDay.count} 笔记
-                      </span>
+                      <span className="font-bold text-[#d97757]">{hoveredDay.count} 笔记</span>
                       <span className="opacity-30">/</span>
-                      <span className="font-medium text-[#6b6964]">
-                        {hoveredDay.wordCount} 字
-                      </span>
+                      <span className="font-medium text-[#6b6964]">{hoveredDay.wordCount} 字</span>
                     </div>
                     <div className="mt-1 text-[10px] font-medium text-[#a39e98] tabular-nums">
                       {hoveredDay.date}
@@ -348,10 +326,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                 transition={{ duration: 0.18 }}
                 className="rounded-2xl border border-[#1d1d1b]/8 bg-[#f6f5f4]/45 p-5"
               >
-                <YearlyStats
-                  stats={stats.days}
-                  firstMemoDate={stats.firstMemoDate}
-                />
+                <YearlyStats stats={stats.days} firstMemoDate={stats.firstMemoDate} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -370,12 +345,7 @@ const MonthCalendar = memo(function MonthCalendar({
   date: Date
   stats: Record<string, DayStats>
   colorFn: (c: number) => string
-  onHover: (
-    e: React.MouseEvent,
-    date: string,
-    count: number,
-    wordCount: number
-  ) => void
+  onHover: (e: React.MouseEvent, date: string, count: number, wordCount: number) => void
 }) {
   const monthStart = startOfMonth(date)
   const monthEnd = endOfMonth(date)
@@ -406,18 +376,13 @@ const MonthCalendar = memo(function MonthCalendar({
         </h3>
         <div className="flex gap-3 text-[11px] font-semibold text-[#a39e98]">
           <span className="tabular-nums">{monthStats.count} 笔记</span>
-          <span className="tabular-nums">
-            {monthStats.daysWithMemos} 记录天数
-          </span>
+          <span className="tabular-nums">{monthStats.daysWithMemos} 记录天数</span>
         </div>
       </div>
 
       <div className="grid grid-cols-7 gap-2 text-center">
         {["一", "二", "三", "四", "五", "六", "日"].map((d) => (
-          <span
-            key={d}
-            className="pb-1 text-[10px] font-semibold text-[#a39e98]"
-          >
+          <span key={d} className="pb-1 text-[10px] font-semibold text-[#a39e98]">
             {d}
           </span>
         ))}
@@ -431,14 +396,10 @@ const MonthCalendar = memo(function MonthCalendar({
             <motion.div
               key={dateStr}
               className="relative group/day aspect-square flex items-center justify-center cursor-default"
-              whileHover={
-                isCurrentMonth && count > 0 ? { scale: 1.04, y: -1 } : {}
-              }
+              whileHover={isCurrentMonth && count > 0 ? { scale: 1.04, y: -1 } : {}}
               transition={{ type: "spring", stiffness: 360, damping: 24 }}
               onMouseEnter={(e) =>
-                isCurrentMonth &&
-                count > 0 &&
-                onHover(e, dateStr, count, dayStat?.wordCount || 0)
+                isCurrentMonth && count > 0 && onHover(e, dateStr, count, dayStat?.wordCount || 0)
               }
             >
               <div
@@ -448,9 +409,7 @@ const MonthCalendar = memo(function MonthCalendar({
                     ? "opacity-0 pointer-events-none"
                     : cn(
                         colorFn(count),
-                        count === 0
-                          ? "bg-[#f1f2f4] text-[#a39e98]"
-                          : "border-black/0"
+                        count === 0 ? "bg-[#f1f2f4] text-[#a39e98]" : "border-black/0"
                       )
                 )}
               />

@@ -196,7 +196,7 @@ export function MemoEditorLayout({
       }}
       className={cn(
         "border border-border rounded-lg relative flex flex-col items-stretch selection:bg-primary/30",
-        isActuallyCollapsed && "border-none cursor-pointer hover:bg-secondary",
+        isActuallyCollapsed && "cursor-pointer hover:bg-secondary",
         className
       )}
       onClick={() => {
@@ -215,10 +215,7 @@ export function MemoEditorLayout({
       />
 
       <div className="w-full flex-1 flex flex-col min-h-0">
-        <div
-          ref={relativeGroupRef}
-          className="relative group w-full flex-1 flex flex-col min-h-0"
-        >
+        <div ref={relativeGroupRef} className="relative group w-full flex-1 flex flex-col min-h-0">
           <motion.div
             ref={editorContainerRef}
             animate={{
@@ -250,19 +247,14 @@ export function MemoEditorLayout({
                 <span
                   className={cn(
                     "text-sm font-medium transition-colors duration-200",
-                    isActuallyCollapsed
-                      ? "text-muted-foreground/30"
-                      : "text-muted-foreground/40"
+                    isActuallyCollapsed ? "text-muted-foreground/30" : "text-muted-foreground/40"
                   )}
                 >
                   {PLACEHOLDER_TEXT}
                 </span>
               </div>
             )}
-            <EditorContent
-              editor={editor}
-              className="flex-1 flex flex-col min-h-0"
-            />
+            <EditorContent editor={editor} className="flex-1 flex flex-col min-h-0" />
           </motion.div>
 
           {showSuggestions && (

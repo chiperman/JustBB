@@ -36,7 +36,7 @@ export function ContextPageShell({
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background">
       <div className="flex-none z-30 border-b border-border/20 bg-background/78 backdrop-blur-md">
-        <div className="mx-auto w-full max-w-screen-xl">
+        <div className={cn("mx-auto w-full", maxWidthClassName)}>
           <div className="px-6 py-5">{header}</div>
         </div>
       </div>
@@ -44,9 +44,7 @@ export function ContextPageShell({
       <div
         className={cn(
           "flex-1 min-h-0",
-          scrollable
-            ? "overflow-y-auto scrollbar-stable"
-            : "overflow-hidden flex flex-col"
+          scrollable ? "overflow-y-auto scrollbar-stable" : "overflow-hidden flex flex-col"
         )}
       >
         <div
@@ -58,9 +56,7 @@ export function ContextPageShell({
         >
           <div
             className={cn(
-              scrollable
-                ? "px-6 pt-4 pb-20"
-                : "px-6 pt-4 pb-6 flex-1 flex flex-col min-h-0",
+              scrollable ? "px-6 pt-4 pb-20" : "px-6 pt-4 pb-6 flex-1 flex flex-col min-h-0",
               contentClassName
             )}
           >
@@ -101,38 +97,26 @@ export function ContextPageHeader({
               JustMemo
             </span>
           </Link>
-          <span className="text-muted-foreground/30 text-[10px] font-light">
-            /
-          </span>
+          <span className="text-muted-foreground/30 text-[10px] font-light">/</span>
           <div className="flex min-w-0 items-center gap-2">
-            <HugeiconsIcon
-              icon={icon}
-              size={14}
-              className="shrink-0 text-primary/60"
-            />
+            <HugeiconsIcon icon={icon} size={14} className="shrink-0 text-primary/60" />
             <span className="truncate text-sm font-medium tracking-tight text-primary">
               {crumb}
             </span>
           </div>
         </div>
 
-        {actions ? (
-          <div className="flex shrink-0 items-center gap-2">{actions}</div>
-        ) : null}
+        {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
       </div>
 
       {showTitle || description ? (
         <div className={cn("pb-2", contentClassName)}>
           <div className="space-y-2">
             {showTitle ? (
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                {title}
-              </h1>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">{title}</h1>
             ) : null}
             {description ? (
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                {description}
-              </p>
+              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>
             ) : null}
           </div>
         </div>

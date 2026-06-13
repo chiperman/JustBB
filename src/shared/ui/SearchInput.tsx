@@ -76,23 +76,21 @@ export function SearchInput() {
 
   return (
     <div className="relative w-full group">
-      <div className="relative flex items-center min-h-[36px] bg-background border border-border rounded-xs px-2 focus-within:border-primary/30 transition-all hover:bg-secondary/50 group">
+      <div className="relative flex items-center min-h-[36px] bg-background border border-border rounded-md px-2 focus-within:border-primary/30 transition-all hover:bg-secondary/50 group">
         <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0 pr-8 py-1.5">
           <HugeiconsIcon
             icon={Search01Icon}
             size={16}
             className={cn(
               "shrink-0 ml-1 transition-colors",
-              value || hasContext
-                ? "text-primary/70"
-                : "text-muted-foreground/50"
+              value || hasContext ? "text-primary/70" : "text-muted-foreground/50"
             )}
           />
 
           {/* Chips Section */}
           <div className="flex items-center gap-1.5 flex-wrap">
             {tag && (
-              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-xs border border-primary/10 shrink-0 h-5">
+              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-md border border-primary/10 shrink-0 h-5">
                 <HugeiconsIcon icon={Tag01Icon} size={10} />
                 <span>{tag}</span>
                 <button
@@ -104,7 +102,7 @@ export function SearchInput() {
               </div>
             )}
             {num && (
-              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-xs border border-primary/10 shrink-0 h-5">
+              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-md border border-primary/10 shrink-0 h-5">
                 <span>#{num}</span>
                 <button
                   onClick={() => removeParam("num")}
@@ -115,7 +113,7 @@ export function SearchInput() {
               </div>
             )}
             {date && (
-              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-xs border border-primary/10 shrink-0 h-5">
+              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-md border border-primary/10 shrink-0 h-5">
                 <HugeiconsIcon icon={Calendar03Icon} size={10} />
                 <span>{date}</span>
                 <button
@@ -127,7 +125,7 @@ export function SearchInput() {
               </div>
             )}
             {year && month && (
-              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-xs border border-primary/10 shrink-0 h-5">
+              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-md border border-primary/10 shrink-0 h-5">
                 <HugeiconsIcon icon={Calendar03Icon} size={10} />
                 <span>
                   {year}-{month}

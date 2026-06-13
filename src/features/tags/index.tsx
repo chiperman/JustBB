@@ -2,16 +2,9 @@
 
 import { useMemo, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  Cancel01Icon,
-  Search01Icon,
-  Tag01Icon as TagIcon,
-} from "@hugeicons/core-free-icons"
+import { Cancel01Icon, Search01Icon, Tag01Icon as TagIcon } from "@hugeicons/core-free-icons"
 
-import {
-  ContextPageHeader,
-  ContextPageShell,
-} from "@/shared/layout/ContextPageShell"
+import { ContextPageHeader, ContextPageShell } from "@/shared/layout/ContextPageShell"
 import { cn } from "@/shared/lib/utils"
 
 import { useTagGroups, TagData } from "./hooks/useTagGroups"
@@ -46,9 +39,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
   const normalizedQuery = query.trim().toLowerCase()
   const visibleTags = useMemo(() => {
     if (!normalizedQuery) return sortedTags
-    return sortedTags.filter((tag) =>
-      tag.tag_name.toLowerCase().includes(normalizedQuery)
-    )
+    return sortedTags.filter((tag) => tag.tag_name.toLowerCase().includes(normalizedQuery))
   }, [normalizedQuery, sortedTags])
 
   return (
@@ -60,12 +51,12 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
           actions={
             <div className="flex items-center gap-3">
               {/* 排序切换 Tabs */}
-              <div className="flex items-center rounded-lg bg-secondary/80 p-0.5 whisper-border">
+              <div className="flex items-center rounded-md bg-secondary/80 p-0.5 whisper-border">
                 <button
                   type="button"
                   onClick={() => setSortBy("count")}
                   className={cn(
-                    "rounded-[6px] px-2.5 py-1 text-xs font-medium transition-all cursor-pointer",
+                    "rounded-[6px] px-3 py-1.5 text-xs font-medium transition-all cursor-pointer",
                     sortBy === "count"
                       ? "bg-card text-foreground shadow-[0_1px_2px_rgba(29,29,27,0.05)]"
                       : "text-muted-foreground hover:text-foreground"
@@ -77,7 +68,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
                   type="button"
                   onClick={() => setSortBy("name")}
                   className={cn(
-                    "rounded-[6px] px-2.5 py-1 text-xs font-medium transition-all cursor-pointer",
+                    "rounded-[6px] px-3 py-1.5 text-xs font-medium transition-all cursor-pointer",
                     sortBy === "name"
                       ? "bg-card text-foreground shadow-[0_1px_2px_rgba(29,29,27,0.05)]"
                       : "text-muted-foreground hover:text-foreground"
@@ -89,32 +80,32 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
 
               {/* 搜索过滤框 */}
               <div className="relative w-36 sm:w-48">
-                <div className="relative flex items-center min-h-[32px] bg-background/50 border border-border rounded-md px-2.5 transition-all hover:bg-background/80 focus-within:border-primary/30">
-                  <HugeiconsIcon
-                    icon={Search01Icon}
-                    size={14}
-                    className={cn(
-                      "shrink-0 transition-colors mr-1.5",
-                      query.trim()
-                        ? "text-primary/70"
-                        : "text-muted-foreground/45"
-                    )}
-                  />
-                  <input
-                    type="text"
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="筛选..."
-                    className="flex-1 min-w-0 bg-transparent border-none outline-none ring-0 p-0 h-full text-xs text-foreground placeholder:text-muted-foreground/40"
-                  />
+                <div className="relative flex items-center min-h-[36px] bg-background border border-border rounded-md px-2 focus-within:border-primary/30 transition-all hover:bg-secondary/50 group">
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0 py-1.5">
+                    <HugeiconsIcon
+                      icon={Search01Icon}
+                      size={16}
+                      className={cn(
+                        "shrink-0 ml-1 transition-colors",
+                        query.trim() ? "text-primary/70" : "text-muted-foreground/50"
+                      )}
+                    />
+                    <input
+                      type="text"
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                      placeholder="筛选..."
+                      className="flex-1 min-w-0 bg-transparent border-none outline-none ring-0 p-0 h-full text-sm text-foreground placeholder:text-muted-foreground/40"
+                    />
+                  </div>
                   {query ? (
                     <button
                       type="button"
                       onClick={() => setQuery("")}
-                      className="shrink-0 ml-1 p-0.5 text-muted-foreground/30 hover:text-muted-foreground transition-colors active:scale-90"
+                      className="shrink-0 p-1 text-muted-foreground/30 hover:text-muted-foreground transition-colors active:scale-90 outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       title="清空筛选"
                     >
-                      <HugeiconsIcon icon={Cancel01Icon} size={12} />
+                      <HugeiconsIcon icon={Cancel01Icon} size={14} />
                     </button>
                   ) : null}
                 </div>
@@ -145,9 +136,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
           </div>
         ) : visibleTags.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border/60 bg-card/30 px-6 py-16 text-center">
-            <p className="text-sm text-muted-foreground">
-              没有找到匹配 “{query.trim()}” 的标签。
-            </p>
+            <p className="text-sm text-muted-foreground">没有找到匹配 “{query.trim()}” 的标签。</p>
           </div>
         ) : (
           <section className="space-y-4">

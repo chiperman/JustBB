@@ -134,10 +134,20 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 
 ### Inputs & Forms
 
+**Search & Filter Inputs (搜索与筛选输入框)**
+
+- Background: `#ffffff` (or alt theme states)
+- Text: `#1d1d1b`
+- Height: `36px`
+- Font Size: `text-sm` (14px)
+- Radius: `8px` (`rounded-md`) — to match standard inputs and tags, avoiding sharp styling tear
+- Focus: Soft clay outline ring (`focus-within:border-primary/30`)
+
+**Standard Form Fields (标准表单输入框)**
+
 - Background: `#ffffff`
 - Text: `#1d1d1b`
-- Border: `1px solid #dddddd`
-- Radius: 8px
+- Radius: `8px` (`rounded-md`)
 - Focus: Soft clay outline ring
 
 ## 5. Layout Principles
@@ -154,9 +164,9 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 
 ### Border Radius Scale
 
-- Micro (4px): Inline tags
-- Standard (8px): Buttons, inputs, navigation items, dropdown items
-- Comfortable (12px): Standard cards, popover containers
+- Micro (4px): Command items
+- Standard (8px): Buttons, standard form fields, Search & Filter inputs, inline tags & filter chips, navigation items, dropdown items
+- Comfortable (12px): Standard cards, popover containers, editor layout wrapper
 - Large (16px): Dialogs and Modals
 
 ## 6. Layout Depth

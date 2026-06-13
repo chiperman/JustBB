@@ -19,7 +19,7 @@ export function TagCard({ tag, maxCount, isFeatured = false }: TagCardProps) {
     <Link
       href={`/?tag=${encodeURIComponent(tag.tag_name)}`}
       className={cn(
-        "group relative z-10 flex items-center justify-between rounded-card border transition-all overflow-hidden",
+        "group relative z-10 flex items-center justify-between rounded-md border transition-all overflow-hidden",
         isFeatured
           ? "border-primary/20 bg-(--badge-clay-bg) px-5 py-4 hover:border-primary hover:scale-[1.01] active:scale-[0.98]"
           : "border-border bg-card px-4 py-3 hover:border-primary/30 hover:bg-accent/20 hover:scale-[1.01] active:scale-[0.98]"
@@ -59,9 +59,7 @@ export function TagCard({ tag, maxCount, isFeatured = false }: TagCardProps) {
       <span
         className={cn(
           "shrink-0 font-mono tabular-nums",
-          isFeatured
-            ? "text-sm font-semibold text-primary/80"
-            : "text-xs text-muted-foreground"
+          isFeatured ? "text-sm font-semibold text-primary/80" : "text-xs text-muted-foreground"
         )}
       >
         {tag.count.toString().padStart(2, "0")}

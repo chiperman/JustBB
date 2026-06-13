@@ -39,10 +39,7 @@ const CONTENT_FADE_TRANSITION = {
 const HEATMAP_SLOT_HEIGHT = 248
 const TAGS_SLOT_HEIGHT = 176
 
-export function LeftSidebar({
-  onClose,
-  initialCollapsed = false,
-}: LeftSidebarProps) {
+export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarProps) {
   const isMobile = !!onClose
   const isCollapsed = useSyncExternalStore(
     (onStoreChange) =>
@@ -60,10 +57,7 @@ export function LeftSidebar({
   const { navItems, currentView, handleNavigate } = useSidebarNavigation()
 
   useEffect(() => {
-    syncLayoutPreferenceCookie(
-      LEFT_SIDEBAR_STORAGE_KEY,
-      LEFT_SIDEBAR_COOKIE_KEY
-    )
+    syncLayoutPreferenceCookie(LEFT_SIDEBAR_STORAGE_KEY, LEFT_SIDEBAR_COOKIE_KEY)
   }, [])
 
   const toggleCollapsedState = () => {
@@ -85,9 +79,7 @@ export function LeftSidebar({
     <motion.aside
       initial={false}
       animate={{
-        width: effectiveIsCollapsed
-          ? SIDEBAR_COLLAPSED_WIDTH
-          : SIDEBAR_EXPANDED_WIDTH,
+        width: effectiveIsCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH,
       }}
       transition={SIDEBAR_TRANSITION}
       style={{ willChange: "width" }}
@@ -103,10 +95,7 @@ export function LeftSidebar({
         )}
       >
         <div
-          className={cn(
-            "h-9",
-            effectiveIsCollapsed ? "w-9 min-w-9 shrink-0" : "flex-1 min-w-0"
-          )}
+          className={cn("h-9", effectiveIsCollapsed ? "w-9 min-w-9 shrink-0" : "flex-1 min-w-0")}
         >
           <SidebarSettings isCollapsed={effectiveIsCollapsed} />
         </div>
@@ -115,23 +104,14 @@ export function LeftSidebar({
           onClick={toggleCollapsedState}
           side="left"
           isMobile={isMobile}
-          label={
-            isMobile
-              ? "关闭侧边栏"
-              : effectiveIsCollapsed
-                ? "展开侧边栏"
-                : "收起侧边栏"
-          }
+          label={isMobile ? "关闭侧边栏" : effectiveIsCollapsed ? "展开侧边栏" : "收起侧边栏"}
         />
       </div>
 
       {/* Heatmap Area */}
       <motion.div
         initial={false}
-        className={cn(
-          "shrink-0 overflow-hidden px-1",
-          effectiveIsCollapsed ? "mb-0" : "mb-5"
-        )}
+        className={cn("shrink-0 overflow-hidden px-1", effectiveIsCollapsed ? "mb-0" : "mb-5")}
         animate={{ height: effectiveIsCollapsed ? 0 : HEATMAP_SLOT_HEIGHT }}
         transition={SIDEBAR_TRANSITION}
       >
@@ -148,11 +128,7 @@ export function LeftSidebar({
                 }
           }
         >
-          <Suspense
-            fallback={
-              <div className="h-40 w-full animate-pulse rounded bg-muted/20" />
-            }
-          >
+          <Suspense fallback={<div className="h-40 w-full animate-pulse rounded bg-muted/20" />}>
             <Heatmap />
           </Suspense>
         </motion.div>
@@ -170,10 +146,7 @@ export function LeftSidebar({
         <motion.div
           layout
           transition={SIDEBAR_TRANSITION}
-          className={cn(
-            "mb-3 border-t border-border",
-            effectiveIsCollapsed ? "mx-1" : "mx-2"
-          )}
+          className={cn("mb-3 border-t border-border", effectiveIsCollapsed ? "mx-1" : "mx-2")}
         />
 
         {navItems.map((item) => (
@@ -182,9 +155,7 @@ export function LeftSidebar({
             item={item}
             isActive={
               hasMounted &&
-              (item.href === "/"
-                ? currentView === "/"
-                : currentView.startsWith(item.href))
+              (item.href === "/" ? currentView === "/" : currentView.startsWith(item.href))
             }
             isCollapsed={effectiveIsCollapsed}
             onClick={(href) => handleNavigate(href, isMobile, onClose)}
@@ -214,10 +185,7 @@ export function LeftSidebar({
               <div className="space-y-2">
                 <div className="flex flex-wrap gap-2">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                      key={i}
-                      className="h-6 w-12 rounded-full bg-muted/20 animate-pulse"
-                    />
+                    <div key={i} className="h-6 w-12 rounded-md bg-muted/20 animate-pulse" />
                   ))}
                 </div>
               </div>

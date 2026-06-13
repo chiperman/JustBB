@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { motion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Cancel01Icon, Search01Icon, Tag01Icon as TagIcon } from "@hugeicons/core-free-icons"
 
@@ -51,30 +52,44 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
           actions={
             <div className="flex items-center gap-3">
               {/* 排序切换 Tabs */}
-              <div className="flex items-center rounded-md bg-secondary/80 p-0.5 whisper-border">
+              <div className="flex items-center rounded-md bg-secondary/80 p-0.5 whisper-border relative">
                 <button
                   type="button"
                   onClick={() => setSortBy("count")}
                   className={cn(
-                    "rounded-[6px] px-3 py-1.5 text-xs font-medium transition-all cursor-pointer",
+                    "relative z-10 rounded-[6px] px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer hover:bg-transparent",
                     sortBy === "count"
-                      ? "bg-card text-foreground shadow-[0_1px_2px_rgba(29,29,27,0.05)]"
+                      ? "text-foreground font-semibold"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  按频次
+                  {sortBy === "count" && (
+                    <motion.div
+                      layoutId="tags-active-sort-tab"
+                      className="absolute inset-0 bg-card rounded-[6px] shadow-[0_1px_2px_rgba(29,29,27,0.05)] whisper-border"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.45 }}
+                    />
+                  )}
+                  <span className="relative z-10">按频次</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setSortBy("name")}
                   className={cn(
-                    "rounded-[6px] px-3 py-1.5 text-xs font-medium transition-all cursor-pointer",
+                    "relative z-10 rounded-[6px] px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer hover:bg-transparent",
                     sortBy === "name"
-                      ? "bg-card text-foreground shadow-[0_1px_2px_rgba(29,29,27,0.05)]"
+                      ? "text-foreground font-semibold"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  按名称
+                  {sortBy === "name" && (
+                    <motion.div
+                      layoutId="tags-active-sort-tab"
+                      className="absolute inset-0 bg-card rounded-[6px] shadow-[0_1px_2px_rgba(29,29,27,0.05)] whisper-border"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.45 }}
+                    />
+                  )}
+                  <span className="relative z-10">按名称</span>
                 </button>
               </div>
 

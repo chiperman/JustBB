@@ -3,13 +3,7 @@
 import * as React from "react"
 import { motion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  PanelLeftCloseIcon,
-  PanelLeftOpenIcon,
-  PanelRightCloseIcon,
-  PanelRightOpenIcon,
-  Cancel01Icon,
-} from "@hugeicons/core-free-icons"
+import { ArrowLeft01Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
 import { cn } from "@/shared/lib/utils"
 
 interface SidebarCollapseButtonProps {
@@ -29,28 +23,47 @@ export function SidebarCollapseButton({
   label,
   className,
 }: SidebarCollapseButtonProps) {
-  const getIcon = () => {
-    if (isMobile && side === "left") return Cancel01Icon
-    if (side === "left") {
-      return isCollapsed ? PanelLeftCloseIcon : PanelLeftOpenIcon
-    }
-    return isCollapsed ? PanelRightOpenIcon : PanelRightCloseIcon
-  }
+  const isLeft = side === "left"
+  const showClose = isMobile && isLeft
 
-  const Icon = getIcon()
+  // 计算旋转角度：
+  // 左边栏展开（!isCollapsed）指向左（0），折叠（isCollapsed）指向右（180）
+  // 右边栏展开（!isCollapsed）指向右（180），折叠（isCollapsed）指向左（0）
+  const rotateAngle = (isLeft && isCollapsed) || (!isLeft && !isCollapsed) ? 180 : 0
 
   return (
-    <motion.div layout="position" className="relative z-50">
-      <button
+    <div className="relative z-50">
+      <motion.button
         onClick={onClick}
         aria-label={label}
+        whileHover={{
+          scale: 1.02,
+        }}
+        whileTap={{ scale: 0.95 }}
+        transition={{
+          type: "spring",
+          stiffness: 350,
+          damping: 22,
+        }}
         className={cn(
-          "group relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-md transition-all duration-200 hover:scale-102 active:scale-95 hover:bg-secondary hover:text-foreground hover:ring-1 hover:ring-border/40 text-muted-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring",
+          "group relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-md bg-transparent text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring",
           className
         )}
       >
-        <HugeiconsIcon icon={Icon} size={14} />
-      </button>
-    </motion.div>
+        <motion.div
+          animate={{
+            rotate: showClose ? 0 : rotateAngle,
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 280,
+            damping: 22,
+          }}
+          className="flex items-center justify-center"
+        >
+          <HugeiconsIcon icon={showClose ? Cancel01Icon : ArrowLeft01Icon} size={15} />
+        </motion.div>
+      </motion.button>
+    </div>
   )
 }

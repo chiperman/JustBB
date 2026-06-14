@@ -85,20 +85,13 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       style={{ willChange: "width" }}
       className="relative flex h-full shrink-0 flex-col overflow-hidden border-r border-border bg-muted p-2"
     >
-      {/* Top Area */}
+      {/* Top Area: 仅包含折叠按钮 */}
       <div
         className={cn(
-          "flex shrink-0 px-3 transition-[height,margin,padding] duration-200",
-          effectiveIsCollapsed
-            ? "h-28 flex-col items-center justify-center gap-2 mb-2"
-            : "h-16 items-center justify-between"
+          "flex h-16 shrink-0 items-center transition-[padding,justify-content] duration-200",
+          effectiveIsCollapsed ? "justify-center px-0" : "pl-4"
         )}
       >
-        <div
-          className={cn("h-9", effectiveIsCollapsed ? "w-9 min-w-9 shrink-0" : "flex-1 min-w-0")}
-        >
-          <SidebarSettings isCollapsed={effectiveIsCollapsed} />
-        </div>
         <SidebarCollapseButton
           isCollapsed={effectiveIsCollapsed}
           onClick={toggleCollapsedState}
@@ -166,7 +159,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       {/* Popular Tags */}
       <motion.div
         initial={false}
-        className="mt-auto shrink-0 overflow-hidden"
+        className="shrink-0 overflow-hidden"
         animate={{
           height: effectiveIsCollapsed ? 0 : TAGS_SLOT_HEIGHT,
           opacity: effectiveIsCollapsed ? 0 : 1,
@@ -195,6 +188,16 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
           </Suspense>
         </div>
       </motion.div>
+
+      {/* Bottom Settings Area: 设置按钮移至此处，带 mt-auto 置底 */}
+      <div
+        className={cn(
+          "shrink-0 border-t border-border mt-auto pt-2 flex items-center transition-[padding,justify-content] duration-200",
+          effectiveIsCollapsed ? "justify-center px-0" : "pl-4"
+        )}
+      >
+        <SidebarSettings isCollapsed={effectiveIsCollapsed} />
+      </div>
     </motion.aside>
   )
 }

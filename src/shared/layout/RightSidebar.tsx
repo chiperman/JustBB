@@ -1,12 +1,6 @@
 "use client"
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react"
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import {
   Timeline,
@@ -49,9 +43,7 @@ export function RightSidebar({
   initialCollapsed?: boolean
   initialData?: TimelineStats
 }) {
-  const [allDays, setAllDays] = useState<Record<string, { count: number }>>(
-    initialData?.days || {}
-  )
+  const [allDays, setAllDays] = useState<Record<string, { count: number }>>(initialData?.days || {})
   const isMounted = useHasMounted()
   const router = useRouter()
   const pathname = usePathname()
@@ -94,10 +86,7 @@ export function RightSidebar({
   }
 
   useEffect(() => {
-    syncLayoutPreferenceCookie(
-      RIGHT_SIDEBAR_STORAGE_KEY,
-      RIGHT_SIDEBAR_COOKIE_KEY
-    )
+    syncLayoutPreferenceCookie(RIGHT_SIDEBAR_STORAGE_KEY, RIGHT_SIDEBAR_COOKIE_KEY)
   }, [])
 
   // 自动滚动侧边栏以确保选中项可见
@@ -188,8 +177,7 @@ export function RightSidebar({
     if (!isMounted) return false // 服务端始终返回 false
     const id = `year-${year}`
     if (activeId === id) return true
-    if (!activeId && yearFilter === String(year) && !monthFilter && !dateFilter)
-      return true
+    if (!activeId && yearFilter === String(year) && !monthFilter && !dateFilter) return true
     return false
   }
 
@@ -197,12 +185,7 @@ export function RightSidebar({
     if (!isMounted) return false
     const id = `month-${year}-${month}`
     if (activeId === id) return true
-    if (
-      !activeId &&
-      yearFilter === String(year) &&
-      monthFilter === String(month) &&
-      !dateFilter
-    )
+    if (!activeId && yearFilter === String(year) && monthFilter === String(month) && !dateFilter)
       return true
     return false
   }
@@ -246,11 +229,7 @@ export function RightSidebar({
     router.push(`/?${currentParams.toString()}`)
   }
 
-  const handleMonthClick = (
-    e: React.MouseEvent,
-    year: number,
-    month: number
-  ) => {
+  const handleMonthClick = (e: React.MouseEvent, year: number, month: number) => {
     e.preventDefault()
     const id = `month-${year}-${month}`
     setManualClick(true)
@@ -281,18 +260,6 @@ export function RightSidebar({
 
   return (
     <div className="relative hidden xl:block h-full shrink-0 overflow-visible">
-      {isCollapsed && (
-        <div className="absolute top-6 right-6 z-30">
-          <SidebarCollapseButton
-            isCollapsed={true}
-            onClick={() => setCollapsedState(false)}
-            side="right"
-            label="展开右侧时间轴"
-            className="bg-background border border-border"
-          />
-        </div>
-      )}
-
       <motion.div
         initial={false}
         animate={{ width: isCollapsed ? 0 : RIGHT_SIDEBAR_EXPANDED_WIDTH }}
@@ -301,13 +268,8 @@ export function RightSidebar({
         className="relative h-full overflow-hidden"
       >
         <aside className="flex h-full w-80 flex-col overflow-hidden border-l border-border bg-muted p-6">
-          <div className="mb-8 flex items-center gap-3">
-            <SidebarCollapseButton
-              isCollapsed={false}
-              onClick={() => setCollapsedState(true)}
-              side="right"
-              label="收起右侧时间轴"
-            />
+          <div className="mb-8 flex h-9 items-center gap-3">
+            <div className="w-9 shrink-0" />
             <h3 className="flex-1 badge-text uppercase">时间轴</h3>
           </div>
           <div className="relative flex-1 overflow-y-auto pr-1 scrollbar-hide">
@@ -325,17 +287,10 @@ export function RightSidebar({
                     <div key={i} className="relative">
                       <TimelineLine className="bg-(--heatmap-0)" />
                       <TimelineDot className="border-(--heatmap-0) bg-(--heatmap-0)" />
-                      <Skeleton
-                        className={cn(
-                          "mb-6 h-4",
-                          i % 2 === 0 ? "w-16" : "w-12"
-                        )}
-                      />
+                      <Skeleton className={cn("mb-6 h-4", i % 2 === 0 ? "w-16" : "w-12")} />
                       <div className="space-y-6 pl-4">
                         <div className="space-y-3">
-                          <Skeleton
-                            className={cn("h-3", i % 2 === 0 ? "w-12" : "w-14")}
-                          />
+                          <Skeleton className={cn("h-3", i % 2 === 0 ? "w-12" : "w-14")} />
                           <div className="space-y-2">
                             <Skeleton className="h-2 w-10" />
                             <Skeleton className="h-2 w-8" />
@@ -379,9 +334,7 @@ export function RightSidebar({
                                   ? "text-primary"
                                   : "text-foreground hover:text-primary"
                               )}
-                              onClick={(e) =>
-                                handleYearClick(e, yearGroup.year)
-                              }
+                              onClick={(e) => handleYearClick(e, yearGroup.year)}
                             >
                               {yearGroup.year}
                             </button>
@@ -395,25 +348,17 @@ export function RightSidebar({
                               >
                                 <div className="relative mb-3">
                                   <TimelineLine
-                                    active={isMonthActive(
-                                      yearGroup.year,
-                                      monthGroup.month
-                                    )}
+                                    active={isMonthActive(yearGroup.year, monthGroup.month)}
                                     className={cn(
                                       "-left-[25px] transition-opacity duration-300",
-                                      !isMonthActive(
-                                        yearGroup.year,
-                                        monthGroup.month
-                                      ) && "opacity-0"
+                                      !isMonthActive(yearGroup.year, monthGroup.month) &&
+                                        "opacity-0"
                                     )}
                                   />
                                   <h5
                                     className={cn(
                                       "block cursor-pointer pl-1 text-[11px] font-bold tracking-wide uppercase transition-colors",
-                                      isMonthActive(
-                                        yearGroup.year,
-                                        monthGroup.month
-                                      )
+                                      isMonthActive(yearGroup.year, monthGroup.month)
                                         ? "text-primary"
                                         : "text-muted-foreground/80 hover:text-primary"
                                     )}
@@ -421,11 +366,7 @@ export function RightSidebar({
                                     <button
                                       className="block w-full text-left"
                                       onClick={(e) =>
-                                        handleMonthClick(
-                                          e,
-                                          yearGroup.year,
-                                          monthGroup.month
-                                        )
+                                        handleMonthClick(e, yearGroup.year, monthGroup.month)
                                       }
                                     >
                                       {monthNames[monthGroup.month]}
@@ -458,9 +399,7 @@ export function RightSidebar({
                                               ? "text-primary"
                                               : "text-muted-foreground/50 hover:text-primary/70"
                                           )}
-                                          onClick={(e) =>
-                                            handleDayClick(e, dateStr)
-                                          }
+                                          onClick={(e) => handleDayClick(e, dateStr)}
                                         >
                                           {`${day}号`}
                                         </button>
@@ -484,6 +423,22 @@ export function RightSidebar({
             </AnimatePresence>
           </div>
         </aside>
+      </motion.div>
+
+      {/* 唯一的折叠按钮：通过 animate={{ x: ... }} 实现在折叠/展开时的水平滑动，避免硬切换导致自转动画中断 */}
+      <motion.div
+        className="absolute top-6 right-6 z-30"
+        animate={{
+          x: isCollapsed ? 0 : -236,
+        }}
+        transition={RIGHT_SIDEBAR_TRANSITION}
+      >
+        <SidebarCollapseButton
+          isCollapsed={isCollapsed}
+          onClick={() => setCollapsedState(!isCollapsed)}
+          side="right"
+          label={isCollapsed ? "展开右侧时间轴" : "收起右侧时间轴"}
+        />
       </motion.div>
     </div>
   )

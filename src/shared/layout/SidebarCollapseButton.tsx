@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowLeft01Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
 import { cn } from "@/shared/lib/utils"
+import { useLayout } from "@/state/LayoutContext"
 
 interface SidebarCollapseButtonProps {
   isCollapsed: boolean
@@ -23,6 +24,7 @@ export function SidebarCollapseButton({
   label,
   className,
 }: SidebarCollapseButtonProps) {
+  const { animationMultiplier } = useLayout()
   const isLeft = side === "left"
   const showClose = isMobile && isLeft
 
@@ -42,8 +44,8 @@ export function SidebarCollapseButton({
         whileTap={{ scale: 0.95 }}
         transition={{
           type: "spring",
-          stiffness: 350,
-          damping: 22,
+          stiffness: 350 / (animationMultiplier * animationMultiplier),
+          damping: 22 / animationMultiplier,
         }}
         className={cn(
           "group relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-md bg-transparent text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring",
@@ -56,8 +58,8 @@ export function SidebarCollapseButton({
           }}
           transition={{
             type: "spring",
-            stiffness: 280,
-            damping: 22,
+            stiffness: 280 / (animationMultiplier * animationMultiplier),
+            damping: 22 / animationMultiplier,
           }}
           className="flex items-center justify-center"
         >

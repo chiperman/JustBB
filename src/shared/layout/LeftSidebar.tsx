@@ -11,6 +11,7 @@ import { motion } from "framer-motion"
 import { useSidebarNavigation } from "@/shared/hooks/useSidebarNavigation"
 import { SidebarNavItem } from "./sidebar/SidebarNavItem"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
+import { useLayout } from "@/state/LayoutContext"
 import {
   LEFT_SIDEBAR_COOKIE_KEY,
   LEFT_SIDEBAR_STORAGE_EVENT,
@@ -28,14 +29,6 @@ export interface LeftSidebarProps {
 
 const SIDEBAR_EXPANDED_WIDTH = 280
 const SIDEBAR_COLLAPSED_WIDTH = 88
-const SIDEBAR_TRANSITION = {
-  duration: 0.28,
-  ease: [0.22, 1, 0.36, 1] as const,
-}
-const CONTENT_FADE_TRANSITION = {
-  duration: 0.14,
-  ease: [0.4, 0, 0.2, 1] as const,
-}
 const HEATMAP_SLOT_HEIGHT = 248
 const TAGS_SLOT_HEIGHT = 176
 
@@ -55,6 +48,16 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
   const hasMounted = useHasMounted()
 
   const { navItems, currentView, handleNavigate } = useSidebarNavigation()
+  const { animationMultiplier } = useLayout()
+
+  const sidebarTransition = {
+    duration: 0.28 * animationMultiplier,
+    ease: [0.22, 1, 0.36, 1] as const,
+  }
+  const contentFadeTransition = {
+    duration: 0.14 * animationMultiplier,
+    ease: [0.4, 0, 0.2, 1] as const,
+  }
 
   useEffect(() => {
     syncLayoutPreferenceCookie(LEFT_SIDEBAR_STORAGE_KEY, LEFT_SIDEBAR_COOKIE_KEY)
@@ -81,7 +84,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       animate={{
         width: effectiveIsCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH,
       }}
-      transition={SIDEBAR_TRANSITION}
+      transition={sidebarTransition}
       style={{ willChange: "width" }}
       className="relative flex h-full shrink-0 flex-col overflow-hidden border-r border-border bg-muted p-2"
     >
@@ -106,7 +109,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
         initial={false}
         className={cn("shrink-0 overflow-hidden px-1", effectiveIsCollapsed ? "mb-0" : "mb-5")}
         animate={{ height: effectiveIsCollapsed ? 0 : HEATMAP_SLOT_HEIGHT }}
-        transition={SIDEBAR_TRANSITION}
+        transition={sidebarTransition}
       >
         <motion.div
           initial={false}
@@ -114,10 +117,10 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
           animate={{ opacity: effectiveIsCollapsed ? 0 : 1 }}
           transition={
             effectiveIsCollapsed
-              ? CONTENT_FADE_TRANSITION
+              ? contentFadeTransition
               : {
-                  ...CONTENT_FADE_TRANSITION,
-                  delay: 0.14,
+                  ...contentFadeTransition,
+                  delay: 0.14 * animationMultiplier,
                 }
           }
         >
@@ -130,7 +133,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       {/* Navigation */}
       <motion.nav
         layout
-        transition={SIDEBAR_TRANSITION}
+        transition={sidebarTransition}
         className={cn(
           "relative min-h-0 flex-1 overflow-x-hidden px-1 pb-4 custom-scrollbar",
           effectiveIsCollapsed ? "overflow-y-hidden" : "overflow-y-auto"
@@ -138,7 +141,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       >
         <motion.div
           layout
-          transition={SIDEBAR_TRANSITION}
+          transition={sidebarTransition}
           className={cn("mb-3 border-t border-border", effectiveIsCollapsed ? "mx-1" : "mx-2")}
         />
 
@@ -165,10 +168,10 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
           opacity: effectiveIsCollapsed ? 0 : 1,
         }}
         transition={{
-          height: SIDEBAR_TRANSITION,
+          height: sidebarTransition,
           opacity: effectiveIsCollapsed
-            ? CONTENT_FADE_TRANSITION
-            : { ...CONTENT_FADE_TRANSITION, delay: 0.14 },
+            ? contentFadeTransition
+            : { ...contentFadeTransition, delay: 0.14 * animationMultiplier },
         }}
       >
         <div className="h-full border-t border-border px-1 pt-4 pb-1">

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import type { RefObject } from "react"
@@ -13,6 +14,7 @@ import { EditorToolbar } from "@/features/memos/components/editor/EditorToolbar"
 import { LinkPasteMenu } from "@/features/memos/components/editor/LinkPasteMenu"
 import type { LinkRenderMode } from "@/features/memos/components/editor/smartLink"
 import { PLACEHOLDER_TEXT } from "@/features/memos/components/MemoEditor"
+import { useLayout } from "@/state/LayoutContext"
 
 export interface SuggestionItem {
   id: string
@@ -144,6 +146,7 @@ export function MemoEditorLayout({
   onLinkPickerConfirm,
   className,
 }: MemoEditorLayoutProps) {
+  const { animationMultiplier } = useLayout()
   return (
     <motion.section
       initial={false}
@@ -166,27 +169,31 @@ export function MemoEditorLayout({
         borderWidth: 0,
         boxShadow: "none",
         transition: {
-          opacity: { duration: shouldAnimateCollapse ? 0.2 : 0 },
+          opacity: { duration: shouldAnimateCollapse ? 0.2 * animationMultiplier : 0 },
           height: {
-            duration: shouldAnimateCollapse ? 0.3 : 0,
+            duration: shouldAnimateCollapse ? 0.3 * animationMultiplier : 0,
             ease: [0.22, 1, 0.36, 1],
           },
-          paddingTop: { duration: shouldAnimateCollapse ? 0.3 : 0 },
-          paddingBottom: { duration: shouldAnimateCollapse ? 0.3 : 0 },
-          marginTop: { duration: shouldAnimateCollapse ? 0.3 : 0 },
-          marginBottom: { duration: shouldAnimateCollapse ? 0.3 : 0 },
-          borderWidth: { duration: shouldAnimateCollapse ? 0.3 : 0 },
+          paddingTop: { duration: shouldAnimateCollapse ? 0.3 * animationMultiplier : 0 },
+          paddingBottom: { duration: shouldAnimateCollapse ? 0.3 * animationMultiplier : 0 },
+          marginTop: { duration: shouldAnimateCollapse ? 0.3 * animationMultiplier : 0 },
+          marginBottom: { duration: shouldAnimateCollapse ? 0.3 * animationMultiplier : 0 },
+          borderWidth: { duration: shouldAnimateCollapse ? 0.3 * animationMultiplier : 0 },
         },
       }}
       transition={{
         height: isActuallyCollapsed
           ? shouldAnimateCollapse
-            ? { type: "spring", stiffness: 350, damping: 40 }
+            ? {
+                type: "spring",
+                stiffness: 350 / (animationMultiplier * animationMultiplier),
+                damping: 40 / animationMultiplier,
+              }
             : { duration: 0 }
           : shouldAnimateCollapse
-            ? { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
+            ? { duration: 0.4 * animationMultiplier, ease: [0.22, 1, 0.36, 1] }
             : { duration: 0 },
-        opacity: { duration: shouldAnimateCollapse ? 0.2 : 0 },
+        opacity: { duration: shouldAnimateCollapse ? 0.2 * animationMultiplier : 0 },
       }}
       onAnimationStart={() => undefined}
       onAnimationComplete={() => undefined}

@@ -21,12 +21,9 @@ import {
 import { useTheme } from "next-themes"
 import { logout } from "@/features/auth/actions"
 import { supabase } from "@/lib/supabase"
-import {
-  DRAFT_CONTENT_KEY,
-  DRAFT_IS_PRIVATE_KEY,
-} from "@/features/memos/hooks/useMemoEditor"
+import { DRAFT_CONTENT_KEY, DRAFT_IS_PRIVATE_KEY } from "@/features/memos/hooks/useMemoEditor"
 import { cn } from "@/shared/lib/utils"
-import { useLayout } from "@/state/LayoutContext"
+import { useLayout, AnimationSpeed } from "@/state/LayoutContext"
 import { useUser } from "@/state/UserContext"
 import {
   DropdownMenu,
@@ -54,7 +51,7 @@ interface SidebarSettingsProps {
 
 export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
   const { user, setUser } = useUser()
-  const { setViewMode } = useLayout()
+  const { setViewMode, animationSpeed, setAnimationSpeed } = useLayout()
   const { theme, setTheme } = useTheme()
   const [loggingOut, setLoggingOut] = React.useState(false)
   const [hasMounted, setHasMounted] = React.useState(false)
@@ -83,50 +80,23 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
 
   const renderIdentity = () => {
     if (user?.role === "admin")
-      return (
-        <HugeiconsIcon icon={ShieldCheck} size={16} className="text-primary" />
-      )
-    if (user)
-      return (
-        <HugeiconsIcon
-          icon={User}
-          size={16}
-          className="text-muted-foreground"
-        />
-      )
-    return (
-      <HugeiconsIcon
-        icon={UserCircle}
-        size={16}
-        className="text-muted-foreground"
-      />
-    )
+      return <HugeiconsIcon icon={ShieldCheck} size={16} className="text-primary" />
+    if (user) return <HugeiconsIcon icon={User} size={16} className="text-muted-foreground" />
+    return <HugeiconsIcon icon={UserCircle} size={16} className="text-muted-foreground" />
   }
 
   const identityLabel = user ? user.email : "未登录"
   const triggerClassName = cn(
     "h-9 rounded-md bg-transparent hover:bg-secondary hover:text-accent-foreground hover:ring-1 hover:ring-border/40 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none transition-all duration-200",
-    isCollapsed
-      ? "w-9 justify-center px-0"
-      : "flex w-full items-center justify-start gap-3 px-3"
+    isCollapsed ? "w-9 justify-center px-0" : "flex w-full items-center justify-start gap-3 px-3"
   )
 
   if (!hasMounted) {
     return (
-      <Button
-        variant="ghost"
-        className={triggerClassName}
-        aria-label="账号与设置"
-      >
-        <HugeiconsIcon
-          icon={Settings}
-          size={16}
-          className="text-muted-foreground"
-        />
+      <Button variant="ghost" className={triggerClassName} aria-label="账号与设置">
+        <HugeiconsIcon icon={Settings} size={16} className="text-muted-foreground" />
         {!isCollapsed && (
-          <span className="nav-button-text truncate opacity-80">
-            {identityLabel}
-          </span>
+          <span className="nav-button-text truncate opacity-80">{identityLabel}</span>
         )}
       </Button>
     )
@@ -136,25 +106,15 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className={triggerClassName}
-            aria-label="账号与设置"
-          >
+          <Button variant="ghost" className={triggerClassName} aria-label="账号与设置">
             <div className="relative shrink-0">
-              <HugeiconsIcon
-                icon={Settings}
-                size={16}
-                className="text-muted-foreground"
-              />
+              <HugeiconsIcon icon={Settings} size={16} className="text-muted-foreground" />
               {user && (
                 <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background bg-primary" />
               )}
             </div>
             {!isCollapsed && (
-              <span className="nav-button-text truncate opacity-80">
-                {identityLabel}
-              </span>
+              <span className="nav-button-text truncate opacity-80">{identityLabel}</span>
             )}
           </Button>
         </DropdownMenuTrigger>
@@ -175,11 +135,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                 </div>
                 <div className="flex flex-col min-w-0">
                   <p className="body-large font-bold truncate leading-none">
-                    {user
-                      ? user.role === "admin"
-                        ? "正式管理员"
-                        : "普通用户"
-                      : "匿名身份"}
+                    {user ? (user.role === "admin" ? "正式管理员" : "普通用户") : "匿名身份"}
                   </p>
                   <p className="micro-label truncate mt-1.5 opacity-70">
                     {user ? user.email : "仅可查看公开内容"}
@@ -197,19 +153,12 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
             </DropdownMenuLabel>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger className="h-10">
-                <HugeiconsIcon
-                  icon={Sun}
-                  size={16}
-                  className="mr-2 text-primary"
-                />
+                <HugeiconsIcon icon={Sun} size={16} className="mr-2 text-primary" />
                 <span className="nav-button-text">外观主题</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuSubContent className="ml-1">
-                  <DropdownMenuRadioGroup
-                    value={theme}
-                    onValueChange={setTheme}
-                  >
+                  <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
                     <DropdownMenuRadioItem value="light" className="h-9">
                       <HugeiconsIcon
                         icon={Sun}
@@ -238,6 +187,34 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
             </DropdownMenuSub>
+
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="h-10">
+                <HugeiconsIcon icon={FlashIcon} size={16} className="mr-2 text-primary" />
+                <span className="nav-button-text">动画速度</span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuSubContent className="ml-1">
+                  <DropdownMenuRadioGroup
+                    value={animationSpeed}
+                    onValueChange={(val) => setAnimationSpeed(val as AnimationSpeed)}
+                  >
+                    <DropdownMenuRadioItem value="normal" className="h-9">
+                      <span className="nav-button-text">正常 (1.0x)</span>
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="slow" className="h-9">
+                      <span className="nav-button-text">慢速 (0.5x)</span>
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="very-slow" className="h-9">
+                      <span className="nav-button-text">极慢 (0.2x)</span>
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="super-slow" className="h-9">
+                      <span className="nav-button-text">超慢 (0.1x)</span>
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuPortal>
+            </DropdownMenuSub>
           </div>
 
           <DropdownMenuSeparator />
@@ -251,11 +228,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
               onClick={() => setImportDialogOpen(true)}
               disabled={!canUseImportExport}
             >
-              <HugeiconsIcon
-                icon={Upload}
-                size={16}
-                className="mr-2 text-primary"
-              />
+              <HugeiconsIcon icon={Upload} size={16} className="mr-2 text-primary" />
               <span className="nav-button-text">导入 Memos</span>
             </DropdownMenuItem>
 
@@ -264,11 +237,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
               onClick={() => setExportDialogOpen(true)}
               disabled={!canUseImportExport}
             >
-              <HugeiconsIcon
-                icon={Download}
-                size={16}
-                className="mr-2 text-primary"
-              />
+              <HugeiconsIcon icon={Download} size={16} className="mr-2 text-primary" />
               <span className="nav-button-text">导出 Memos</span>
             </DropdownMenuItem>
 
@@ -293,11 +262,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
               onClick={() => setR2ConfigOpen(true)}
               disabled={!canUseImportExport}
             >
-              <HugeiconsIcon
-                icon={Image01Icon}
-                size={16}
-                className="mr-2 text-primary"
-              />
+              <HugeiconsIcon icon={Image01Icon} size={16} className="mr-2 text-primary" />
               <span className="nav-button-text">图片存储配置</span>
             </DropdownMenuItem>
           </div>
@@ -306,15 +271,8 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
 
           <div className="px-1 py-1">
             {!user ? (
-              <DropdownMenuItem
-                className="h-10"
-                onClick={() => setViewMode("SPLIT_VIEW")}
-              >
-                <HugeiconsIcon
-                  icon={LogIn}
-                  size={16}
-                  className="mr-2 text-primary"
-                />
+              <DropdownMenuItem className="h-10" onClick={() => setViewMode("SPLIT_VIEW")}>
+                <HugeiconsIcon icon={LogIn} size={16} className="mr-2 text-primary" />
                 <span className="nav-button-text">登录系统</span>
               </DropdownMenuItem>
             ) : (
@@ -336,14 +294,8 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
       </DropdownMenu>
 
       <UsageModal open={usageModalOpen} onOpenChange={setUsageModalOpen} />
-      <ExportConfigDialog
-        open={exportDialogOpen}
-        onOpenChange={setExportDialogOpen}
-      />
-      <ImportConfigDialog
-        open={importDialogOpen}
-        onOpenChange={setImportDialogOpen}
-      />
+      <ExportConfigDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen} />
+      <ImportConfigDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} />
       <R2ConfigDialog open={r2ConfigOpen} onOpenChange={setR2ConfigOpen} />
     </>
   )

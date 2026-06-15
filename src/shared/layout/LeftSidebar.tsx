@@ -30,7 +30,7 @@ export interface LeftSidebarProps {
 const SIDEBAR_EXPANDED_WIDTH = 280
 const SIDEBAR_COLLAPSED_WIDTH = 60
 const HEATMAP_SLOT_HEIGHT = 248
-const TAGS_SLOT_HEIGHT = 176
+const TAGS_SLOT_HEIGHT = "auto"
 
 export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarProps) {
   const isMobile = !!onClose
@@ -163,7 +163,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
           opacity: sidebarTransition,
         }}
       >
-        <div className="w-[264px] shrink-0 h-full border-t border-border px-1 pt-4 pb-1">
+        <div className="w-[264px] shrink-0 border-t border-border px-1 pt-4 pb-4">
           <h3 className="mb-4 flex items-center gap-2 card-title">热门标签</h3>
           <Suspense
             fallback={

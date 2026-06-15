@@ -263,23 +263,76 @@ export function RightSidebar({
 
   if (!isHomePage) return null
 
+  // 客户端挂载前的静态骨架屏占位，用于 SSR 与水合首帧，防止 Layout Shift 并彻底杜绝动画初始化竞态
+  if (!isMounted) {
+    return (
+      <div className="relative hidden xl:block h-full shrink-0 overflow-visible">
+        <div
+          style={{
+            willChange: "width",
+            width: initialCollapsed ? 0 : RIGHT_SIDEBAR_EXPANDED_WIDTH,
+          }}
+          className="relative h-full overflow-hidden"
+        >
+          <aside className="flex h-full w-80 flex-col overflow-hidden border-l border-border bg-muted p-6">
+            <div className="mb-8 flex h-9 items-center justify-between">
+              <h3 className="badge-text uppercase">时间轴</h3>
+              <div className="w-9 shrink-0" />
+            </div>
+            <div className="relative flex-1 overflow-y-auto pr-1 scrollbar-hide">
+              <div className="space-y-8">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="relative">
+                    <TimelineLine className="bg-(--heatmap-0)" />
+                    <TimelineDot className="border-(--heatmap-0) bg-(--heatmap-0)" />
+                    <Skeleton className={cn("mb-6 h-4", i % 2 === 0 ? "w-16" : "w-12")} />
+                    <div className="space-y-6 pl-4">
+                      <div className="space-y-3">
+                        <Skeleton className={cn("h-3", i % 2 === 0 ? "w-12" : "w-14")} />
+                        <div className="space-y-2">
+                          <Skeleton className="h-2 w-10" />
+                          <Skeleton className="h-2 w-8" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
+        </div>
+        <div className="absolute top-6 right-6 z-30">
+          <SidebarCollapseButton
+            isCollapsed={initialCollapsed}
+            onClick={() => {}}
+            side="right"
+            label={initialCollapsed ? "展开右侧时间轴" : "收起右侧时间轴"}
+          />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="relative hidden xl:block h-full shrink-0 overflow-visible">
       <motion.div
         initial={false}
         animate={{ width: isCollapsed ? 0 : RIGHT_SIDEBAR_EXPANDED_WIDTH }}
         transition={rightSidebarTransition}
-        style={{ willChange: "width" }}
+        style={{
+          willChange: "width",
+          width: isCollapsed ? 0 : RIGHT_SIDEBAR_EXPANDED_WIDTH,
+        }}
         className="relative h-full overflow-hidden"
       >
         <aside className="flex h-full w-80 flex-col overflow-hidden border-l border-border bg-muted p-6">
-          <div className="mb-8 flex h-9 items-center gap-3">
+          <div className="mb-8 flex h-9 items-center justify-between">
+            <h3 className="badge-text uppercase">时间轴</h3>
             <div className="w-9 shrink-0" />
-            <h3 className="flex-1 badge-text uppercase">时间轴</h3>
           </div>
           <div className="relative flex-1 overflow-y-auto pr-1 scrollbar-hide">
             <AnimatePresence mode="wait">
-              {!isMounted && Object.keys(allDays).length === 0 ? (
+              {Object.keys(allDays).length === 0 ? (
                 <motion.div
                   key="skeleton"
                   initial={{ opacity: 0 }}
@@ -430,21 +483,15 @@ export function RightSidebar({
         </aside>
       </motion.div>
 
-      {/* 唯一的折叠按钮：通过 animate={{ x: ... }} 实现在折叠/展开时的水平滑动，避免硬切换导致自转动画中断 */}
-      <motion.div
-        className="absolute top-6 right-6 z-30"
-        animate={{
-          x: isCollapsed ? 0 : -236,
-        }}
-        transition={rightSidebarTransition}
-      >
+      {/* 唯一的折叠按钮：固定在右上角位置不动，避免错位 */}
+      <div className="absolute top-6 right-6 z-30">
         <SidebarCollapseButton
           isCollapsed={isCollapsed}
           onClick={() => setCollapsedState(!isCollapsed)}
           side="right"
           label={isCollapsed ? "展开右侧时间轴" : "收起右侧时间轴"}
         />
-      </motion.div>
+      </div>
     </div>
   )
 }

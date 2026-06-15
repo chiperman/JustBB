@@ -28,7 +28,7 @@ export interface LeftSidebarProps {
 }
 
 const SIDEBAR_EXPANDED_WIDTH = 280
-const SIDEBAR_COLLAPSED_WIDTH = 88
+const SIDEBAR_COLLAPSED_WIDTH = 60
 const HEATMAP_SLOT_HEIGHT = 248
 const TAGS_SLOT_HEIGHT = 176
 
@@ -89,12 +89,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       className="relative flex h-full shrink-0 flex-col overflow-hidden border-r border-border bg-muted p-2"
     >
       {/* Top Area: 仅包含折叠按钮 */}
-      <div
-        className={cn(
-          "flex h-16 shrink-0 items-center transition-[padding,justify-content] duration-200",
-          effectiveIsCollapsed ? "justify-center px-0" : "pl-4"
-        )}
-      >
+      <div className="flex h-16 shrink-0 items-center pl-1">
         <SidebarCollapseButton
           isCollapsed={effectiveIsCollapsed}
           onClick={toggleCollapsedState}
@@ -107,22 +102,18 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       {/* Heatmap Area */}
       <motion.div
         initial={false}
-        className={cn("shrink-0 overflow-hidden px-1", effectiveIsCollapsed ? "mb-0" : "mb-5")}
-        animate={{ height: effectiveIsCollapsed ? 0 : HEATMAP_SLOT_HEIGHT }}
+        className="shrink-0 overflow-hidden px-1"
+        animate={{
+          height: effectiveIsCollapsed ? 0 : HEATMAP_SLOT_HEIGHT,
+          marginBottom: effectiveIsCollapsed ? 0 : 20,
+        }}
         transition={sidebarTransition}
       >
         <motion.div
           initial={false}
-          className="h-full"
+          className="h-full w-[264px] shrink-0"
           animate={{ opacity: effectiveIsCollapsed ? 0 : 1 }}
-          transition={
-            effectiveIsCollapsed
-              ? contentFadeTransition
-              : {
-                  ...contentFadeTransition,
-                  delay: 0.14 * animationMultiplier,
-                }
-          }
+          transition={sidebarTransition}
         >
           <Suspense fallback={<div className="h-40 w-full animate-pulse rounded bg-muted/20" />}>
             <Heatmap />
@@ -169,12 +160,10 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
         }}
         transition={{
           height: sidebarTransition,
-          opacity: effectiveIsCollapsed
-            ? contentFadeTransition
-            : { ...contentFadeTransition, delay: 0.14 * animationMultiplier },
+          opacity: sidebarTransition,
         }}
       >
-        <div className="h-full border-t border-border px-1 pt-4 pb-1">
+        <div className="w-[264px] shrink-0 h-full border-t border-border px-1 pt-4 pb-1">
           <h3 className="mb-4 flex items-center gap-2 card-title">热门标签</h3>
           <Suspense
             fallback={
@@ -193,12 +182,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       </motion.div>
 
       {/* Bottom Settings Area: 设置按钮移至此处，带 mt-auto 置底 */}
-      <div
-        className={cn(
-          "shrink-0 border-t border-border mt-auto pt-2 flex items-center transition-[padding,justify-content] duration-200",
-          effectiveIsCollapsed ? "justify-center px-0" : "pl-4"
-        )}
-      >
+      <div className="shrink-0 border-t border-border mt-auto pt-2 flex items-center pl-1 w-full">
         <SidebarSettings isCollapsed={effectiveIsCollapsed} />
       </div>
     </motion.aside>

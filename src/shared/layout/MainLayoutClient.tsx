@@ -1,12 +1,6 @@
 "use client"
 
-import React, {
-  useEffect,
-  useLayoutEffect,
-  useState,
-  useRef,
-  useMemo,
-} from "react"
+import React, { useEffect, useLayoutEffect, useState, useRef, useMemo } from "react"
 import { generateCacheKey, cn } from "@/shared/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"
 import { MemoEditor, MemoFeed } from "@/features/memos"
@@ -18,12 +12,14 @@ import { getMemos } from "@/server/actions/memos/query"
 import { useSearchParams } from "next/navigation"
 import { useUser } from "@/state/UserContext"
 import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
+import { useLayout } from "@/state/LayoutContext"
 
 export function MainLayoutClient() {
   const searchParams = useSearchParams()
   const { getCache, setCache } = usePageDataCache()
   const { user } = useUser()
   const { unlockedMemoIds } = useUnlockedMemos()
+  const { animationMultiplier } = useLayout()
   const unlockedMemoIdsRef = useRef(unlockedMemoIds)
   useEffect(() => {
     unlockedMemoIdsRef.current = unlockedMemoIds
@@ -149,18 +145,37 @@ export function MainLayoutClient() {
       >
         <div className="max-w-screen-md mx-auto">
           {/* Level 3: Visual Padding Area */}
-          <div className="px-6 py-6 space-y-6">
+          <div className="px-6 py-6 flex flex-col">
             {/* Feed 标题与过滤显示 (包含 Logo 和 SearchInput) */}
             <FeedHeader isRefreshing={isRefreshing} />
 
             {/* 编辑器区域 */}
-            <AnimatePresence>
+            <AnimatePresence initial={false}>
               {user && (
-                <MemoEditor
-                  mode="create"
-                  isCollapsed={true}
-                  scrollCollapsed={editorForceCollapsed}
-                />
+                <motion.div
+                  key="memo-editor-wrapper"
+                  initial={{ opacity: 0 }}
+                  animate={{
+                    opacity: 1,
+                  }}
+                  exit={{
+                    height: 0,
+                    opacity: 0,
+                    marginTop: 0,
+                  }}
+                  transition={{
+                    opacity: { duration: 0.2 * animationMultiplier },
+                    height: { duration: 0.3 * animationMultiplier, ease: [0.22, 1, 0.36, 1] },
+                    marginTop: { duration: 0.3 * animationMultiplier, ease: [0.22, 1, 0.36, 1] },
+                  }}
+                  className="overflow-hidden mt-6"
+                >
+                  <MemoEditor
+                    mode="create"
+                    isCollapsed={true}
+                    scrollCollapsed={editorForceCollapsed}
+                  />
+                </motion.div>
               )}
             </AnimatePresence>
           </div>
@@ -168,10 +183,7 @@ export function MainLayoutClient() {
       </div>
 
       {/* 2. 底部滚动区域 (Scrollable Feed Area) */}
-      <div
-        ref={containerRef}
-        className="flex-1 overflow-y-auto scrollbar-stable"
-      >
+      <div ref={containerRef} className="flex-1 overflow-y-auto scrollbar-stable">
         <div className="max-w-screen-md mx-auto">
           {/* Level 3: Visual Padding Area */}
           <div className="px-6 pt-4 pb-20">

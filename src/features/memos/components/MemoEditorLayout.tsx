@@ -164,8 +164,6 @@ export function MemoEditorLayout({
         paddingBottom: 0,
         paddingLeft: 0,
         paddingRight: 0,
-        marginTop: -24,
-        marginBottom: -24,
         borderWidth: 0,
         boxShadow: "none",
         transition: {
@@ -176,8 +174,6 @@ export function MemoEditorLayout({
           },
           paddingTop: { duration: shouldAnimateCollapse ? 0.3 * animationMultiplier : 0 },
           paddingBottom: { duration: shouldAnimateCollapse ? 0.3 * animationMultiplier : 0 },
-          marginTop: { duration: shouldAnimateCollapse ? 0.3 * animationMultiplier : 0 },
-          marginBottom: { duration: shouldAnimateCollapse ? 0.3 * animationMultiplier : 0 },
           borderWidth: { duration: shouldAnimateCollapse ? 0.3 * animationMultiplier : 0 },
         },
       }}

@@ -11,10 +11,9 @@ type LoginTransitionWrapperProps = {
 }
 
 const PANEL_TRANSITION = {
-  type: "spring" as const,
-  stiffness: 185,
-  damping: 26,
-  mass: 0.95,
+  type: "tween" as const,
+  duration: 0.45,
+  ease: [0.16, 1, 0.3, 1] as const, // easeOutExpo
 }
 
 const FADE_TRANSITION = {
@@ -70,9 +69,7 @@ export function LoginTransitionWrapper({
   const { user } = useUser()
   const isSplitView = viewMode === "SPLIT_VIEW"
   const variant = isSplitView ? "split" : "home"
-  const homeCardBackgroundColor = isSplitView
-    ? "var(--card)"
-    : "var(--background)"
+  const homeCardBackgroundColor = isSplitView ? "var(--card)" : "var(--background)"
   const draftOpacity = !user && isSplitView ? 0.025 : 0.05
   const creditOpacity = !user && isSplitView ? 0.012 : 0.03
 
@@ -103,10 +100,7 @@ export function LoginTransitionWrapper({
           variants={HOME_TRANSITION_VARIANTS}
           initial="home"
           animate={variant}
-          className={cn(
-            "absolute inset-0 z-10 origin-center",
-            isSplitView && "cursor-pointer"
-          )}
+          className={cn("absolute inset-0 z-10 origin-center", isSplitView && "cursor-pointer")}
           style={{
             borderRadius: isSplitView ? 24 : 0,
           }}
@@ -115,8 +109,7 @@ export function LoginTransitionWrapper({
           <div
             className={cn(
               "home-card-shell h-full w-full overflow-hidden border border-black/5 dark:border-white/5",
-              isSplitView &&
-                "rounded-[24px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.12)]"
+              isSplitView && "rounded-[24px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.12)]"
             )}
             style={{
               borderRadius: "inherit",
@@ -124,12 +117,7 @@ export function LoginTransitionWrapper({
             }}
           >
             {/* Actual Home Page Content */}
-            <div
-              className={cn(
-                "h-full",
-                isSplitView && "pointer-events-none select-none"
-              )}
-            >
+            <div className={cn("h-full", isSplitView && "pointer-events-none select-none")}>
               {children}
             </div>
           </div>

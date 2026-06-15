@@ -1,14 +1,8 @@
 "use client"
 
-import { useState, useTransition, useEffect, useMemo } from "react"
+import { useState, useTransition, useEffect, useMemo, useRef } from "react"
 import { useRouter } from "next/navigation"
-import {
-  login,
-  signup,
-  verifyOtp,
-  signInWithOAuth,
-  sendPasswordResetEmail,
-} from "../actions"
+import { login, signup, verifyOtp, signInWithOAuth, sendPasswordResetEmail } from "../actions"
 import { useToast } from "@/shared/hooks/use-toast"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
@@ -37,15 +31,16 @@ export function LoginPanel() {
 
   const [showPassword, setShowPassword] = useState(false)
 
+  const loginPasswordRef = useRef<HTMLInputElement>(null)
+  const signupPasswordRef = useRef<HTMLInputElement>(null)
+
   // Common states
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
 
-  const [step, setStep] = useState<"email" | "login" | "signup" | "otp">(
-    "email"
-  )
+  const [step, setStep] = useState<"email" | "login" | "signup" | "otp">("email")
   const [otpCode, setOtpCode] = useState("")
 
   // Mirror PasswordStrength's criteria for button disabled state
@@ -216,6 +211,8 @@ export function LoginPanel() {
               </div>
               <Input
                 type="email"
+                name="email"
+                autoComplete="username"
                 placeholder="name@example.com"
                 className="h-11 border-border/70 bg-background pl-10 transition-all focus:border-primary/30"
                 value={email}
@@ -273,6 +270,9 @@ export function LoginPanel() {
             {...formVariants}
             onSubmit={handleLogin}
             className="space-y-4"
+            onAnimationComplete={() => {
+              loginPasswordRef.current?.focus()
+            }}
           >
             <div className="flex items-center gap-2 mb-2">
               <Button
@@ -287,9 +287,7 @@ export function LoginPanel() {
             </div>
             <div className="space-y-1">
               <h3 className="text-xl font-bold tracking-tight">欢迎回来</h3>
-              <p className="text-[11px] font-mono text-primary/60 truncate">
-                {email}
-              </p>
+              <p className="text-[11px] font-mono text-primary/60 truncate">{email}</p>
             </div>
             <div className="space-y-3">
               <div className="relative">
@@ -297,7 +295,10 @@ export function LoginPanel() {
                   <HugeiconsIcon icon={Lock} size={16} />
                 </div>
                 <Input
+                  ref={loginPasswordRef}
                   type={showPassword ? "text" : "password"}
+                  name="password"
+                  autoComplete="current-password"
                   placeholder="您的密码"
                   className="h-11 border-border/70 bg-background pl-10 pr-10 transition-all focus:border-primary/30"
                   value={password}
@@ -315,11 +316,7 @@ export function LoginPanel() {
               </div>
               <Button className="w-full h-11" disabled={isPending}>
                 {isPending ? (
-                  <HugeiconsIcon
-                    icon={Loader2}
-                    size={18}
-                    className="animate-spin"
-                  />
+                  <HugeiconsIcon icon={Loader2} size={18} className="animate-spin" />
                 ) : (
                   "登录"
                 )}
@@ -356,6 +353,9 @@ export function LoginPanel() {
             {...formVariants}
             onSubmit={handleSignup}
             className="space-y-4"
+            onAnimationComplete={() => {
+              signupPasswordRef.current?.focus()
+            }}
           >
             <div className="flex items-center gap-2 mb-2">
               <Button
@@ -370,9 +370,7 @@ export function LoginPanel() {
             </div>
             <div className="space-y-1">
               <h3 className="text-xl font-bold tracking-tight">创建账号</h3>
-              <p className="text-xs text-muted-foreground">
-                为您的新账号设置一个安全的密码
-              </p>
+              <p className="text-xs text-muted-foreground">为您的新账号设置一个安全的密码</p>
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -381,7 +379,10 @@ export function LoginPanel() {
                     <HugeiconsIcon icon={Lock} size={16} />
                   </div>
                   <Input
+                    ref={signupPasswordRef}
                     type={showPassword ? "text" : "password"}
+                    name="password"
+                    autoComplete="new-password"
                     placeholder="设置密码"
                     className="h-11 border-border/70 bg-background pl-10 pr-10 transition-all focus:border-primary/30"
                     value={password}
@@ -394,24 +395,14 @@ export function LoginPanel() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-3 text-muted-foreground/50 hover:text-foreground transition-colors"
                   >
-                    <HugeiconsIcon
-                      icon={showPassword ? EyeOff : Eye}
-                      size={16}
-                    />
+                    <HugeiconsIcon icon={showPassword ? EyeOff : Eye} size={16} />
                   </button>
                 </div>
                 <PasswordStrength password={password} />
               </div>
-              <Button
-                className="w-full h-11"
-                disabled={isPending || passwordScore === 0}
-              >
+              <Button className="w-full h-11" disabled={isPending || passwordScore === 0}>
                 {isPending ? (
-                  <HugeiconsIcon
-                    icon={Loader2}
-                    size={18}
-                    className="animate-spin"
-                  />
+                  <HugeiconsIcon icon={Loader2} size={18} className="animate-spin" />
                 ) : (
                   "创建账号"
                 )}
@@ -425,9 +416,8 @@ export function LoginPanel() {
             <div className="space-y-2">
               <h3 className="text-xl font-bold tracking-tight">最后一步</h3>
               <p className="text-xs text-muted-foreground">
-                我们已向{" "}
-                <span className="text-primary/80 font-medium">{email}</span>{" "}
-                发送了 6 位验证码，请在下方输入：
+                我们已向 <span className="text-primary/80 font-medium">{email}</span> 发送了 6
+                位验证码，请在下方输入：
               </p>
             </div>
 
@@ -447,11 +437,7 @@ export function LoginPanel() {
                 onClick={handleVerifyOtp}
               >
                 {isPending ? (
-                  <HugeiconsIcon
-                    icon={Loader2}
-                    size={18}
-                    className="animate-spin"
-                  />
+                  <HugeiconsIcon icon={Loader2} size={18} className="animate-spin" />
                 ) : (
                   "验证并登录"
                 )}

@@ -111,7 +111,6 @@ export function R2ConfigDialog({ open, onOpenChange }: R2ConfigDialogProps) {
         public_url: "",
       })
       setTestResult(null)
-      onOpenChange(false)
     } else {
       toast({
         title: "清除失败",

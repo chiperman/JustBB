@@ -151,10 +151,10 @@ export function MainLayoutClient() {
       {/* 1. 顶部固定区域 (Fixed Top Area) */}
       <div
         className={cn(
-          "flex-none z-30 transition-all duration-300 scrollbar-stable overflow-y-auto",
+          "flex-none z-30 transition-all duration-300 scrollbar-stable overflow-y-auto border-b",
           editorForceCollapsed
-            ? "bg-background/80 backdrop-blur-md border-b border-border/20"
-            : "bg-transparent"
+            ? "bg-background/80 backdrop-blur-md border-border/20"
+            : "bg-transparent border-border/0"
         )}
       >
         <div className="max-w-screen-md mx-auto">

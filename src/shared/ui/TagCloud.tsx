@@ -14,7 +14,7 @@ export const TagCloud = memo(function TagCloud() {
   const { tags, isLoading, isMounted } = useTags()
   const searchParams = useSearchParams()
   const router = useRouter()
-  const currentQuery = searchParams.get("q")
+  const currentQuery = searchParams.get("query")
 
   const topTags = useMemo(() => {
     return [...tags].sort((a, b) => b.count - a.count).slice(0, 6)
@@ -31,10 +31,7 @@ export const TagCloud = memo(function TagCloud() {
     router.push(`/?${params.toString()}`)
   }
 
-  const handleTagKeyDown = (
-    event: React.KeyboardEvent<HTMLSpanElement>,
-    tag: string
-  ) => {
+  const handleTagKeyDown = (event: React.KeyboardEvent<HTMLSpanElement>, tag: string) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault()
       handleTagClick(tag)

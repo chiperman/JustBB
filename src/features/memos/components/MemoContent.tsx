@@ -17,11 +17,7 @@ import {
   Copy01Icon as Copy,
   Link01Icon,
 } from "@hugeicons/core-free-icons"
-import {
-  HoverCard,
-  HoverCardTrigger,
-  HoverCardContent,
-} from "@/shared/ui/hover-card"
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/shared/ui/hover-card"
 import { toast } from "@/shared/hooks/use-toast"
 
 interface MemoContentProps {
@@ -38,7 +34,7 @@ export function MemoContent({
   style,
 }: MemoContentProps) {
   const searchParams = useSearchParams()
-  const searchQuery = searchParams?.get("q") || ""
+  const searchQuery = searchParams?.get("query") || ""
 
   const handleCopyLink = (e: React.MouseEvent, url: string) => {
     e.preventDefault()
@@ -54,10 +50,7 @@ export function MemoContent({
       <>
         {parts.map((part, i) =>
           part.toLowerCase() === highlight.toLowerCase() ? (
-            <span
-              key={i}
-              className="bg-[#fdf5f2] text-primary font-medium px-0.5 rounded-md mx-px"
-            >
+            <span key={i} className="bg-[#fdf5f2] text-primary font-medium px-0.5 rounded-md mx-px">
               {part}
             </span>
           ) : (
@@ -87,15 +80,9 @@ export function MemoContent({
               )
 
               return disablePreview ? (
-                <React.Fragment key={`ref-${index}`}>
-                  {linkElement}
-                </React.Fragment>
+                <React.Fragment key={`ref-${index}`}>{linkElement}</React.Fragment>
               ) : (
-                <MemoHoverPreview
-                  key={`ref-${index}`}
-                  memoNumber={memoNum}
-                  memoId={memoNum}
-                >
+                <MemoHoverPreview key={`ref-${index}`} memoNumber={memoNum} memoId={memoNum}>
                   {linkElement}
                 </MemoHoverPreview>
               )
@@ -133,10 +120,7 @@ export function MemoContent({
             case "code":
               return (
                 <div key={`code-${index}`}>
-                  <CodeBlock
-                    language={token.lang || "typescript"}
-                    value={token.value}
-                  />
+                  <CodeBlock language={token.lang || "typescript"} value={token.value} />
                 </div>
               )
             case "location":
@@ -148,9 +132,7 @@ export function MemoContent({
               )
 
               return disablePreview ? (
-                <React.Fragment key={`loc-${index}`}>
-                  {locElement}
-                </React.Fragment>
+                <React.Fragment key={`loc-${index}`}>{locElement}</React.Fragment>
               ) : (
                 <LocationHoverPreview
                   key={`loc-${index}`}
@@ -177,9 +159,7 @@ export function MemoContent({
                           className="inline-flex items-center gap-1 rounded-md hover:bg-primary/20 transition-colors cursor-pointer overflow-hidden"
                         >
                           <span>🔗</span>
-                          <span className="truncate max-w-[200px]">
-                            {token.title}
-                          </span>
+                          <span className="truncate max-w-[200px]">{token.title}</span>
                         </a>
                       </HoverCardTrigger>
                       <HoverCardContent className="w-80 p-0 overflow-hidden border-none">
@@ -248,17 +228,9 @@ export function MemoContent({
                 />
               )
             case "link":
-              return (
-                <LinkPreview
-                  key={`link-${index}`}
-                  url={token.value}
-                  showCopyButton
-                />
-              )
+              return <LinkPreview key={`link-${index}`} url={token.value} showCopyButton />
             case "email":
-              return (
-                <EmailComponent key={`email-${index}`} email={token.value} />
-              )
+              return <EmailComponent key={`email-${index}`} email={token.value} />
             case "text":
             default:
               return (
@@ -315,10 +287,7 @@ function EmailComponent({ email }: { email: string }) {
           )}
         </button>
       </span>
-      <a
-        href={`mailto:${email}`}
-        className="text-primary transition-colors inline align-baseline"
-      >
+      <a href={`mailto:${email}`} className="text-primary transition-colors inline align-baseline">
         {email}
       </a>
     </span>

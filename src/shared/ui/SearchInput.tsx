@@ -15,7 +15,7 @@ import { cn } from "@/shared/lib/utils"
 export function SearchInput() {
   const searchParams = useSearchParams()
   const { replace } = useRouter()
-  const q = searchParams.get("q") || ""
+  const q = searchParams.get("query") || ""
   const tag = searchParams.get("tag")
   const num = searchParams.get("num")
   const date = searchParams.get("date")
@@ -44,18 +44,18 @@ export function SearchInput() {
       const tagValue = trimmedTerm.slice(1).trim()
       if (tagValue) {
         params.set("tag", tagValue)
-        params.delete("q")
+        params.delete("query")
         setValue("")
       }
     } else if (/^\d+$/.test(trimmedTerm)) {
       params.set("num", trimmedTerm)
-      params.delete("q")
+      params.delete("query")
       setValue("")
     } else {
       if (trimmedTerm) {
-        params.set("q", trimmedTerm)
+        params.set("query", trimmedTerm)
       } else {
-        params.delete("q")
+        params.delete("query")
       }
     }
     replace(`/?${params.toString()}`)
@@ -69,7 +69,7 @@ export function SearchInput() {
   const handleGlobalSearch = () => {
     const params = new URLSearchParams()
     if (value.trim()) {
-      params.set("q", value.trim())
+      params.set("query", value.trim())
     }
     replace(`/?${params.toString()}`)
   }
@@ -178,7 +178,7 @@ export function SearchInput() {
 
       {hasContext && (
         <div className="absolute top-full left-0 right-0 pt-1 flex items-center justify-end px-0.5 animate-in fade-in slide-in-from-top-1 duration-200 pointer-events-auto h-7">
-          {(value.trim() || searchParams.get("q")) && (
+          {(value.trim() || searchParams.get("query")) && (
             <button
               onClick={handleGlobalSearch}
               className="group flex items-center gap-1 px-1.5 h-5 rounded-md bg-primary/[0.03] hover:bg-primary/10 micro-label font-medium text-primary/60 hover:text-primary transition-all border border-primary/10 whitespace-nowrap ml-2 outline-none focus-visible:ring-1 focus-visible:ring-ring"

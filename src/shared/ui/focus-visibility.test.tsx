@@ -3,7 +3,7 @@ import path from "node:path"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 
-let searchParamsString = "q=hello&tag=test"
+let searchParamsString = "query=hello&tag=test"
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -52,8 +52,7 @@ vi.mock("@/shared/hooks/useHasMounted", () => ({
 }))
 
 vi.mock("framer-motion", async () => {
-  const actual =
-    await vi.importActual<typeof import("framer-motion")>("framer-motion")
+  const actual = await vi.importActual<typeof import("framer-motion")>("framer-motion")
 
   return {
     ...actual,
@@ -132,13 +131,7 @@ describe("focus visibility regressions", () => {
   it("keeps a visible focus ring on usage tooltip triggers", () => {
     const html = renderToStaticMarkup(
       <TooltipProvider>
-        <UsageProgress
-          label="数据库"
-          used={128}
-          limit={512}
-          percentage={25}
-          info="使用说明"
-        />
+        <UsageProgress label="数据库" used={128} limit={512} percentage={25} info="使用说明" />
       </TooltipProvider>
     )
 
@@ -147,10 +140,7 @@ describe("focus visibility regressions", () => {
   })
 
   it("does not disable the ghost select trigger focus ring", () => {
-    const source = fs.readFileSync(
-      path.join(process.cwd(), "src/shared/ui/select.tsx"),
-      "utf8"
-    )
+    const source = fs.readFileSync(path.join(process.cwd(), "src/shared/ui/select.tsx"), "utf8")
 
     expect(source).not.toContain("focus-visible:ring-0")
   })
@@ -166,10 +156,7 @@ describe("focus visibility regressions", () => {
 
   it("keeps visible focus styles on editor link actions", () => {
     const source = fs.readFileSync(
-      path.join(
-        process.cwd(),
-        "src/features/memos/components/editor/LinkNodeView.tsx"
-      ),
+      path.join(process.cwd(), "src/features/memos/components/editor/LinkNodeView.tsx"),
       "utf8"
     )
 

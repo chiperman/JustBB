@@ -5,11 +5,7 @@ import { Json, Database } from "@/types/database"
 import { Memo, Location } from "@/types/memo"
 import { ActionResponse } from "../shared/types"
 import { fetchMemosSchema, FetchMemosInput } from "@/lib/memos/schemas"
-import {
-  BASE_MEMO_SELECT,
-  getMemosQuery,
-  MemoFilters,
-} from "@/lib/memos/query-builder"
+import { BASE_MEMO_SELECT, getMemosQuery, MemoFilters } from "@/lib/memos/query-builder"
 import { getCurrentUserId } from "@/features/auth/actions"
 import { withViewerAccess } from "@/lib/memos/visibility"
 
@@ -48,7 +44,7 @@ export async function getMemos(
   if (num) filters.num = num
   if (year) filters.year = year
   if (month) filters.month = month
-  if (date && !before_date && !after_date) filters.date = date
+  if (date) filters.date = date
   if (after_date) filters.after_date = after_date
   if (before_date) filters.before_date = before_date
   if (excludePinned) filters.exclude_pinned = true
@@ -146,12 +142,10 @@ export async function getGalleryMemos(
   }
 
   const memos = (
-    (data ||
-      []) as Database["public"]["Functions"]["search_memos_secure"]["Returns"]
+    (data || []) as Database["public"]["Functions"]["search_memos_secure"]["Returns"]
   ).map((memo) => {
     const isOwner = Boolean(viewerId && memo.owner_id === viewerId)
-    const canView =
-      !memo.is_private || isOwner || unlockedMemoIds.includes(memo.id)
+    const canView = !memo.is_private || isOwner || unlockedMemoIds.includes(memo.id)
     const isLocked = memo.is_locked ?? !canView
 
     let content = memo.content || ""
@@ -256,8 +250,7 @@ export async function getMemoById(
     .single()
 
   if (error) {
-    if (error.code === "PGRST116")
-      return { success: true, error: null, data: null }
+    if (error.code === "PGRST116") return { success: true, error: null, data: null }
     return { success: false, error: error.message, data: null }
   }
 
@@ -276,20 +269,15 @@ export async function getMemoById(
 /**
  * 获取反向引用 (Backlinks)
  */
-export async function getBacklinks(
-  memoNumber: number
-): Promise<ActionResponse<Memo[]>> {
+export async function getBacklinks(memoNumber: number): Promise<ActionResponse<Memo[]>> {
   if (!memoNumber) return { success: true, error: null, data: [] }
 
   const { query: qBuilder } = await getMemosQuery()
   let q = MemoFilters.active(qBuilder)
-  q = q
-    .ilike("content", `%@${memoNumber}%`)
-    .order("created_at", { ascending: false })
+  q = q.ilike("content", `%@${memoNumber}%`).order("created_at", { ascending: false })
 
   const { data, error } = await q
-  if (error || !data)
-    return { success: false, error: error?.message || "未知错误", data: [] }
+  if (error || !data) return { success: false, error: error?.message || "未知错误", data: [] }
 
   const filteredMemos = (data as unknown as Memo[]).filter((m) => {
     const regex = new RegExp(`@${memoNumber}(?!\\d)`)
@@ -322,8 +310,7 @@ export async function getMemosWithLocations(
   }
 
   const memosWithLocations = (
-    (data ||
-      []) as Database["public"]["Functions"]["search_memos_secure"]["Returns"]
+    (data || []) as Database["public"]["Functions"]["search_memos_secure"]["Returns"]
   )
     .map((memo) =>
       withViewerAccess(memo as unknown as Memo, viewerId, unlockedMemoIds, {
@@ -331,9 +318,7 @@ export async function getMemosWithLocations(
       })
     )
     .filter((memo): memo is Memo => memo !== null)
-    .filter(
-      (memo) => Array.isArray(memo.locations) && memo.locations.length > 0
-    )
+    .filter((memo) => Array.isArray(memo.locations) && memo.locations.length > 0)
     .map((memo) => ({
       ...memo,
       locations: memo.locations as unknown as Location[],
@@ -365,14 +350,7 @@ export async function getOnThisDayMemos(): Promise<ActionResponse<Memo[]>> {
     0,
     0
   ).toISOString()
-  const endDate = new Date(
-    currentYear - 1,
-    month - 1,
-    day,
-    23,
-    59,
-    59
-  ).toISOString()
+  const endDate = new Date(currentYear - 1, month - 1, day, 23, 59, 59).toISOString()
 
   const { query: qBuilder } = await getMemosQuery()
   let q = MemoFilters.active(qBuilder)
@@ -380,8 +358,7 @@ export async function getOnThisDayMemos(): Promise<ActionResponse<Memo[]>> {
   q = q.order("created_at", { ascending: false })
 
   const { data, error } = await q
-  if (error || !data)
-    return { success: false, error: error?.message || "查询失败", data: [] }
+  if (error || !data) return { success: false, error: error?.message || "查询失败", data: [] }
 
   const filteredMemos = (data as unknown as Memo[]).filter((memo) => {
     const d = new Date(memo.created_at)

@@ -76,9 +76,23 @@ export function MainLayoutClient() {
   const cachedData = getCache(cacheKey)
   const latestRequestIdRef = useRef(0)
 
+  const [prevCacheKey, setPrevCacheKey] = useState(cacheKey)
   const [memos, setMemos] = useState<Memo[]>(cachedData?.memos || [])
   const [isLoading, setIsLoading] = useState(!cachedData)
   const [isRefreshing, setIsRefreshing] = useState(false)
+
+  // 当 cacheKey 变动时，在渲染阶段立即同步调整状态，防止子组件以旧数据渲染
+  if (cacheKey !== prevCacheKey) {
+    setPrevCacheKey(cacheKey)
+    const latestCachedData = getCache(cacheKey)
+    if (!latestCachedData) {
+      setIsLoading(true)
+      setMemos([])
+    } else {
+      setMemos(latestCachedData.memos || [])
+      setIsLoading(false)
+    }
+  }
 
   // 2. 路由/搜索变动时重置并刷新，只接受当前 query 的最新结果
   useEffect(() => {

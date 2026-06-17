@@ -78,6 +78,20 @@ describe("getMemos TDD", () => {
     )
   })
 
+  it("should pass date filter even when before_date is present (for pagination)", async () => {
+    mockRpc.mockResolvedValue({ data: [], error: null })
+
+    const result = await getMemos({ date: "2026-02-06", before_date: "2026-02-06T12:00:00Z" })
+    expect(result.success).toBe(true)
+
+    expect(mockRpc).toHaveBeenCalledWith(
+      "search_memos_secure",
+      expect.objectContaining({
+        filters: { date: "2026-02-06", before_date: "2026-02-06T12:00:00Z" },
+      })
+    )
+  })
+
   it("should handle pagination offset and limit", async () => {
     mockRpc.mockResolvedValue({ data: [], error: null })
 
@@ -224,16 +238,8 @@ describe("Derivative Memo Queries TDD", () => {
   describe("getOnThisDayMemos", () => {
     it("should filter lookback years and dynamically lock", async () => {
       const today = new Date()
-      const sameDayLastYear = new Date(
-        today.getFullYear() - 1,
-        today.getMonth(),
-        today.getDate()
-      )
-      const differentDay = new Date(
-        today.getFullYear() - 1,
-        today.getMonth(),
-        today.getDate() + 1
-      )
+      const sameDayLastYear = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate())
+      const differentDay = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate() + 1)
 
       const mockMemos = [
         {

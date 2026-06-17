@@ -34,25 +34,15 @@ export function reconcileInitialMemoWindow(
     return nextMemo
   })
 
-  const olderMemos = currentMemos.filter(
-    (memo) => !previousInitialIds.has(memo.id)
-  )
+  const olderMemos = currentMemos.filter((memo) => !previousInitialIds.has(memo.id))
   return mergeMemos(olderMemos, alignedNextInitialMemos)
 }
 
-export function reconcileHasMoreOlder(
-  currentHasMoreOlder: boolean,
-  nextInitialMemos: Memo[]
-) {
-  return (
-    currentHasMoreOlder && nextInitialMemos.length >= INITIAL_MEMO_PAGE_SIZE
-  )
+export function reconcileHasMoreOlder(currentHasMoreOlder: boolean, nextInitialMemos: Memo[]) {
+  return currentHasMoreOlder && nextInitialMemos.length >= INITIAL_MEMO_PAGE_SIZE
 }
 
-export function reconcileUpdatedMemo(
-  existingMemo: Memo,
-  updatedMemo: Memo
-): Memo {
+export function reconcileUpdatedMemo(existingMemo: Memo, updatedMemo: Memo): Memo {
   return {
     ...existingMemo,
     ...updatedMemo,
@@ -64,27 +54,34 @@ export function reconcileUpdatedMemo(
 export function useMemoFeed({ initialMemos, searchParams }: UseMemoFeedProps) {
   const { unlockedMemoIds } = useUnlockedMemos()
   const [memos, setMemos] = useState<Memo[]>(initialMemos)
-  const [hasMoreOlder, setHasMoreOlder] = useState(
-    initialMemos.length >= INITIAL_MEMO_PAGE_SIZE
-  )
+  const [hasMoreOlder, setHasMoreOlder] = useState(initialMemos.length >= INITIAL_MEMO_PAGE_SIZE)
   const [isLoadingOlder, setIsLoadingOlder] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [lastCreatedId, setLastCreatedId] = useState<string | null>(null)
-  const previousInitialIdsRef = useRef(
-    new Set(initialMemos.map((memo) => memo.id))
-  )
+  const previousInitialIdsRef = useRef(new Set(initialMemos.map((memo) => memo.id)))
+  const lastSearchParamsRef = useRef(searchParams)
 
   useEffect(() => {
-    setMemos((prev) =>
-      reconcileInitialMemoWindow(
-        prev,
-        previousInitialIdsRef.current,
-        initialMemos
-      )
-    )
-    setHasMoreOlder((prev) => reconcileHasMoreOlder(prev, initialMemos))
-    previousInitialIdsRef.current = new Set(initialMemos.map((memo) => memo.id))
-  }, [initialMemos])
+    const paramsChanged =
+      searchParams.query !== lastSearchParamsRef.current.query ||
+      searchParams.tag !== lastSearchParamsRef.current.tag ||
+      searchParams.year !== lastSearchParamsRef.current.year ||
+      searchParams.month !== lastSearchParamsRef.current.month ||
+      searchParams.date !== lastSearchParamsRef.current.date ||
+      searchParams.sort !== lastSearchParamsRef.current.sort
+
+    if (paramsChanged) {
+      setMemos(initialMemos)
+      setHasMoreOlder(initialMemos.length >= INITIAL_MEMO_PAGE_SIZE)
+      previousInitialIdsRef.current = new Set(initialMemos.map((memo) => memo.id))
+      lastSearchParamsRef.current = searchParams
+    } else {
+      const prevInitialIds = previousInitialIdsRef.current
+      setMemos((prev) => reconcileInitialMemoWindow(prev, prevInitialIds, initialMemos))
+      setHasMoreOlder((prev) => reconcileHasMoreOlder(prev, initialMemos))
+      previousInitialIdsRef.current = new Set(initialMemos.map((memo) => memo.id))
+    }
+  }, [initialMemos, searchParams])
 
   const fetchOlderMemos = useCallback(async () => {
     if (isLoadingOlder || !hasMoreOlder) return
@@ -94,9 +91,7 @@ export function useMemoFeed({ initialMemos, searchParams }: UseMemoFeedProps) {
       const limit = INITIAL_MEMO_PAGE_SIZE
       const unpinnedMemos = memos.filter((m) => !m.is_pinned)
       const lastMemo =
-        unpinnedMemos.length > 0
-          ? unpinnedMemos[unpinnedMemos.length - 1]
-          : memos[memos.length - 1]
+        unpinnedMemos.length > 0 ? unpinnedMemos[unpinnedMemos.length - 1] : memos[memos.length - 1]
 
       const res = await getMemos({
         ...searchParams,
@@ -108,9 +103,7 @@ export function useMemoFeed({ initialMemos, searchParams }: UseMemoFeedProps) {
       })
 
       const nextMemos = res.data || []
-      const validNewMemos = nextMemos.filter(
-        (nm) => !memos.find((m) => m.id === nm.id)
-      )
+      const validNewMemos = nextMemos.filter((nm) => !memos.find((m) => m.id === nm.id))
 
       if (nextMemos.length < limit || validNewMemos.length === 0) {
         setHasMoreOlder(false)
@@ -129,9 +122,7 @@ export function useMemoFeed({ initialMemos, searchParams }: UseMemoFeedProps) {
 
   const updateMemoInList = useCallback((updatedMemo: Memo) => {
     setMemos((prev) =>
-      prev.map((m) =>
-        m.id === updatedMemo.id ? reconcileUpdatedMemo(m, updatedMemo) : m
-      )
+      prev.map((m) => (m.id === updatedMemo.id ? reconcileUpdatedMemo(m, updatedMemo) : m))
     )
   }, [])
 
@@ -148,9 +139,7 @@ export function useMemoFeed({ initialMemos, searchParams }: UseMemoFeedProps) {
             setLastCreatedId(payload.memo.id)
             return mergeMemos(prev, [payload.memo])
           case "update":
-            return prev.map((m) =>
-              m.id === payload.id ? { ...m, ...payload.updates } : m
-            )
+            return prev.map((m) => (m.id === payload.id ? { ...m, ...payload.updates } : m))
           case "delete":
             return prev.filter((m) => m.id !== payload.id)
           default:

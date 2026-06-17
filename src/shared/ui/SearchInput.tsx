@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  Search01Icon,
-  Cancel01Icon,
-  Calendar03Icon,
-  Tag01Icon,
-  Globe02Icon,
-} from "@hugeicons/core-free-icons"
+import { Search01Icon, Cancel01Icon, Calendar03Icon, Tag01Icon } from "@hugeicons/core-free-icons"
 import { useRouter, useSearchParams } from "next/navigation"
 import { cn } from "@/shared/lib/utils"
 
@@ -40,17 +34,23 @@ export function SearchInput() {
     const params = new URLSearchParams(searchParams.toString())
     const trimmedTerm = term.trim()
 
-    if (trimmedTerm.startsWith("#")) {
-      const tagValue = trimmedTerm.slice(1).trim()
+    const tagMatch = trimmedTerm.match(/^(?:tag|t):(.+)$/i)
+    const numMatch = trimmedTerm.match(/^(?:num|n|id):(\d+)$/i)
+
+    if (tagMatch) {
+      const tagValue = tagMatch[1].trim()
       if (tagValue) {
         params.set("tag", tagValue)
         params.delete("query")
         setValue("")
       }
-    } else if (/^\d+$/.test(trimmedTerm)) {
-      params.set("num", trimmedTerm)
-      params.delete("query")
-      setValue("")
+    } else if (numMatch) {
+      const numValue = numMatch[1].trim()
+      if (numValue) {
+        params.set("num", numValue)
+        params.delete("query")
+        setValue("")
+      }
     } else {
       if (trimmedTerm) {
         params.set("query", trimmedTerm)
@@ -64,14 +64,6 @@ export function SearchInput() {
   const handleClear = () => {
     setValue("")
     performSearch("")
-  }
-
-  const handleGlobalSearch = () => {
-    const params = new URLSearchParams()
-    if (value.trim()) {
-      params.set("query", value.trim())
-    }
-    replace(`/?${params.toString()}`)
   }
 
   return (
@@ -156,8 +148,18 @@ export function SearchInput() {
               if (e.key === "Enter") {
                 performSearch(value)
               } else if (e.key === "Backspace" && !value && hasContext) {
-                // Optional feature: delete last chip on backspace if input is empty
-                // We'll keep it simple for now and only use the 'x' buttons
+                const params = new URLSearchParams(searchParams.toString())
+                if (year && month) {
+                  params.delete("year")
+                  params.delete("month")
+                } else if (date) {
+                  params.delete("date")
+                } else if (num) {
+                  params.delete("num")
+                } else if (tag) {
+                  params.delete("tag")
+                }
+                replace(`/?${params.toString()}`)
               }
             }}
           />
@@ -175,24 +177,6 @@ export function SearchInput() {
           )}
         </div>
       </div>
-
-      {hasContext && (
-        <div className="absolute top-full left-0 right-0 pt-1 flex items-center justify-end px-0.5 animate-in fade-in slide-in-from-top-1 duration-200 pointer-events-auto h-7">
-          {(value.trim() || searchParams.get("query")) && (
-            <button
-              onClick={handleGlobalSearch}
-              className="group flex items-center gap-1 px-1.5 h-5 rounded-md bg-primary/[0.03] hover:bg-primary/10 micro-label font-medium text-primary/60 hover:text-primary transition-all border border-primary/10 whitespace-nowrap ml-2 outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              <HugeiconsIcon
-                icon={Globe02Icon}
-                size={10}
-                className="group-hover:rotate-12 transition-transform"
-              />
-              <span>全量搜索</span>
-            </button>
-          )}
-        </div>
-      )}
     </div>
   )
 }

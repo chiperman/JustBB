@@ -40,8 +40,8 @@ ON CONFLICT (provider, provider_id) DO UPDATE SET
 INSERT INTO memos (id, owner_id, content, tags, is_private, is_pinned, pinned_at, created_at, word_count)
 VALUES 
 ('11111111-1111-1111-1111-111111111111', '00000000-0000-0000-0000-000000000001', '【全站置顶】欢迎来到 JustBB 2.0 极简版。这里是你逃离噪音的港湾。 🔗 [项目文档](https://github.com/) #公告 #置顶', ARRAY['公告', '置顶'], false, true, now(), now() - interval '1 hour', 45),
-('11111111-1111-1111-1111-111111111112', '00000000-0000-0000-0000-000000000001', '【置顶】这是较早的一条置顶，用于测试置顶项之间的二次排序逻辑。', ARRAY['公告'], false, true, now() - interval '1 day', now() - interval '2 days', 30),
-('11111111-1111-1111-1111-111111111113', '00000000-0000-0000-0000-000000000001', '这是一条展示 Markdown 功能的普通记录：\n- 任务一\n- 任务二\n- [ ] 待办事项', ARRAY['日常', 'Markdown'], false, false, NULL, now() - interval '3 hours', 20)
+('11111111-1111-1111-1111-111111111112', '00000000-0000-0000-0000-000000000001', '【置顶】这是较早的一条置顶，用于测试置顶项之间的二次排序逻辑。 #公告', ARRAY['公告'], false, true, now() - interval '1 day', now() - interval '2 days', 30),
+('11111111-1111-1111-1111-111111111113', '00000000-0000-0000-0000-000000000001', '这是一条展示 Markdown 功能的普通记录：\n- 任务一\n- 任务二\n- [ ] 待办事项 #日常 #Markdown', ARRAY['日常', 'Markdown'], false, false, NULL, now() - interval '3 hours', 20)
 ON CONFLICT (id) DO UPDATE SET
     owner_id = EXCLUDED.owner_id,
     content = EXCLUDED.content,
@@ -79,8 +79,8 @@ ON CONFLICT (id) DO UPDATE SET
 -- 3. [Privacy & Trash] 隐私口令与已删除记录
 INSERT INTO memos (id, owner_id, content, tags, is_private, access_code_hash, access_code_hint, created_at, word_count, deleted_at)
 VALUES 
-('33333333-3333-3333-3333-333333333331', '00000000-0000-0000-0000-000000000001', '我的银行卡备忘：[此处已隐藏]。', ARRAY['私密'], true, crypt('password123', gen_salt('bf')), '我最常用的基础密码', '2024-01-01 00:01:00+08', 15, NULL),
-('33333333-3333-3333-3333-333333333332', '00000000-0000-0000-0000-000000000001', '这条记录已被删除，但在垃圾箱中可见。', ARRAY['垃圾箱'], false, NULL, NULL, '2025-12-31 23:59:59+08', 18, now() - interval '1 day')
+('33333333-3333-3333-3333-333333333331', '00000000-0000-0000-0000-000000000001', '我的银行卡备忘：[此处已隐藏]。 #私密', ARRAY['私密'], true, crypt('password123', gen_salt('bf')), '我最常用的基础密码', '2024-01-01 00:01:00+08', 15, NULL),
+('33333333-3333-3333-3333-333333333332', '00000000-0000-0000-0000-000000000001', '这条记录已被删除，但在垃圾箱中可见。 #垃圾箱', ARRAY['垃圾箱'], false, NULL, NULL, '2025-12-31 23:59:59+08', 18, now() - interval '1 day')
 ON CONFLICT (id) DO UPDATE SET
     owner_id = EXCLUDED.owner_id,
     content = EXCLUDED.content,
@@ -102,13 +102,19 @@ SELECT
   -- 使用 extensions.uuid_generate_v5(namespace, name) 生成基于索引的固定 UUID
   extensions.uuid_generate_v5('00000000-0000-0000-0000-000000000000', s.id::text),
   '00000000-0000-0000-0000-000000000001',
-  '自动生成的碎碎念 #' || s.id || '：' || (
+  '自动生成的碎碎念 No.' || s.id || '：' || (
     CASE (s.id % 5)
       WHEN 0 THEN '今天写了点代码。'
       WHEN 1 THEN '天气不错，适合散步。'
       WHEN 2 THEN '读了一本好书。'
       WHEN 3 THEN '发现了一个有趣的网站。'
       ELSE '这是一条普通的记录。'
+    END
+  ) || ' #' || (
+    CASE (s.id % 7)
+      WHEN 0 THEN '技术' WHEN 1 THEN '生活' WHEN 2 THEN '随笔' 
+      WHEN 3 THEN '思考' WHEN 4 THEN '日常' WHEN 5 THEN '读书' 
+      ELSE '灵感'
     END
   ),
   ARRAY[

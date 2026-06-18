@@ -86,13 +86,10 @@ export function ExpandableContent({
                 e.stopPropagation()
                 setIsExpanded(!isExpanded)
               }}
-              className="flex items-center gap-1.5 px-3 py-1 bg-muted/80 backdrop-blur text-muted-foreground text-[10px] font-medium rounded-full hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer border border-border/50"
+              className="flex items-center gap-1.5 px-3 py-1 bg-muted/80 backdrop-blur text-muted-foreground text-[10px] font-medium rounded-full hover:bg-primary hover:text-primary-foreground transition-all border border-border/50"
             >
               {isExpanded ? "收起内容" : "展开内容"}
-              <HugeiconsIcon
-                icon={isExpanded ? ArrowUp01Icon : ArrowDown01Icon}
-                size={12}
-              />
+              <HugeiconsIcon icon={isExpanded ? ArrowUp01Icon : ArrowDown01Icon} size={12} />
             </button>
           </motion.div>
         )}

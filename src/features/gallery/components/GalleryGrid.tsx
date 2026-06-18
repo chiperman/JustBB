@@ -50,11 +50,7 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
           transition={{ delay: idx * 0.03, duration: 0.5 }}
           className="break-inside-avoid mb-6"
         >
-          <div
-            tabIndex={0}
-            className="group relative overflow-hidden rounded-xl border border-border/40 bg-card focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
-            aria-label="查看图片 Memo"
-          >
+          <div className="group relative overflow-hidden rounded-xl border border-border/40 bg-card focus-within:ring-1 focus-within:ring-ring">
             <ImageZoom
               src={item.imageUrl || ""}
               alt="Memo multimedia content"
@@ -71,13 +67,13 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
             </ImageZoom>
 
             {/* Gradient wash overlay — visible on hover (pointer-events-none lets clicks through to ImageZoom) */}
-            <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(to_top,rgba(29,29,27,0.72)_0%,rgba(29,29,27,0.34)_42%,rgba(29,29,27,0.04)_72%),linear-gradient(135deg,rgba(217,119,87,0.18),transparent_45%)] opacity-0 group-hover:opacity-100 group-focus:opacity-100" />
+            <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(to_top,rgba(29,29,27,0.72)_0%,rgba(29,29,27,0.34)_42%,rgba(29,29,27,0.04)_72%),linear-gradient(135deg,rgba(217,119,87,0.18),transparent_45%)] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100" />
 
             {/* Glassy bottom panel — visible on hover (pointer-events-none lets clicks through to ImageZoom) */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[48%] border-t border-white/[0.22] bg-[linear-gradient(to_top,rgba(29,29,27,0.44)_0%,rgba(246,245,244,0.14)_58%,rgba(246,245,244,0.02)_82%,transparent_100%),rgba(246,245,244,0.08)] opacity-0 backdrop-blur-[22px] backdrop-saturate-[1.35] [-webkit-backdrop-filter:blur(22px)_saturate(1.35)] [mask-image:linear-gradient(to_top,black_0%,black_62%,rgba(0,0,0,0.62)_80%,transparent_100%)] group-hover:opacity-100 group-focus:opacity-100" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[48%] border-t border-white/[0.22] bg-[linear-gradient(to_top,rgba(29,29,27,0.44)_0%,rgba(246,245,244,0.14)_58%,rgba(246,245,244,0.02)_82%,transparent_100%),rgba(246,245,244,0.08)] opacity-0 backdrop-blur-[22px] backdrop-saturate-[1.35] [-webkit-backdrop-filter:blur(22px)_saturate(1.35)] [mask-image:linear-gradient(to_top,black_0%,black_62%,rgba(0,0,0,0.62)_80%,transparent_100%)] group-hover:opacity-100 group-focus-within:opacity-100" />
 
             {/* Content — visible on hover (pointer-events-none lets clicks through to ImageZoom) */}
-            <div className="pointer-events-none absolute inset-x-[18px] bottom-[18px] z-20 grid gap-3 opacity-0 group-hover:opacity-100 group-focus:opacity-100">
+            <div className="pointer-events-none absolute inset-x-[18px] bottom-[18px] z-20 grid gap-3 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100">
               <p className="line-clamp-2 text-[15px] font-semibold leading-normal text-white drop-shadow-[0_1px_18px_rgba(0,0,0,0.42)]">
                 {item.content.replace(/!\[.*?\]\((.*?)\)/g, "").trim() || "图片分享"}
               </p>

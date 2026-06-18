@@ -100,12 +100,19 @@ export function LoginTransitionWrapper({
           variants={HOME_TRANSITION_VARIANTS}
           initial="home"
           animate={variant}
-          className={cn("absolute inset-0 z-10 origin-center", isSplitView && "cursor-pointer")}
+          className="absolute inset-0 z-10 origin-center"
           style={{
             borderRadius: isSplitView ? 24 : 0,
           }}
-          onClick={() => isSplitView && setViewMode("HOME_FOCUS")}
         >
+          {isSplitView && (
+            <button
+              type="button"
+              aria-label="返回主视图"
+              className="absolute inset-0 z-20 rounded-[24px] bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              onClick={() => setViewMode("HOME_FOCUS")}
+            />
+          )}
           <div
             className={cn(
               "home-card-shell h-full w-full overflow-hidden border border-black/5 dark:border-white/5",

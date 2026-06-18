@@ -57,7 +57,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
                   type="button"
                   onClick={() => setSortBy("count")}
                   className={cn(
-                    "relative z-10 rounded-[6px] px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer hover:bg-transparent",
+                    "relative z-10 rounded-[6px] px-3 py-1.5 text-xs font-medium transition-colors hover:bg-transparent",
                     sortBy === "count"
                       ? "text-foreground font-semibold"
                       : "text-muted-foreground hover:text-foreground"
@@ -76,7 +76,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
                   type="button"
                   onClick={() => setSortBy("name")}
                   className={cn(
-                    "relative z-10 rounded-[6px] px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer hover:bg-transparent",
+                    "relative z-10 rounded-[6px] px-3 py-1.5 text-xs font-medium transition-colors hover:bg-transparent",
                     sortBy === "name"
                       ? "text-foreground font-semibold"
                       : "text-muted-foreground hover:text-foreground"

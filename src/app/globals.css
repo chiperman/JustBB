@@ -51,8 +51,8 @@
   --: none;
 
   --font-sans:
-    "Inter", var(--font-notion-inter), ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    "Inter", var(--font-notion-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 :root {
@@ -262,6 +262,28 @@ body {
   }
   p {
     @apply body-text;
+  }
+
+  /* 根据原生或 ARIA 交互语义统一显示手型光标 */
+  :where(
+      button,
+      a[href],
+      label[for],
+      summary,
+      [role="button"],
+      [role="checkbox"],
+      [role="radio"],
+      [role="switch"],
+      [role="tab"],
+      [role^="menuitem"],
+      [role="option"],
+      [role="link"]
+    ):not(:disabled):not([aria-disabled="true"]):not([data-disabled]) {
+    cursor: pointer;
+  }
+
+  :where(:disabled, [disabled], [aria-disabled="true"], [data-disabled]) {
+    cursor: not-allowed;
   }
 }
 

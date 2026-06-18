@@ -77,9 +77,7 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
               <TimelineLine />
               <TimelineDot className="bg-(--heatmap-0) border-(--heatmap-0)" />
               <TimelineHeading className="mb-6">
-                <Skeleton
-                  className={cn("h-4", i % 2 === 0 ? "w-32" : "w-28")}
-                />
+                <Skeleton className={cn("h-4", i % 2 === 0 ? "w-32" : "w-28")} />
               </TimelineHeading>
               <TimelineContent>
                 <div className="flex flex-col gap-3">
@@ -134,7 +132,7 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
                         href={`#memo-${memo.id}`}
                         onClick={(e) => handleMemoClick(e, memo.id)}
                         className={cn(
-                          "text-[10px] transition-colors block py-0.5 pl-1 cursor-pointer font-mono font-bold tracking-tight",
+                          "text-[10px] transition-colors block py-0.5 pl-1 font-mono font-bold tracking-tight",
                           isActive
                             ? "text-primary"
                             : "text-muted-foreground/50 hover:text-primary/70"

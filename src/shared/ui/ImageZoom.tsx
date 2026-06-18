@@ -178,7 +178,7 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
             y.set(0)
           }}
           className={cn(
-            "px-3 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer",
+            "px-3 py-1 rounded-full text-[11px] font-medium transition-all",
             fitMode === "fit" ? "bg-white/25 text-white" : "text-white/40 hover:text-white/70"
           )}
         >
@@ -192,7 +192,7 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
             y.set(0)
           }}
           className={cn(
-            "px-3 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer",
+            "px-3 py-1 rounded-full text-[11px] font-medium transition-all",
             fitMode === "original" ? "bg-white/25 text-white" : "text-white/40 hover:text-white/70"
           )}
         >
@@ -221,7 +221,7 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
           e.stopPropagation()
           onClose()
         }}
-        className="absolute top-8 right-8 p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 text-white transition-all active:scale-95 backdrop-blur-md group/close z-20 cursor-pointer"
+        className="absolute top-8 right-8 p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 text-white transition-all active:scale-95 backdrop-blur-md group/close z-20"
         aria-label="关闭预览"
       >
         <HugeiconsIcon
@@ -274,6 +274,15 @@ export function ImageZoom({ src, alt, className, children, noHoverScale }: Image
     >
       <DialogTrigger asChild>
         <motion.div
+          role="button"
+          tabIndex={0}
+          aria-label={alt ? `打开图片预览：${alt}` : "打开图片预览"}
+          onKeyDown={(event) => {
+            if (!event.repeat && (event.key === "Enter" || event.key === " ")) {
+              event.preventDefault()
+              event.currentTarget.click()
+            }
+          }}
           style={{ scale: noHoverScale ? undefined : undefined }}
           {...(noHoverScale
             ? {}
@@ -282,7 +291,7 @@ export function ImageZoom({ src, alt, className, children, noHoverScale }: Image
                 whileTap: { scale: 0.985 },
               })}
           className={cn(
-            "cursor-pointer group/zoom relative overflow-hidden rounded-inner ring-1 ring-black/5",
+            "group/zoom relative overflow-hidden rounded-inner ring-1 ring-black/5 outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
             className
           )}
         >

@@ -14,7 +14,7 @@ export const TagCloud = memo(function TagCloud() {
   const { tags, isLoading, isMounted } = useTags()
   const searchParams = useSearchParams()
   const router = useRouter()
-  const currentQuery = searchParams.get("query")
+  const currentTag = searchParams.get("tag")
 
   const topTags = useMemo(() => {
     return [...tags].sort((a, b) => b.count - a.count).slice(0, 6)
@@ -32,7 +32,7 @@ export const TagCloud = memo(function TagCloud() {
   }
 
   const handleTagKeyDown = (event: React.KeyboardEvent<HTMLSpanElement>, tag: string) => {
-    if (event.key === "Enter" || event.key === " ") {
+    if (!event.repeat && (event.key === "Enter" || event.key === " ")) {
       event.preventDefault()
       handleTagClick(tag)
     }
@@ -73,7 +73,7 @@ export const TagCloud = memo(function TagCloud() {
           className="flex flex-wrap gap-2"
         >
           {topTags.map(({ tag_name, count }) => {
-            const isActive = currentQuery === tag_name
+            const isActive = currentTag === tag_name
             return (
               <Badge
                 key={tag_name}
@@ -81,12 +81,13 @@ export const TagCloud = memo(function TagCloud() {
                 onClick={() => handleTagClick(tag_name)}
                 onKeyDown={(event) => handleTagKeyDown(event, tag_name)}
                 className={cn(
-                  "cursor-pointer px-2 py-0.5 nav-button-text font-medium gap-1.5 transition-all active:scale-95 outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset",
+                  "px-2 py-0.5 nav-button-text font-medium gap-1.5 transition-all active:scale-95 outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset",
                   isActive
                     ? ""
                     : "border-border/50 bg-background text-muted-foreground hover:bg-accent"
                 )}
                 aria-label={`标签 #${tag_name}，共有 ${count} 条记录`}
+                aria-pressed={isActive}
                 role="button"
                 tabIndex={0}
               >

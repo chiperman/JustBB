@@ -3,10 +3,7 @@
 import { useState, useEffect } from "react"
 import { AnimatePresence } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  ArrowUp01Icon as ArrowUp,
-  ArrowDown01Icon as ArrowDown,
-} from "@hugeicons/core-free-icons"
+import { ArrowUp01Icon as ArrowUp, ArrowDown01Icon as ArrowDown } from "@hugeicons/core-free-icons"
 import { BaseFloatingCapsule } from "@/shared/ui/BaseFloatingCapsule"
 
 interface NewMemosIndicatorProps {
@@ -14,10 +11,7 @@ interface NewMemosIndicatorProps {
   clearLastCreatedId: () => void
 }
 
-export function NewMemosIndicator({
-  lastCreatedId,
-  clearLastCreatedId,
-}: NewMemosIndicatorProps) {
+export function NewMemosIndicator({ lastCreatedId, clearLastCreatedId }: NewMemosIndicatorProps) {
   const [direction, setDirection] = useState<"up" | "down" | null>(null)
   const [isVisible, setIsVisible] = useState(false)
 
@@ -73,8 +67,16 @@ export function NewMemosIndicator({
     <AnimatePresence>
       {isVisible && direction && (
         <BaseFloatingCapsule
-          className="cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+          role="button"
+          tabIndex={0}
+          className="hover:scale-105 active:scale-95 transition-transform"
           onClick={scrollToMemo}
+          onKeyDown={(e) => {
+            if (!e.repeat && (e.key === "Enter" || e.key === " ")) {
+              e.preventDefault()
+              scrollToMemo()
+            }
+          }}
         >
           <div className="flex items-center gap-2 px-3 py-1 text-primary">
             <HugeiconsIcon

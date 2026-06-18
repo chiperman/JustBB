@@ -199,25 +199,30 @@ export function MemoEditorLayout({
       }}
       className={cn(
         "border border-border rounded-lg relative flex flex-col items-stretch selection:bg-primary/30",
-        isActuallyCollapsed && "cursor-pointer hover:bg-secondary",
+        isActuallyCollapsed && "hover:bg-secondary",
         className
       )}
-      onClick={() => {
-        if (isActuallyCollapsed && editor) {
-          const selection = window.getSelection()
-          if (!selection || selection.toString().length === 0) {
-            editor.commands.focus("end")
-          }
-        }
-      }}
     >
+      {isActuallyCollapsed && (
+        <button
+          type="button"
+          aria-label="展开 Memo 编辑器"
+          className="absolute inset-0 z-20 rounded-lg bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          onClick={() => editor?.commands.focus("end")}
+        />
+      )}
+
       <motion.div
         className="absolute inset-0 bg-card rounded-lg pointer-events-none"
         animate={{ opacity: isActuallyCollapsed ? 0 : 1 }}
         transition={{ duration: shouldAnimateCollapse ? 0.2 : 0 }}
       />
 
-      <div className="w-full flex-1 flex flex-col min-h-0">
+      <div
+        className="w-full flex-1 flex flex-col min-h-0"
+        inert={isActuallyCollapsed}
+        aria-hidden={isActuallyCollapsed}
+      >
         <div ref={relativeGroupRef} className="relative group w-full flex-1 flex flex-col min-h-0">
           <motion.div
             ref={editorContainerRef}

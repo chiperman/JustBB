@@ -116,10 +116,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
               <DropdownMenuContent align="start" side="bottom" className="w-48">
                 {user && (
                   <>
-                    <DropdownMenuItem
-                      className="cursor-pointer gap-2"
-                      onClick={() => toggleSelectionMode(true)}
-                    >
+                    <DropdownMenuItem className="gap-2" onClick={() => toggleSelectionMode(true)}>
                       <HugeiconsIcon icon={CheckmarkSquare02Icon} size={16} />
                       <span>选择笔记</span>
                     </DropdownMenuItem>
@@ -127,17 +124,17 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
                   </>
                 )}
                 <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="cursor-pointer gap-2">
+                  <DropdownMenuSubTrigger className="gap-2">
                     <HugeiconsIcon icon={Sorting05Icon} size={16} />
                     <span>排序方式</span>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
                     <DropdownMenuSubContent>
                       <DropdownMenuRadioGroup value={currentSort} onValueChange={handleSortChange}>
-                        <DropdownMenuRadioItem value="newest" className="cursor-pointer">
+                        <DropdownMenuRadioItem value="newest">
                           创建时间，从新到旧
                         </DropdownMenuRadioItem>
-                        <DropdownMenuRadioItem value="oldest" className="cursor-pointer">
+                        <DropdownMenuRadioItem value="oldest">
                           创建时间，从旧到新
                         </DropdownMenuRadioItem>
                       </DropdownMenuRadioGroup>

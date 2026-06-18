@@ -387,7 +387,7 @@ export function RightSidebar({
                           <TimelineHeading className="mb-6">
                             <button
                               className={cn(
-                                "cursor-pointer font-mono text-sm font-bold tracking-tighter transition-colors",
+                                "font-mono text-sm font-bold tracking-tighter transition-colors",
                                 isYearActive(yearGroup.year)
                                   ? "text-primary"
                                   : "text-foreground hover:text-primary"
@@ -415,7 +415,7 @@ export function RightSidebar({
                                   />
                                   <h5
                                     className={cn(
-                                      "block cursor-pointer pl-1 text-[11px] font-bold tracking-wide uppercase transition-colors",
+                                      "block pl-1 text-[11px] font-bold tracking-wide uppercase transition-colors",
                                       isMonthActive(yearGroup.year, monthGroup.month)
                                         ? "text-primary"
                                         : "text-muted-foreground/80 hover:text-primary"
@@ -452,7 +452,7 @@ export function RightSidebar({
                                         <button
                                           type="button"
                                           className={cn(
-                                            "block w-full cursor-pointer py-0.5 pl-1 text-left font-mono text-[10px] font-bold tracking-tight transition-colors",
+                                            "block w-full py-0.5 pl-1 text-left font-mono text-[10px] font-bold tracking-tight transition-colors",
                                             isActive
                                               ? "text-primary"
                                               : "text-muted-foreground/50 hover:text-primary/70"

@@ -16,22 +16,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu"
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/shared/ui/hover-card"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/shared/ui/hover-card"
 import { useToast } from "@/shared/hooks/use-toast"
 import type { LinkRenderMode } from "./smartLink"
 
 export const LinkNodeView = (props: NodeViewProps) => {
   const { node, updateAttributes, editor } = props
-  const {
-    id: url,
-    label: title,
-    mode = "mention",
-    isPending = false,
-  } = node.attrs
+  const { id: url, label: title, mode = "mention", isPending = false } = node.attrs
   const { toast } = useToast()
   const editorDom = editor.view.dom
 
@@ -60,9 +51,7 @@ export const LinkNodeView = (props: NodeViewProps) => {
   const renderMenu = () => (
     <DropdownMenu
       onOpenChange={(open) => {
-        editorDom.dispatchEvent(
-          new CustomEvent("memo-internal-menu-change", { detail: { open } })
-        )
+        editorDom.dispatchEvent(new CustomEvent("memo-internal-menu-change", { detail: { open } }))
       }}
     >
       <DropdownMenuTrigger asChild>
@@ -106,7 +95,7 @@ export const LinkNodeView = (props: NodeViewProps) => {
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 rounded-md hover:bg-primary/20 transition-colors cursor-pointer overflow-hidden"
+                className="inline-flex items-center gap-1 rounded-md hover:bg-primary/20 transition-colors overflow-hidden"
               >
                 <span>🔗</span>
                 <span className="truncate max-w-[200px]">{title}</span>
@@ -128,11 +117,7 @@ export const LinkNodeView = (props: NodeViewProps) => {
 
       {mode === "pill" && (
         <div className="inline-flex items-center gap-2 px-2 py-1 rounded-md border border-border bg-card/50 hover:bg-accent/30 transition-all group">
-          <HugeiconsIcon
-            icon={Link01Icon}
-            size={14}
-            className="text-muted-foreground/60"
-          />
+          <HugeiconsIcon icon={Link01Icon} size={14} className="text-muted-foreground/60" />
           <span className="text-xs text-foreground/80 font-medium truncate max-w-[200px]">
             {title}
           </span>

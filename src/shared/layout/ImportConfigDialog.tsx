@@ -18,10 +18,7 @@ import {
   parseLeanCloud,
   ParsedMemo,
 } from "@/server/services/import/parsers"
-import {
-  importMemos,
-  ImportResult,
-} from "@/server/services/import/importService"
+import { importMemos, ImportResult } from "@/server/services/import/importService"
 import { Progress } from "@/shared/ui/progress"
 import { useUser } from "@/state/UserContext"
 
@@ -30,10 +27,7 @@ interface ImportConfigDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-export function ImportConfigDialog({
-  open,
-  onOpenChange,
-}: ImportConfigDialogProps) {
+export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogProps) {
   const { user } = useUser()
   const [file, setFile] = React.useState<File | null>(null)
   const [status, setStatus] = React.useState<
@@ -42,6 +36,7 @@ export function ImportConfigDialog({
   const [progress, setProgress] = React.useState(0)
   const [result, setResult] = React.useState<ImportResult | null>(null)
   const [error, setError] = React.useState<string | null>(null)
+  const fileInputId = React.useId()
 
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
@@ -79,9 +74,7 @@ export function ImportConfigDialog({
 
       setStatus("importing")
       const importResult = await importMemos(parsedMemos, (p) => {
-        setProgress(
-          Math.round(((p.success + p.skipped + p.failed) / p.total) * 100)
-        )
+        setProgress(Math.round(((p.success + p.skipped + p.failed) / p.total) * 100))
         setResult(p)
       })
 
@@ -179,8 +172,7 @@ export function ImportConfigDialog({
                   onClick={() => setExampleFormat(f)}
                   className={cn(
                     "h-7 text-[11px] font-bold uppercase tracking-tight",
-                    exampleFormat === f &&
-                      "bg-background border border-border/50"
+                    exampleFormat === f && "bg-background border border-border/50"
                   )}
                 >
                   {f === "jsonl" ? "LeanCloud" : f}
@@ -191,9 +183,7 @@ export function ImportConfigDialog({
             <div className="bg-background/80 rounded-xl p-4 border border-border/40 font-mono text-[11px] leading-relaxed overflow-x-auto">
               {exampleFormat === "markdown" && (
                 <pre className="text-muted-foreground whitespace-pre-wrap">
-                  <span className="text-primary font-bold">
-                    ### [2020/9/28 20:14:05]
-                  </span>
+                  <span className="text-primary font-bold">### [2020/9/28 20:14:05]</span>
                   {"\n"}
                   <span className="opacity-60">
                     {
@@ -237,9 +227,7 @@ export function ImportConfigDialog({
                   {"\n"}
                   {'    "word_count": 45, // 可选'}
                   {"\n"}
-                  {
-                    '    "locations": [{"name": "教学楼", "lat": 30.1, "lng": 104.2}], // 可选'
-                  }
+                  {'    "locations": [{"name": "教学楼", "lat": 30.1, "lng": 104.2}], // 可选'}
                   {"\n"}
                   {'    "access_code_hash": null, // 可选'}
                   {"\n"}
@@ -252,9 +240,7 @@ export function ImportConfigDialog({
               )}
               {exampleFormat === "jsonl" && (
                 <pre className="text-muted-foreground whitespace-pre-wrap">
-                  <span className="opacity-50">
-                    {"// LeanCloud 核心字段对照"}
-                  </span>
+                  <span className="opacity-50">{"// LeanCloud 核心字段对照"}</span>
                   {"\n"}
                   {"{"}
                   {"\n"}
@@ -264,13 +250,9 @@ export function ImportConfigDialog({
                   {"\n"}
                   {'  "tag": "# 💤梦", // 对应 tags'}
                   {"\n"}
-                  {
-                    '  "createdAt": "2020-09-28T12:14:05.559Z", // 对应 created_at'
-                  }
+                  {'  "createdAt": "2020-09-28T12:14:05.559Z", // 对应 created_at'}
                   {"\n"}
-                  {
-                    '  "updatedAt": "2024-05-18T04:31:40.124Z" // 对应 updated_at'
-                  }
+                  {'  "updatedAt": "2024-05-18T04:31:40.124Z" // 对应 updated_at'}
                   {"\n"}
                   {"}"}
                 </pre>
@@ -280,43 +262,44 @@ export function ImportConfigDialog({
         )}
 
         {status === "idle" && (
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className={cn(
-              "group relative border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer",
-              file
-                ? "border-primary/40 bg-primary/5"
-                : "border-border hover:border-primary/30 hover:bg-secondary"
-            )}
-          >
+          <>
             <input
+              id={fileInputId}
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
               accept=".json,.md,.jsonl"
-              className="hidden"
+              className="peer sr-only"
             />
 
-            <div
+            <label
+              htmlFor={fileInputId}
               className={cn(
-                "mb-4 p-4 rounded-full transition-all duration-300",
+                "group relative border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center transition-all duration-300 outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40",
                 file
-                  ? "bg-primary/20 text-primary"
-                  : "bg-secondary text-muted-foreground group-hover:text-primary group-hover:bg-primary/10"
+                  ? "border-primary/40 bg-primary/5"
+                  : "border-border hover:border-primary/30 hover:bg-secondary"
               )}
             >
-              <HugeiconsIcon icon={file ? FileImportIcon : Upload} size={32} />
-            </div>
+              <span
+                className={cn(
+                  "mb-4 block p-4 rounded-full transition-all duration-300",
+                  file
+                    ? "bg-primary/20 text-primary"
+                    : "bg-secondary text-muted-foreground group-hover:text-primary group-hover:bg-primary/10"
+                )}
+              >
+                <HugeiconsIcon icon={file ? FileImportIcon : Upload} size={32} />
+              </span>
 
-            <div className="text-center">
-              <p className="body-large font-bold">
-                {file ? file.name : "点击或拖拽文件到此处"}
-              </p>
-              <p className="caption opacity-60 mt-1">
-                支持 .json, .md, .jsonl 格式
-              </p>
-            </div>
-          </div>
+              <span className="block text-center">
+                <span className="body-large block font-bold">
+                  {file ? file.name : "点击选择文件"}
+                </span>
+                <span className="caption mt-1 block opacity-60">支持 .json, .md, .jsonl 格式</span>
+              </span>
+            </label>
+          </>
         )}
 
         {(status === "parsing" || status === "importing") && (
@@ -335,9 +318,7 @@ export function ImportConfigDialog({
                   <p className="caption opacity-60">请勿关闭弹窗或刷新页面</p>
                 </div>
               </div>
-              <span className="body-large font-mono font-bold text-primary">
-                {progress}%
-              </span>
+              <span className="body-large font-mono font-bold text-primary">{progress}%</span>
             </div>
 
             <Progress value={progress} className="h-2" />
@@ -346,21 +327,15 @@ export function ImportConfigDialog({
               <div className="grid grid-cols-3 gap-4 pt-2">
                 <div className="text-center p-3 bg-secondary rounded-xl">
                   <p className="micro-label uppercase opacity-50 mb-1">成功</p>
-                  <p className="body-large font-bold text-green-600">
-                    {result.success}
-                  </p>
+                  <p className="body-large font-bold text-green-600">{result.success}</p>
                 </div>
                 <div className="text-center p-3 bg-secondary rounded-xl">
                   <p className="micro-label uppercase opacity-50 mb-1">重复</p>
-                  <p className="body-large font-bold text-amber-600">
-                    {result.skipped}
-                  </p>
+                  <p className="body-large font-bold text-amber-600">{result.skipped}</p>
                 </div>
                 <div className="text-center p-3 bg-secondary rounded-xl">
                   <p className="micro-label uppercase opacity-50 mb-1">失败</p>
-                  <p className="body-large font-bold text-red-600">
-                    {result.failed}
-                  </p>
+                  <p className="body-large font-bold text-red-600">{result.failed}</p>
                 </div>
               </div>
             )}
@@ -374,9 +349,7 @@ export function ImportConfigDialog({
                   className="w-full text-xs text-muted-foreground hover:text-red-600 flex items-center justify-center gap-1"
                 >
                   <HugeiconsIcon icon={CancelIcon} size={14} />
-                  {showErrors
-                    ? "隐藏错误详情"
-                    : `查看 ${result.failed} 条失败详情`}
+                  {showErrors ? "隐藏错误详情" : `查看 ${result.failed} 条失败详情`}
                 </Button>
 
                 {showErrors && (
@@ -386,12 +359,8 @@ export function ImportConfigDialog({
                         key={idx}
                         className="p-2 bg-background/50 rounded-lg border border-red-100/50 flex flex-col gap-0.5"
                       >
-                        <p className="text-[11px] font-bold truncate">
-                          {err.summary}
-                        </p>
-                        <p className="text-[10px] text-red-500 opacity-80">
-                          {err.message}
-                        </p>
+                        <p className="text-[11px] font-bold truncate">{err.summary}</p>
+                        <p className="text-[10px] text-red-500 opacity-80">{err.message}</p>
                       </div>
                     ))}
                   </div>
@@ -408,12 +377,8 @@ export function ImportConfigDialog({
                 <HugeiconsIcon icon={CheckIcon} size={32} />
               </div>
               <div>
-                <p className="body-large font-bold text-green-600 text-[18px]">
-                  导入成功！
-                </p>
-                <p className="body-text opacity-70">
-                  所有记录处理完毕，数据已同步。
-                </p>
+                <p className="body-large font-bold text-green-600 text-[18px]">导入成功！</p>
+                <p className="body-text opacity-70">所有记录处理完毕，数据已同步。</p>
               </div>
             </div>
 
@@ -440,12 +405,8 @@ export function ImportConfigDialog({
                   key={item.label}
                   className="text-center p-3 bg-secondary rounded-xl border border-border/50"
                 >
-                  <p className="micro-label uppercase opacity-50 mb-1">
-                    {item.label}
-                  </p>
-                  <p className={cn("body-large font-bold", item.color)}>
-                    {item.value}
-                  </p>
+                  <p className="micro-label uppercase opacity-50 mb-1">{item.label}</p>
+                  <p className={cn("body-large font-bold", item.color)}>{item.value}</p>
                 </div>
               ))}
             </div>
@@ -459,9 +420,7 @@ export function ImportConfigDialog({
                   className="w-full text-xs text-muted-foreground hover:text-red-600 flex items-center justify-center gap-1"
                 >
                   <HugeiconsIcon icon={CancelIcon} size={14} />
-                  {showErrors
-                    ? "隐藏错误详情"
-                    : `查看 ${result.failed} 条失败详情`}
+                  {showErrors ? "隐藏错误详情" : `查看 ${result.failed} 条失败详情`}
                 </Button>
 
                 {showErrors && (
@@ -474,9 +433,7 @@ export function ImportConfigDialog({
                         <p className="text-[12px] font-bold text-foreground leading-tight">
                           {err.summary}
                         </p>
-                        <p className="text-[11px] text-red-500 opacity-90">
-                          {err.message}
-                        </p>
+                        <p className="text-[11px] text-red-500 opacity-90">{err.message}</p>
                       </div>
                     ))}
                   </div>
@@ -493,9 +450,7 @@ export function ImportConfigDialog({
                 <HugeiconsIcon icon={CancelIcon} size={32} />
               </div>
               <div>
-                <p className="body-large font-bold text-destructive">
-                  导入过程中出错
-                </p>
+                <p className="body-large font-bold text-destructive">导入过程中出错</p>
                 <p className="caption text-destructive opacity-80">{error}</p>
               </div>
             </div>

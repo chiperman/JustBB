@@ -22,10 +22,7 @@ interface ExportConfigDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-export function ExportConfigDialog({
-  open,
-  onOpenChange,
-}: ExportConfigDialogProps) {
+export function ExportConfigDialog({ open, onOpenChange }: ExportConfigDialogProps) {
   const { startExport, status } = useExport()
   const { user } = useUser()
   const [format, setFormat] = React.useState<ExportFormat>("markdown")
@@ -54,12 +51,7 @@ export function ExportConfigDialog({
           </Button>
           <Button
             onClick={handleStart}
-            disabled={
-              !user ||
-              (status !== "idle" &&
-                status !== "completed" &&
-                status !== "error")
-            }
+            disabled={!user || (status !== "idle" && status !== "completed" && status !== "error")}
             className="h-10 px-8 font-bold"
           >
             开始导出数据
@@ -99,15 +91,11 @@ export function ExportConfigDialog({
             },
           ].map((item) => (
             <div key={item.id} className="relative group">
-              <RadioGroupItem
-                value={item.id}
-                id={item.id}
-                className="peer sr-only"
-              />
+              <RadioGroupItem value={item.id} id={item.id} className="peer sr-only" />
               <Label
                 htmlFor={item.id}
                 className={cn(
-                  "flex flex-col items-center justify-center rounded-xl border p-8 cursor-pointer transition-all duration-300 active:scale-95 hover:scale-102",
+                  "flex flex-col items-center justify-center rounded-xl border p-8 transition-all duration-300 active:scale-95 hover:scale-102",
                   // 基础态
                   "border-border bg-background text-muted-foreground",
                   // 待选态
@@ -130,17 +118,11 @@ export function ExportConfigDialog({
                 <span className="text-[16px] font-bold tracking-tight transition-colors duration-300">
                   {item.label}
                 </span>
-                <span className="caption opacity-60 mt-1.5 text-center">
-                  {item.desc}
-                </span>
+                <span className="caption opacity-60 mt-1.5 text-center">{item.desc}</span>
 
                 {/* 选中标记 */}
                 <div className="absolute top-4 right-4 transition-all duration-300 scale-50 opacity-0 peer-data-[state=checked]:opacity-100 peer-data-[state=checked]:scale-100">
-                  <HugeiconsIcon
-                    icon={CheckIcon}
-                    size={18}
-                    className="text-primary"
-                  />
+                  <HugeiconsIcon icon={CheckIcon} size={18} className="text-primary" />
                 </div>
               </Label>
             </div>

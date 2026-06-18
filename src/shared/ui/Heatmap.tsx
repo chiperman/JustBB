@@ -30,13 +30,9 @@ const HeatmapCell = memo(
     dateStr: string
     count: number
     isActive?: boolean
-    onHover: (
-      e: React.MouseEvent | React.FocusEvent,
-      date: string,
-      count: number
-    ) => void
+    onHover: (e: React.MouseEvent | React.FocusEvent, date: string, count: number) => void
     onBlur: () => void
-    onClick: (e: React.MouseEvent, date: string) => void
+    onClick: (e: React.MouseEvent | React.KeyboardEvent, date: string) => void
     shouldReduceMotion: boolean
   }) => {
     const getColorClass = (c: number) => {
@@ -67,6 +63,12 @@ const HeatmapCell = memo(
         onFocus={(e) => hasData && onHover(e, dateStr, count)}
         onBlur={() => hasData && onBlur()}
         onClick={(e) => hasData && onClick(e, dateStr)}
+        onKeyDown={(e) => {
+          if (hasData && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault()
+            onClick(e, dateStr)
+          }
+        }}
       />
     )
   }
@@ -100,11 +102,7 @@ export const Heatmap = memo(function Heatmap() {
     if (!firstMemoDate) return 0
     const parts = firstMemoDate.split("-")
     if (parts.length < 3) return 0
-    const firstDate = new Date(
-      parseInt(parts[0]),
-      parseInt(parts[1]) - 1,
-      parseInt(parts[2])
-    )
+    const firstDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]))
     return differenceInDays(new Date(), firstDate) + 1
   }, [firstMemoDate])
 
@@ -119,9 +117,7 @@ export const Heatmap = memo(function Heatmap() {
     // 强制回退到该周的周日 (weekStartsOn: 0)，确保 grid 第一行始终是周日
     const startDate = startOfWeek(candidateStart, { weekStartsOn: 0 })
 
-    return eachDayOfInterval({ start: startDate, end: today }).map((d) =>
-      format(d, "yyyy-MM-dd")
-    )
+    return eachDayOfInterval({ start: startDate, end: today }).map((d) => format(d, "yyyy-MM-dd"))
   }, [])
 
   // 动态计算月份标签及其所在列的索引
@@ -149,9 +145,7 @@ export const Heatmap = memo(function Heatmap() {
     (e: React.MouseEvent | React.FocusEvent, date: string, count: number) => {
       const target = e.currentTarget as HTMLElement
       const rect = target.getBoundingClientRect()
-      const container = target.closest(
-        ".heatmap-content-wrapper"
-      ) as HTMLElement
+      const container = target.closest(".heatmap-content-wrapper") as HTMLElement
 
       if (container) {
         const containerRect = container.getBoundingClientRect()
@@ -175,7 +169,7 @@ export const Heatmap = memo(function Heatmap() {
   )
 
   const handleCellClick = useCallback(
-    (e: React.MouseEvent, date: string) => {
+    (e: React.MouseEvent | React.KeyboardEvent, date: string) => {
       e.preventDefault()
       e.stopPropagation()
       router.push(`/?date=${date}`)
@@ -218,30 +212,24 @@ export const Heatmap = memo(function Heatmap() {
 
   // 顶栏统计触发器
   const StatsTrigger = (
-    <div className="grid grid-cols-3 gap-8 w-full max-w-sm mx-auto px-4 cursor-pointer hover:bg-accent/50 hover:ring-1 hover:ring-border/40 transition-all rounded-md py-2">
+    <div className="grid grid-cols-3 gap-8 w-full max-w-sm mx-auto px-4 hover:bg-accent/50 hover:ring-1 hover:ring-border/40 transition-all rounded-md py-2">
       <div className="flex flex-col items-center">
         <span className="text-3xl tracking-tighter leading-none font-bold tabular-nums text-foreground">
           {displayStats.totalMemos}
         </span>
-        <span className="text-[12px] font-medium text-muted-foreground mt-1">
-          记录
-        </span>
+        <span className="text-[12px] font-medium text-muted-foreground mt-1">记录</span>
       </div>
       <div className="flex flex-col items-center border-x border-border/50">
         <span className="text-3xl tracking-tighter leading-none font-bold tabular-nums text-foreground">
           {displayStats.totalTags}
         </span>
-        <span className="text-[12px] font-medium text-muted-foreground mt-1">
-          标签
-        </span>
+        <span className="text-[12px] font-medium text-muted-foreground mt-1">标签</span>
       </div>
       <div className="flex flex-col items-center">
         <span className="text-3xl tracking-tighter leading-none font-bold tabular-nums text-foreground">
           {displayTotalActiveDays}
         </span>
-        <span className="text-[12px] font-medium text-muted-foreground mt-1">
-          天
-        </span>
+        <span className="text-[12px] font-medium text-muted-foreground mt-1">天</span>
       </div>
     </div>
   )
@@ -268,17 +256,10 @@ export const Heatmap = memo(function Heatmap() {
     <ClientOnly fallback={Skeleton}>
       <div className="w-full space-y-4 px-1 relative overflow-visible">
         {/* 顶栏统计 - 加载时不响应点击 */}
-        {loading ? (
-          StatsTrigger
-        ) : (
-          <HeatmapModal stats={displayStats} trigger={StatsTrigger} />
-        )}
+        {loading ? StatsTrigger : <HeatmapModal stats={displayStats} trigger={StatsTrigger} />}
 
         {/* 热力图主体 */}
-        <div
-          className="relative pt-2"
-          onMouseLeave={() => setHoveredDate(null)}
-        >
+        <div className="relative pt-2" onMouseLeave={() => setHoveredDate(null)}>
           <div className="relative overflow-visible heatmap-content-wrapper">
             <div
               className="grid grid-rows-7 grid-flow-col gap-[4px] justify-center"
@@ -307,11 +288,9 @@ export const Heatmap = memo(function Heatmap() {
               <div
                 className={cn(
                   "absolute z-[999] mt-[-15px] rounded-md border border-border bg-card px-2.5 py-1.5 font-sans text-[11px] text-foreground-[var(--)] pointer-events-none animate-in fade-in zoom-in duration-150 whitespace-nowrap hover:ring-1 hover:ring-border/40",
-                  hoveredDate.align === "center" &&
-                    "-translate-x-1/2 -translate-y-full",
+                  hoveredDate.align === "center" && "-translate-x-1/2 -translate-y-full",
                   hoveredDate.align === "left" && "-translate-y-full ml-[-7px]",
-                  hoveredDate.align === "right" &&
-                    "-translate-x-full -translate-y-full mr-[-7px]"
+                  hoveredDate.align === "right" && "-translate-x-full -translate-y-full mr-[-7px]"
                 )}
                 style={{ left: hoveredDate.left, top: hoveredDate.top }}
               >
@@ -319,9 +298,7 @@ export const Heatmap = memo(function Heatmap() {
                   {hoveredDate.count} 笔记
                 </span>
                 <span className="mx-1.5 opacity-40">/</span>
-                <span className="tabular-nums font-medium">
-                  {hoveredDate.date}
-                </span>
+                <span className="tabular-nums font-medium">{hoveredDate.date}</span>
               </div>
             )}
           </div>

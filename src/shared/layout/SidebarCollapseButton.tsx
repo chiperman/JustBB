@@ -48,7 +48,7 @@ export function SidebarCollapseButton({
           damping: 22 / animationMultiplier,
         }}
         className={cn(
-          "group relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-md bg-transparent text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring",
+          "group relative flex h-9 w-9 items-center justify-center rounded-md bg-transparent text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring",
           className
         )}
       >

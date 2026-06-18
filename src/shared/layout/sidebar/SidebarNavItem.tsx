@@ -35,7 +35,7 @@ export function SidebarNavItem({ item, isActive, isCollapsed, onClick }: Sidebar
           transitionDuration: `${200 * animationMultiplier}ms`,
         }}
         className={cn(
-          "group relative flex h-9 cursor-pointer items-center rounded-md text-left transition-all duration-200 hover:scale-102 active:scale-95",
+          "group relative flex h-9 items-center rounded-md text-left transition-all duration-200 hover:scale-102 active:scale-95",
           isCollapsed ? "w-9" : "w-full",
           isActive
             ? "bg-(--badge-clay-bg) text-primary font-medium"

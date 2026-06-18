@@ -1,11 +1,7 @@
 "use client"
 
 import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  PinIcon,
-  ChatLock01Icon as LockIcon,
-  Link02Icon,
-} from "@hugeicons/core-free-icons"
+import { PinIcon, ChatLock01Icon as LockIcon, Link02Icon } from "@hugeicons/core-free-icons"
 import { cn, formatDate } from "@/shared/lib/utils"
 import { Button } from "@/shared/ui/button"
 import { Checkbox } from "@/shared/ui/checkbox"
@@ -46,7 +42,7 @@ export function MemoCardHeader({
       <div className="flex items-center gap-3">
         {isSelectionMode && (
           <div
-            className="flex items-center justify-center cursor-pointer"
+            className="flex items-center justify-center"
             onClick={(e: React.MouseEvent) => {
               e.stopPropagation()
               onToggleSelection()
@@ -56,13 +52,11 @@ export function MemoCardHeader({
               checked={isSelected}
               onCheckedChange={onToggleSelection}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              className="h-4 w-4 rounded-[4px] border-border bg-background transition-all cursor-pointer data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+              className="h-4 w-4 rounded-[4px] border-border bg-background transition-all data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
             />
           </div>
         )}
-        <span className="badge-text bg-[#fdf5f2] px-2 py-0.5 rounded-sm">
-          #{memo.memo_number}
-        </span>
+        <span className="badge-text bg-[#fdf5f2] px-2 py-0.5 rounded-sm">#{memo.memo_number}</span>
         <time className="caption tracking-tight">
           {hasMounted
             ? memo.is_locked
@@ -105,8 +99,7 @@ export function MemoCardHeader({
               }}
               className={cn(
                 "h-7 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-all z-10 pointer-events-auto",
-                !showViewOriginal &&
-                  "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                !showViewOriginal && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
               )}
             >
               查看原文

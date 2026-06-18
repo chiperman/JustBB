@@ -172,9 +172,13 @@ export const Heatmap = memo(function Heatmap() {
     (e: React.MouseEvent | React.KeyboardEvent, date: string) => {
       e.preventDefault()
       e.stopPropagation()
-      router.push(`/?date=${date}`)
+      const currentParams = new URLSearchParams(searchParams.toString())
+      currentParams.delete("year")
+      currentParams.delete("month")
+      currentParams.set("date", date)
+      router.push(`/?${currentParams.toString()}`)
     },
-    [router]
+    [router, searchParams]
   )
 
   useEffect(() => {

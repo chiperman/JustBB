@@ -173,18 +173,19 @@ export function SearchInput() {
   return (
     <div className="relative w-full group">
       <div className="relative flex items-center min-h-[36px] bg-background border border-border rounded-md px-2 focus-within:border-primary/30 transition-all hover:bg-secondary/50 group">
-        <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0 pr-8 py-1.5">
-          <HugeiconsIcon
-            icon={Search01Icon}
-            size={16}
-            className={cn(
-              "shrink-0 ml-1 transition-colors",
-              value || hasContext ? "text-primary/70" : "text-muted-foreground/50"
-            )}
-          />
+        <HugeiconsIcon
+          icon={Search01Icon}
+          size={16}
+          className={cn(
+            "shrink-0 ml-1 transition-colors",
+            value || hasContext ? "text-primary/70" : "text-muted-foreground/50"
+          )}
+        />
 
+        {/* 滚动容器 */}
+        <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-x-auto scrollbar-hide py-1.5 pr-8 pl-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {/* Chips Section */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 shrink-0">
             {activeChips.map((chip, index) => {
               const icon = chip.type === "tag" ? Tag01Icon : Calendar03Icon
               return (
@@ -220,7 +221,7 @@ export function SearchInput() {
             ref={inputRef}
             type="text"
             placeholder={hasContext ? "" : "键入关键词搜索..."}
-            className="flex-1 min-w-[60px] bg-transparent border-none outline-none ring-0 p-0 h-full text-sm text-foreground placeholder:text-muted-foreground/40"
+            className="flex-1 min-w-[80px] bg-transparent border-none outline-none ring-0 p-0 h-full text-sm text-foreground placeholder:text-muted-foreground/40"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => {
@@ -244,7 +245,8 @@ export function SearchInput() {
           />
         </div>
 
-        <div className="shrink-0 flex items-center gap-1">
+        {/* 绝对定位的清除按钮 */}
+        <div className="absolute right-2 flex items-center gap-1">
           {value && (
             <button
               onClick={handleClear}

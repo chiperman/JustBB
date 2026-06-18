@@ -134,3 +134,5 @@ BEGIN
   OFFSET offset_val;
 END;
 $$;
+
+GRANT ALL ON TABLE public.memos TO postgres, anon, authenticated, service_role;

@@ -115,7 +115,7 @@ export const TagCloud = memo(function TagCloud() {
                 <span
                   className={cn(
                     "text-[10px] opacity-60",
-                    isActive ? "text-primary-foreground" : "text-stone-400"
+                    isActive ? "text-current" : "text-stone-400"
                   )}
                   aria-hidden="true"
                 >

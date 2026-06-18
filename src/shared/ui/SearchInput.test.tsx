@@ -4,6 +4,7 @@ import React, { forwardRef } from "react"
 import { render, fireEvent } from "@testing-library/react"
 
 import { SearchInput } from "./SearchInput"
+import { TooltipProvider } from "./tooltip"
 
 const mockReplace = vi.fn()
 let currentParams = new URLSearchParams("tag=tag1&num=123")
@@ -77,33 +78,49 @@ describe("SearchInput Chip Interaction", () => {
   })
 
   it("focuses input when a chip is clicked to delete via the close button", () => {
-    const { container, rerender } = render(<SearchInput />)
+    const { container, rerender } = render(
+      <TooltipProvider>
+        <SearchInput />
+      </TooltipProvider>
+    )
 
     const chips = container.querySelectorAll(".badge-text")
     expect(chips.length).toBe(2)
     const closeBtn = chips[0].querySelector("button") as HTMLButtonElement
 
     fireEvent.click(closeBtn)
-    rerender(<SearchInput />)
+    rerender(
+      <TooltipProvider>
+        <SearchInput />
+      </TooltipProvider>
+    )
 
     const input = container.querySelector("input")
     expect(document.activeElement).toBe(input)
   })
 
   it("focuses input and clears all chips when clear all button is clicked", () => {
-    const { container, rerender } = render(<SearchInput />)
+    const { container, rerender } = render(
+      <TooltipProvider>
+        <SearchInput />
+      </TooltipProvider>
+    )
 
     const chipsBefore = container.querySelectorAll(".badge-text")
     expect(chipsBefore.length).toBe(2)
 
-    // Find "清除全部" button by text content
+    // Find "重置" button by text content
     const clearAllBtn = Array.from(container.querySelectorAll("button")).find(
-      (btn) => btn.textContent === "清除全部"
+      (btn) => btn.textContent === "重置"
     ) as HTMLButtonElement
     expect(clearAllBtn).toBeDefined()
 
     fireEvent.click(clearAllBtn)
-    rerender(<SearchInput />)
+    rerender(
+      <TooltipProvider>
+        <SearchInput />
+      </TooltipProvider>
+    )
 
     const chipsAfter = container.querySelectorAll(".badge-text")
     expect(chipsAfter.length).toBe(0)
@@ -114,13 +131,21 @@ describe("SearchInput Chip Interaction", () => {
 
   it("parses multiple whitespace-separated directives (Scenario A) and updates search parameters accordingly", () => {
     currentParams = new URLSearchParams("")
-    const { container, rerender } = render(<SearchInput />)
+    const { container, rerender } = render(
+      <TooltipProvider>
+        <SearchInput />
+      </TooltipProvider>
+    )
 
     const input = container.querySelector("input") as HTMLInputElement
     fireEvent.change(input, { target: { value: "32 t:da" } })
     fireEvent.keyDown(input, { key: "Enter" })
 
-    rerender(<SearchInput />)
+    rerender(
+      <TooltipProvider>
+        <SearchInput />
+      </TooltipProvider>
+    )
 
     expect(currentParams.get("tag")).toBe("da")
     expect(currentParams.get("query")).toBe("32")

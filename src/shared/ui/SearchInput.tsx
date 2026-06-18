@@ -2,10 +2,17 @@
 
 import { useEffect, useState, useRef } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Search01Icon, Cancel01Icon, Calendar03Icon, Tag01Icon } from "@hugeicons/core-free-icons"
+import {
+  Search01Icon,
+  Cancel01Icon,
+  Calendar03Icon,
+  Tag01Icon,
+  HashtagIcon,
+} from "@hugeicons/core-free-icons"
 import { useRouter, useSearchParams } from "next/navigation"
 import { cn } from "@/shared/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 
 interface ActiveChip {
   type: "tag" | "num" | "date" | "year-month"
@@ -35,8 +42,8 @@ export function SearchInput() {
   useEffect(() => {
     setActiveChips((prev) => {
       const currentChips: ActiveChip[] = []
-      if (tag) currentChips.push({ type: "tag", value: tag, label: `#${tag}` })
-      if (num) currentChips.push({ type: "num", value: num, label: `#${num}` })
+      if (tag) currentChips.push({ type: "tag", value: tag, label: tag })
+      if (num) currentChips.push({ type: "num", value: num, label: num })
       if (date) currentChips.push({ type: "date", value: date, label: date })
       if (year && month) {
         currentChips.push({
@@ -165,7 +172,7 @@ export function SearchInput() {
         {value && (
           <button
             onClick={handleClear}
-            className="p-1 text-muted-foreground/30 hover:text-muted-foreground transition-colors active:scale-90 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="p-1 text-muted-foreground/30 hover:text-muted-foreground hover:bg-primary/5 rounded-full transition-colors active:scale-90 outline-none focus-visible:ring-1 focus-visible:ring-ring"
             title="清空搜索"
           >
             <HugeiconsIcon icon={Cancel01Icon} size={14} />
@@ -174,10 +181,15 @@ export function SearchInput() {
       </div>
 
       {/* 过滤标签下置流式展示 */}
-      <div className="absolute top-full left-0 right-0 flex flex-wrap items-center gap-1.5 mt-2 px-1 select-none z-10">
+      <div className="absolute top-full left-0 right-0 flex flex-nowrap items-center gap-1.5 mt-2 px-1 select-none z-10 h-8 overflow-x-auto overflow-y-hidden">
         <AnimatePresence>
           {activeChips.map((chip) => {
-            const icon = chip.type === "tag" ? Tag01Icon : Calendar03Icon
+            let icon = Tag01Icon
+            if (chip.type === "date" || chip.type === "year-month") {
+              icon = Calendar03Icon
+            } else if (chip.type === "num") {
+              icon = HashtagIcon
+            }
             return (
               <motion.div
                 key={`${chip.type}-${chip.value}`}
@@ -187,8 +199,15 @@ export function SearchInput() {
                 transition={{ duration: 0.15 }}
                 className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-md border border-primary/10 shrink-0 h-5 hover:bg-primary/[0.03] transition-colors"
               >
-                {chip.type !== "num" && <HugeiconsIcon icon={icon} size={10} />}
-                <span>{chip.label}</span>
+                <HugeiconsIcon icon={icon} size={10} />
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="truncate max-w-[150px] cursor-default">{chip.label}</span>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs font-normal">{chip.label}</TooltipContent>
+                </Tooltip>
+
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
@@ -210,9 +229,9 @@ export function SearchInput() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
               onClick={clearAllChips}
-              className="text-xs text-muted-foreground/60 hover:text-primary transition-colors px-1 py-0.5 hover:bg-secondary/40 rounded-md outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="text-xs text-muted-foreground/60 hover:text-primary transition-colors px-1 py-0.5 hover:bg-secondary/40 rounded-md outline-none focus-visible:ring-1 focus-visible:ring-ring shrink-0"
             >
-              清除全部
+              重置
             </motion.button>
           )}
         </AnimatePresence>

@@ -31,6 +31,7 @@ export async function getMemos(
     year,
     month,
     sort,
+    tagMode,
     after_date,
     before_date,
     excludePinned,
@@ -45,6 +46,7 @@ export async function getMemos(
   if (year) filters.year = year
   if (month) filters.month = month
   if (date) filters.date = date
+  if (tagMode === "or") filters.tag_mode = "or"
   if (after_date) filters.after_date = after_date
   if (before_date) filters.before_date = before_date
   if (excludePinned) filters.exclude_pinned = true

@@ -16,6 +16,7 @@ interface UseMemoFeedProps {
     month?: string
     date?: string
     sort?: string
+    tagMode?: "and" | "or"
   }
 }
 
@@ -68,6 +69,7 @@ export function useMemoFeed({ initialMemos, searchParams }: UseMemoFeedProps) {
       searchParams.year !== lastSearchParamsRef.current.year ||
       searchParams.month !== lastSearchParamsRef.current.month ||
       searchParams.date !== lastSearchParamsRef.current.date ||
+      searchParams.tagMode !== lastSearchParamsRef.current.tagMode ||
       searchParams.sort !== lastSearchParamsRef.current.sort
 
     if (paramsChanged) {

@@ -16,17 +16,37 @@ export const TagCloud = memo(function TagCloud() {
   const router = useRouter()
   const currentTag = searchParams.get("tag")
 
+  const activeTags = useMemo(() => {
+    return currentTag
+      ? currentTag
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : []
+  }, [currentTag])
+
   const topTags = useMemo(() => {
     return [...tags].sort((a, b) => b.count - a.count).slice(0, 6)
   }, [tags])
 
   const handleTagClick = (tag: string) => {
-    const params = new URLSearchParams(searchParams)
-    const currentTag = params.get("tag")
-    if (currentTag === tag) {
-      params.delete("tag") // 再次点击取消过滤
+    const params = new URLSearchParams(searchParams.toString())
+    const currentTagVal = params.get("tag") || ""
+    const activeTagsList = currentTagVal
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean)
+
+    if (activeTagsList.includes(tag)) {
+      const filtered = activeTagsList.filter((t) => t !== tag)
+      if (filtered.length > 0) {
+        params.set("tag", filtered.join(","))
+      } else {
+        params.delete("tag")
+      }
     } else {
-      params.set("tag", tag)
+      const merged = [...activeTagsList, tag]
+      params.set("tag", merged.join(","))
     }
     router.push(`/?${params.toString()}`)
   }
@@ -73,7 +93,7 @@ export const TagCloud = memo(function TagCloud() {
           className="flex flex-wrap gap-2"
         >
           {topTags.map(({ tag_name, count }) => {
-            const isActive = currentTag === tag_name
+            const isActive = activeTags.includes(tag_name)
             return (
               <Badge
                 key={tag_name}

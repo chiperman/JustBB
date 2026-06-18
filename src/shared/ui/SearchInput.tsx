@@ -29,6 +29,7 @@ export function SearchInput() {
   const date = searchParams.get("date")
   const year = searchParams.get("year")
   const month = searchParams.get("month")
+  const tagMode = searchParams.get("tagMode") || "and"
 
   const [value, setValue] = useState(q)
   const [activeChips, setActiveChips] = useState<ActiveChip[]>([])
@@ -42,8 +43,22 @@ export function SearchInput() {
   useEffect(() => {
     setActiveChips((prev) => {
       const currentChips: ActiveChip[] = []
-      if (tag) currentChips.push({ type: "tag", value: tag, label: tag })
-      if (num) currentChips.push({ type: "num", value: num, label: num })
+      if (tag) {
+        tag.split(",").forEach((t) => {
+          const trimmed = t.trim()
+          if (trimmed) {
+            currentChips.push({ type: "tag", value: trimmed, label: trimmed })
+          }
+        })
+      }
+      if (num) {
+        num.split(",").forEach((n) => {
+          const trimmed = n.trim()
+          if (trimmed) {
+            currentChips.push({ type: "num", value: trimmed, label: trimmed })
+          }
+        })
+      }
       if (date) currentChips.push({ type: "date", value: date, label: date })
       if (year && month) {
         currentChips.push({
@@ -68,6 +83,18 @@ export function SearchInput() {
     if (chip.type === "year-month") {
       params.delete("year")
       params.delete("month")
+    } else if (chip.type === "tag" || chip.type === "num") {
+      const existing = params.get(chip.type) || ""
+      const list = existing
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean)
+      const filtered = list.filter((item) => item !== chip.value)
+      if (filtered.length > 0) {
+        params.set(chip.type, filtered.join(","))
+      } else {
+        params.delete(chip.type)
+      }
     } else {
       params.delete(chip.type)
     }
@@ -82,8 +109,20 @@ export function SearchInput() {
     params.delete("date")
     params.delete("year")
     params.delete("month")
+    params.delete("tagMode")
     replace(`/?${params.toString()}`)
     inputRef.current?.focus()
+  }
+
+  const toggleTagMode = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    const nextMode = tagMode === "and" ? "or" : "and"
+    if (nextMode === "or") {
+      params.set("tagMode", "or")
+    } else {
+      params.delete("tagMode")
+    }
+    replace(`/?${params.toString()}`)
   }
 
   const performSearch = (term: string) => {
@@ -98,8 +137,8 @@ export function SearchInput() {
     }
 
     const tokens = trimmedTerm.split(/\s+/)
-    let newTag: string | null = null
-    let newNum: string | null = null
+    const newTags: string[] = []
+    const newNums: string[] = []
     const remainingWords: string[] = []
 
     for (const token of tokens) {
@@ -108,20 +147,28 @@ export function SearchInput() {
 
       if (tagMatch) {
         const val = tagMatch[1].trim()
-        if (val) newTag = val
+        if (val) newTags.push(val)
       } else if (numMatch) {
         const val = numMatch[1].trim()
-        if (val) newNum = val
+        if (val) newNums.push(val)
       } else {
         remainingWords.push(token)
       }
     }
 
-    if (newTag) {
-      params.set("tag", newTag)
+    if (newTags.length > 0) {
+      const existing = params.get("tag") ? params.get("tag")!.split(",") : []
+      const merged = [...new Set([...existing, ...newTags])].map((x) => x.trim()).filter(Boolean)
+      if (merged.length > 0) {
+        params.set("tag", merged.join(","))
+      }
     }
-    if (newNum) {
-      params.set("num", newNum)
+    if (newNums.length > 0) {
+      const existing = params.get("num") ? params.get("num")!.split(",") : []
+      const merged = [...new Set([...existing, ...newNums])].map((x) => x.trim()).filter(Boolean)
+      if (merged.length > 0) {
+        params.set("num", merged.join(","))
+      }
     }
 
     const finalQuery = remainingWords.join(" ").trim()
@@ -168,11 +215,29 @@ export function SearchInput() {
           }}
         />
 
+        {/* 框内集成切换按钮 (当有 2 个及以上 tag 时显示) */}
+        {activeChips.filter((c) => c.type === "tag").length >= 2 && (
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              toggleTagMode()
+            }}
+            className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-primary transition-colors mr-1 outline-none focus-visible:ring-1 focus-visible:ring-ring shrink-0 select-none"
+            title={
+              tagMode === "or"
+                ? "当前为：包含任一标签，点击切换为包含全部标签"
+                : "当前为：包含全部标签，点击切换为包含任一标签"
+            }
+          >
+            {tagMode === "or" ? "OR" : "AND"}
+          </button>
+        )}
+
         {/* 清除文本按钮 */}
         {value && (
           <button
             onClick={handleClear}
-            className="p-1 text-muted-foreground/30 hover:text-muted-foreground hover:bg-primary/5 rounded-full transition-colors active:scale-90 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="p-1 text-muted-foreground/30 hover:text-muted-foreground hover:bg-primary/5 rounded-full transition-colors active:scale-95 outline-none focus-visible:ring-1 focus-visible:ring-ring"
             title="清空搜索"
           >
             <HugeiconsIcon icon={Cancel01Icon} size={14} />
@@ -181,61 +246,90 @@ export function SearchInput() {
       </div>
 
       {/* 过滤标签下置流式展示 */}
-      <div className="absolute top-full left-0 right-0 flex flex-nowrap items-center gap-1.5 mt-2 px-1 select-none z-10 h-8 overflow-x-auto overflow-y-hidden">
-        <AnimatePresence>
-          {activeChips.map((chip) => {
-            let icon = Tag01Icon
-            if (chip.type === "date" || chip.type === "year-month") {
-              icon = Calendar03Icon
-            } else if (chip.type === "num") {
-              icon = HashtagIcon
-            }
-            return (
-              <motion.div
-                key={`${chip.type}-${chip.value}`}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
+      {activeChips.length > 0 && (
+        <div className="absolute top-full left-0 right-0 flex items-start justify-between select-none z-10 w-full mt-2">
+          {/* 左侧可滚动内容区 */}
+          <div className="flex-1 min-w-0 flex flex-nowrap items-start gap-1.5 h-9 overflow-x-auto overflow-y-hidden">
+            <AnimatePresence>
+              {activeChips.map((chip) => {
+                let icon = Tag01Icon
+                if (chip.type === "date" || chip.type === "year-month") {
+                  icon = Calendar03Icon
+                } else if (chip.type === "num") {
+                  icon = HashtagIcon
+                }
+                return (
+                  <motion.div
+                    key={`${chip.type}-${chip.value}`}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-md border border-primary/10 shrink-0 h-5 hover:bg-primary/[0.03] transition-colors"
+                  >
+                    <HugeiconsIcon icon={icon} size={10} />
+                    <SearchInputChipLabel label={chip.label} />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        removeChip(chip)
+                      }}
+                      className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      title={`移除过滤: ${chip.label}`}
+                    >
+                      <HugeiconsIcon icon={Cancel01Icon} size={8} />
+                    </button>
+                  </motion.div>
+                )
+              })}
+            </AnimatePresence>
+          </div>
+
+          {/* 右侧固定不滚动的重置按钮 */}
+          <AnimatePresence>
+            {activeChips.length >= 2 && (
+              <motion.button
+                key="clear-all-btn"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-md border border-primary/10 shrink-0 h-5 hover:bg-primary/[0.03] transition-colors"
+                onClick={clearAllChips}
+                className="text-xs text-muted-foreground/60 hover:text-primary transition-colors px-1 py-0.5 hover:bg-secondary/40 rounded-md outline-none focus-visible:ring-1 focus-visible:ring-ring shrink-0 ml-2 mt-0.5"
               >
-                <HugeiconsIcon icon={icon} size={10} />
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="truncate max-w-[150px] cursor-default">{chip.label}</span>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs font-normal">{chip.label}</TooltipContent>
-                </Tooltip>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    removeChip(chip)
-                  }}
-                  className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  title={`移除过滤: ${chip.label}`}
-                >
-                  <HugeiconsIcon icon={Cancel01Icon} size={8} />
-                </button>
-              </motion.div>
-            )
-          })}
-          {activeChips.length >= 2 && (
-            <motion.button
-              key="clear-all-btn"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              onClick={clearAllChips}
-              className="text-xs text-muted-foreground/60 hover:text-primary transition-colors px-1 py-0.5 hover:bg-secondary/40 rounded-md outline-none focus-visible:ring-1 focus-visible:ring-ring shrink-0"
-            >
-              重置
-            </motion.button>
-          )}
-        </AnimatePresence>
-      </div>
+                重置
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
+  )
+}
+
+function SearchInputChipLabel({ label }: { label: string }) {
+  const [open, setOpen] = useState(false)
+  const spanRef = useRef<HTMLSpanElement>(null)
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen) {
+      const el = spanRef.current
+      if (el && el.scrollWidth > el.offsetWidth) {
+        setOpen(true)
+      }
+    } else {
+      setOpen(false)
+    }
+  }
+
+  return (
+    <Tooltip open={open} onOpenChange={handleOpenChange}>
+      <TooltipTrigger asChild>
+        <span ref={spanRef} className="truncate max-w-[150px] cursor-default">
+          {label}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs font-normal">{label}</TooltipContent>
+    </Tooltip>
   )
 }

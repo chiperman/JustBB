@@ -113,4 +113,19 @@ describe("SearchInput Focus & Chip Interaction", () => {
     // Focus must still stay on the input
     expect(document.activeElement).toBe(input)
   })
+
+  it("parses multiple whitespace-separated directives (Scenario A) and updates search parameters accordingly", () => {
+    currentParams = new URLSearchParams("")
+    const { container, rerender } = render(<SearchInput />)
+
+    const input = container.querySelector("input") as HTMLInputElement
+    fireEvent.change(input, { target: { value: "32 t:da" } })
+    fireEvent.keyDown(input, { key: "Enter" })
+
+    rerender(<SearchInput />)
+
+    expect(currentParams.get("tag")).toBe("da")
+    expect(currentParams.get("query")).toBe("32")
+    expect(input.value).toBe("32")
+  })
 })

@@ -90,30 +90,49 @@ export function SearchInput() {
     const params = new URLSearchParams(searchParams.toString())
     const trimmedTerm = term.trim()
 
-    const tagMatch = trimmedTerm.match(/^(?:tag|t):(.+)$/i)
-    const numMatch = trimmedTerm.match(/^(?:num|n|id):(\d+)$/i)
+    if (!trimmedTerm) {
+      params.delete("query")
+      setValue("")
+      replace(`/?${params.toString()}`)
+      return
+    }
 
-    if (tagMatch) {
-      const tagValue = tagMatch[1].trim()
-      if (tagValue) {
-        params.set("tag", tagValue)
-        params.delete("query")
-        setValue("")
-      }
-    } else if (numMatch) {
-      const numValue = numMatch[1].trim()
-      if (numValue) {
-        params.set("num", numValue)
-        params.delete("query")
-        setValue("")
-      }
-    } else {
-      if (trimmedTerm) {
-        params.set("query", trimmedTerm)
+    const tokens = trimmedTerm.split(/\s+/)
+    let newTag: string | null = null
+    let newNum: string | null = null
+    const remainingWords: string[] = []
+
+    for (const token of tokens) {
+      const tagMatch = token.match(/^(?:tag|t):(.+)$/i)
+      const numMatch = token.match(/^(?:num|n|id):(\d+)$/i)
+
+      if (tagMatch) {
+        const val = tagMatch[1].trim()
+        if (val) newTag = val
+      } else if (numMatch) {
+        const val = numMatch[1].trim()
+        if (val) newNum = val
       } else {
-        params.delete("query")
+        remainingWords.push(token)
       }
     }
+
+    if (newTag) {
+      params.set("tag", newTag)
+    }
+    if (newNum) {
+      params.set("num", newNum)
+    }
+
+    const finalQuery = remainingWords.join(" ").trim()
+    if (finalQuery) {
+      params.set("query", finalQuery)
+      setValue(finalQuery)
+    } else {
+      params.delete("query")
+      setValue("")
+    }
+
     replace(`/?${params.toString()}`)
   }
 

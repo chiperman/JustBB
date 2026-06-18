@@ -68,9 +68,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
       {isSelectionMode ? (
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-primary">
-              {selectedIds.size} SELECTED
-            </span>
+            <span className="text-sm font-medium text-primary">{selectedIds.size} SELECTED</span>
           </div>
         </div>
       ) : (
@@ -85,11 +83,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
               title="回到首页"
             >
               {isRefreshing ? (
-                <HugeiconsIcon
-                  icon={Loader2}
-                  size={14}
-                  className="text-primary animate-spin"
-                />
+                <HugeiconsIcon icon={Loader2} size={14} className="text-primary animate-spin" />
               ) : (
                 <HugeiconsIcon
                   icon={Home01Icon}
@@ -101,31 +95,6 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
                 JustMemo
               </span>
             </Link>
-
-            {activeDate && (
-              <div className="flex items-center gap-1.5 h-full px-1">
-                <span className="micro-label opacity-30 font-light">/</span>
-                <span className="nav-button-text text-primary tracking-tight tabular-nums leading-none">
-                  {activeDate}
-                </span>
-              </div>
-            )}
-            {searchParams?.get("tag") && (
-              <div className="flex items-center gap-1.5 h-full px-1">
-                <span className="micro-label opacity-30 font-light">/</span>
-                <span className="nav-button-text text-primary tracking-tight leading-none">
-                  #{searchParams.get("tag")}
-                </span>
-              </div>
-            )}
-            {searchParams?.get("num") && (
-              <div className="flex items-center gap-1.5 h-full px-1">
-                <span className="micro-label opacity-30 font-light">/</span>
-                <span className="nav-button-text text-primary tracking-tight leading-none">
-                  #{searchParams.get("num")}
-                </span>
-              </div>
-            )}
           </div>
 
           {hasMounted ? (
@@ -164,20 +133,11 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
                     <DropdownMenuSubContent>
-                      <DropdownMenuRadioGroup
-                        value={currentSort}
-                        onValueChange={handleSortChange}
-                      >
-                        <DropdownMenuRadioItem
-                          value="newest"
-                          className="cursor-pointer"
-                        >
+                      <DropdownMenuRadioGroup value={currentSort} onValueChange={handleSortChange}>
+                        <DropdownMenuRadioItem value="newest" className="cursor-pointer">
                           创建时间，从新到旧
                         </DropdownMenuRadioItem>
-                        <DropdownMenuRadioItem
-                          value="oldest"
-                          className="cursor-pointer"
-                        >
+                        <DropdownMenuRadioItem value="oldest" className="cursor-pointer">
                           创建时间，从旧到新
                         </DropdownMenuRadioItem>
                       </DropdownMenuRadioGroup>

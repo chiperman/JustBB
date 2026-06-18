@@ -26,30 +26,10 @@ export function SearchInput() {
   const [activeChips, setActiveChips] = useState<ActiveChip[]>([])
 
   const inputRef = useRef<HTMLInputElement>(null)
-  const chipRefs = useRef<(HTMLDivElement | null)[]>([])
-  const pendingFocusIndexRef = useRef<number | "input" | null>(null)
-
-  useEffect(() => {
-    if (pendingFocusIndexRef.current !== null) {
-      if (pendingFocusIndexRef.current === "input") {
-        inputRef.current?.focus()
-      } else if (typeof pendingFocusIndexRef.current === "number") {
-        const targetIndex = pendingFocusIndexRef.current
-        if (targetIndex >= 0 && targetIndex < activeChips.length) {
-          chipRefs.current[targetIndex]?.focus()
-        } else {
-          inputRef.current?.focus()
-        }
-      }
-      pendingFocusIndexRef.current = null
-    }
-  }, [activeChips])
 
   useEffect(() => {
     setValue(q)
   }, [q])
-
-  const hasContext = !!(tag || num || date || (year && month))
 
   useEffect(() => {
     setActiveChips((prev) => {
@@ -71,7 +51,7 @@ export function SearchInput() {
       const added = currentChips.filter(
         (c) => !preserved.some((p) => p.type === c.type && p.value === c.value)
       )
-      return [...preserved, ...added]
+      return [...preserved, [...added].reverse()].flat() // 保持之前的大体顺序，仅平铺展示
     })
   }, [searchParams, tag, num, date, year, month])
 
@@ -84,6 +64,18 @@ export function SearchInput() {
       params.delete(chip.type)
     }
     replace(`/?${params.toString()}`)
+    inputRef.current?.focus()
+  }
+
+  const clearAllChips = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("tag")
+    params.delete("num")
+    params.delete("date")
+    params.delete("year")
+    params.delete("month")
+    replace(`/?${params.toString()}`)
+    inputRef.current?.focus()
   }
 
   const performSearch = (term: string) => {
@@ -141,123 +133,80 @@ export function SearchInput() {
     performSearch("")
   }
 
-  const handleChipKeyDown = (e: React.KeyboardEvent, chip: ActiveChip, index: number) => {
-    if (e.key === "Backspace" || e.key === "Delete") {
-      e.preventDefault()
-      if (activeChips.length <= 1) {
-        pendingFocusIndexRef.current = "input"
-      } else {
-        const nextTargetIndex = index < activeChips.length - 1 ? index : index - 1
-        if (nextTargetIndex >= 0) {
-          pendingFocusIndexRef.current = nextTargetIndex
-        } else {
-          pendingFocusIndexRef.current = "input"
-        }
-      }
-      removeChip(chip)
-    } else if (e.key === "ArrowLeft") {
-      e.preventDefault()
-      if (index > 0) {
-        chipRefs.current[index - 1]?.focus()
-      }
-    } else if (e.key === "ArrowRight") {
-      e.preventDefault()
-      if (index < activeChips.length - 1) {
-        chipRefs.current[index + 1]?.focus()
-      } else {
-        inputRef.current?.focus()
-      }
-    }
-  }
-
   return (
-    <div className="relative w-full group">
+    <div className="relative w-full">
+      {/* 搜索框输入主体 */}
       <div className="relative flex items-center min-h-[36px] bg-background border border-border rounded-md px-2 focus-within:border-primary/30 transition-all hover:bg-secondary/50 group">
         <HugeiconsIcon
           icon={Search01Icon}
           size={16}
           className={cn(
             "shrink-0 ml-1 transition-colors",
-            value || hasContext ? "text-primary/70" : "text-muted-foreground/50"
+            value || activeChips.length > 0 ? "text-primary/70" : "text-muted-foreground/50"
           )}
         />
 
-        {/* 滚动容器 */}
-        <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-x-auto scrollbar-hide py-1.5 pr-8 pl-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          {/* Chips Section */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {activeChips.map((chip, index) => {
-              const icon = chip.type === "tag" ? Tag01Icon : Calendar03Icon
-              return (
-                <div
-                  key={`${chip.type}-${chip.value}`}
-                  ref={(el) => {
-                    chipRefs.current[index] = el
+        <input
+          ref={inputRef}
+          type="text"
+          placeholder="键入关键词搜索..."
+          className="flex-1 min-w-0 bg-transparent border-none outline-none ring-0 p-0 pl-2 h-full text-sm text-foreground placeholder:text-muted-foreground/40"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              performSearch(value)
+            }
+          }}
+        />
+
+        {/* 清除文本按钮 */}
+        {value && (
+          <button
+            onClick={handleClear}
+            className="p-1 text-muted-foreground/30 hover:text-muted-foreground transition-colors active:scale-90 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            title="清空搜索"
+          >
+            <HugeiconsIcon icon={Cancel01Icon} size={14} />
+          </button>
+        )}
+      </div>
+
+      {/* 过滤标签下置流式展示 */}
+      {activeChips.length > 0 && (
+        <div className="absolute top-full left-0 right-0 flex flex-wrap items-center gap-1.5 mt-2 px-1 select-none z-10">
+          {activeChips.map((chip) => {
+            const icon = chip.type === "tag" ? Tag01Icon : Calendar03Icon
+            return (
+              <div
+                key={`${chip.type}-${chip.value}`}
+                className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-md border border-primary/10 shrink-0 h-5 hover:bg-primary/[0.03] transition-colors"
+              >
+                {chip.type !== "num" && <HugeiconsIcon icon={icon} size={10} />}
+                <span>{chip.label}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    removeChip(chip)
                   }}
-                  tabIndex={0}
-                  onKeyDown={(e) => handleChipKeyDown(e, chip, index)}
-                  className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-md border border-primary/10 shrink-0 h-5 outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer hover:bg-primary/[0.03] transition-colors"
+                  className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  title={`移除过滤: ${chip.label}`}
                 >
-                  {chip.type !== "num" && <HugeiconsIcon icon={icon} size={10} />}
-                  <span>{chip.label}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      pendingFocusIndexRef.current = "input"
-                      removeChip(chip)
-                    }}
-                    tabIndex={-1}
-                    className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    <HugeiconsIcon icon={Cancel01Icon} size={8} />
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Editable Search Input */}
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder={hasContext ? "" : "键入关键词搜索..."}
-            className="flex-1 min-w-[80px] bg-transparent border-none outline-none ring-0 p-0 h-full text-sm text-foreground placeholder:text-muted-foreground/40"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                performSearch(value)
-              } else if (e.key === "Backspace" && !value && activeChips.length > 0) {
-                e.preventDefault()
-                const lastChip = activeChips[activeChips.length - 1]
-                pendingFocusIndexRef.current = "input"
-                removeChip(lastChip)
-              } else if (
-                e.key === "ArrowLeft" &&
-                e.currentTarget.selectionStart === 0 &&
-                e.currentTarget.selectionEnd === 0 &&
-                activeChips.length > 0
-              ) {
-                e.preventDefault()
-                chipRefs.current[activeChips.length - 1]?.focus()
-              }
-            }}
-          />
-        </div>
-
-        {/* 绝对定位的清除按钮 */}
-        <div className="absolute right-2 flex items-center gap-1">
-          {value && (
+                  <HugeiconsIcon icon={Cancel01Icon} size={8} />
+                </button>
+              </div>
+            )
+          })}
+          {activeChips.length >= 2 && (
             <button
-              onClick={handleClear}
-              className="p-1 text-muted-foreground/30 hover:text-muted-foreground transition-colors active:scale-90 outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              title="清空搜索"
+              onClick={clearAllChips}
+              className="text-xs text-muted-foreground/60 hover:text-primary transition-colors px-1 py-0.5 hover:bg-secondary/40 rounded-md outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
-              <HugeiconsIcon icon={Cancel01Icon} size={14} />
+              清除全部
             </button>
           )}
         </div>
-      </div>
+      )}
     </div>
   )
 }

@@ -1,10 +1,16 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Search01Icon, Cancel01Icon, Calendar03Icon, Tag01Icon } from "@hugeicons/core-free-icons"
 import { useRouter, useSearchParams } from "next/navigation"
 import { cn } from "@/shared/lib/utils"
+
+interface ActiveChip {
+  type: "tag" | "num" | "date" | "year-month"
+  value: string
+  label: string
+}
 
 export function SearchInput() {
   const searchParams = useSearchParams()
@@ -17,6 +23,27 @@ export function SearchInput() {
   const month = searchParams.get("month")
 
   const [value, setValue] = useState(q)
+  const [activeChips, setActiveChips] = useState<ActiveChip[]>([])
+
+  const inputRef = useRef<HTMLInputElement>(null)
+  const chipRefs = useRef<(HTMLDivElement | null)[]>([])
+  const pendingFocusIndexRef = useRef<number | "input" | null>(null)
+
+  useEffect(() => {
+    if (pendingFocusIndexRef.current !== null) {
+      if (pendingFocusIndexRef.current === "input") {
+        inputRef.current?.focus()
+      } else if (typeof pendingFocusIndexRef.current === "number") {
+        const targetIndex = pendingFocusIndexRef.current
+        if (targetIndex >= 0 && targetIndex < activeChips.length) {
+          chipRefs.current[targetIndex]?.focus()
+        } else {
+          inputRef.current?.focus()
+        }
+      }
+      pendingFocusIndexRef.current = null
+    }
+  }, [activeChips])
 
   useEffect(() => {
     setValue(q)
@@ -24,9 +51,38 @@ export function SearchInput() {
 
   const hasContext = !!(tag || num || date || (year && month))
 
-  const removeParam = (param: string) => {
+  useEffect(() => {
+    setActiveChips((prev) => {
+      const currentChips: ActiveChip[] = []
+      if (tag) currentChips.push({ type: "tag", value: tag, label: `#${tag}` })
+      if (num) currentChips.push({ type: "num", value: num, label: `#${num}` })
+      if (date) currentChips.push({ type: "date", value: date, label: date })
+      if (year && month) {
+        currentChips.push({
+          type: "year-month",
+          value: `${year}-${month}`,
+          label: `${year}-${month}`,
+        })
+      }
+
+      const preserved = prev.filter((p) =>
+        currentChips.some((c) => c.type === p.type && c.value === p.value)
+      )
+      const added = currentChips.filter(
+        (c) => !preserved.some((p) => p.type === c.type && p.value === c.value)
+      )
+      return [...preserved, ...added]
+    })
+  }, [searchParams, tag, num, date, year, month])
+
+  const removeChip = (chip: ActiveChip) => {
     const params = new URLSearchParams(searchParams.toString())
-    params.delete(param)
+    if (chip.type === "year-month") {
+      params.delete("year")
+      params.delete("month")
+    } else {
+      params.delete(chip.type)
+    }
     replace(`/?${params.toString()}`)
   }
 
@@ -66,6 +122,35 @@ export function SearchInput() {
     performSearch("")
   }
 
+  const handleChipKeyDown = (e: React.KeyboardEvent, chip: ActiveChip, index: number) => {
+    if (e.key === "Backspace" || e.key === "Delete") {
+      e.preventDefault()
+      if (activeChips.length <= 1) {
+        pendingFocusIndexRef.current = "input"
+      } else {
+        const nextTargetIndex = index < activeChips.length - 1 ? index : index - 1
+        if (nextTargetIndex >= 0) {
+          pendingFocusIndexRef.current = nextTargetIndex
+        } else {
+          pendingFocusIndexRef.current = "input"
+        }
+      }
+      removeChip(chip)
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault()
+      if (index > 0) {
+        chipRefs.current[index - 1]?.focus()
+      }
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault()
+      if (index < activeChips.length - 1) {
+        chipRefs.current[index + 1]?.focus()
+      } else {
+        inputRef.current?.focus()
+      }
+    }
+  }
+
   return (
     <div className="relative w-full group">
       <div className="relative flex items-center min-h-[36px] bg-background border border-border rounded-md px-2 focus-within:border-primary/30 transition-all hover:bg-secondary/50 group">
@@ -81,64 +166,39 @@ export function SearchInput() {
 
           {/* Chips Section */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            {tag && (
-              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-md border border-primary/10 shrink-0 h-5">
-                <HugeiconsIcon icon={Tag01Icon} size={10} />
-                <span>{tag}</span>
-                <button
-                  onClick={() => removeParam("tag")}
-                  className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <HugeiconsIcon icon={Cancel01Icon} size={8} />
-                </button>
-              </div>
-            )}
-            {num && (
-              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-md border border-primary/10 shrink-0 h-5">
-                <span>#{num}</span>
-                <button
-                  onClick={() => removeParam("num")}
-                  className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <HugeiconsIcon icon={Cancel01Icon} size={8} />
-                </button>
-              </div>
-            )}
-            {date && (
-              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-md border border-primary/10 shrink-0 h-5">
-                <HugeiconsIcon icon={Calendar03Icon} size={10} />
-                <span>{date}</span>
-                <button
-                  onClick={() => removeParam("date")}
-                  className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <HugeiconsIcon icon={Cancel01Icon} size={8} />
-                </button>
-              </div>
-            )}
-            {year && month && (
-              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-md border border-primary/10 shrink-0 h-5">
-                <HugeiconsIcon icon={Calendar03Icon} size={10} />
-                <span>
-                  {year}-{month}
-                </span>
-                <button
-                  onClick={() => {
-                    const params = new URLSearchParams(searchParams.toString())
-                    params.delete("year")
-                    params.delete("month")
-                    replace(`/?${params.toString()}`)
+            {activeChips.map((chip, index) => {
+              const icon = chip.type === "tag" ? Tag01Icon : Calendar03Icon
+              return (
+                <div
+                  key={`${chip.type}-${chip.value}`}
+                  ref={(el) => {
+                    chipRefs.current[index] = el
                   }}
-                  className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  tabIndex={0}
+                  onKeyDown={(e) => handleChipKeyDown(e, chip, index)}
+                  className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-md border border-primary/10 shrink-0 h-5 outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer hover:bg-primary/[0.03] transition-colors"
                 >
-                  <HugeiconsIcon icon={Cancel01Icon} size={8} />
-                </button>
-              </div>
-            )}
+                  {chip.type !== "num" && <HugeiconsIcon icon={icon} size={10} />}
+                  <span>{chip.label}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      pendingFocusIndexRef.current = "input"
+                      removeChip(chip)
+                    }}
+                    tabIndex={-1}
+                    className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <HugeiconsIcon icon={Cancel01Icon} size={8} />
+                  </button>
+                </div>
+              )
+            })}
           </div>
 
           {/* Editable Search Input */}
           <input
+            ref={inputRef}
             type="text"
             placeholder={hasContext ? "" : "键入关键词搜索..."}
             className="flex-1 min-w-[60px] bg-transparent border-none outline-none ring-0 p-0 h-full text-sm text-foreground placeholder:text-muted-foreground/40"
@@ -147,19 +207,19 @@ export function SearchInput() {
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 performSearch(value)
-              } else if (e.key === "Backspace" && !value && hasContext) {
-                const params = new URLSearchParams(searchParams.toString())
-                if (year && month) {
-                  params.delete("year")
-                  params.delete("month")
-                } else if (date) {
-                  params.delete("date")
-                } else if (num) {
-                  params.delete("num")
-                } else if (tag) {
-                  params.delete("tag")
-                }
-                replace(`/?${params.toString()}`)
+              } else if (e.key === "Backspace" && !value && activeChips.length > 0) {
+                e.preventDefault()
+                const lastChip = activeChips[activeChips.length - 1]
+                pendingFocusIndexRef.current = "input"
+                removeChip(lastChip)
+              } else if (
+                e.key === "ArrowLeft" &&
+                e.currentTarget.selectionStart === 0 &&
+                e.currentTarget.selectionEnd === 0 &&
+                activeChips.length > 0
+              ) {
+                e.preventDefault()
+                chipRefs.current[activeChips.length - 1]?.focus()
               }
             }}
           />

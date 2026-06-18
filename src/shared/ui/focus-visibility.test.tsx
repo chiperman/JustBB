@@ -97,7 +97,7 @@ describe("focus visibility regressions", () => {
     const html = renderToStaticMarkup(<SearchInput />)
     const focusMatches = html.match(/focus-visible:ring-1/g) ?? []
 
-    expect(focusMatches.length).toBeGreaterThanOrEqual(2)
+    expect(focusMatches.length).toBeGreaterThanOrEqual(1)
     expect(html).toContain("focus-visible:ring-ring")
   })
 

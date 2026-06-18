@@ -32,7 +32,7 @@ export function getSingleParam(param: string | string[] | undefined): string | u
  */
 export function generateCacheKey(params: Record<string, string | string[] | undefined>): string {
   const searchParams = new URLSearchParams()
-  const keys = ["query", "tag", "num", "year", "month", "date", "sort"]
+  const keys = ["query", "tag", "num", "year", "month", "date", "sort", "tagMode"]
 
   keys.forEach((key) => {
     const val = getSingleParam(params[key])

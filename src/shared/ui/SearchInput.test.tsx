@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import React from "react"
+import React, { forwardRef } from "react"
 import { render, fireEvent } from "@testing-library/react"
+
 import { SearchInput } from "./SearchInput"
 
 const mockReplace = vi.fn()
@@ -30,6 +31,42 @@ vi.mock("next/navigation", () => ({
     return cachedParams
   },
 }))
+
+vi.mock("framer-motion", () => {
+  const MockDiv = forwardRef(
+    (
+      { children, ...props }: React.HTMLAttributes<HTMLDivElement>,
+      ref: React.Ref<HTMLDivElement>
+    ) => (
+      <div ref={ref} {...props}>
+        {children}
+      </div>
+    )
+  )
+  MockDiv.displayName = "MockDiv"
+
+  const MockButton = forwardRef(
+    (
+      { children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>,
+      ref: React.Ref<HTMLButtonElement>
+    ) => (
+      <button ref={ref} {...props}>
+        {children}
+      </button>
+    )
+  )
+  MockButton.displayName = "MockButton"
+
+  const MockAnimatePresence = ({ children }: { children: React.ReactNode }) => <>{children}</>
+
+  return {
+    motion: {
+      div: MockDiv,
+      button: MockButton,
+    },
+    AnimatePresence: MockAnimatePresence,
+  }
+})
 
 describe("SearchInput Chip Interaction", () => {
   beforeEach(() => {

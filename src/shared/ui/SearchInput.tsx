@@ -5,6 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { Search01Icon, Cancel01Icon, Calendar03Icon, Tag01Icon } from "@hugeicons/core-free-icons"
 import { useRouter, useSearchParams } from "next/navigation"
 import { cn } from "@/shared/lib/utils"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface ActiveChip {
   type: "tag" | "num" | "date" | "year-month"
@@ -173,13 +174,17 @@ export function SearchInput() {
       </div>
 
       {/* 过滤标签下置流式展示 */}
-      {activeChips.length > 0 && (
-        <div className="absolute top-full left-0 right-0 flex flex-wrap items-center gap-1.5 mt-2 px-1 select-none z-10">
+      <div className="absolute top-full left-0 right-0 flex flex-wrap items-center gap-1.5 mt-2 px-1 select-none z-10">
+        <AnimatePresence>
           {activeChips.map((chip) => {
             const icon = chip.type === "tag" ? Tag01Icon : Calendar03Icon
             return (
-              <div
+              <motion.div
                 key={`${chip.type}-${chip.value}`}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.15 }}
                 className="flex items-center gap-1 px-1.5 py-0.5 bg-(--badge-clay-bg) badge-text rounded-md border border-primary/10 shrink-0 h-5 hover:bg-primary/[0.03] transition-colors"
               >
                 {chip.type !== "num" && <HugeiconsIcon icon={icon} size={10} />}
@@ -194,19 +199,24 @@ export function SearchInput() {
                 >
                   <HugeiconsIcon icon={Cancel01Icon} size={8} />
                 </button>
-              </div>
+              </motion.div>
             )
           })}
           {activeChips.length >= 2 && (
-            <button
+            <motion.button
+              key="clear-all-btn"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
               onClick={clearAllChips}
               className="text-xs text-muted-foreground/60 hover:text-primary transition-colors px-1 py-0.5 hover:bg-secondary/40 rounded-md outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               清除全部
-            </button>
+            </motion.button>
           )}
-        </div>
-      )}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }

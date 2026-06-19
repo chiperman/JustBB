@@ -6,12 +6,8 @@ import { getClient, getAdminClient } from "@/lib/supabase"
 import { ActionResponse } from "../shared/types"
 import { Memo } from "@/types/memo"
 import { getCurrentUserId, isAdmin } from "@/features/auth/actions"
-import {
-  calculateWordCount,
-  extractLocations,
-  mergeTagsIntoContent,
-  removeTagsFromContent,
-} from "@/lib/memos/parser"
+import { mergeTagsIntoContent, removeTagsFromContent } from "@/lib/memos/parser"
+import { buildMemoPayload } from "./helpers"
 import { Database } from "@/types/database"
 import {
   createMemoSchema,
@@ -109,11 +105,8 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
 
   const payload: Partial<MemoInsert> = {
     owner_id: viewerId,
-    content,
     is_private,
-    is_pinned,
-    word_count: calculateWordCount(content),
-    locations: extractLocations(content) as unknown as MemoInsert["locations"],
+    ...buildMemoPayload(content, { isPinned: is_pinned }),
   }
 
   if (is_private && access_code) {
@@ -170,9 +163,7 @@ export async function updateMemoContent(formData: FormData): Promise<ActionRespo
   const { data, error } = await supabase
     .from("memos")
     .update({
-      content,
-      word_count: calculateWordCount(content),
-      locations: extractLocations(content) as unknown as MemoInsert["locations"],
+      ...buildMemoPayload(content),
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)

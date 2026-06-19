@@ -56,15 +56,51 @@ export function BrandLogo({ className, pixelSize = 3 }: BrandLogoProps) {
       [1, 0, 0, 0, 1],
       [1, 1, 1, 1, 0],
     ],
+    M: [
+      [1, 0, 0, 0, 1],
+      [1, 1, 0, 1, 1],
+      [1, 0, 1, 0, 1],
+      [1, 0, 0, 0, 1],
+      [1, 0, 0, 0, 1],
+      [1, 0, 0, 0, 1],
+      [1, 0, 0, 0, 1],
+    ],
+    e: [
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 1, 1, 1, 0],
+      [1, 0, 0, 0, 1],
+      [1, 1, 1, 1, 1],
+      [1, 0, 0, 0, 0],
+      [0, 1, 1, 1, 0],
+    ],
+    m: [
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [1, 1, 0, 1, 1],
+      [1, 0, 1, 0, 1],
+      [1, 0, 1, 0, 1],
+      [1, 0, 1, 0, 1],
+      [1, 0, 1, 0, 1],
+    ],
+    o: [
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 1, 1, 1, 0],
+      [1, 0, 0, 0, 1],
+      [1, 0, 0, 0, 1],
+      [1, 0, 0, 0, 1],
+      [0, 1, 1, 1, 0],
+    ],
   }
 
-  const wordOrder = ["J", "u", "s", "t", "B", "B"] as const
+  const wordOrder = ["J", "u", "s", "t", "M", "e", "m", "o"] as const
   const charWidth = 5
   const charHeight = 7
   const letterSpacing = 1 // 字符间距
 
-  // 计算 SVG 的画布尺寸：6 个字符 + 5 个间距
-  const totalCols = charWidth * 6 + letterSpacing * 5
+  // 计算 SVG 的画布尺寸：8 个字符 + 7 个间距
+  const totalCols = charWidth * 8 + letterSpacing * 7
   const totalRows = charHeight
 
   const width = totalCols * pixelSize
@@ -73,7 +109,7 @@ export function BrandLogo({ className, pixelSize = 3 }: BrandLogoProps) {
   // 渲染所有像素矩形
   const rects: React.ReactNode[] = []
 
-  // 1. 渲染品牌字 "JustBB"
+  // 1. 渲染品牌字 "JustMemo"
   wordOrder.forEach((char, charIndex) => {
     const grid = letters[char]
     const xOffset = charIndex * (charWidth + letterSpacing)
@@ -102,7 +138,7 @@ export function BrandLogo({ className, pixelSize = 3 }: BrandLogoProps) {
       height={height}
       viewBox={`0 0 ${width} ${height}`}
       className={cn("text-foreground", className)}
-      aria-label="JustBB"
+      aria-label="JustMemo"
       role="img"
     >
       {rects}

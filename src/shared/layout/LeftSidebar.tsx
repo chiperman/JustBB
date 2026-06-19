@@ -104,7 +104,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
           initial={false}
           animate={{
             opacity: effectiveIsCollapsed ? 0 : 1,
-            width: effectiveIsCollapsed ? 0 : 113,
+            width: effectiveIsCollapsed ? 0 : 149,
             x: effectiveIsCollapsed ? -10 : 0,
             display: effectiveIsCollapsed ? "none" : "flex",
           }}

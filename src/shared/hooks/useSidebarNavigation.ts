@@ -19,12 +19,8 @@ export function useSidebarNavigation() {
     })
   }, [isAdmin, user])
 
-  const handleNavigate = (
-    href: string,
-    isMobile: boolean,
-    onClose?: () => void
-  ) => {
-    if (href !== currentView) {
+  const handleNavigate = (href: string, isMobile: boolean, onClose?: () => void) => {
+    if (href !== currentView || href === "/") {
       router.push(href)
     }
     if (isMobile) onClose?.()

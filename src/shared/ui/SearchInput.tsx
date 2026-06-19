@@ -258,9 +258,13 @@ export function SearchInput() {
                 } else if (chip.type === "num") {
                   icon = HashtagIcon
                 }
+                const chipKey =
+                  chip.type === "date" || chip.type === "year-month"
+                    ? chip.type
+                    : `${chip.type}-${chip.value}`
                 return (
                   <motion.div
-                    key={`${chip.type}-${chip.value}`}
+                    key={chipKey}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
@@ -325,8 +329,19 @@ function SearchInputChipLabel({ label }: { label: string }) {
   return (
     <Tooltip open={open} onOpenChange={handleOpenChange}>
       <TooltipTrigger asChild>
-        <span ref={spanRef} className="truncate max-w-[150px] cursor-default">
-          {label}
+        <span ref={spanRef} className="truncate max-w-[150px] cursor-default flex items-center">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={label}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
+              className="inline-block"
+            >
+              {label}
+            </motion.div>
+          </AnimatePresence>
         </span>
       </TooltipTrigger>
       <TooltipContent className="max-w-xs font-normal">{label}</TooltipContent>

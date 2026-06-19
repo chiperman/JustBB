@@ -318,3 +318,8 @@ body {
 .dark ::-webkit-scrollbar-thumb {
   background-color: rgba(246, 245, 244, 0.1);
 }
+
+/* 稳定滚动条布局，防止滚动条隐现导致容器宽度抖动 */
+.scrollbar-stable {
+  scrollbar-gutter: stable;
+}

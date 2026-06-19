@@ -1,13 +1,8 @@
 "use client"
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useMemo,
-} from "react"
+import React, { createContext, useContext, useState, useCallback, useMemo } from "react"
 import { usePathname } from "next/navigation"
+import { Memo } from "@/types/memo"
 
 interface SelectionContextType {
   isSelectionMode: boolean
@@ -16,11 +11,11 @@ interface SelectionContextType {
   toggleId: (id: string) => void
   clearSelection: () => void
   selectAll: (ids: string[]) => void
+  registerMemos: (memos: Memo[]) => void
+  getSelectedMemos: () => Memo[]
 }
 
-const SelectionContext = createContext<SelectionContextType | undefined>(
-  undefined
-)
+const SelectionContext = createContext<SelectionContextType | undefined>(undefined)
 
 function UIProviderBase({
   children,
@@ -34,6 +29,7 @@ function UIProviderBase({
   // --- Selection State ---
   const [isSelectionMode, setIsSelectionMode] = useState(isTrashPath)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [registeredMemos, setRegisteredMemos] = useState<Memo[]>([])
 
   const toggleSelectionMode = useCallback((enabled?: boolean) => {
     setIsSelectionMode((prev) => {
@@ -65,6 +61,14 @@ function UIProviderBase({
     setSelectedIds(new Set(ids))
   }, [])
 
+  const registerMemos = useCallback((memos: Memo[]) => {
+    setRegisteredMemos(memos)
+  }, [])
+
+  const getSelectedMemos = useCallback(() => {
+    return registeredMemos.filter((memo) => selectedIds.has(memo.id))
+  }, [registeredMemos, selectedIds])
+
   const contextValue = useMemo(
     () => ({
       isSelectionMode,
@@ -73,6 +77,8 @@ function UIProviderBase({
       toggleId,
       clearSelection,
       selectAll,
+      registerMemos,
+      getSelectedMemos,
     }),
     [
       isSelectionMode,
@@ -81,14 +87,12 @@ function UIProviderBase({
       toggleId,
       clearSelection,
       selectAll,
+      registerMemos,
+      getSelectedMemos,
     ]
   )
 
-  return (
-    <SelectionContext.Provider value={contextValue}>
-      {children}
-    </SelectionContext.Provider>
-  )
+  return <SelectionContext.Provider value={contextValue}>{children}</SelectionContext.Provider>
 }
 
 function UIProviderWithRouterPath({ children }: { children: React.ReactNode }) {
@@ -121,9 +125,7 @@ export function UIProvider({
 export function useUI() {
   const context = useContext(SelectionContext)
   if (context === undefined) {
-    throw new Error(
-      "useUI must be used within a SelectionProvider (UIProvider)"
-    )
+    throw new Error("useUI must be used within a SelectionProvider (UIProvider)")
   }
   return context
 }

@@ -56,7 +56,7 @@ export function MemoCardView({
     <article
       onClick={handleCardClick}
       className={cn(
-        "relative bg-card rounded-lg p-6 transition-all border border-border hover:focus-within:ring-2 focus-within:ring-primary/10 group",
+        "relative bg-card rounded-lg p-6 transition-[background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-border hover:focus-within:ring-2 focus-within:ring-primary/10 group",
         displayMemo.is_pinned && "bg-(--badge-clay-bg)/50 border-primary/20",
         isSelectionMode && "cursor-pointer hover:border-primary/40 select-none",
         isSelectionMode && isSelected && "border-primary/35 bg-primary/[0.03]",
@@ -81,7 +81,8 @@ export function MemoCardView({
       <div
         className={cn(
           "w-full transition-all mt-2",
-          displayMemo.is_locked && "blur-sm select-none"
+          displayMemo.is_locked && "blur-sm select-none",
+          isSelectionMode && "pointer-events-none"
         )}
       >
         {displayMemo.is_locked ? (
@@ -92,33 +93,33 @@ export function MemoCardView({
           <ExpandableContent
             needsExpansion={
               !showOriginalOnly &&
-              (displayMemo.content.length > 300 ||
-                displayMemo.content.split("\n").length > 8)
+              (displayMemo.content.length > 300 || displayMemo.content.split("\n").length > 8)
             }
             collapsedHeight={200}
           >
-            <MemoContent
-              content={displayMemo.content}
-              disablePreview={showOriginalOnly}
-            />
+            <MemoContent content={displayMemo.content} disablePreview={showOriginalOnly} />
           </ExpandableContent>
         )}
       </div>
 
       {!showOriginalOnly && (
-        <MemoCardBacklinks
-          memoId={displayMemo.id}
-          showBacklinks={showBacklinks}
-          isLoading={loadingBacklinks}
-          backlinks={backlinks}
-        />
+        <div className={cn(isSelectionMode && "pointer-events-none")}>
+          <MemoCardBacklinks
+            memoId={displayMemo.id}
+            showBacklinks={showBacklinks}
+            isLoading={loadingBacklinks}
+            backlinks={backlinks}
+          />
+        </div>
       )}
 
       {displayMemo.is_locked && (
-        <MemoCardLockOverlay
-          onUnlock={() => setIsUnlockOpen(true)}
-          shouldReduceMotion={shouldReduceMotion}
-        />
+        <div className={cn(isSelectionMode && "pointer-events-none")}>
+          <MemoCardLockOverlay
+            onUnlock={() => setIsUnlockOpen(true)}
+            shouldReduceMotion={shouldReduceMotion}
+          />
+        </div>
       )}
 
       <UnlockDialog

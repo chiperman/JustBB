@@ -6,6 +6,7 @@ import { getMemos } from "@/server/actions/memos/query"
 import { mergeMemos } from "@/shared/lib/streamUtils"
 import { useMemoSync, MemoEventPayload } from "@/lib/memos/events"
 import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
+import { useSelection } from "@/state/UIContext"
 
 interface UseMemoFeedProps {
   initialMemos: Memo[]
@@ -54,6 +55,7 @@ export function reconcileUpdatedMemo(existingMemo: Memo, updatedMemo: Memo): Mem
 
 export function useMemoFeed({ initialMemos, searchParams }: UseMemoFeedProps) {
   const { unlockedMemoIds } = useUnlockedMemos()
+  const { registerMemos } = useSelection()
   const [memos, setMemos] = useState<Memo[]>(initialMemos)
   const [hasMoreOlder, setHasMoreOlder] = useState(initialMemos.length >= INITIAL_MEMO_PAGE_SIZE)
   const [isLoadingOlder, setIsLoadingOlder] = useState(false)
@@ -61,6 +63,10 @@ export function useMemoFeed({ initialMemos, searchParams }: UseMemoFeedProps) {
   const [lastCreatedId, setLastCreatedId] = useState<string | null>(null)
   const previousInitialIdsRef = useRef(new Set(initialMemos.map((memo) => memo.id)))
   const lastSearchParamsRef = useRef(searchParams)
+
+  useEffect(() => {
+    registerMemos(memos)
+  }, [memos, registerMemos])
 
   useEffect(() => {
     const paramsChanged =

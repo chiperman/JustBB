@@ -38,24 +38,27 @@ export function MemoCardHeader({
   showViewOriginal,
 }: MemoCardHeaderProps) {
   return (
-    <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center justify-between mb-4 min-h-[32px]">
       <div className="flex items-center gap-3">
-        {isSelectionMode && (
-          <div
-            className="flex items-center justify-center"
-            onClick={(e: React.MouseEvent) => {
-              e.stopPropagation()
-              onToggleSelection()
-            }}
-          >
-            <Checkbox
-              checked={isSelected}
-              onCheckedChange={onToggleSelection}
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              className="h-4 w-4 rounded-[4px] border-border bg-background transition-all data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-            />
-          </div>
-        )}
+        <div
+          className={cn(
+            "absolute top-[26px] -translate-y-1/2 flex items-center justify-center z-20 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+            isSelectionMode
+              ? "opacity-100 scale-100 pointer-events-auto -left-6 sm:-left-8"
+              : "opacity-0 scale-75 pointer-events-none -left-9 sm:-left-11"
+          )}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation()
+            onToggleSelection()
+          }}
+        >
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={onToggleSelection}
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            className="h-4 w-4 rounded-[4px] border-border bg-background transition-all data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+          />
+        </div>
         <span className="badge-text bg-[#fdf5f2] px-2 py-0.5 rounded-sm">#{memo.memo_number}</span>
         <time className="caption tracking-tight">
           {hasMounted
@@ -86,8 +89,15 @@ export function MemoCardHeader({
           </span>
         )}
       </div>
-      {!memo.is_locked && !isSelectionMode && (
-        <div className="flex items-center gap-2">
+      {!memo.is_locked && (
+        <div
+          className={cn(
+            "flex items-center gap-2 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+            isSelectionMode
+              ? "opacity-0 scale-95 pointer-events-none translate-x-2 invisible"
+              : "opacity-100 scale-100 pointer-events-auto translate-x-0 visible"
+          )}
+        >
           {showOriginalOnly || showViewOriginal ? (
             <Button
               variant="ghost"

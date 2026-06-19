@@ -22,17 +22,18 @@ import {
   batchPermanentDeleteMemos,
 } from "@/server/actions/memos/trash"
 import { batchAddTagsToMemos } from "@/server/actions/memos/mutate"
-import { TagSelectDialog } from "./TagSelectDialog"
+import { TagSelectDialog, TagState } from "./TagSelectDialog"
 import { useTags } from "@/state/TagsContext"
 import { useStats } from "@/state/StatsContext"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { BaseFloatingCapsule } from "./BaseFloatingCapsule"
 import { useConfirm } from "@/state/ConfirmContext"
+import { dispatchMemoEvent } from "@/lib/memos/events"
 
 export function SelectionToolbar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { isSelectionMode, selectedIds, clearSelection, toggleSelectionMode } =
+  const { isSelectionMode, selectedIds, clearSelection, toggleSelectionMode, getSelectedMemos } =
     useSelection()
   const { refreshTags } = useTags()
   const { refreshStats } = useStats()
@@ -65,6 +66,9 @@ export function SelectionToolbar() {
           title: "已批量删除",
           description: `成功删除 ${selectedIds.size} 条笔记`,
         })
+        Array.from(selectedIds).forEach((id) => {
+          dispatchMemoEvent({ type: "delete", id })
+        })
         clearSelection()
         refreshTags()
         refreshStats()
@@ -91,6 +95,9 @@ export function SelectionToolbar() {
         toast({
           title: "已恢复",
           description: `成功恢复 ${selectedIds.size} 条笔记`,
+        })
+        Array.from(selectedIds).forEach((id) => {
+          dispatchMemoEvent({ type: "delete", id })
         })
         clearSelection()
         refreshTags()
@@ -127,6 +134,9 @@ export function SelectionToolbar() {
           description: `成功删除 ${selectedIds.size} 条笔记`,
           variant: "destructive",
         })
+        Array.from(selectedIds).forEach((id) => {
+          dispatchMemoEvent({ type: "delete", id })
+        })
         clearSelection()
         refreshTags()
         refreshStats()
@@ -143,26 +153,66 @@ export function SelectionToolbar() {
     }
   }
 
-  const handleBatchAddTags = async (tags: string[]) => {
+  const getInitialTagStates = () => {
+    const selectedMemos = getSelectedMemos()
+    const N = selectedMemos.length
+    if (N === 0) return {}
+
+    const tagCounts: Record<string, number> = {}
+    selectedMemos.forEach((memo) => {
+      const memoTags = memo.tags || []
+      memoTags.forEach((tag) => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1
+      })
+    })
+
+    const initialStates: Record<string, TagState> = {}
+    Object.entries(tagCounts).forEach(([tag, count]) => {
+      if (count === N) {
+        initialStates[tag] = "checked"
+      } else if (count > 0) {
+        initialStates[tag] = "indeterminate"
+      }
+    })
+    return initialStates
+  }
+
+  const handleBatchManageTags = async (addTags: string[], removeTags: string[]) => {
     const formData = new FormData()
     formData.append("ids", Array.from(selectedIds).join(","))
-    formData.append("tags", tags.join(","))
+    formData.append("tags", addTags.join(","))
+    formData.append("removeTags", removeTags.join(","))
 
     setIsPending(true)
     try {
       const res = await batchAddTagsToMemos(formData)
       if (res.success) {
         toast({
-          title: "已批量添加标签",
-          description: `成功为 ${selectedIds.size} 条笔记添加了标签`,
+          title: "已更新标签",
+          description: `成功修改了 ${selectedIds.size} 条笔记的标签`,
         })
+        if (res.data) {
+          res.data.forEach((updatedMemo) => {
+            dispatchMemoEvent({
+              type: "update",
+              id: updatedMemo.id,
+              updates: {
+                tags: updatedMemo.tags,
+                content: updatedMemo.content,
+                word_count: updatedMemo.word_count,
+                locations: updatedMemo.locations,
+                updated_at: updatedMemo.updated_at,
+              },
+            })
+          })
+        }
         clearSelection()
         refreshTags()
         refreshStats()
         router.refresh()
       } else {
         toast({
-          title: "添加失败",
+          title: "更新失败",
           description: res.error,
           variant: "destructive",
         })
@@ -222,11 +272,7 @@ export function SelectionToolbar() {
                     className="h-8 gap-2 text-xs hover:bg-destructive/10 hover:text-destructive rounded-md transition-all"
                   >
                     {isPending ? (
-                      <HugeiconsIcon
-                        icon={Loader2}
-                        size={14}
-                        className="animate-spin"
-                      />
+                      <HugeiconsIcon icon={Loader2} size={14} className="animate-spin" />
                     ) : (
                       <HugeiconsIcon icon={Trash2} size={14} />
                     )}
@@ -253,11 +299,7 @@ export function SelectionToolbar() {
                 onClick={() => toggleSelectionMode(false)}
                 className="h-8 w-8 p-0 rounded-md hover:bg-accent transition-colors"
               >
-                <HugeiconsIcon
-                  icon={X}
-                  size={16}
-                  className="text-muted-foreground"
-                />
+                <HugeiconsIcon icon={X} size={16} className="text-muted-foreground" />
               </Button>
             </div>
           </BaseFloatingCapsule>
@@ -268,7 +310,8 @@ export function SelectionToolbar() {
         <TagSelectDialog
           isOpen={isTagDialogOpen}
           onClose={() => setIsTagDialogOpen(false)}
-          onConfirm={handleBatchAddTags}
+          initialTagStates={getInitialTagStates()}
+          onConfirm={handleBatchManageTags}
         />
       )}
     </>

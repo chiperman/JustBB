@@ -208,7 +208,7 @@ export function MemoEditorLayout({
           type="button"
           aria-label="展开 Memo 编辑器"
           className="absolute inset-0 z-20 rounded-lg bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-          onClick={() => editor?.commands.focus("end")}
+          onClick={onEditorClick}
         />
       )}
 

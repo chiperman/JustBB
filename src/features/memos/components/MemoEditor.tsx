@@ -3,10 +3,7 @@
 import { useRef, useEffect, useMemo, useCallback } from "react"
 import { cn } from "@/shared/lib/utils"
 import { useEditor, type Editor } from "@tiptap/react"
-import {
-  getExtensions,
-  textToTiptapHtml,
-} from "@/features/memos/components/editor/extensions"
+import { getExtensions, textToTiptapHtml } from "@/features/memos/components/editor/extensions"
 import { fetchLinkMetadata } from "@/shared/lib/link-preview"
 import {
   findPendingMarkupLink,
@@ -19,10 +16,7 @@ import { MemoEditorLayout } from "@/features/memos/components/MemoEditorLayout"
 import { useState } from "react"
 import { toast } from "@/shared/hooks/use-toast"
 
-import {
-  useMemoEditor,
-  DRAFT_CONTENT_KEY,
-} from "@/features/memos/hooks/useMemoEditor"
+import { useMemoEditor, DRAFT_CONTENT_KEY } from "@/features/memos/hooks/useMemoEditor"
 import { useImageUpload } from "@/features/memos/hooks/useImageUpload"
 import {
   useEditorSuggestions,
@@ -40,8 +34,7 @@ interface MemoEditorProps {
   className?: string
 }
 
-const IMAGE_URL_RE =
-  /\.(?:jpe?g|png|gif|webp|avif|svg|bmp|ico|tiff?)(?:\?|#|$)/i
+const IMAGE_URL_RE = /\.(?:jpe?g|png|gif|webp|avif|svg|bmp|ico|tiff?)(?:\?|#|$)/i
 
 function isImageUrl(url: string): boolean {
   try {
@@ -78,9 +71,7 @@ function isPristineEmptyEditor(editor: Editor | null) {
   const firstChild = doc.firstChild
 
   return (
-    doc.childCount === 1 &&
-    firstChild?.type.name === "paragraph" &&
-    firstChild.childCount === 0
+    doc.childCount === 1 && firstChild?.type.name === "paragraph" && firstChild.childCount === 0
   )
 }
 
@@ -110,11 +101,7 @@ export function MemoEditor({
       if (!file.type.startsWith("image/")) return
       const result = await uploadFile(file)
       if (result.url && editorRef.current) {
-        editorRef.current
-          .chain()
-          .focus()
-          .insertContent(`![图片](${result.url}) `)
-          .run()
+        editorRef.current.chain().focus().insertContent(`![图片](${result.url}) `).run()
       } else if (result.error) {
         toast({
           title: "图片上传失败",
@@ -226,8 +213,7 @@ export function MemoEditor({
     !content.trim() &&
     mode === "create"
   const shouldAnimateCollapse = enableCollapseAnimation
-  const needsPrivateDialog =
-    isPrivate && (mode === "create" || !memo?.is_private)
+  const needsPrivateDialog = isPrivate && (mode === "create" || !memo?.is_private)
 
   // 将 pending 的 markupLink 节点转为默认模式（图片 URL 转图片，普通 URL 转提及）
   const resolvePendingLink = useCallback(
@@ -251,9 +237,7 @@ export function MemoEditor({
           const node = view.state.doc.nodeAt(pendingLink.pos)
           if (node) {
             const finalTitle =
-              fetchedMeta?.title ||
-              fetchedMeta?.domain ||
-              deriveTitleFromUrl(pendingPasteUrl)
+              fetchedMeta?.title || fetchedMeta?.domain || deriveTitleFromUrl(pendingPasteUrl)
             view.dispatch(
               view.state.tr.setNodeMarkup(pendingLink.pos, undefined, {
                 ...node.attrs,
@@ -280,8 +264,7 @@ export function MemoEditor({
   const extensions = useMemo(
     () =>
       getExtensions({
-        shouldAllowMentionSuggestion: () =>
-          !suppressSuggestionRestoreRef.current,
+        shouldAllowMentionSuggestion: () => !suppressSuggestionRestoreRef.current,
         onMentionStart: (props) => {
           if (suppressSuggestionRestoreRef.current) {
             return
@@ -331,9 +314,7 @@ export function MemoEditor({
           if (props.event.key === "Enter") {
             const item = suggestionsRef.current?.[selectedIndexRef.current]
             if (item && suggestionPropsRef.current) {
-              const label = item.label.startsWith("@")
-                ? item.label.slice(1)
-                : item.label
+              const label = item.label.startsWith("@") ? item.label.slice(1) : item.label
               suggestionPropsRef.current.command({ id: label, label: label })
               props.event.preventDefault()
               props.event.stopPropagation()
@@ -342,8 +323,7 @@ export function MemoEditor({
           }
           return false
         },
-        shouldAllowHashtagSuggestion: () =>
-          !suppressSuggestionRestoreRef.current,
+        shouldAllowHashtagSuggestion: () => !suppressSuggestionRestoreRef.current,
         onHashtagStart: (props) => {
           if (suppressSuggestionRestoreRef.current) {
             return
@@ -394,9 +374,7 @@ export function MemoEditor({
             const item = suggestionsRef.current?.[selectedIndexRef.current]
             if (suggestionPropsRef.current && item) {
               const rawLabel = item.label
-              const label = rawLabel.startsWith("#")
-                ? rawLabel.slice(1)
-                : rawLabel
+              const label = rawLabel.startsWith("#") ? rawLabel.slice(1) : rawLabel
               suggestionPropsRef.current.command({ id: label, label: label })
               props.event.preventDefault()
               props.event.stopPropagation()
@@ -430,10 +408,7 @@ export function MemoEditor({
       setContent(text)
       setError(null)
       if (mode === "create") {
-        localStorage.setItem(
-          DRAFT_CONTENT_KEY,
-          JSON.stringify(editor.getJSON())
-        )
+        localStorage.setItem(DRAFT_CONTENT_KEY, JSON.stringify(editor.getJSON()))
       }
     },
     onFocus: () => {
@@ -447,10 +422,7 @@ export function MemoEditor({
       setTimeout(() => {
         if (!editor) return
         const { from } = editor.state.selection
-        const textBefore = editor.state.doc.textBetween(
-          Math.max(0, from - 20),
-          from
-        )
+        const textBefore = editor.state.doc.textBetween(Math.max(0, from - 20), from)
         const mentionMatch = textBefore.match(/(?:^|\s)(@|#)(\w*)$/)
         if (mentionMatch) {
           const char = mentionMatch[1]
@@ -507,9 +479,7 @@ export function MemoEditor({
         mousedown: (_view, event) => {
           suppressSuggestionRestoreRef.current = false
           // 记录点击位置，供 onBlur 判断是否需要收缩
-          mousedownInsideEditorRef.current = _view.dom.contains(
-            event.target as Node
-          )
+          mousedownInsideEditorRef.current = _view.dom.contains(event.target as Node)
           // 点击编辑器外部时，关闭弹窗但标记不收缩
           if (!mousedownInsideEditorRef.current && isAnyDialogOpen) {
             collapseAfterPopupCloseRef.current = true
@@ -538,9 +508,7 @@ export function MemoEditor({
         // 优先处理剪贴板中的图片文件
         const files = event.clipboardData?.files
         if (files && files.length > 0) {
-          const imageFile = Array.from(files).find((f) =>
-            f.type.startsWith("image/")
-          )
+          const imageFile = Array.from(files).find((f) => f.type.startsWith("image/"))
           if (imageFile) {
             event.preventDefault()
             handleImageFile(imageFile)
@@ -584,8 +552,7 @@ export function MemoEditor({
         // 立即开始预获取元数据，节省时间
         fetchLinkMetadata(url).then((meta) => {
           setFetchedMeta(meta)
-          const bestTitle =
-            meta?.title || meta?.domain || deriveTitleFromUrl(url)
+          const bestTitle = meta?.title || meta?.domain || deriveTitleFromUrl(url)
           if (editor) {
             // 更新节点显示标题（无论是否仍在 pending 状态）
             editor.state.doc.descendants((node, pos) => {
@@ -615,9 +582,7 @@ export function MemoEditor({
       handleDrop: (view, event) => {
         const files = event.dataTransfer?.files
         if (files && files.length > 0) {
-          const imageFile = Array.from(files).find((f) =>
-            f.type.startsWith("image/")
-          )
+          const imageFile = Array.from(files).find((f) => f.type.startsWith("image/"))
           if (imageFile) {
             event.preventDefault()
             handleImageFile(imageFile)
@@ -657,21 +622,12 @@ export function MemoEditor({
       setShowLinkPicker(true)
     }
 
-    editorDom.addEventListener(
-      "memo-internal-menu-change",
-      handleMenuChange as EventListener
-    )
+    editorDom.addEventListener("memo-internal-menu-change", handleMenuChange as EventListener)
     editorDom.addEventListener("edit-link", handleEditLink as EventListener)
 
     return () => {
-      editorDom.removeEventListener(
-        "memo-internal-menu-change",
-        handleMenuChange as EventListener
-      )
-      editorDom.removeEventListener(
-        "edit-link",
-        handleEditLink as EventListener
-      )
+      editorDom.removeEventListener("memo-internal-menu-change", handleMenuChange as EventListener)
+      editorDom.removeEventListener("edit-link", handleEditLink as EventListener)
     }
   }, [editor, setIsMenuOpen, setShowLinkPicker])
 
@@ -702,11 +658,7 @@ export function MemoEditor({
         editor.commands.setContent(textToTiptapHtml(memo.content))
       } else if (mode === "create") {
         const draftContent = localStorage.getItem(DRAFT_CONTENT_KEY)
-        if (
-          draftContent &&
-          draftContent.trim() &&
-          editor.getText().trim() === ""
-        ) {
+        if (draftContent && draftContent.trim() && editor.getText().trim() === "") {
           try {
             const json = JSON.parse(draftContent)
             editor.commands.setContent(json)
@@ -858,16 +810,19 @@ export function MemoEditor({
       suggestionPosition={suggestionPosition}
       pasteMenuPosition={pasteMenuPosition}
       pendingPasteUrl={pendingPasteUrl}
-      isPendingPasteImageUrl={
-        pendingPasteUrl ? isImageUrl(pendingPasteUrl) : false
-      }
+      isPendingPasteImageUrl={pendingPasteUrl ? isImageUrl(pendingPasteUrl) : false}
       fetchedMeta={fetchedMeta}
       editingLinkInfo={editingLinkInfo}
       editorContainerRef={editorContainerRef}
       relativeGroupRef={relativeGroupRef}
       fileInputRef={fileInputRef}
       editor={editor}
-      onEditorClick={() => editor?.commands.focus()}
+      onEditorClick={() => {
+        setIsFocused(true)
+        window.requestAnimationFrame(() => {
+          editor?.commands.focus("end")
+        })
+      }}
       onImageFileSelect={handleImageFile}
       onShowLocationPicker={() => setShowLocationPicker(true)}
       onShowLinkPicker={() => setShowLinkPicker(true)}
@@ -902,17 +857,12 @@ export function MemoEditor({
                   from: pendingLink.pos,
                   to: pendingLink.pos + 1,
                 })
-                .insertContentAt(
-                  pendingLink.pos,
-                  `![图片](${pendingPasteUrl}) `
-                )
+                .insertContentAt(pendingLink.pos, `![图片](${pendingPasteUrl}) `)
                 .focus()
                 .run()
             } else {
               const finalTitle =
-                fetchedMeta?.title ||
-                fetchedMeta?.domain ||
-                deriveTitleFromUrl(pendingPasteUrl)
+                fetchedMeta?.title || fetchedMeta?.domain || deriveTitleFromUrl(pendingPasteUrl)
               editor
                 .chain()
                 .setNodeSelection(pendingLink.pos)
@@ -942,10 +892,7 @@ export function MemoEditor({
                   from: pendingLink.pos,
                   to: pendingLink.pos + 1,
                 })
-                .insertContentAt(
-                  pendingLink.pos,
-                  `![图片](${pendingPasteUrl}) `
-                )
+                .insertContentAt(pendingLink.pos, `![图片](${pendingPasteUrl}) `)
                 .focus()
                 .run()
             }
@@ -960,9 +907,7 @@ export function MemoEditor({
 
           if (pendingLink) {
             const finalTitle =
-              fetchedMeta?.title ||
-              fetchedMeta?.domain ||
-              deriveTitleFromUrl(pendingPasteUrl)
+              fetchedMeta?.title || fetchedMeta?.domain || deriveTitleFromUrl(pendingPasteUrl)
 
             editor
               .chain()

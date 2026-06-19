@@ -5,6 +5,7 @@ import { TagCloud } from "../ui/TagCloud"
 import { Heatmap } from "../ui/Heatmap"
 import { cn } from "@/shared/lib/utils"
 import { SidebarCollapseButton } from "./SidebarCollapseButton"
+import { BrandLogo } from "../ui/BrandLogo"
 import { SidebarSettings } from "./SidebarSettings"
 import { motion } from "framer-motion"
 
@@ -88,8 +89,8 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       style={{ willChange: "width" }}
       className="relative flex h-full shrink-0 flex-col overflow-hidden border-r border-border bg-muted p-2"
     >
-      {/* Top Area: 仅包含折叠按钮 */}
-      <div className="flex h-16 shrink-0 items-center pl-1">
+      {/* Top Area: 包含折叠按钮与品牌Logo */}
+      <div className="flex h-16 shrink-0 items-center pl-1 gap-2.5">
         <SidebarCollapseButton
           isCollapsed={effectiveIsCollapsed}
           onClick={toggleCollapsedState}
@@ -97,6 +98,26 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
           isMobile={isMobile}
           label={isMobile ? "关闭侧边栏" : effectiveIsCollapsed ? "展开侧边栏" : "收起侧边栏"}
         />
+        <motion.button
+          onClick={() => handleNavigate("/", isMobile, onClose)}
+          disabled={effectiveIsCollapsed}
+          initial={false}
+          animate={{
+            opacity: effectiveIsCollapsed ? 0 : 1,
+            width: effectiveIsCollapsed ? 0 : 113,
+            x: effectiveIsCollapsed ? -10 : 0,
+            display: effectiveIsCollapsed ? "none" : "flex",
+          }}
+          transition={sidebarTransition}
+          className={cn(
+            "overflow-hidden whitespace-nowrap flex items-center select-none cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-md p-1 -ml-1 bg-transparent text-left border-none",
+            effectiveIsCollapsed && "pointer-events-none"
+          )}
+          title="返回首页"
+          aria-label="返回首页"
+        >
+          <BrandLogo className="text-foreground/80 hover:text-foreground transition-colors duration-200 shrink-0" />
+        </motion.button>
       </div>
 
       {/* Heatmap Area */}

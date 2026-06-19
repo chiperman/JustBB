@@ -49,12 +49,28 @@ export const updateMemoStateSchema = z.object({
   access_code: z.string().optional().nullable(), // 原始口令输入，由 Action 负责哈希
 })
 
-/**
- * 批量添加标签的 Schema
- */
+const arrayPreprocessor = (val: unknown) => {
+  if (typeof val === "string") {
+    if (val.trim() === "") return []
+    try {
+      const parsed = JSON.parse(val)
+      if (Array.isArray(parsed)) return parsed
+    } catch {
+      // 忽略 JSON 解析错误，继续按逗号分割
+    }
+    return val
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+  }
+  if (Array.isArray(val)) return val
+  return []
+}
+
 export const batchAddTagsSchema = z.object({
-  ids: z.array(postgresUuidSchema).min(1, "请至少选择一条记录"),
-  tags: z.array(z.string()).min(1, "请至少选择一个标签"),
+  ids: z.preprocess(arrayPreprocessor, z.array(postgresUuidSchema).min(1, "请至少选择一条记录")),
+  tags: z.preprocess(arrayPreprocessor, z.array(z.string()).optional().default([])),
+  removeTags: z.preprocess(arrayPreprocessor, z.array(z.string()).optional().default([])),
 })
 
 /**

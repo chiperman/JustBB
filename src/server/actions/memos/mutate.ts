@@ -10,6 +10,7 @@ import {
   calculateWordCount,
   extractLocations,
   mergeTagsIntoContent,
+  removeTagsFromContent,
 } from "@/lib/memos/parser"
 import { Database } from "@/types/database"
 import {
@@ -89,9 +90,7 @@ function logValidationFailure(
 /**
  * 创建新笔记
  */
-export async function createMemo(
-  formData: FormData
-): Promise<ActionResponse<Memo>> {
+export async function createMemo(formData: FormData): Promise<ActionResponse<Memo>> {
   if (!(await isAdmin())) {
     return { success: false, error: "权限不足，仅管理员可进行此操作" }
   }
@@ -105,8 +104,7 @@ export async function createMemo(
     return { success: false, error: validation.error.issues[0].message }
   }
 
-  const { content, is_private, is_pinned, access_code, access_code_hint } =
-    validation.data
+  const { content, is_private, is_pinned, access_code, access_code_hint } = validation.data
   const supabase = await getClient()
 
   const payload: Partial<MemoInsert> = {
@@ -146,9 +144,7 @@ export async function createMemo(
 /**
  * 更新笔记内容 (含内容解析)
  */
-export async function updateMemoContent(
-  formData: FormData
-): Promise<ActionResponse<Memo>> {
+export async function updateMemoContent(formData: FormData): Promise<ActionResponse<Memo>> {
   if (!(await isAdmin())) {
     return { success: false, error: "权限不足，仅管理员可进行此操作" }
   }
@@ -160,14 +156,8 @@ export async function updateMemoContent(
 
   if (!validation.success) {
     const issue = validation.error.issues[0]
-    const receivedId =
-      typeof rawData.id === "string" ? rawData.id : String(rawData.id ?? "")
-    logValidationFailure(
-      "Invalid memo update payload",
-      viewerId,
-      issue,
-      rawData
-    )
+    const receivedId = typeof rawData.id === "string" ? rawData.id : String(rawData.id ?? "")
+    logValidationFailure("Invalid memo update payload", viewerId, issue, rawData)
     if (issue.path.includes("id")) {
       return { success: false, error: `无效的ID：${receivedId || "(空)"}` }
     }
@@ -182,9 +172,7 @@ export async function updateMemoContent(
     .update({
       content,
       word_count: calculateWordCount(content),
-      locations: extractLocations(
-        content
-      ) as unknown as MemoInsert["locations"],
+      locations: extractLocations(content) as unknown as MemoInsert["locations"],
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
@@ -193,17 +181,12 @@ export async function updateMemoContent(
     .single()
 
   if (error) {
-    logDatabaseError(
-      "Error updating memo content",
-      { viewerId, memoId: id },
-      error
-    )
+    logDatabaseError("Error updating memo content", { viewerId, memoId: id }, error)
     return { success: false, error: formatActionError("保存失败", error) }
   }
 
   if (!data) {
-    const noDataError =
-      "保存失败：数据库没有返回更新后的记录，可能这条 memo 不属于当前账号。"
+    const noDataError = "保存失败：数据库没有返回更新后的记录，可能这条 memo 不属于当前账号。"
     console.error("Error updating memo content: no row returned", {
       viewerId,
       memoId: id,
@@ -222,9 +205,7 @@ export async function updateMemoContent(
 /**
  * 更新笔记状态 (置顶、私密等)
  */
-export async function updateMemoState(
-  formData: FormData
-): Promise<ActionResponse<Memo>> {
+export async function updateMemoState(formData: FormData): Promise<ActionResponse<Memo>> {
   if (!(await isAdmin())) {
     return { success: false, error: "权限不足，仅管理员可进行此操作" }
   }
@@ -236,8 +217,7 @@ export async function updateMemoState(
 
   if (!validation.success) {
     const issue = validation.error.issues[0]
-    const receivedId =
-      typeof rawData.id === "string" ? rawData.id : String(rawData.id ?? "")
+    const receivedId = typeof rawData.id === "string" ? rawData.id : String(rawData.id ?? "")
     logValidationFailure("Invalid memo state payload", viewerId, issue, rawData)
     if (issue.path.includes("id")) {
       return { success: false, error: `无效的ID：${receivedId || "(空)"}` }
@@ -245,8 +225,7 @@ export async function updateMemoState(
     return { success: false, error: issue.message }
   }
 
-  const { id, is_pinned, is_private, access_code, access_code_hint } =
-    validation.data
+  const { id, is_pinned, is_private, access_code, access_code_hint } = validation.data
   const supabase = await getClient()
 
   const updatePayload: Partial<MemoInsert> = {}
@@ -273,17 +252,12 @@ export async function updateMemoState(
     .single()
 
   if (error) {
-    logDatabaseError(
-      "Error updating memo state",
-      { viewerId, memoId: id },
-      error
-    )
+    logDatabaseError("Error updating memo state", { viewerId, memoId: id }, error)
     return { success: false, error: formatActionError("更新失败", error) }
   }
 
   if (!data) {
-    const noDataError =
-      "更新失败：数据库没有返回更新后的记录，可能这条 memo 不属于当前账号。"
+    const noDataError = "更新失败：数据库没有返回更新后的记录，可能这条 memo 不属于当前账号。"
     console.error("Error updating memo state: no row returned", {
       viewerId,
       memoId: id,
@@ -302,9 +276,7 @@ export async function updateMemoState(
 /**
  * 批量为笔记添加标签
  */
-export async function batchAddTagsToMemos(
-  formData: FormData
-): Promise<ActionResponse> {
+export async function batchAddTagsToMemos(formData: FormData): Promise<ActionResponse<Memo[]>> {
   if (!(await isAdmin())) {
     return { success: false, error: "权限不足，仅管理员可进行此操作" }
   }
@@ -318,14 +290,15 @@ export async function batchAddTagsToMemos(
     return { success: false, error: validation.error.issues[0].message }
   }
 
-  const { ids, tags } = validation.data
+  const { ids, tags, removeTags } = validation.data
   const supabase = await getClient()
 
   const validIds = ids.filter(Boolean)
-  const validTags = tags.map((t) => t.trim()).filter(Boolean)
+  const validTags = (tags || []).map((t) => t.trim()).filter(Boolean)
+  const validRemoveTags = (removeTags || []).map((t) => t.trim()).filter(Boolean)
 
-  if (validIds.length === 0 || validTags.length === 0) {
-    return { success: true, error: null }
+  if (validIds.length === 0 || (validTags.length === 0 && validRemoveTags.length === 0)) {
+    return { success: true, data: [], error: null }
   }
 
   // 先拉取当前内容
@@ -339,9 +312,17 @@ export async function batchAddTagsToMemos(
 
   const results = await Promise.all(
     memos.map((memo) => {
-      const { content: newContent, tags: combinedTags } = mergeTagsIntoContent(
+      // 1. 先安全剔除需要移除的标签
+      const { content: intermediateContent, tags: intermediateTags } = removeTagsFromContent(
         memo.content || "",
         memo.tags || [],
+        validRemoveTags
+      )
+
+      // 2. 再合并需要添加的新标签
+      const { content: newContent, tags: combinedTags } = mergeTagsIntoContent(
+        intermediateContent,
+        intermediateTags,
         validTags
       )
 
@@ -352,19 +333,20 @@ export async function batchAddTagsToMemos(
           content: newContent,
           updated_at: new Date().toISOString(),
           word_count: calculateWordCount(newContent),
-          locations: extractLocations(
-            newContent
-          ) as unknown as MemoInsert["locations"],
+          locations: extractLocations(newContent) as unknown as MemoInsert["locations"],
         })
         .eq("id", memo.id)
+        .select()
     })
   )
 
   const hasError = results.some((r) => r.error)
   if (hasError) return { success: false, error: "部分更新失败" }
 
+  const updatedMemos = results.map((r) => r.data?.[0]).filter(Boolean) as Memo[]
+
   revalidatePath("/")
-  return { success: true, error: null }
+  return { success: true, data: updatedMemos, error: null }
 }
 
 /**
@@ -432,9 +414,7 @@ export async function verifyUnlockCode(
     return {
       success: true,
       error: null,
-      data: withViewerAccess(data as unknown as Memo, viewerId, [
-        memoId,
-      ]) as Memo,
+      data: withViewerAccess(data as unknown as Memo, viewerId, [memoId]) as Memo,
     }
   }
 

@@ -36,6 +36,12 @@ interface MemoEditorProps {
 
 const IMAGE_URL_RE = /\.(?:jpe?g|png|gif|webp|avif|svg|bmp|ico|tiff?)(?:\?|#|$)/i
 
+type LocalImageAttachment = {
+  id: string
+  file: File
+  previewUrl: string
+}
+
 function isImageUrl(url: string): boolean {
   try {
     const pathname = new URL(url).pathname
@@ -94,7 +100,8 @@ export function MemoEditor({
   const editorRef = useRef<Editor | null>(null)
 
   const { uploadFile, isUploading } = useImageUpload()
-  const r2ConfiguredRef = useRef<boolean | null>(null)
+  const [queuedImages, setQueuedImages] = useState<LocalImageAttachment[]>([])
+  const queuedImagesRef = useRef<LocalImageAttachment[]>([])
   const [uploadingImages, setUploadingImages] = useState<
     {
       id: string
@@ -138,10 +145,11 @@ export function MemoEditor({
     performPublish,
     handleCancel,
   } = useMemoEditor({ mode, initialMemo: memo, onSuccess, onCancel })
+  const [isDraggingImages, setIsDraggingImages] = useState(false)
+  const [isPublishingQueuedImages, setIsPublishingQueuedImages] = useState(false)
 
-  const handleImageFile = useCallback(
+  const handleImageFileUpload = useCallback(
     async (file: File) => {
-      if (!file.type.startsWith("image/")) return
       const id = Math.random().toString(36).substring(2, 9)
       const previewUrl = URL.createObjectURL(file)
 
@@ -157,7 +165,7 @@ export function MemoEditor({
       URL.revokeObjectURL(previewUrl)
 
       if (result.url) {
-        setImages((prev) => [...prev, result.url!])
+        return result.url
       } else if (result.error) {
         toast({
           title: "图片上传失败",
@@ -165,41 +173,132 @@ export function MemoEditor({
           variant: "destructive",
         })
       }
+
+      return null
     },
-    [uploadFile, setImages]
+    [uploadFile]
   )
 
-  const handleRemoveImage = useCallback(
+  const handleImageFiles = useCallback((files: File[] | FileList) => {
+    const imageFiles = Array.from(files).filter((file) => file.type.startsWith("image/"))
+    if (imageFiles.length === 0) return
+
+    setQueuedImages((prev) =>
+      prev.concat(
+        imageFiles.map((file) => ({
+          id: Math.random().toString(36).substring(2, 9),
+          file,
+          previewUrl: URL.createObjectURL(file),
+        }))
+      )
+    )
+  }, [])
+
+  const handleRemoveUploadedImage = useCallback(
     (urlToRemove: string) => {
       setImages((prev) => prev.filter((url) => url !== urlToRemove))
     },
     [setImages]
   )
 
-  const handleImageButtonClick = useCallback(async () => {
-    if (r2ConfiguredRef.current === false) {
-      toast({
-        title: "请先配置图片存储",
-        description: "在设置菜单中配置 Cloudflare R2 后即可上传图片",
-        variant: "destructive",
-      })
-      return
-    }
-    if (r2ConfiguredRef.current === null) {
-      const { getR2Config } = await import("@/server/actions/settings/r2")
-      const res = await getR2Config()
-      r2ConfiguredRef.current = !!res.data
-      if (!res.data) {
-        toast({
-          title: "请先配置图片存储",
-          description: "在设置菜单中配置 Cloudflare R2 后即可上传图片",
-          variant: "destructive",
-        })
-        return
-      }
-    }
+  const handleRemoveQueuedImage = useCallback((idToRemove: string) => {
+    setQueuedImages((prev) => {
+      const target = prev.find((image) => image.id === idToRemove)
+      if (target) URL.revokeObjectURL(target.previewUrl)
+      return prev.filter((image) => image.id !== idToRemove)
+    })
+  }, [])
+
+  const handleAttachmentInteract = useCallback(() => {
+    collapseAfterPopupCloseRef.current = true
+    setIsFocused(true)
+  }, [setIsFocused])
+
+  const handleImageButtonClick = useCallback(() => {
     fileInputRef.current?.click()
   }, [])
+
+  useEffect(() => {
+    const getImageFiles = (files: FileList | null | undefined) =>
+      Array.from(files ?? []).filter((file) => file.type.startsWith("image/"))
+    const hasImageItems = (items: DataTransferItemList | null | undefined) =>
+      Array.from(items ?? []).some((item) => item.kind === "file" && item.type.startsWith("image/"))
+
+    const handleWindowDragOver = (event: DragEvent) => {
+      if (
+        getImageFiles(event.dataTransfer?.files).length === 0 &&
+        !hasImageItems(event.dataTransfer?.items)
+      ) {
+        return
+      }
+      event.preventDefault()
+      setIsDraggingImages(true)
+    }
+
+    const handleWindowDrop = (event: DragEvent) => {
+      setIsDraggingImages(false)
+      if (event.defaultPrevented) return
+
+      const imageFiles = getImageFiles(event.dataTransfer?.files)
+      if (imageFiles.length === 0) return
+
+      event.preventDefault()
+      handleImageFiles(imageFiles)
+    }
+
+    const handleWindowDragLeave = (event: DragEvent) => {
+      if (event.relatedTarget === null) {
+        setIsDraggingImages(false)
+      }
+    }
+
+    window.addEventListener("dragover", handleWindowDragOver)
+    window.addEventListener("drop", handleWindowDrop)
+    window.addEventListener("dragleave", handleWindowDragLeave)
+
+    return () => {
+      window.removeEventListener("dragover", handleWindowDragOver)
+      window.removeEventListener("drop", handleWindowDrop)
+      window.removeEventListener("dragleave", handleWindowDragLeave)
+    }
+  }, [handleImageFiles])
+
+  useEffect(() => {
+    queuedImagesRef.current = queuedImages
+  }, [queuedImages])
+
+  useEffect(
+    () => () => {
+      queuedImagesRef.current.forEach((image) => URL.revokeObjectURL(image.previewUrl))
+    },
+    []
+  )
+
+  const clearQueuedImages = useCallback(() => {
+    setQueuedImages((prev) => {
+      prev.forEach((image) => URL.revokeObjectURL(image.previewUrl))
+      return []
+    })
+  }, [])
+
+  const uploadQueuedImages = useCallback(async () => {
+    if (queuedImages.length === 0) return images
+
+    setIsPublishingQueuedImages(true)
+    try {
+      const urls = (
+        await Promise.all(queuedImages.map((image) => handleImageFileUpload(image.file)))
+      ).filter((url): url is string => Boolean(url))
+
+      if (urls.length !== queuedImages.length) {
+        return null
+      }
+
+      return [...images, ...urls]
+    } finally {
+      setIsPublishingQueuedImages(false)
+    }
+  }, [handleImageFileUpload, images, queuedImages])
 
   // 智能链接系统相关状态
   const [pendingPasteUrl, setPendingPasteUrl] = useState<string | null>(null)
@@ -289,6 +388,18 @@ export function MemoEditor({
     setPendingPastePos(null)
     setFetchedMeta(null)
   }, [])
+
+  const handlePublishWithQueuedImages = useCallback(async () => {
+    const currentEditor = editorRef.current
+    resolvePendingLink(currentEditor?.view)
+    const imageUrls = await uploadQueuedImages()
+    if (!imageUrls) return
+
+    const didPublish = await performPublish(currentEditor, imageUrls)
+    if (didPublish) {
+      clearQueuedImages()
+    }
+  }, [clearQueuedImages, performPublish, resolvePendingLink, uploadQueuedImages])
 
   const extensions = useMemo(
     () =>
@@ -537,10 +648,10 @@ export function MemoEditor({
         // 优先处理剪贴板中的图片文件
         const files = event.clipboardData?.files
         if (files && files.length > 0) {
-          const imageFile = Array.from(files).find((f) => f.type.startsWith("image/"))
-          if (imageFile) {
+          const imageFiles = Array.from(files).filter((f) => f.type.startsWith("image/"))
+          if (imageFiles.length > 0) {
             event.preventDefault()
-            handleImageFile(imageFile)
+            handleImageFiles(imageFiles)
             return true
           }
         }
@@ -611,10 +722,10 @@ export function MemoEditor({
       handleDrop: (view, event) => {
         const files = event.dataTransfer?.files
         if (files && files.length > 0) {
-          const imageFile = Array.from(files).find((f) => f.type.startsWith("image/"))
-          if (imageFile) {
+          const imageFiles = Array.from(files).filter((f) => f.type.startsWith("image/"))
+          if (imageFiles.length > 0) {
             event.preventDefault()
-            handleImageFile(imageFile)
+            handleImageFiles(imageFiles)
             return true
           }
         }
@@ -807,6 +918,7 @@ export function MemoEditor({
       editor?.commands.blur()
       setShowPlaceholder(true)
     }
+    clearQueuedImages()
     handleCancel()
   }
 
@@ -817,12 +929,16 @@ export function MemoEditor({
       isFocused={isFocused}
       isPrivate={isPrivate}
       isPinned={isPinned}
-      isPending={isPending}
-      isUploadingImage={isUploading}
+      isPending={isPending || isPublishingQueuedImages}
+      isUploadingImage={isUploading || isPublishingQueuedImages}
       content={content}
       uploadedImages={images}
+      queuedImages={queuedImages}
       uploadingImages={uploadingImages}
-      onRemoveImage={handleRemoveImage}
+      isDraggingImages={isDraggingImages}
+      onRemoveImage={handleRemoveUploadedImage}
+      onRemoveQueuedImage={handleRemoveQueuedImage}
+      onAttachmentInteract={handleAttachmentInteract}
       mode={mode}
       showPlaceholder={showPlaceholder}
       showSuggestions={showSuggestions}
@@ -855,7 +971,7 @@ export function MemoEditor({
           editor?.commands.focus("end")
         })
       }}
-      onImageFileSelect={handleImageFile}
+      onImageFilesSelect={handleImageFiles}
       onShowLocationPicker={() => setShowLocationPicker(true)}
       onShowLinkPicker={() => setShowLinkPicker(true)}
       onTogglePrivate={handleTogglePrivate}
@@ -866,8 +982,7 @@ export function MemoEditor({
         if (needsPrivateDialog) {
           setShowPrivateDialog(true)
         } else {
-          resolvePendingLink(editor?.view)
-          performPublish(editor)
+          handlePublishWithQueuedImages()
         }
       }}
       onSelectSuggestion={(item) => handleSelectSuggestion(item, editor)}
@@ -964,8 +1079,7 @@ export function MemoEditor({
         }
       }}
       onPrivateConfirm={() => {
-        resolvePendingLink(editor?.view)
-        performPublish(editor)
+        handlePublishWithQueuedImages()
       }}
       onLocationPickerOpenChange={(open) => {
         setShowLocationPicker(open)

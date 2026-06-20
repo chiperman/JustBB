@@ -40,7 +40,7 @@ async function compressImage(file: File): Promise<File> {
 }
 
 export function useImageUpload() {
-  const [isUploading, setIsUploading] = useState(false)
+  const [pendingUploads, setPendingUploads] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
   const uploadFile = useCallback(
@@ -48,7 +48,7 @@ export function useImageUpload() {
       file: File,
       onProgress?: (progress: number) => void
     ): Promise<{ url: string | null; error: string | null }> => {
-      setIsUploading(true)
+      setPendingUploads((count) => count + 1)
       setError(null)
 
       try {
@@ -101,11 +101,11 @@ export function useImageUpload() {
         setError(message)
         return { url: null, error: message }
       } finally {
-        setIsUploading(false)
+        setPendingUploads((count) => Math.max(0, count - 1))
       }
     },
     []
   )
 
-  return { uploadFile, isUploading, error }
+  return { uploadFile, isUploading: pendingUploads > 0, error }
 }

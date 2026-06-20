@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
-import type { RefObject } from "react"
+import * as React from "react"
 import type { Editor } from "@tiptap/react"
 import { motion } from "framer-motion"
 import { cn } from "@/shared/lib/utils"
@@ -16,6 +16,7 @@ import type { LinkRenderMode } from "@/features/memos/components/editor/smartLin
 import { PLACEHOLDER_TEXT } from "@/features/memos/components/MemoEditor"
 import { useLayout } from "@/state/LayoutContext"
 import { ImageZoom } from "@/shared/ui/ImageZoom"
+import { SmartImage } from "@/shared/ui/SmartImage"
 
 export interface SuggestionItem {
   id: string
@@ -43,6 +44,7 @@ export interface MemoEditorLayoutProps {
   showLocationPicker: boolean
   showLinkPicker: boolean
   error: string | null
+  isDraggingImages: boolean
   suggestions: SuggestionItem[]
   selectedIndex: number
   isLoading: boolean
@@ -68,7 +70,7 @@ export interface MemoEditorLayoutProps {
 
   // Callbacks
   onEditorClick: () => void
-  onImageFileSelect: (file: File) => void
+  onImageFilesSelect: (files: File[]) => void
   onShowLocationPicker: () => void
   onShowLinkPicker: () => void
   onTogglePrivate: () => void
@@ -86,12 +88,15 @@ export interface MemoEditorLayoutProps {
   onLocationConfirm: (loc: string) => void
   onLinkPickerOpenChange: (open: boolean) => void
   onLinkPickerConfirm: (title: string, url: string) => void
+  onAttachmentInteract?: () => void
 
   // Optional
   className?: string
   uploadedImages?: string[]
+  queuedImages?: { id: string; previewUrl: string }[]
   uploadingImages?: { id: string; previewUrl: string; progress: number }[]
   onRemoveImage?: (url: string) => void
+  onRemoveQueuedImage?: (id: string) => void
 }
 
 export function MemoEditorLayout({
@@ -114,6 +119,7 @@ export function MemoEditorLayout({
   showLocationPicker,
   showLinkPicker,
   error,
+  isDraggingImages,
   suggestions,
   selectedIndex,
   isLoading,
@@ -130,7 +136,7 @@ export function MemoEditorLayout({
   fileInputRef,
   editor,
   onEditorClick,
-  onImageFileSelect,
+  onImageFilesSelect,
   onShowLocationPicker,
   onShowLinkPicker,
   onTogglePrivate,
@@ -148,12 +154,63 @@ export function MemoEditorLayout({
   onLocationConfirm,
   onLinkPickerOpenChange,
   onLinkPickerConfirm,
+  onAttachmentInteract,
   className,
   uploadedImages,
+  queuedImages,
   uploadingImages,
   onRemoveImage,
+  onRemoveQueuedImage,
 }: MemoEditorLayoutProps) {
   const { animationMultiplier } = useLayout()
+  const attachmentStripRef = React.useRef<HTMLDivElement>(null)
+  const attachmentDragRef = React.useRef({
+    active: false,
+    moved: false,
+    startX: 0,
+    scrollLeft: 0,
+  })
+
+  const handleAttachmentPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    onAttachmentInteract?.()
+    if (event.button !== 0 || (event.target as HTMLElement).closest("button")) return
+
+    const strip = attachmentStripRef.current
+    if (!strip) return
+
+    attachmentDragRef.current = {
+      active: true,
+      moved: false,
+      startX: event.clientX,
+      scrollLeft: strip.scrollLeft,
+    }
+  }
+
+  const handleAttachmentPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = attachmentDragRef.current
+    const strip = attachmentStripRef.current
+    if (!drag.active || !strip) return
+
+    const deltaX = event.clientX - drag.startX
+    if (Math.abs(deltaX) > 4) {
+      drag.moved = true
+    }
+
+    strip.scrollLeft = drag.scrollLeft - deltaX
+  }
+
+  const stopAttachmentDrag = () => {
+    attachmentDragRef.current.active = false
+  }
+
+  const handleAttachmentClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!attachmentDragRef.current.moved) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    attachmentDragRef.current.moved = false
+  }
+
   return (
     <motion.section
       initial={false}
@@ -225,6 +282,22 @@ export function MemoEditorLayout({
         transition={{ duration: shouldAnimateCollapse ? 0.2 : 0 }}
       />
 
+      {isDraggingImages && (
+        <div className="pointer-events-none absolute inset-3 z-30 flex items-center justify-center rounded-lg border border-dashed border-primary/55 bg-background/85 backdrop-blur-sm">
+          <div
+            className={cn(
+              "flex items-center gap-2 rounded-lg px-4 text-center",
+              isActuallyCollapsed ? "py-1.5" : "flex-col py-4"
+            )}
+          >
+            <span className="text-sm font-semibold text-foreground">松开即可添加图片</span>
+            {!isActuallyCollapsed && (
+              <span className="text-xs text-muted-foreground">图片会在发布 Memo 时上传</span>
+            )}
+          </div>
+        </div>
+      )}
+
       <div
         className="w-full flex-1 flex flex-col min-h-0"
         inert={isActuallyCollapsed}
@@ -273,17 +346,24 @@ export function MemoEditorLayout({
 
             {/* 上传图片缩略图展示区 */}
             {((uploadedImages && uploadedImages.length > 0) ||
+              (queuedImages && queuedImages.length > 0) ||
               (uploadingImages && uploadingImages.length > 0)) && (
               <div
-                className="flex flex-wrap gap-2 mt-3 mb-1 select-none relative z-10"
-                onMouseDown={(e) => e.preventDefault()}
+                ref={attachmentStripRef}
+                className="flex flex-nowrap gap-2 mt-3 mb-1 select-none relative z-10 overflow-x-auto overflow-y-hidden pb-2 scrollbar-hover cursor-grab active:cursor-grabbing"
+                onPointerDown={handleAttachmentPointerDown}
+                onPointerMove={handleAttachmentPointerMove}
+                onPointerUp={stopAttachmentDrag}
+                onPointerCancel={stopAttachmentDrag}
+                onClickCapture={handleAttachmentClickCapture}
+                onMouseDownCapture={() => onAttachmentInteract?.()}
               >
                 {/* 已上传图片 */}
                 {uploadedImages &&
                   uploadedImages.map((url, idx) => (
                     <div
                       key={idx}
-                      className="relative w-16 h-16 rounded-md overflow-hidden ring-1 ring-border group/img"
+                      className="relative w-16 h-16 shrink-0 rounded-md overflow-hidden ring-1 ring-border group/img"
                     >
                       <ImageZoom
                         src={url}
@@ -291,9 +371,11 @@ export function MemoEditorLayout({
                         className="w-full h-full"
                         noHoverScale
                       >
-                        <img
+                        <SmartImage
                           src={url}
                           alt="Uploaded attachment"
+                          containerClassName="w-full h-full min-h-0"
+                          fallbackClassName="rounded-md"
                           className="w-full h-full object-cover cursor-zoom-in"
                         />
                       </ImageZoom>
@@ -301,7 +383,59 @@ export function MemoEditorLayout({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation()
+                          onAttachmentInteract?.()
                           onRemoveImage?.(url)
+                        }}
+                        className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-0.5 opacity-100 md:opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer flex items-center justify-center w-5 h-5 border-none z-20"
+                        title="移除图片"
+                      >
+                        <svg
+                          className="w-2.5 h-2.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2.5"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+
+                {/* 待发布图片 */}
+                {queuedImages &&
+                  queuedImages.map((img) => (
+                    <div
+                      key={img.id}
+                      className="relative w-16 h-16 shrink-0 rounded-md overflow-hidden ring-1 ring-border group/img"
+                    >
+                      <ImageZoom
+                        src={img.previewUrl}
+                        alt="Queued attachment"
+                        className="w-full h-full"
+                        noHoverScale
+                      >
+                        <SmartImage
+                          src={img.previewUrl}
+                          alt="Queued attachment"
+                          containerClassName="w-full h-full min-h-0"
+                          fallbackClassName="rounded-md"
+                          className="w-full h-full object-cover cursor-zoom-in"
+                        />
+                      </ImageZoom>
+                      <span className="pointer-events-none absolute bottom-1 left-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[9px] font-medium text-white">
+                        待发布
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onAttachmentInteract?.()
+                          onRemoveQueuedImage?.(img.id)
                         }}
                         className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-0.5 opacity-100 md:opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer flex items-center justify-center w-5 h-5 border-none z-20"
                         title="移除图片"
@@ -328,7 +462,7 @@ export function MemoEditorLayout({
                   uploadingImages.map((img) => (
                     <div
                       key={img.id}
-                      className="relative w-16 h-16 rounded-md overflow-hidden ring-1 ring-border bg-muted flex items-center justify-center"
+                      className="relative w-16 h-16 shrink-0 rounded-md overflow-hidden ring-1 ring-border bg-muted flex items-center justify-center"
                     >
                       <img
                         src={img.previewUrl}
@@ -342,7 +476,7 @@ export function MemoEditorLayout({
                               cx="20"
                               cy="20"
                               r="16"
-                              className="stroke-white/20"
+                              className="stroke-zinc-200/35"
                               strokeWidth="2.5"
                               fill="transparent"
                             />
@@ -350,7 +484,7 @@ export function MemoEditorLayout({
                               cx="20"
                               cy="20"
                               r="16"
-                              className="stroke-primary"
+                              className="stroke-zinc-200"
                               strokeWidth="2.5"
                               fill="transparent"
                               strokeDasharray={2 * Math.PI * 16}
@@ -358,7 +492,7 @@ export function MemoEditorLayout({
                               strokeLinecap="round"
                             />
                           </svg>
-                          <span className="absolute text-[10px] font-semibold text-white">
+                          <span className="absolute text-[10px] font-semibold text-zinc-100">
                             {img.progress}%
                           </span>
                         </div>
@@ -416,12 +550,13 @@ export function MemoEditorLayout({
         <input
           ref={fileInputRef}
           type="file"
+          multiple
           accept="image/jpeg,image/png,image/gif,image/webp"
           className="hidden"
           onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) {
-              onImageFileSelect(file)
+            const files = Array.from(e.target.files ?? [])
+            if (files.length > 0) {
+              onImageFilesSelect(files)
               e.target.value = ""
             }
           }}

@@ -26,3 +26,38 @@ describe("MemoEditor collapse animation", () => {
     )
   })
 })
+
+describe("MemoEditor image upload", () => {
+  it("支持从文件选择器、粘贴和拖拽一次添加多张待发布图片", () => {
+    expect(layoutSource).toMatch(/type="file"[\s\S]*?multiple[\s\S]*?onImageFilesSelect\(files\)/)
+    expect(source).toMatch(/const imageFiles = Array\.from\(files\)\.filter/)
+    expect(source).toMatch(/setQueuedImages/)
+    expect(source).toMatch(/Promise\.all\(queuedImages\.map/)
+    expect(source).not.toMatch(/Array\.from\(files\)\.find/)
+  })
+
+  it("拖拽图片时显示编辑器上传区域", () => {
+    expect(source).toMatch(/setIsDraggingImages\(true\)/)
+    expect(layoutSource).toContain("松开即可添加图片")
+  })
+
+  it("附件缩略图保持单行横向滚动，上传进度使用中性灰", () => {
+    expect(layoutSource).toContain("flex-nowrap")
+    expect(layoutSource).toContain("overflow-x-auto")
+    expect(layoutSource).toContain("shrink-0")
+    expect(layoutSource).toContain("stroke-zinc-200")
+    expect(layoutSource).not.toContain('className="stroke-primary"')
+  })
+
+  it("点击预览或删除附件时不触发编辑器收缩", () => {
+    expect(source).toMatch(/collapseAfterPopupCloseRef\.current\s*=\s*true/)
+    expect(source).toContain("onAttachmentInteract={handleAttachmentInteract}")
+    expect(layoutSource).toContain("onAttachmentInteract?.()")
+    expect(layoutSource).toContain("onMouseDownCapture")
+    expect(layoutSource).not.toContain("setPointerCapture")
+  })
+
+  it("待发布徽标不拦截小图预览点击", () => {
+    expect(layoutSource).toContain("pointer-events-none absolute bottom-1 left-1")
+  })
+})

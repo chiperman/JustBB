@@ -20,9 +20,7 @@ const MAGIC_BYTES: Record<string, { ext: string; type: string }> = {
   "52494646": { ext: "webp", type: "image/webp" },
 }
 
-function validateMagicBytes(
-  buffer: Buffer
-): { ext: string; type: string } | null {
+function validateMagicBytes(buffer: Buffer): { ext: string; type: string } | null {
   if (buffer.length < 4) return null
 
   const hex = buffer.toString("hex").slice(0, 14)
@@ -38,11 +36,7 @@ const uploadTimestamps = new Map<string, number[]>()
 
 const r2ClientMap = new Map<string, S3Client>()
 
-function getR2Client(
-  accountId: string,
-  accessKey: string,
-  secretKey: string
-): S3Client {
+function getR2Client(accountId: string, accessKey: string, secretKey: string): S3Client {
   const cacheKey = `${accountId}:${accessKey}:${secretKey}`
   const cached = r2ClientMap.get(cacheKey)
   if (cached) return cached
@@ -68,6 +62,23 @@ export function checkRateLimit(userId: string): boolean {
   return true
 }
 
+async function isPublicImageReachable(url: string): Promise<boolean> {
+  try {
+    const headResponse = await fetch(url, { method: "HEAD", cache: "no-store" })
+    if (headResponse.ok) return true
+
+    // 有些对象存储或代理不支持 HEAD，用最小 GET 兜底确认公开读权限。
+    const getResponse = await fetch(url, {
+      method: "GET",
+      headers: { Range: "bytes=0-0" },
+      cache: "no-store",
+    })
+    return getResponse.ok
+  } catch {
+    return false
+  }
+}
+
 export async function POST(request: NextRequest) {
   const supabase = await getClient()
   const {
@@ -81,17 +92,12 @@ export async function POST(request: NextRequest) {
   // 读取用户的 R2 配置
   const { data: config } = await supabase
     .from("r2_configs")
-    .select(
-      "account_id, access_key_id, secret_access_key, bucket_name, public_url"
-    )
+    .select("account_id, access_key_id, secret_access_key, bucket_name, public_url")
     .eq("user_id", user.id)
     .single()
 
   if (!config) {
-    return NextResponse.json(
-      { error: "未配置 R2，请先在设置中配置" },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "未配置 R2，请先在设置中配置" }, { status: 400 })
   }
 
   // 解析上传的文件
@@ -117,17 +123,11 @@ export async function POST(request: NextRequest) {
   const magicInfo = validateMagicBytes(buffer)
 
   if (!magicInfo) {
-    return NextResponse.json(
-      { error: "文件内容不是有效的图片" },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "文件内容不是有效的图片" }, { status: 400 })
   }
 
   if (file.size > MAX_FILE_SIZE) {
-    return NextResponse.json(
-      { error: "文件大小不能超过 10MB" },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "文件大小不能超过 10MB" }, { status: 400 })
   }
 
   // 生成文件路径
@@ -138,11 +138,7 @@ export async function POST(request: NextRequest) {
   const key = `JustMemo/${user.id}/${timestamp}-${random}.${ext}`
 
   // 上传到 R2
-  const client = getR2Client(
-    config.account_id,
-    config.access_key_id,
-    config.secret_access_key
-  )
+  const client = getR2Client(config.account_id, config.access_key_id, config.secret_access_key)
 
   try {
     await client.send(
@@ -156,14 +152,22 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     const isDev = process.env.NODE_ENV === "development"
     const message = err instanceof Error ? err.message : "上传失败"
-    return NextResponse.json(
-      { error: isDev ? message : "上传失败，请稍后重试" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: isDev ? message : "上传失败，请稍后重试" }, { status: 500 })
   }
 
   const publicUrl = config.public_url.replace(/\/+$/, "")
   const url = `${publicUrl}/${key}`
+
+  const reachable = await isPublicImageReachable(url)
+  if (!reachable) {
+    return NextResponse.json(
+      {
+        error:
+          "图片已上传，但公开访问 URL 无法读取。请检查 R2 Bucket 是否已开启公开访问，或公开访问 URL 是否正确。",
+      },
+      { status: 502 }
+    )
+  }
 
   return NextResponse.json({ url })
 }

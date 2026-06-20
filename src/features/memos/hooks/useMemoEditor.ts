@@ -78,13 +78,13 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
     }
   }, [isPrivate, mode])
 
-  const performPublish = async (editor: Editor | null) => {
+  const performPublish = async (editor: Editor | null, imageUrls: string[] = images) => {
     const textContent = editor?.getText({ blockSeparator: "\n" }) || content
     if (isPending) {
       const message = "正在提交，请稍候。"
       setError(message)
       toast({ title: "请稍候", description: message })
-      return
+      return false
     }
 
     if (!textContent.trim()) {
@@ -95,7 +95,7 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
         description: message,
         variant: "destructive",
       })
-      return
+      return false
     }
 
     setIsPending(true)
@@ -106,7 +106,7 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
     formData.append("content", textContent)
     formData.append("is_private", String(isPrivate))
     formData.append("is_pinned", String(isPinned))
-    formData.append("images", JSON.stringify(images))
+    formData.append("images", JSON.stringify(imageUrls))
 
     if (isPrivate && accessCode) {
       formData.append("access_code", accessCode)
@@ -124,7 +124,7 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
             description: message,
             variant: "destructive",
           })
-          return
+          return false
         }
         formData.append("id", initialMemo.id)
         result = await updateMemoContent(formData)
@@ -167,6 +167,7 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
           toast({ title: "已保存" })
           onSuccess?.(newMemo)
         }
+        return true
       } else {
         const message = typeof result.error === "string" ? result.error : "操作失败，请稍后重试"
         setError(message)
@@ -175,6 +176,7 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
           description: message,
           variant: "destructive",
         })
+        return false
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "服务器连接失败"
@@ -184,6 +186,7 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
         description: message,
         variant: "destructive",
       })
+      return false
     } finally {
       setIsPending(false)
     }

@@ -5,6 +5,11 @@ import { useState, useCallback } from "react"
 const MAX_SIZE = 2 * 1024 * 1024 // 超过 2MB 压缩
 const MAX_DIMENSION = 2048 // 最大宽/高
 
+type UploadResponse = {
+  url: string
+  warning?: string | null
+}
+
 async function compressImage(file: File): Promise<File> {
   if (file.size <= MAX_SIZE) {
     return file
@@ -47,7 +52,7 @@ export function useImageUpload() {
     async (
       file: File,
       onProgress?: (progress: number) => void
-    ): Promise<{ url: string | null; error: string | null }> => {
+    ): Promise<{ url: string | null; error: string | null; warning?: string | null }> => {
       setPendingUploads((count) => count + 1)
       setError(null)
 
@@ -57,7 +62,7 @@ export function useImageUpload() {
         const formData = new FormData()
         formData.append("file", processed)
 
-        const url = await new Promise<string>((resolve, reject) => {
+        const response = await new Promise<UploadResponse>((resolve, reject) => {
           const xhr = new XMLHttpRequest()
           xhr.open("POST", "/api/upload")
 
@@ -73,8 +78,12 @@ export function useImageUpload() {
           xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) {
               try {
-                const response = JSON.parse(xhr.responseText)
-                resolve(response.url)
+                const parsed = JSON.parse(xhr.responseText)
+                if (typeof parsed.url !== "string") {
+                  reject(new Error("上传响应缺少图片地址"))
+                  return
+                }
+                resolve(parsed)
               } catch (e) {
                 reject(new Error("解析响应失败"))
               }
@@ -95,7 +104,7 @@ export function useImageUpload() {
           xhr.send(formData)
         })
 
-        return { url, error: null }
+        return { url: response.url, error: null, warning: response.warning ?? null }
       } catch (err) {
         const message = err instanceof Error ? err.message : "上传失败"
         setError(message)

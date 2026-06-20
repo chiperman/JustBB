@@ -40,6 +40,8 @@ type LocalImageAttachment = {
   id: string
   file: File
   previewUrl: string
+  progress?: number
+  isUploading?: boolean
 }
 
 function isImageUrl(url: string): boolean {
@@ -149,22 +151,51 @@ export function MemoEditor({
   const [isPublishingQueuedImages, setIsPublishingQueuedImages] = useState(false)
 
   const handleImageFileUpload = useCallback(
-    async (file: File) => {
-      const id = Math.random().toString(36).substring(2, 9)
-      const previewUrl = URL.createObjectURL(file)
+    async (file: File, attachment?: { id: string; previewUrl: string }) => {
+      const id = attachment?.id ?? Math.random().toString(36).substring(2, 9)
+      const previewUrl = attachment?.previewUrl ?? URL.createObjectURL(file)
+      const isQueuedAttachment = Boolean(attachment)
 
-      setUploadingImages((prev) => [...prev, { id, previewUrl, progress: 0 }])
+      if (isQueuedAttachment) {
+        setQueuedImages((prev) =>
+          prev.map((img) => (img.id === id ? { ...img, progress: 0, isUploading: true } : img))
+        )
+      } else {
+        setUploadingImages((prev) => [...prev, { id, previewUrl, progress: 0 }])
+      }
 
       const result = await uploadFile(file, (progress) => {
-        setUploadingImages((prev) =>
-          prev.map((img) => (img.id === id ? { ...img, progress } : img))
-        )
+        if (isQueuedAttachment) {
+          setQueuedImages((prev) =>
+            prev.map((img) => (img.id === id ? { ...img, progress, isUploading: true } : img))
+          )
+        } else {
+          setUploadingImages((prev) =>
+            prev.map((img) => (img.id === id ? { ...img, progress } : img))
+          )
+        }
       })
 
-      setUploadingImages((prev) => prev.filter((img) => img.id !== id))
-      URL.revokeObjectURL(previewUrl)
+      if (isQueuedAttachment) {
+        setQueuedImages((prev) =>
+          prev.map((img) =>
+            img.id === id
+              ? { ...img, progress: result.url ? 100 : undefined, isUploading: false }
+              : img
+          )
+        )
+      } else {
+        setUploadingImages((prev) => prev.filter((img) => img.id !== id))
+        URL.revokeObjectURL(previewUrl)
+      }
 
       if (result.url) {
+        if (result.warning) {
+          toast({
+            title: "图片已上传",
+            description: result.warning,
+          })
+        }
         return result.url
       } else if (result.error) {
         toast({
@@ -287,7 +318,11 @@ export function MemoEditor({
     setIsPublishingQueuedImages(true)
     try {
       const urls = (
-        await Promise.all(queuedImages.map((image) => handleImageFileUpload(image.file)))
+        await Promise.all(
+          queuedImages.map((image) =>
+            handleImageFileUpload(image.file, { id: image.id, previewUrl: image.previewUrl })
+          )
+        )
       ).filter((url): url is string => Boolean(url))
 
       if (urls.length !== queuedImages.length) {

@@ -32,7 +32,7 @@ describe("MemoEditor image upload", () => {
     expect(layoutSource).toMatch(/type="file"[\s\S]*?multiple[\s\S]*?onImageFilesSelect\(files\)/)
     expect(source).toMatch(/const imageFiles = Array\.from\(files\)\.filter/)
     expect(source).toMatch(/setQueuedImages/)
-    expect(source).toMatch(/Promise\.all\(queuedImages\.map/)
+    expect(source).toMatch(/Promise\.all\([\s\S]*queuedImages\.map/)
     expect(source).not.toMatch(/Array\.from\(files\)\.find/)
   })
 
@@ -59,5 +59,11 @@ describe("MemoEditor image upload", () => {
 
   it("待发布徽标不拦截小图预览点击", () => {
     expect(layoutSource).toContain("pointer-events-none absolute bottom-1 left-1")
+  })
+
+  it("发布时直接在待发布图片上显示上传进度", () => {
+    expect(source).toMatch(/setQueuedImages\([\s\S]*progress: 0[\s\S]*isUploading: true/)
+    expect(source).toMatch(/handleImageFileUpload\(image\.file, \{ id: image\.id/)
+    expect(layoutSource).toContain('{img.isUploading ? "上传中" : "待发布"}')
   })
 })

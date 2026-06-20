@@ -2,9 +2,10 @@
 
 import { Memo } from "@/types/memo"
 import { motion } from "framer-motion"
-import { cn } from "@/shared/lib/utils"
 import { ImageZoom } from "@/shared/ui/ImageZoom"
 import { SmartImage } from "@/shared/ui/SmartImage"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Image01Icon as GalleryIcon } from "@hugeicons/core-free-icons"
 
 interface GalleryGridProps {
   memos: Memo[]
@@ -21,9 +22,14 @@ function formatDate(date: Date | string): string {
 export function GalleryGrid({ memos }: GalleryGridProps) {
   if (!memos || memos.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-20 text-muted-foreground bg-muted/5 rounded-md border border-dashed border-border/50">
-        <p className="italic text-lg opacity-60">暂无图片内容</p>
-        <p className="text-xs opacity-40 mt-2">发布包含图片的 Memo 即可在此展示</p>
+      <div className="flex h-full min-h-[500px] flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(250,247,245,0.36))] px-6 py-24 text-center text-muted-foreground">
+        <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary/8 text-primary/55 ring-1 ring-primary/10">
+          <HugeiconsIcon icon={GalleryIcon} size={26} strokeWidth={1.7} />
+        </div>
+        <p className="text-lg font-semibold text-foreground/55">暂无图片</p>
+        <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground/55">
+          发布带图片的 Memo 后，影像会在这里汇集成你的私人画廊。
+        </p>
       </div>
     )
   }

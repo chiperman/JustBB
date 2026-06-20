@@ -160,13 +160,11 @@ export async function POST(request: NextRequest) {
 
   const reachable = await isPublicImageReachable(url)
   if (!reachable) {
-    return NextResponse.json(
-      {
-        error:
-          "图片已上传，但公开访问 URL 无法读取。请检查 R2 Bucket 是否已开启公开访问，或公开访问 URL 是否正确。",
-      },
-      { status: 502 }
-    )
+    return NextResponse.json({
+      url,
+      warning:
+        "图片已上传，但公开访问 URL 暂时无法读取。Memo 已继续发布，请检查 R2 Bucket 公开访问或公开访问 URL 配置。",
+    })
   }
 
   return NextResponse.json({ url })

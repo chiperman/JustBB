@@ -93,7 +93,7 @@ export interface MemoEditorLayoutProps {
   // Optional
   className?: string
   uploadedImages?: string[]
-  queuedImages?: { id: string; previewUrl: string }[]
+  queuedImages?: { id: string; previewUrl: string; progress?: number; isUploading?: boolean }[]
   uploadingImages?: { id: string; previewUrl: string; progress: number }[]
   onRemoveImage?: (url: string) => void
   onRemoveQueuedImage?: (id: string) => void
@@ -428,8 +428,40 @@ export function MemoEditorLayout({
                         />
                       </ImageZoom>
                       <span className="pointer-events-none absolute bottom-1 left-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[9px] font-medium text-white">
-                        待发布
+                        {img.isUploading ? "上传中" : "待发布"}
                       </span>
+                      {img.isUploading && (
+                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/35 backdrop-blur-[0.5px]">
+                          <div className="relative w-10 h-10 flex items-center justify-center">
+                            <svg className="w-full h-full transform -rotate-90">
+                              <circle
+                                cx="20"
+                                cy="20"
+                                r="16"
+                                className="stroke-zinc-200/35"
+                                strokeWidth="2.5"
+                                fill="transparent"
+                              />
+                              <circle
+                                cx="20"
+                                cy="20"
+                                r="16"
+                                className="stroke-zinc-200"
+                                strokeWidth="2.5"
+                                fill="transparent"
+                                strokeDasharray={2 * Math.PI * 16}
+                                strokeDashoffset={
+                                  2 * Math.PI * 16 * (1 - (img.progress ?? 0) / 100)
+                                }
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                            <span className="absolute text-[10px] font-semibold text-zinc-100">
+                              {img.progress ?? 0}%
+                            </span>
+                          </div>
+                        </div>
+                      )}
                       <button
                         type="button"
                         onClick={(e) => {

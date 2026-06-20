@@ -95,7 +95,13 @@ export function SmartImage({
             exit={{ opacity: 0 }}
             className="absolute inset-0 flex items-center justify-center z-10"
           >
-            <div className="w-full h-full animate-pulse bg-muted/40" />
+            <div
+              className={cn(
+                "h-full w-full animate-pulse bg-muted/40",
+                isFullPage &&
+                  "rounded-lg bg-gradient-to-br from-muted/40 via-background/70 to-muted/30 shadow-[0_18px_48px_rgba(29,29,27,0.08)] backdrop-blur-sm dark:from-white/10 dark:via-white/6 dark:to-white/10"
+              )}
+            />
           </motion.div>
         )}
 

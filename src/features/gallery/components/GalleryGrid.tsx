@@ -1,14 +1,17 @@
 "use client"
 
+import { useMemo, useState } from "react"
 import { Memo } from "@/types/memo"
-import { motion } from "framer-motion"
-import { ImageZoom } from "@/shared/ui/ImageZoom"
-import { SmartImage } from "@/shared/ui/SmartImage"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Image01Icon as GalleryIcon } from "@hugeicons/core-free-icons"
+import { ImageStackPreview, ImageStackThumbnail } from "@/shared/ui/ImageStack"
 
 interface GalleryGridProps {
   memos: Memo[]
+}
+
+type GalleryMemoItem = Memo & {
+  images: string[]
 }
 
 function formatDate(date: Date | string): string {
@@ -19,7 +22,73 @@ function formatDate(date: Date | string): string {
   return `${year}.${month}.${day}`
 }
 
+function getStableNumber(input: string): number {
+  let hash = 0
+
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (hash * 31 + input.charCodeAt(i)) % 997
+  }
+
+  return hash
+}
+
+function getGalleryAspectRatio(item: GalleryMemoItem): string {
+  const ratios = item.images.length > 1 ? ["4 / 3", "5 / 4", "3 / 2"] : ["4 / 3", "1 / 1", "5 / 4"]
+  return ratios[getStableNumber(item.id) % ratios.length]
+}
+
+function CardOverlay() {
+  return (
+    <>
+      <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(to_top,rgba(29,29,27,0.72)_0%,rgba(29,29,27,0.34)_42%,rgba(29,29,27,0.04)_72%),linear-gradient(135deg,rgba(217,119,87,0.18),transparent_45%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[48%] border-t border-white/[0.22] bg-[linear-gradient(to_top,rgba(29,29,27,0.44)_0%,rgba(246,245,244,0.14)_58%,rgba(246,245,244,0.02)_82%,transparent_100%),rgba(246,245,244,0.08)] opacity-0 backdrop-blur-[22px] backdrop-saturate-[1.35] transition-opacity duration-300 [-webkit-backdrop-filter:blur(22px)_saturate(1.35)] [mask-image:linear-gradient(to_top,black_0%,black_62%,rgba(0,0,0,0.62)_80%,transparent_100%)] group-hover:opacity-100 group-focus-within:opacity-100" />
+    </>
+  )
+}
+
+function MemoMeta({ item }: { item: GalleryMemoItem }) {
+  return (
+    <div className="pointer-events-none absolute inset-x-[18px] bottom-[18px] z-20 grid gap-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
+      <p className="line-clamp-2 text-[15px] font-semibold leading-normal text-white drop-shadow-[0_1px_18px_rgba(0,0,0,0.42)]">
+        {item.content?.trim() || "图片分享"}
+      </p>
+      <div className="flex items-center justify-between">
+        {item.created_at && (
+          <span className="font-mono text-[11px] tracking-[0.1em] text-white/82">
+            {formatDate(item.created_at)}
+          </span>
+        )}
+        <div className="flex items-center gap-1.5">
+          {item.images.length > 1 && (
+            <span className="badge-text rounded-sm bg-white/88 px-1.5 py-0.5 text-[10px] font-semibold tracking-normal text-foreground/70">
+              {item.images.length} 张
+            </span>
+          )}
+          {item.memo_number && (
+            <span className="badge-text rounded-sm bg-[#fdf5f2] px-1.5 py-0.5 text-[10px] font-semibold tracking-normal text-primary">
+              #{item.memo_number}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function GalleryGrid({ memos }: GalleryGridProps) {
+  const [previewItem, setPreviewItem] = useState<GalleryMemoItem | null>(null)
+
+  const galleryItems = useMemo<GalleryMemoItem[]>(
+    () =>
+      memos
+        .map((memo) => ({
+          ...memo,
+          images: memo.images?.filter(Boolean) || [],
+        }))
+        .filter((memo) => memo.images.length > 0),
+    [memos]
+  )
+
   if (!memos || memos.length === 0) {
     return (
       <div className="flex h-full min-h-[500px] flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(250,247,245,0.36))] px-6 py-24 text-center text-muted-foreground">
@@ -34,74 +103,34 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
     )
   }
 
-  // 从新版独立 images 列中提取并展开所有图片附件
-  const galleryItems: (Omit<Memo, "id"> & { id: string; imageUrl: string })[] = []
-
-  memos.forEach((memo) => {
-    if (memo.images && memo.images.length > 0) {
-      memo.images.forEach((imgUrl, index) => {
-        galleryItems.push({
-          ...memo,
-          id: `${memo.id}-${index}`, // 使用带有序号的唯一 ID 避免 key 重复
-          imageUrl: imgUrl,
-        })
-      })
-    }
-  })
-
   return (
-    <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
-      {galleryItems.map((item, idx) => (
-        <motion.div
-          key={item.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: idx * 0.03, duration: 0.5 }}
-          className="break-inside-avoid mb-6"
-        >
-          <div className="group relative overflow-hidden rounded-xl border border-border/40 bg-card focus-within:ring-1 focus-within:ring-ring">
-            <ImageZoom
-              src={item.imageUrl || ""}
-              alt="Memo multimedia content"
-              className="w-full h-auto border-none bg-transparent rounded-none ring-0 shadow-none"
-              noHoverScale
-            >
-              <SmartImage
-                src={item.imageUrl || ""}
-                alt="Memo multimedia content"
-                containerClassName="w-full h-auto min-h-[140px]"
-                className="w-full h-auto object-cover"
-                loading="lazy"
-              />
-            </ImageZoom>
-
-            {/* Gradient wash overlay — visible on hover (pointer-events-none lets clicks through to ImageZoom) */}
-            <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(to_top,rgba(29,29,27,0.72)_0%,rgba(29,29,27,0.34)_42%,rgba(29,29,27,0.04)_72%),linear-gradient(135deg,rgba(217,119,87,0.18),transparent_45%)] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100" />
-
-            {/* Glassy bottom panel — visible on hover (pointer-events-none lets clicks through to ImageZoom) */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[48%] border-t border-white/[0.22] bg-[linear-gradient(to_top,rgba(29,29,27,0.44)_0%,rgba(246,245,244,0.14)_58%,rgba(246,245,244,0.02)_82%,transparent_100%),rgba(246,245,244,0.08)] opacity-0 backdrop-blur-[22px] backdrop-saturate-[1.35] [-webkit-backdrop-filter:blur(22px)_saturate(1.35)] [mask-image:linear-gradient(to_top,black_0%,black_62%,rgba(0,0,0,0.62)_80%,transparent_100%)] group-hover:opacity-100 group-focus-within:opacity-100" />
-
-            {/* Content — visible on hover (pointer-events-none lets clicks through to ImageZoom) */}
-            <div className="pointer-events-none absolute inset-x-[18px] bottom-[18px] z-20 grid gap-3 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100">
-              <p className="line-clamp-2 text-[15px] font-semibold leading-normal text-white drop-shadow-[0_1px_18px_rgba(0,0,0,0.42)]">
-                {item.content.trim() || "图片分享"}
-              </p>
-              <div className="flex items-center justify-between">
-                {item.created_at && (
-                  <span className="font-mono text-[11px] tracking-[0.1em] text-white/82">
-                    {formatDate(item.created_at)}
-                  </span>
-                )}
-                {item.memo_number && (
-                  <span className="badge-text bg-[#fdf5f2] text-primary px-1.5 py-0.5 rounded-sm text-[10px] font-semibold tracking-normal">
-                    #{item.memo_number}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </motion.div>
+    <div className="columns-1 gap-7 md:columns-2 lg:columns-3">
+      {galleryItems.map((item) => (
+        <div key={item.id} className="mb-8 break-inside-avoid pb-3 pr-5">
+          <ImageStackThumbnail
+            images={item.images}
+            layoutId={`image-stack-${item.id}`}
+            alt="Memo multimedia content"
+            aspectRatio={getGalleryAspectRatio(item)}
+            onOpen={() => setPreviewItem(item)}
+            overlay={
+              <>
+                <CardOverlay />
+                <MemoMeta item={item} />
+              </>
+            }
+          />
+        </div>
       ))}
+
+      {previewItem && (
+        <ImageStackPreview
+          images={previewItem.images}
+          layoutId={`image-stack-${previewItem.id}`}
+          open={!!previewItem}
+          onClose={() => setPreviewItem(null)}
+        />
+      )}
     </div>
   )
 }

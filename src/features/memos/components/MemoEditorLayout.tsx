@@ -367,6 +367,8 @@ export function MemoEditorLayout({
                     >
                       <ImageZoom
                         src={url}
+                        groupImages={uploadedImages}
+                        currentGroupIndex={idx}
                         alt="Uploaded attachment"
                         className="w-full h-full"
                         noHoverScale
@@ -408,13 +410,15 @@ export function MemoEditorLayout({
 
                 {/* 待发布图片 */}
                 {queuedImages &&
-                  queuedImages.map((img) => (
+                  queuedImages.map((img, idx) => (
                     <div
                       key={img.id}
                       className="relative w-16 h-16 shrink-0 rounded-md overflow-hidden ring-1 ring-border group/img"
                     >
                       <ImageZoom
                         src={img.previewUrl}
+                        groupImages={queuedImages.map((q) => q.previewUrl)}
+                        currentGroupIndex={idx}
                         alt="Queued attachment"
                         className="w-full h-full"
                         noHoverScale

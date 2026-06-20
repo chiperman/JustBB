@@ -1,54 +1,47 @@
 "use client"
 
-import { SmartImage } from "@/shared/ui/SmartImage"
-import { ImageZoom } from "@/shared/ui/ImageZoom"
-import { cn } from "@/shared/lib/utils"
+import { useState } from "react"
+import { ImageStackPreview, ImageStackThumbnail } from "@/shared/ui/ImageStack"
 
 interface MemoImageGridProps {
   images: string[]
 }
 
 export function MemoImageGrid({ images }: MemoImageGridProps) {
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+
   if (!images || images.length === 0) return null
 
-  const count = images.length
+  const isStacked = images.length > 1
+  const layoutId = `memo-image-stack-${images[0]}`
 
   return (
-    <div
-      className={cn(
-        "grid gap-2 mt-4 select-none relative z-10",
-        count === 1
-          ? "grid-cols-1"
-          : count === 2 || count === 4
-            ? "grid-cols-2 max-w-[400px]"
-            : "grid-cols-3"
-      )}
-    >
-      {images.map((src, idx) => (
-        <div
-          key={idx}
-          className={cn(
-            "relative rounded-md overflow-hidden ring-1 ring-border/70 transition-all duration-300 hover:scale-[1.01] bg-muted/20",
-            count === 1 ? "max-h-[400px] w-auto max-w-full justify-self-start" : "aspect-square"
-          )}
-        >
-          <ImageZoom src={src}>
-            <SmartImage
-              src={src}
-              alt={`Memo attachment ${idx + 1}`}
-              containerClassName={cn(
-                "w-full h-full",
-                count === 1 ? "max-h-[400px] min-h-[150px] w-auto" : ""
-              )}
-              className={cn(
-                "object-cover w-full h-full select-none",
-                count === 1 ? "object-contain max-h-[400px] w-auto" : ""
-              )}
-              loading="lazy"
-            />
-          </ImageZoom>
-        </div>
-      ))}
+    <div className="relative z-10 mb-5 flex justify-center select-none">
+      <div className={isStacked ? "w-full max-w-[520px] pb-4 pr-6" : "w-full max-w-[520px]"}>
+        <ImageStackThumbnail
+          images={images}
+          layoutId={layoutId}
+          alt="Memo attachment"
+          aspectRatio="4 / 3"
+          onOpen={() => setIsPreviewOpen(true)}
+          className="cursor-zoom-in"
+          imageContainerClassName="min-h-[150px]"
+          badge={
+            isStacked ? (
+              <span className="badge-text pointer-events-none absolute right-3 bottom-3 z-20 rounded-sm bg-white/88 px-2 py-1 text-[11px] font-semibold tracking-normal text-foreground/70 shadow-[0_8px_22px_rgba(29,29,27,0.12)]">
+                {images.length} 张
+              </span>
+            ) : null
+          }
+        />
+      </div>
+
+      <ImageStackPreview
+        images={images}
+        layoutId={layoutId}
+        open={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+      />
     </div>
   )
 }

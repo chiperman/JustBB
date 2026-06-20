@@ -5,7 +5,15 @@ import { motion, AnimatePresence, useMotionValue, useSpring, animate } from "fra
 import { Dialog, DialogTrigger, DialogPortal } from "./dialog"
 import { cn } from "@/shared/lib/utils"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Cancel01Icon } from "@hugeicons/core-free-icons"
+import {
+  Cancel01Icon,
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  SearchMinusIcon,
+  SearchAddIcon,
+  ZoomInAreaIcon,
+  RotateTopRightIcon,
+} from "@hugeicons/core-free-icons"
 import { SmartImage } from "./SmartImage"
 
 interface ImageZoomProps {
@@ -14,13 +22,30 @@ interface ImageZoomProps {
   className?: string
   children?: React.ReactNode
   noHoverScale?: boolean
+  groupImages?: string[]
+  currentGroupIndex?: number
 }
 
 /**
  * 独立的预览内容组件
  * 每次通过 key 重新挂载，确保 useMotionValue/useSpring 彻底重置
  */
-function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onClose: () => void }) {
+function PreviewContent({
+  src,
+  alt,
+  groupImages = [src],
+  initialIndex = 0,
+  onClose,
+}: {
+  src: string
+  alt?: string
+  groupImages?: string[]
+  initialIndex?: number
+  onClose: () => void
+}) {
+  const [activeIndex, setActiveIndex] = React.useState(initialIndex)
+  const currentSrc = groupImages[activeIndex] || src
+
   // 基础运动值：x, y 平移 - 直接使用 MotionValue 以获得极致跟手感
   const x = useMotionValue(0)
   const y = useMotionValue(0)
@@ -35,6 +60,43 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
   const [fitMode, setFitMode] = React.useState<"fit" | "original">("fit")
   const isResettingRef = React.useRef(false)
   const [viewport, setViewport] = React.useState({ width: 1000, height: 1000 })
+  const [rotation, setRotation] = React.useState(0)
+
+  const resetTransform = React.useCallback(() => {
+    rawScale.set(1)
+    x.set(0)
+    y.set(0)
+    setRotation(0)
+  }, [rawScale, x, y])
+
+  const handlePrev = React.useCallback(() => {
+    if (activeIndex > 0) {
+      setActiveIndex((prev) => prev - 1)
+      resetTransform()
+    }
+  }, [activeIndex, resetTransform])
+
+  const handleNext = React.useCallback(() => {
+    if (activeIndex < groupImages.length - 1) {
+      setActiveIndex((prev) => prev + 1)
+      resetTransform()
+    }
+  }, [activeIndex, groupImages.length, resetTransform])
+
+  // 键盘左右翻页监听
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        handlePrev()
+      } else if (e.key === "ArrowRight") {
+        handleNext()
+      } else if (e.key === "Escape") {
+        onClose()
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [handlePrev, handleNext, onClose])
 
   // 非 passive wheel 监听，阻止浏览器页面缩放：仅 Ctrl+滚轮 或 双指捏合缩放图片
   React.useEffect(() => {
@@ -127,6 +189,8 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
         <motion.div
           className="relative flex items-center justify-center pointer-events-auto cursor-grab active:cursor-grabbing"
           style={{ x, y, scale }}
+          animate={{ rotate: rotation }}
+          transition={{ type: "spring", stiffness: 260, damping: 25 }}
           drag
           dragConstraints={dragConstraints}
           dragElastic={0.1}
@@ -142,13 +206,13 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
         >
           <div className={cn("relative rounded-[2px]", fitMode === "fit" && "overflow-hidden")}>
             <SmartImage
-              src={src}
-              alt={alt || "大图"}
+              src={currentSrc}
+              alt={alt || `大图 ${activeIndex + 1}`}
               isFullPage={true}
               containerClassName={cn(
                 fitMode === "fit"
-                  ? "w-full h-full max-w-[80vw] max-h-[70vh]"
-                  : "w-auto h-auto max-w-none max-h-none"
+                  ? "w-full h-full min-w-[min(72vw,320px)] min-h-[min(52vh,320px)] max-w-[80vw] max-h-[70vh]"
+                  : "w-auto h-auto min-w-[min(72vw,320px)] min-h-[min(52vh,320px)] max-w-none max-h-none"
               )}
               className={cn(
                 "object-contain select-none",
@@ -168,47 +232,102 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-inner border border-border/40 bg-popover px-2 py-1.5 backdrop-blur-xl pointer-events-auto"
+        className="absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-inner border border-border/40 bg-popover px-3 py-1.5 backdrop-blur-xl pointer-events-auto"
       >
+        {/* 翻页控制 (仅当有多张图时展示) */}
+        {groupImages.length > 1 && (
+          <>
+            <button
+              onClick={handlePrev}
+              disabled={activeIndex === 0}
+              className={cn(
+                "w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all",
+                activeIndex === 0 &&
+                  "text-foreground/20 hover:text-foreground/20 hover:bg-transparent pointer-events-none cursor-not-allowed"
+              )}
+              title="上一张 (←)"
+            >
+              <HugeiconsIcon icon={ArrowLeft01Icon} size={15} strokeWidth={2} />
+            </button>
+
+            <span className="text-foreground/90 font-mono text-[11px] min-w-[32px] h-8 flex items-center justify-center select-none">
+              {activeIndex + 1}/{groupImages.length}
+            </span>
+
+            <button
+              onClick={handleNext}
+              disabled={activeIndex === groupImages.length - 1}
+              className={cn(
+                "w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all",
+                activeIndex === groupImages.length - 1 &&
+                  "text-foreground/20 hover:text-foreground/20 hover:bg-transparent pointer-events-none cursor-not-allowed"
+              )}
+              title="下一张 (→)"
+            >
+              <HugeiconsIcon icon={ArrowRight01Icon} size={15} strokeWidth={2} />
+            </button>
+
+            <div className="w-px h-3.5 bg-border mx-1" />
+          </>
+        )}
+
+        {/* 缩放操作 */}
         <button
           onClick={() => {
-            setFitMode("fit")
-            rawScale.set(1)
-            x.set(0)
-            y.set(0)
+            const next = Math.max(rawScale.get() - 0.25, 0.25)
+            rawScale.set(next)
           }}
-          className={cn(
-            "px-3 py-1 rounded-md text-[11px] font-medium transition-all",
-            fitMode === "fit"
-              ? "bg-secondary text-foreground"
-              : "text-foreground/70 hover:text-foreground"
-          )}
+          className="w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all"
+          title="缩小"
         >
-          适应
+          <HugeiconsIcon icon={SearchMinusIcon} size={15} strokeWidth={2} />
         </button>
-        <button
-          onClick={() => {
-            setFitMode("original")
-            rawScale.set(1)
-            x.set(0)
-            y.set(0)
-          }}
-          className={cn(
-            "px-3 py-1 rounded-md text-[11px] font-medium transition-all",
-            fitMode === "original"
-              ? "bg-secondary text-foreground"
-              : "text-foreground/70 hover:text-foreground"
-          )}
-        >
-          100%
-        </button>
-        <div className="w-px h-4 bg-border mx-1" />
-        <span className="text-primary font-mono text-[11px] bg-primary/10 px-2 py-0.5 rounded-md ring-1 ring-primary/20">
+
+        <span className="text-foreground font-mono text-[11px] min-w-[36px] h-8 flex items-center justify-center select-none">
           {Math.round(currentScale * 100)}%
         </span>
-        <span className="text-[10px] text-muted-foreground mx-2">
-          Ctrl + 滚轮缩放 · 双指缩放 · 拖拽平移
-        </span>
+
+        <button
+          onClick={() => {
+            const next = Math.min(rawScale.get() + 0.25, 3)
+            rawScale.set(next)
+          }}
+          className="w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all"
+          title="放大"
+        >
+          <HugeiconsIcon icon={SearchAddIcon} size={15} strokeWidth={2} />
+        </button>
+
+        <button
+          onClick={() => {
+            if (fitMode === "fit") {
+              setFitMode("original")
+            } else {
+              setFitMode("fit")
+            }
+            resetTransform()
+          }}
+          className={cn(
+            "w-8 h-8 rounded-md flex items-center justify-center hover:bg-muted active:scale-95 transition-all",
+            fitMode === "original"
+              ? "text-primary hover:text-primary"
+              : "text-foreground/70 hover:text-foreground"
+          )}
+          title={fitMode === "fit" ? "100% 比例" : "适应屏幕"}
+        >
+          <HugeiconsIcon icon={ZoomInAreaIcon} size={15} strokeWidth={2} />
+        </button>
+
+        <div className="w-px h-3.5 bg-border mx-1" />
+
+        {/* 旋转操作 */}
+        <button
+          onClick={() => setRotation((r) => r + 90)}
+          className="w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all"
+          title="顺时针旋转 90°"
+        >
+          <HugeiconsIcon icon={RotateTopRightIcon} size={15} strokeWidth={2} />
+        </button>
       </motion.div>
 
       {/* 关闭按钮 */}
@@ -241,7 +360,15 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
 
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
 
-export function ImageZoom({ src, alt, className, children, noHoverScale }: ImageZoomProps) {
+export function ImageZoom({
+  src,
+  alt,
+  className,
+  children,
+  noHoverScale,
+  groupImages,
+  currentGroupIndex,
+}: ImageZoomProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const [openCount, setOpenCount] = React.useState(0)
   const hasMounted = useHasMounted()
@@ -312,7 +439,16 @@ export function ImageZoom({ src, alt, className, children, noHoverScale }: Image
 
       <DialogPortal>
         <AnimatePresence mode="wait">
-          {isOpen && <PreviewContent key={openCount} src={src} alt={alt} onClose={handleClose} />}
+          {isOpen && (
+            <PreviewContent
+              key={openCount}
+              src={src}
+              alt={alt}
+              groupImages={groupImages}
+              initialIndex={currentGroupIndex}
+              onClose={handleClose}
+            />
+          )}
         </AnimatePresence>
       </DialogPortal>
     </Dialog>

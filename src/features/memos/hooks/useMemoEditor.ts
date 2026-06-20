@@ -13,8 +13,7 @@ import { useToast } from "@/shared/hooks/use-toast"
 // Draft Persistence Keys
 export const DRAFT_CONTENT_KEY = "memo_editor_draft_content"
 export const DRAFT_IS_PRIVATE_KEY = "memo_editor_draft_is_private"
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 interface UseMemoEditorProps {
   mode: "create" | "edit"
@@ -23,17 +22,13 @@ interface UseMemoEditorProps {
   onCancel?: () => void
 }
 
-export function useMemoEditor({
-  mode,
-  initialMemo,
-  onSuccess,
-  onCancel,
-}: UseMemoEditorProps) {
+export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMemoEditorProps) {
   const { refreshTags } = useTags()
   const { refreshStats } = useStats()
   const { toast } = useToast()
 
   const [content, setContent] = useState(initialMemo?.content || "")
+  const [images, setImages] = useState<string[]>(initialMemo?.images || [])
   const [isPending, setIsPending] = useState(false)
   const [isPrivate, setIsPrivate] = useState(initialMemo?.is_private || false)
   const [accessCode, setAccessCode] = useState("")
@@ -111,6 +106,7 @@ export function useMemoEditor({
     formData.append("content", textContent)
     formData.append("is_private", String(isPrivate))
     formData.append("is_pinned", String(isPinned))
+    formData.append("images", JSON.stringify(images))
 
     if (isPrivate && accessCode) {
       formData.append("access_code", accessCode)
@@ -161,6 +157,7 @@ export function useMemoEditor({
           setAccessCode("")
           setAccessHint("")
           setIsPinned(false)
+          setImages([])
 
           if (newMemo) {
             dispatchMemoEvent({ type: "create", memo: newMemo })
@@ -171,10 +168,7 @@ export function useMemoEditor({
           onSuccess?.(newMemo)
         }
       } else {
-        const message =
-          typeof result.error === "string"
-            ? result.error
-            : "操作失败，请稍后重试"
+        const message = typeof result.error === "string" ? result.error : "操作失败，请稍后重试"
         setError(message)
         toast({
           title: mode === "edit" ? "保存失败" : "发布失败",
@@ -206,6 +200,7 @@ export function useMemoEditor({
       setAccessCode("")
       setAccessHint("")
       setIsPinned(false)
+      setImages([])
       setError(null)
       setShowPrivateDialog(false)
       setShowLocationPicker(false)
@@ -216,6 +211,8 @@ export function useMemoEditor({
   return {
     content,
     setContent,
+    images,
+    setImages,
     isPending,
     setIsPending,
     isPrivate,

@@ -28,17 +28,20 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
     )
   }
 
-  // Extract images and group by Month
-  const galleryItems = memos
-    .map((memo) => {
-      const imgRegex = /!\[.*?\]\((.*?)\)/
-      const match = memo.content.match(imgRegex)
-      return {
-        ...memo,
-        imageUrl: match ? match[1] : null,
-      }
-    })
-    .filter((item) => item.imageUrl)
+  // 从新版独立 images 列中提取并展开所有图片附件
+  const galleryItems: (Omit<Memo, "id"> & { id: string; imageUrl: string })[] = []
+
+  memos.forEach((memo) => {
+    if (memo.images && memo.images.length > 0) {
+      memo.images.forEach((imgUrl, index) => {
+        galleryItems.push({
+          ...memo,
+          id: `${memo.id}-${index}`, // 使用带有序号的唯一 ID 避免 key 重复
+          imageUrl: imgUrl,
+        })
+      })
+    }
+  })
 
   return (
     <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
@@ -75,7 +78,7 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
             {/* Content — visible on hover (pointer-events-none lets clicks through to ImageZoom) */}
             <div className="pointer-events-none absolute inset-x-[18px] bottom-[18px] z-20 grid gap-3 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100">
               <p className="line-clamp-2 text-[15px] font-semibold leading-normal text-white drop-shadow-[0_1px_18px_rgba(0,0,0,0.42)]">
-                {item.content.replace(/!\[.*?\]\((.*?)\)/g, "").trim() || "图片分享"}
+                {item.content.trim() || "图片分享"}
               </p>
               <div className="flex items-center justify-between">
                 {item.created_at && (

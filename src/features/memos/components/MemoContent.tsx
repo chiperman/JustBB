@@ -8,9 +8,7 @@ import { CodeBlock } from "@/shared/ui/CodeBlock"
 import { MemoHoverPreview } from "./MemoHoverPreview"
 import { LocationHoverPreview } from "@/shared/ui/LocationHoverPreview"
 import { useSearchParams } from "next/navigation"
-import { ImageZoom } from "@/shared/ui/ImageZoom"
 import { LinkPreview } from "@/shared/ui/LinkPreview"
-import { SmartImage } from "@/shared/ui/SmartImage"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   CheckmarkCircle01Icon as Check,
@@ -96,27 +94,7 @@ export function MemoContent({
                   {token.value}
                 </Link>
               )
-            case "image":
-              return (
-                <span
-                  key={`img-${index}`}
-                  className="block my-5 group relative max-w-full overflow-hidden"
-                >
-                  <div className="flex justify-center items-center">
-                    <div className="relative rounded-md overflow-hidden ring-1 ring-border/70 transition-all duration-500 hover:scale-[1.01]">
-                      <ImageZoom src={token.value}>
-                        <SmartImage
-                          src={token.value}
-                          alt="Memo attachment"
-                          containerClassName="max-h-[550px] w-full h-[300px]"
-                          className="max-h-full max-w-full object-contain select-none"
-                          loading="lazy"
-                        />
-                      </ImageZoom>
-                    </div>
-                  </div>
-                </span>
-              )
+
             case "code":
               return (
                 <div key={`code-${index}`}>

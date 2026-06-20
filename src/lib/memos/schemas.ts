@@ -15,6 +15,24 @@ const optionalBooleanPreprocessor = (val: unknown) => {
   return Boolean(val)
 }
 
+const arrayPreprocessor = (val: unknown) => {
+  if (typeof val === "string") {
+    if (val.trim() === "") return []
+    try {
+      const parsed = JSON.parse(val)
+      if (Array.isArray(parsed)) return parsed
+    } catch {
+      // 忽略 JSON 解析错误，继续按逗号分割
+    }
+    return val
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+  }
+  if (Array.isArray(val)) return val
+  return []
+}
+
 /**
  * 基础 Memo 内容 Schema
  */
@@ -24,6 +42,7 @@ export const memoContentSchema = z.object({
   is_private: z.preprocess(booleanPreprocessor, z.boolean().default(false)),
   access_code_hint: z.string().optional().nullable(),
   access_code: z.string().optional().nullable(),
+  images: z.preprocess(arrayPreprocessor, z.array(z.string()).optional().default([])),
 })
 
 /**
@@ -48,24 +67,6 @@ export const updateMemoStateSchema = z.object({
   access_code_hint: z.string().optional().nullable(),
   access_code: z.string().optional().nullable(), // 原始口令输入，由 Action 负责哈希
 })
-
-const arrayPreprocessor = (val: unknown) => {
-  if (typeof val === "string") {
-    if (val.trim() === "") return []
-    try {
-      const parsed = JSON.parse(val)
-      if (Array.isArray(parsed)) return parsed
-    } catch {
-      // 忽略 JSON 解析错误，继续按逗号分割
-    }
-    return val
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean)
-  }
-  if (Array.isArray(val)) return val
-  return []
-}
 
 export const batchAddTagsSchema = z.object({
   ids: z.preprocess(arrayPreprocessor, z.array(postgresUuidSchema).min(1, "请至少选择一条记录")),

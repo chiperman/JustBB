@@ -1,10 +1,4 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
   graphql_public: {
@@ -42,6 +36,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           id: string
+          images: string[]
           is_pinned: boolean
           is_private: boolean
           locations: Json | null
@@ -59,6 +54,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          images?: string[]
           is_pinned?: boolean
           is_private?: boolean
           locations?: Json | null
@@ -76,6 +72,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          images?: string[]
           is_pinned?: boolean
           is_private?: boolean
           locations?: Json | null
@@ -149,6 +146,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          images: string[]
           is_locked: boolean
           is_owner: boolean
           is_pinned: boolean
@@ -196,10 +194,8 @@ export type Tables<
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R

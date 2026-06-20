@@ -6,7 +6,12 @@ import { getClient, getAdminClient } from "@/lib/supabase"
 import { ActionResponse } from "../shared/types"
 import { Memo } from "@/types/memo"
 import { getCurrentUserId, isAdmin } from "@/features/auth/actions"
-import { mergeTagsIntoContent, removeTagsFromContent } from "@/lib/memos/parser"
+import {
+  calculateWordCount,
+  extractLocations,
+  mergeTagsIntoContent,
+  removeTagsFromContent,
+} from "@/lib/memos/parser"
 import { buildMemoPayload } from "./helpers"
 import { Database } from "@/types/database"
 import {
@@ -100,12 +105,13 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
     return { success: false, error: validation.error.issues[0].message }
   }
 
-  const { content, is_private, is_pinned, access_code, access_code_hint } = validation.data
+  const { content, is_private, is_pinned, access_code, access_code_hint, images } = validation.data
   const supabase = await getClient()
 
   const payload: Partial<MemoInsert> = {
     owner_id: viewerId,
     is_private,
+    images,
     ...buildMemoPayload(content, { isPinned: is_pinned }),
   }
 
@@ -157,13 +163,14 @@ export async function updateMemoContent(formData: FormData): Promise<ActionRespo
     return { success: false, error: issue.message }
   }
 
-  const { id, content } = validation.data
+  const { id, content, images } = validation.data
   const supabase = await getClient()
 
   const { data, error } = await supabase
     .from("memos")
     .update({
       ...buildMemoPayload(content),
+      images,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)

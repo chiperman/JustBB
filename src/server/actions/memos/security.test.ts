@@ -2,12 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, vi } from "vitest"
 import { createClient } from "@supabase/supabase-js"
 import { Database } from "@/types/database"
 import { getClient } from "@/lib/supabase"
-import {
-  createMemo,
-  updateMemoContent,
-  updateMemoState,
-  batchAddTagsToMemos,
-} from "./mutate"
+import { createMemo, updateMemoContent, updateMemoState, batchAddTagsToMemos } from "./mutate"
 import { getTimelineStats, getMemoStats, getAllTags } from "./analytics"
 import { getMemosWithLocations, getGalleryMemos, getMemoById } from "./query"
 
@@ -31,18 +26,14 @@ describe("Security & RLS (Integrated)", () => {
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
   const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-  const hasEnv =
-    !!SUPABASE_URL && !!SUPABASE_ANON_KEY && !!SUPABASE_SERVICE_ROLE_KEY
+  const hasEnv = !!SUPABASE_URL && !!SUPABASE_ANON_KEY && !!SUPABASE_SERVICE_ROLE_KEY
 
   if (!isLocal || !hasEnv) {
     it.skip("Skipping RLS integration tests on non-local environment", () => {})
     return
   }
 
-  const adminClient = createClient<Database>(
-    SUPABASE_URL,
-    SUPABASE_SERVICE_ROLE_KEY
-  )
+  const adminClient = createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
   const anonClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)
   const userClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)
 
@@ -50,14 +41,10 @@ describe("Security & RLS (Integrated)", () => {
   let testMemoWithFeaturesId: string
   let canRun = true
 
-  const isConnectivityError = (
-    error: { message?: string; details?: string } | null
-  ) => {
+  const isConnectivityError = (error: { message?: string; details?: string } | null) => {
     if (!error) return false
     const combined = `${error.message || ""} ${error.details || ""}`
-    return (
-      combined.includes("fetch failed") || combined.includes("ECONNREFUSED")
-    )
+    return combined.includes("fetch failed") || combined.includes("ECONNREFUSED")
   }
 
   const setClient = (client: unknown) => {
@@ -82,14 +69,11 @@ describe("Security & RLS (Integrated)", () => {
 
     if (isConnectivityError(error)) {
       canRun = false
-      console.warn(
-        "WARN: Local Supabase is unreachable. Skipping RLS integration tests."
-      )
+      console.warn("WARN: Local Supabase is unreachable. Skipping RLS integration tests.")
       return
     }
 
-    if (error || !data)
-      throw new Error("Failed to setup test data: " + error?.message)
+    if (error || !data) throw new Error("Failed to setup test data: " + error?.message)
     testMemoId = data.id
 
     // 2. 创建一条包含全部测试特征的私密测试笔记
@@ -97,8 +81,7 @@ describe("Security & RLS (Integrated)", () => {
       .from("memos")
       .insert({
         owner_id: "00000000-0000-0000-0000-000000000001",
-        content:
-          "SECRET_WITH_FEATURES ![secret_image](http://localhost/secret.png)",
+        content: "SECRET_WITH_FEATURES",
         is_private: true,
         access_code_hint: "test_hint",
         created_at: "2099-01-01T12:00:00Z",
@@ -107,12 +90,12 @@ describe("Security & RLS (Integrated)", () => {
         locations: [
           { name: "Secret Location", latitude: 31.23, longitude: 121.47 },
         ] as unknown as Database["public"]["Tables"]["memos"]["Insert"]["locations"],
+        images: ["http://localhost/secret.png"],
       })
       .select()
       .single()
 
-    if (error2 || !data2)
-      throw new Error("Failed to setup test data 2: " + error2?.message)
+    if (error2 || !data2) throw new Error("Failed to setup test data 2: " + error2?.message)
     testMemoWithFeaturesId = data2.id
   })
 
@@ -129,10 +112,7 @@ describe("Security & RLS (Integrated)", () => {
   it("should hide private memos from direct select for anonymous users", async () => {
     if (!canRun) return
 
-    const { data, error } = await anonClient
-      .from("memos")
-      .select("*")
-      .eq("id", testMemoId)
+    const { data, error } = await anonClient.from("memos").select("*").eq("id", testMemoId)
 
     expect(error).toBeNull()
     expect(data).toHaveLength(0) // RLS 应该拦截此请求，返回空数组
@@ -150,9 +130,7 @@ describe("Security & RLS (Integrated)", () => {
     })
 
     if (error && error.code === "PGRST202") {
-      console.warn(
-        "WARN: RPC search_memos_secure not found on local DB. Skipping this assertion."
-      )
+      console.warn("WARN: RPC search_memos_secure not found on local DB. Skipping this assertion.")
       return
     }
 
@@ -185,10 +163,7 @@ describe("Security & RLS (Integrated)", () => {
 
     expect(loginError).toBeNull()
 
-    const { data, error } = await userClient
-      .from("memos")
-      .select("*")
-      .eq("id", testMemoId)
+    const { data, error } = await userClient.from("memos").select("*").eq("id", testMemoId)
 
     expect(error).toBeNull()
     expect(data).toHaveLength(0)
@@ -290,9 +265,7 @@ describe("Security & RLS (Integrated)", () => {
     setClient(anonClient)
     const tagsAnon = await getAllTags()
     expect(tagsAnon.success).toBe(true)
-    const hasSecretTagAnon = tagsAnon.data?.some(
-      (t) => t.tag_name === "SECRET_TAG_2099"
-    )
+    const hasSecretTagAnon = tagsAnon.data?.some((t) => t.tag_name === "SECRET_TAG_2099")
     expect(hasSecretTagAnon).toBe(false)
 
     // 普通已登录用户测试
@@ -305,9 +278,7 @@ describe("Security & RLS (Integrated)", () => {
     setClient(userClient)
     const tagsUser = await getAllTags()
     expect(tagsUser.success).toBe(true)
-    const hasSecretTagUser = tagsUser.data?.some(
-      (t) => t.tag_name === "SECRET_TAG_2099"
-    )
+    const hasSecretTagUser = tagsUser.data?.some((t) => t.tag_name === "SECRET_TAG_2099")
     expect(hasSecretTagUser).toBe(false)
   })
 
@@ -337,13 +308,9 @@ describe("Security & RLS (Integrated)", () => {
     const target = res.data?.find((m) => m.id === testMemoWithFeaturesId)
     expect(target).toBeDefined()
     expect(target?.is_locked).toBe(true)
-    // 内容应该已经被脱敏，原本包含的 http://localhost/secret.png 应该被替换为模糊占位图
-    expect(target?.content).not.toContain("http://localhost/secret.png")
-    // 图片 URL 应已被提取并替换为占位图
-    const imgRegex = /!\[.*?\]\((.*?)\)/
-    const match = target?.content.match(imgRegex)
-    expect(match).toBeDefined()
-    expect(match?.[1]).toContain("locked-placeholder.png")
+    // 独立图片列脱敏：应该已被替换为模糊占位图
+    expect(target?.images).toBeDefined()
+    expect(target?.images?.[0]).toContain("locked-placeholder.png")
   })
 
   it("单条详情接口安全测试：访客获取未解锁私密日记，返回脱敏数据且 is_locked = true", async () => {

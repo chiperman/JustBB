@@ -45,7 +45,8 @@ export function useImageUpload() {
 
   const uploadFile = useCallback(
     async (
-      file: File
+      file: File,
+      onProgress?: (progress: number) => void
     ): Promise<{ url: string | null; error: string | null }> => {
       setIsUploading(true)
       setError(null)
@@ -56,17 +57,44 @@ export function useImageUpload() {
         const formData = new FormData()
         formData.append("file", processed)
 
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
+        const url = await new Promise<string>((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          xhr.open("POST", "/api/upload")
+
+          if (xhr.upload && onProgress) {
+            xhr.upload.onprogress = (event) => {
+              if (event.lengthComputable) {
+                const percentComplete = Math.round((event.loaded / event.total) * 100)
+                onProgress(percentComplete)
+              }
+            }
+          }
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const response = JSON.parse(xhr.responseText)
+                resolve(response.url)
+              } catch (e) {
+                reject(new Error("解析响应失败"))
+              }
+            } else {
+              try {
+                const response = JSON.parse(xhr.responseText)
+                reject(new Error(response.error || `上传失败: ${xhr.status}`))
+              } catch (e) {
+                reject(new Error(`上传失败: ${xhr.status}`))
+              }
+            }
+          }
+
+          xhr.onerror = () => {
+            reject(new Error("网络错误，上传失败"))
+          }
+
+          xhr.send(formData)
         })
 
-        if (!res.ok) {
-          const data = await res.json()
-          throw new Error(data.error || "上传失败")
-        }
-
-        const { url } = await res.json()
         return { url, error: null }
       } catch (err) {
         const message = err instanceof Error ? err.message : "上传失败"

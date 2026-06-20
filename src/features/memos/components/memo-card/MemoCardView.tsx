@@ -12,6 +12,7 @@ import { MemoCardLockOverlay } from "./MemoCardLockOverlay"
 import { useMemoBacklinks } from "../../hooks/useMemoBacklinks"
 import { ExpandableContent } from "@/shared/ui/expandable-content"
 import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
+import { MemoImageGrid } from "./MemoImageGrid"
 
 interface MemoCardViewProps {
   memo: Memo
@@ -98,6 +99,9 @@ export function MemoCardView({
             collapsedHeight={200}
           >
             <MemoContent content={displayMemo.content} disablePreview={showOriginalOnly} />
+            {!showOriginalOnly && displayMemo.images && displayMemo.images.length > 0 && (
+              <MemoImageGrid images={displayMemo.images} />
+            )}
           </ExpandableContent>
         )}
       </div>

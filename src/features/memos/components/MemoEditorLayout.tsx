@@ -15,6 +15,7 @@ import { LinkPasteMenu } from "@/features/memos/components/editor/LinkPasteMenu"
 import type { LinkRenderMode } from "@/features/memos/components/editor/smartLink"
 import { PLACEHOLDER_TEXT } from "@/features/memos/components/MemoEditor"
 import { useLayout } from "@/state/LayoutContext"
+import { ImageZoom } from "@/shared/ui/ImageZoom"
 
 export interface SuggestionItem {
   id: string
@@ -88,6 +89,9 @@ export interface MemoEditorLayoutProps {
 
   // Optional
   className?: string
+  uploadedImages?: string[]
+  uploadingImages?: { id: string; previewUrl: string; progress: number }[]
+  onRemoveImage?: (url: string) => void
 }
 
 export function MemoEditorLayout({
@@ -145,6 +149,9 @@ export function MemoEditorLayout({
   onLinkPickerOpenChange,
   onLinkPickerConfirm,
   className,
+  uploadedImages,
+  uploadingImages,
+  onRemoveImage,
 }: MemoEditorLayoutProps) {
   const { animationMultiplier } = useLayout()
   return (
@@ -263,6 +270,103 @@ export function MemoEditorLayout({
               </div>
             )}
             <EditorContent editor={editor} className="flex-1 flex flex-col min-h-0" />
+
+            {/* 上传图片缩略图展示区 */}
+            {((uploadedImages && uploadedImages.length > 0) ||
+              (uploadingImages && uploadingImages.length > 0)) && (
+              <div
+                className="flex flex-wrap gap-2 mt-3 mb-1 select-none relative z-10"
+                onMouseDown={(e) => e.preventDefault()}
+              >
+                {/* 已上传图片 */}
+                {uploadedImages &&
+                  uploadedImages.map((url, idx) => (
+                    <div
+                      key={idx}
+                      className="relative w-16 h-16 rounded-md overflow-hidden ring-1 ring-border group/img"
+                    >
+                      <ImageZoom
+                        src={url}
+                        alt="Uploaded attachment"
+                        className="w-full h-full"
+                        noHoverScale
+                      >
+                        <img
+                          src={url}
+                          alt="Uploaded attachment"
+                          className="w-full h-full object-cover cursor-zoom-in"
+                        />
+                      </ImageZoom>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onRemoveImage?.(url)
+                        }}
+                        className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-0.5 opacity-100 md:opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer flex items-center justify-center w-5 h-5 border-none z-20"
+                        title="移除图片"
+                      >
+                        <svg
+                          className="w-2.5 h-2.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2.5"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+
+                {/* 正在上传图片 */}
+                {uploadingImages &&
+                  uploadingImages.map((img) => (
+                    <div
+                      key={img.id}
+                      className="relative w-16 h-16 rounded-md overflow-hidden ring-1 ring-border bg-muted flex items-center justify-center"
+                    >
+                      <img
+                        src={img.previewUrl}
+                        alt="Uploading preview"
+                        className="w-full h-full object-cover opacity-60 blur-[0.5px]"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/35 backdrop-blur-[0.5px]">
+                        <div className="relative w-10 h-10 flex items-center justify-center">
+                          <svg className="w-full h-full transform -rotate-90">
+                            <circle
+                              cx="20"
+                              cy="20"
+                              r="16"
+                              className="stroke-white/20"
+                              strokeWidth="2.5"
+                              fill="transparent"
+                            />
+                            <circle
+                              cx="20"
+                              cy="20"
+                              r="16"
+                              className="stroke-primary"
+                              strokeWidth="2.5"
+                              fill="transparent"
+                              strokeDasharray={2 * Math.PI * 16}
+                              strokeDashoffset={2 * Math.PI * 16 * (1 - img.progress / 100)}
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <span className="absolute text-[10px] font-semibold text-white">
+                            {img.progress}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
           </motion.div>
 
           {showSuggestions && (

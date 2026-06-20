@@ -95,52 +95,19 @@ export function MemoEditor({
 
   const { uploadFile, isUploading } = useImageUpload()
   const r2ConfiguredRef = useRef<boolean | null>(null)
-
-  const handleImageFile = useCallback(
-    async (file: File) => {
-      if (!file.type.startsWith("image/")) return
-      const result = await uploadFile(file)
-      if (result.url && editorRef.current) {
-        editorRef.current.chain().focus().insertContent(`![图片](${result.url}) `).run()
-      } else if (result.error) {
-        toast({
-          title: "图片上传失败",
-          description: result.error,
-          variant: "destructive",
-        })
-      }
-    },
-    [uploadFile]
-  )
-
-  const handleImageButtonClick = useCallback(async () => {
-    if (r2ConfiguredRef.current === false) {
-      toast({
-        title: "请先配置图片存储",
-        description: "在设置菜单中配置 Cloudflare R2 后即可上传图片",
-        variant: "destructive",
-      })
-      return
-    }
-    if (r2ConfiguredRef.current === null) {
-      const { getR2Config } = await import("@/server/actions/settings/r2")
-      const res = await getR2Config()
-      r2ConfiguredRef.current = !!res.data
-      if (!res.data) {
-        toast({
-          title: "请先配置图片存储",
-          description: "在设置菜单中配置 Cloudflare R2 后即可上传图片",
-          variant: "destructive",
-        })
-        return
-      }
-    }
-    fileInputRef.current?.click()
-  }, [])
+  const [uploadingImages, setUploadingImages] = useState<
+    {
+      id: string
+      previewUrl: string
+      progress: number
+    }[]
+  >([])
 
   const {
     content,
     setContent,
+    images,
+    setImages,
     isPending,
     isPrivate,
     accessCode,
@@ -171,6 +138,68 @@ export function MemoEditor({
     performPublish,
     handleCancel,
   } = useMemoEditor({ mode, initialMemo: memo, onSuccess, onCancel })
+
+  const handleImageFile = useCallback(
+    async (file: File) => {
+      if (!file.type.startsWith("image/")) return
+      const id = Math.random().toString(36).substring(2, 9)
+      const previewUrl = URL.createObjectURL(file)
+
+      setUploadingImages((prev) => [...prev, { id, previewUrl, progress: 0 }])
+
+      const result = await uploadFile(file, (progress) => {
+        setUploadingImages((prev) =>
+          prev.map((img) => (img.id === id ? { ...img, progress } : img))
+        )
+      })
+
+      setUploadingImages((prev) => prev.filter((img) => img.id !== id))
+      URL.revokeObjectURL(previewUrl)
+
+      if (result.url) {
+        setImages((prev) => [...prev, result.url!])
+      } else if (result.error) {
+        toast({
+          title: "图片上传失败",
+          description: result.error,
+          variant: "destructive",
+        })
+      }
+    },
+    [uploadFile, setImages]
+  )
+
+  const handleRemoveImage = useCallback(
+    (urlToRemove: string) => {
+      setImages((prev) => prev.filter((url) => url !== urlToRemove))
+    },
+    [setImages]
+  )
+
+  const handleImageButtonClick = useCallback(async () => {
+    if (r2ConfiguredRef.current === false) {
+      toast({
+        title: "请先配置图片存储",
+        description: "在设置菜单中配置 Cloudflare R2 后即可上传图片",
+        variant: "destructive",
+      })
+      return
+    }
+    if (r2ConfiguredRef.current === null) {
+      const { getR2Config } = await import("@/server/actions/settings/r2")
+      const res = await getR2Config()
+      r2ConfiguredRef.current = !!res.data
+      if (!res.data) {
+        toast({
+          title: "请先配置图片存储",
+          description: "在设置菜单中配置 Cloudflare R2 后即可上传图片",
+          variant: "destructive",
+        })
+        return
+      }
+    }
+    fileInputRef.current?.click()
+  }, [])
 
   // 智能链接系统相关状态
   const [pendingPasteUrl, setPendingPasteUrl] = useState<string | null>(null)
@@ -791,6 +820,9 @@ export function MemoEditor({
       isPending={isPending}
       isUploadingImage={isUploading}
       content={content}
+      uploadedImages={images}
+      uploadingImages={uploadingImages}
+      onRemoveImage={handleRemoveImage}
       mode={mode}
       showPlaceholder={showPlaceholder}
       showSuggestions={showSuggestions}

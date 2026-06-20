@@ -26,9 +26,9 @@ describe("parseContentTokens", () => {
     expect(parseContentTokens(input)).toEqual(expected)
   })
 
-  it("should parse simple image urls", () => {
+  it("should parse simple image urls as links", () => {
     const input = "https://example.com/image.png"
-    const expected = [{ type: "image", value: "https://example.com/image.png" }]
+    const expected = [{ type: "link", value: "https://example.com/image.png" }]
     expect(parseContentTokens(input)).toEqual(expected)
   })
 
@@ -44,11 +44,11 @@ describe("parseContentTokens", () => {
     expect(parseContentTokens(input)).toEqual(expected)
   })
 
-  it("should parse image inside text", () => {
+  it("should parse image inside text as links", () => {
     const input = "Here is a pic https://foo.com/bar.jpg nice?"
     const expected = [
       { type: "text", value: "Here is a pic " },
-      { type: "image", value: "https://foo.com/bar.jpg" },
+      { type: "link", value: "https://foo.com/bar.jpg" },
       { type: "text", value: " nice?" },
     ]
     expect(parseContentTokens(input)).toEqual(expected)
@@ -128,8 +128,7 @@ describe("parseContentTokens", () => {
   })
 
   it("should parse multiple locations in one content", () => {
-    const input =
-      "从 📍[上海](31.2304,121.4737) 飞到 📍[东京](35.6762,139.6503)"
+    const input = "从 📍[上海](31.2304,121.4737) 飞到 📍[东京](35.6762,139.6503)"
     const expected = [
       { type: "text", value: "从 " },
       {

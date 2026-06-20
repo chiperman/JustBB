@@ -168,7 +168,7 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 px-2 py-1.5 bg-black/60 backdrop-blur-2xl rounded-full border border-white/10 pointer-events-auto whitespace-nowrap z-20 flex items-center gap-1"
+        className="absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-inner border border-border/40 bg-popover px-2 py-1.5 backdrop-blur-xl pointer-events-auto"
       >
         <button
           onClick={() => {
@@ -178,8 +178,10 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
             y.set(0)
           }}
           className={cn(
-            "px-3 py-1 rounded-full text-[11px] font-medium transition-all",
-            fitMode === "fit" ? "bg-white/25 text-white" : "text-white/40 hover:text-white/70"
+            "px-3 py-1 rounded-md text-[11px] font-medium transition-all",
+            fitMode === "fit"
+              ? "bg-secondary text-foreground"
+              : "text-foreground/70 hover:text-foreground"
           )}
         >
           适应
@@ -192,17 +194,19 @@ function PreviewContent({ src, alt, onClose }: { src: string; alt?: string; onCl
             y.set(0)
           }}
           className={cn(
-            "px-3 py-1 rounded-full text-[11px] font-medium transition-all",
-            fitMode === "original" ? "bg-white/25 text-white" : "text-white/40 hover:text-white/70"
+            "px-3 py-1 rounded-md text-[11px] font-medium transition-all",
+            fitMode === "original"
+              ? "bg-secondary text-foreground"
+              : "text-foreground/70 hover:text-foreground"
           )}
         >
           100%
         </button>
-        <div className="w-px h-4 bg-white/10 mx-1" />
-        <span className="text-primary font-mono text-[11px] bg-primary/20 px-2 py-0.5 rounded-full ring-1 ring-primary/30">
+        <div className="w-px h-4 bg-border mx-1" />
+        <span className="text-primary font-mono text-[11px] bg-primary/10 px-2 py-0.5 rounded-md ring-1 ring-primary/20">
           {Math.round(currentScale * 100)}%
         </span>
-        <span className="text-[10px] text-white/40 mx-2">
+        <span className="text-[10px] text-muted-foreground mx-2">
           Ctrl + 滚轮缩放 · 双指缩放 · 拖拽平移
         </span>
       </motion.div>

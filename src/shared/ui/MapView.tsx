@@ -36,9 +36,7 @@ export function MapView({
 }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<Leaflet.Map | null>(null)
-  const clusterLayer = useRef<
-    Leaflet.MarkerClusterGroup | Leaflet.LayerGroup | null
-  >(null)
+  const clusterLayer = useRef<Leaflet.MarkerClusterGroup | Leaflet.LayerGroup | null>(null)
   const [L, setL] = React.useState<typeof Leaflet | null>(null)
   const pathname = usePathname() || "/"
   const { resolvedTheme } = useTheme()
@@ -170,13 +168,9 @@ export function MapView({
 
     // Leaflet 在缩放中的弹窗内初始化时容易拿到过期尺寸，缩放后会露出白边。
     // 这里在初始化、动画结束和容器尺寸变更后都重新计算一次地图尺寸。
-    const invalidateTimers = [0, 150, 320].map((delay) =>
-      setTimeout(scheduleInvalidate, delay)
-    )
+    const invalidateTimers = [0, 150, 320].map((delay) => setTimeout(scheduleInvalidate, delay))
     const resizeObserver =
-      typeof ResizeObserver === "undefined"
-        ? null
-        : new ResizeObserver(() => scheduleInvalidate())
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => scheduleInvalidate())
     resizeObserver?.observe(map.getContainer())
 
     const dialogContent = map.getContainer().closest('[role="dialog"]')
@@ -246,9 +240,7 @@ export function MapView({
       clusterGroup.on("clusterclick", (a: { layer: Leaflet.MarkerCluster }) => {
         const cluster = a.layer
         const bounds = cluster.getBounds()
-        const isSameLocation = bounds
-          .getNorthEast()
-          .equals(bounds.getSouthWest(), 0.0001)
+        const isSameLocation = bounds.getNorthEast().equals(bounds.getSouthWest(), 0.0001)
         const currentZoom = map.getZoom()
 
         // 如果坐标重合，或者是已达最大缩放，则直接弹出该聚合下的所有 Memo 列表
@@ -272,14 +264,14 @@ export function MapView({
             }
             return options.memos || []
           })
-          const firstMarkerOptions = childMarkers[0]
-            ?.options as Leaflet.MarkerOptions & { locationName?: string }
+          const firstMarkerOptions = childMarkers[0]?.options as Leaflet.MarkerOptions & {
+            locationName?: string
+          }
           const locationName = firstMarkerOptions?.locationName || "聚合地点"
 
           // 弹出聚合列表
           const popupEl = document.createElement("div")
-          popupEl.className =
-            "w-[340px] max-h-[480px] overflow-hidden flex flex-col"
+          popupEl.className = "w-[340px] max-h-[480px] overflow-hidden flex flex-col"
 
           const root = createRoot(popupEl)
           popupRootRef.current = root
@@ -342,15 +334,7 @@ export function MapView({
       map.remove()
       mapInstance.current = null
     }
-  }, [
-    L,
-    mode,
-    interactive,
-    onMapClick,
-    pathname,
-    resolvedTheme,
-    getMinZoomForContainer,
-  ]) // 监听主题变化
+  }, [L, mode, interactive, onMapClick, pathname, resolvedTheme, getMinZoomForContainer]) // 监听主题变化
 
   useEffect(() => {
     if (!mapInstance.current || !clusterLayer.current || !L) return
@@ -377,10 +361,7 @@ export function MapView({
     })
 
     // 动态计算错峰间隔：总时长控制在 1.5s 左右，营造一种从容的“溯源”入场感
-    const staggerDelay = Math.max(
-      5,
-      Math.min(50, 1500 / (sortedMarkers.length || 1))
-    )
+    const staggerDelay = Math.max(5, Math.min(50, 1500 / (sortedMarkers.length || 1)))
 
     sortedMarkers.forEach((marker, index) => {
       const pos: Leaflet.LatLngExpression = [marker.lat, marker.lng]
@@ -388,8 +369,7 @@ export function MapView({
 
       const isDraggable = mode === "mini" && interactive
       // 仅在首次加载的大图模式下应用错峰动画
-      const delay =
-        isFirstLoadRef.current && mode === "full" ? index * staggerDelay : 0
+      const delay = isFirstLoadRef.current && mode === "full" ? index * staggerDelay : 0
 
       const leafMarker = L.marker(pos, {
         draggable: isDraggable,
@@ -429,8 +409,7 @@ export function MapView({
       } else if (marker.items.length > 0) {
         // 弹出层 (仅非编辑模式)
         const popupEl = document.createElement("div")
-        popupEl.className =
-          "w-[340px] max-h-[480px] overflow-hidden flex flex-col"
+        popupEl.className = "w-[340px] max-h-[480px] overflow-hidden flex flex-col"
 
         const root = createRoot(popupEl)
         root.render(
@@ -479,15 +458,7 @@ export function MapView({
     }
 
     invalidateMapSize()
-  }, [
-    L,
-    markers,
-    mode,
-    interactive,
-    onMarkerDragEnd,
-    pathname,
-    invalidateMapSize,
-  ])
+  }, [L, markers, mode, interactive, onMarkerDragEnd, pathname, invalidateMapSize])
 
   return (
     <div
@@ -504,20 +475,14 @@ export function MapView({
         <>
           {mode === "full" ? (
             <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 pointer-events-none">
-              <div className="bg-background/80 backdrop-blur-md border border-border/50 px-3 py-1.5 rounded-full flex items-center gap-2">
-                <HugeiconsIcon
-                  icon={Location04Icon}
-                  size={14}
-                  className="text-primary"
-                />
-                <span className="text-[11px] font-medium tracking-tight">
-                  空间锚点预览
-                </span>
+              <div className="flex items-center gap-2 rounded-inner border border-border/40 bg-popover px-3 py-1.5 backdrop-blur-xl">
+                <HugeiconsIcon icon={Location04Icon} size={14} className="text-primary" />
+                <span className="text-[11px] font-medium tracking-tight">空间锚点预览</span>
               </div>
             </div>
           ) : (
             <div className="absolute top-2 right-2 z-10 pointer-events-none">
-              <div className="bg-background/82 text-foreground/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[9px] font-bold border border-border/50 tracking-[0.18em] uppercase">
+              <div className="rounded-inner border border-border/40 bg-popover px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-foreground/70 backdrop-blur-xl">
                 LEVEL {currentZoom}
               </div>
             </div>
@@ -533,7 +498,7 @@ export function MapView({
                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 className="absolute bottom-8 left-1/2 z-10"
               >
-                <div className="bg-background/80 text-foreground/80 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-bold border border-border/50 tracking-[0.2em] uppercase">
+                <div className="rounded-inner border border-border/40 bg-popover px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/70 backdrop-blur-xl">
                   LEVEL {currentZoom}
                 </div>
               </motion.div>
@@ -542,18 +507,18 @@ export function MapView({
 
           {/* 自定义胶囊缩放控件：对齐空间预览风格 */}
           {mode === "full" && (
-            <div className="absolute bottom-6 right-6 z-10 hidden md:block">
-              <div className="flex flex-col bg-background/80 backdrop-blur-md border border-border/50 rounded-full overflow-hidden">
+            <div className="absolute bottom-8 right-8 z-10 hidden md:block">
+              <div className="flex flex-col overflow-hidden rounded-inner border border-border/40 bg-popover backdrop-blur-xl">
                 <button
                   onClick={() => mapInstance.current?.zoomIn()}
-                  className="p-2.5 flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-accent/50 transition-colors border-b border-border/40"
+                  className="flex items-center justify-center border-b border-border/40 p-2.5 text-foreground/70 transition-all hover:bg-secondary hover:text-foreground active:scale-95"
                   title="Zoom In"
                 >
                   <HugeiconsIcon icon={Add01Icon} size={16} />
                 </button>
                 <button
                   onClick={() => mapInstance.current?.zoomOut()}
-                  className="p-2.5 flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-accent/50 transition-colors"
+                  className="flex items-center justify-center p-2.5 text-foreground/70 transition-all hover:bg-secondary hover:text-foreground active:scale-95"
                   title="Zoom Out"
                 >
                   <HugeiconsIcon icon={MinusSignIcon} size={16} />

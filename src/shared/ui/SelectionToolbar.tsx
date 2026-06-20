@@ -228,7 +228,7 @@ export function SelectionToolbar() {
       <AnimatePresence>
         {isSelectionMode && (
           <BaseFloatingCapsule className="min-w-[320px]">
-            <div className="flex items-center gap-1 flex-1 px-2">
+            <div className="flex items-center gap-1.5 flex-1 px-1">
               {isTrashPage ? (
                 <>
                   <Button
@@ -236,7 +236,7 @@ export function SelectionToolbar() {
                     size="sm"
                     onClick={handleBatchRestore}
                     disabled={!hasSelection || isPending}
-                    className="h-8 gap-2 text-xs hover:bg-primary/5 hover:text-primary rounded-md transition-all"
+                    className="h-8 px-3 gap-1.5 text-xs font-medium text-foreground/70 hover:text-foreground hover:bg-muted rounded-md active:scale-95 transition-all"
                   >
                     <HugeiconsIcon icon={ArchiveRestore} size={14} />
                     <span>恢复</span>
@@ -246,7 +246,7 @@ export function SelectionToolbar() {
                     size="sm"
                     onClick={handleBatchPermanentDelete}
                     disabled={!hasSelection || isPending}
-                    className="h-8 gap-2 text-xs hover:bg-destructive/5 hover:text-destructive rounded-md transition-all"
+                    className="h-8 px-3 gap-1.5 text-xs font-medium text-destructive/70 hover:text-destructive hover:bg-destructive/5 rounded-md active:scale-95 transition-all"
                   >
                     <HugeiconsIcon icon={ShieldAlert} size={14} />
                     <span>彻底删除</span>
@@ -259,7 +259,7 @@ export function SelectionToolbar() {
                     size="sm"
                     onClick={() => setIsTagDialogOpen(true)}
                     disabled={!hasSelection || isPending}
-                    className="h-8 gap-2 text-xs hover:bg-primary/5 hover:text-primary rounded-md transition-all"
+                    className="h-8 px-3 gap-1.5 text-xs font-medium text-foreground/70 hover:text-foreground hover:bg-muted rounded-md active:scale-95 transition-all"
                   >
                     <HugeiconsIcon icon={Tag} size={14} />
                     <span>添加标签</span>
@@ -269,7 +269,7 @@ export function SelectionToolbar() {
                     size="sm"
                     onClick={handleBatchDelete}
                     disabled={!hasSelection || isPending}
-                    className="h-8 gap-2 text-xs hover:bg-destructive/10 hover:text-destructive rounded-md transition-all"
+                    className="h-8 px-3 gap-1.5 text-xs font-medium text-destructive/70 hover:text-destructive hover:bg-destructive/5 rounded-md active:scale-95 transition-all"
                   >
                     {isPending ? (
                       <HugeiconsIcon icon={Loader2} size={14} className="animate-spin" />
@@ -282,13 +282,15 @@ export function SelectionToolbar() {
               )}
             </div>
 
-            <div className="flex items-center gap-1 pl-3 border-l border-border/40 ml-1">
+            <div className="w-px h-3.5 bg-border mx-1" />
+
+            <div className="flex items-center gap-1.5">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={clearSelection}
                 disabled={!hasSelection || isPending}
-                className="h-8 px-2 rounded-md text-muted-foreground hover:text-primary transition-colors"
+                className="h-8 w-8 p-0 flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted rounded-md active:scale-95 transition-all"
                 title="重置选择"
               >
                 <HugeiconsIcon icon={RotateCcw} size={14} />
@@ -297,9 +299,9 @@ export function SelectionToolbar() {
                 variant="ghost"
                 size="sm"
                 onClick={() => toggleSelectionMode(false)}
-                className="h-8 w-8 p-0 rounded-md hover:bg-accent transition-colors"
+                className="h-8 w-8 p-0 flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted rounded-md active:scale-95 transition-all"
               >
-                <HugeiconsIcon icon={X} size={16} className="text-muted-foreground" />
+                <HugeiconsIcon icon={X} size={15} />
               </Button>
             </div>
           </BaseFloatingCapsule>

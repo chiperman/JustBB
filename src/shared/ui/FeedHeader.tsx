@@ -61,7 +61,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-4 py-2 h-10 transition-all duration-300",
+        "flex h-10 items-center justify-between gap-4 transition-all duration-300",
         hasContext && "mb-9"
       )}
     >
@@ -73,13 +73,13 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
         </div>
       ) : (
         <div className="flex items-center gap-1.5 overflow-hidden">
-          <div className="flex items-center whitespace-nowrap h-8">
+          <div className="flex items-center whitespace-nowrap">
             <Link
               href="/"
               onClick={() => {
                 router.push("/")
               }}
-              className="group flex items-center gap-1.5 px-2 py-1 rounded-sm hover:bg-secondary transition-all mr-1 h-full active:scale-95 outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
+              className="group mr-1 flex items-center gap-1.5 rounded-md px-2 py-1 text-sm transition-all hover:bg-secondary active:scale-95 outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
               title="回到首页"
             >
               {isRefreshing ? (
@@ -91,7 +91,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
                   className="text-primary/70 group-hover:text-primary transition-colors"
                 />
               )}
-              <span className="text-sm font-bold tracking-tight text-primary group-hover:text-primary transition-colors leading-none">
+              <span className="font-bold tracking-tight text-primary group-hover:text-primary transition-colors">
                 JustMemo
               </span>
             </Link>

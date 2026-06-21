@@ -151,7 +151,7 @@ export function MainLayoutClient() {
       {/* 1. 顶部固定区域 (Fixed Top Area) */}
       <div
         className={cn(
-          "flex-none z-30 transition-all duration-300 scrollbar-stable overflow-y-auto border-b",
+          "flex-none z-30 transition-all duration-300 border-b",
           editorForceCollapsed
             ? "bg-background/80 backdrop-blur-md border-border/20"
             : "bg-transparent border-border/0"
@@ -159,7 +159,7 @@ export function MainLayoutClient() {
       >
         <div className="max-w-screen-md mx-auto">
           {/* Level 3: Visual Padding Area */}
-          <div className="px-6 py-6 flex flex-col">
+          <div className="px-6 py-5 flex flex-col">
             {/* Feed 标题与过滤显示 (包含 Logo 和 SearchInput) */}
             <FeedHeader isRefreshing={isRefreshing} />
 
@@ -197,7 +197,7 @@ export function MainLayoutClient() {
       </div>
 
       {/* 2. 底部滚动区域 (Scrollable Feed Area) */}
-      <div ref={containerRef} className="flex-1 overflow-y-auto scrollbar-stable">
+      <div ref={containerRef} className="flex-1 overflow-y-auto scrollbar-stable-both">
         <div className="max-w-screen-md mx-auto">
           {/* Level 3: Visual Padding Area */}
           <div className="px-6 pt-4 pb-20">

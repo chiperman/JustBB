@@ -323,3 +323,8 @@ body {
 .scrollbar-stable {
   scrollbar-gutter: stable;
 }
+
+/* 双侧预留滚动条槽位，保持滚动容器内居中内容不被单侧 gutter 推偏 */
+.scrollbar-stable-both {
+  scrollbar-gutter: stable both-edges;
+}

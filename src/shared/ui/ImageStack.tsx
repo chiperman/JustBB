@@ -102,6 +102,10 @@ function getPreviewImageRotation(src: string, imageIndex: number, imageCount: nu
   return imageCount <= 1 ? 0 : getImageRotation(src, imageIndex)
 }
 
+function getSwipeDragRotation(offset: number) {
+  return Math.max(-4.5, Math.min(4.5, offset / 58))
+}
+
 function getClampedAspectRatio(width: number, height: number) {
   if (width <= 0 || height <= 0) return null
 
@@ -210,7 +214,7 @@ function PreviewImage({
       : "max-h-none max-w-none select-none rounded-xl object-contain shadow-[0_18px_48px_rgba(29,29,27,0.16)] dark:shadow-[0_18px_48px_rgba(0,0,0,0.28)]"
 
   return (
-    <div className="relative flex h-full min-h-[220px] w-full min-w-[220px] items-center justify-center overflow-visible rounded-xl">
+    <div className="relative flex h-full w-full items-center justify-center overflow-visible rounded-xl">
       {status === "error" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-xl border border-border/50 bg-background px-8 text-muted-foreground shadow-[0_18px_48px_rgba(29,29,27,0.08)] dark:border-white/10 dark:bg-zinc-900">
           <HugeiconsIcon icon={Image01Icon} size={32} strokeWidth={1.5} />
@@ -427,6 +431,7 @@ export function ImageStackPreview({
   const [isOpeningCover, setIsOpeningCover] = useState(true)
   const [isClosing, setIsClosing] = useState(false)
   const [swipeOffset, setSwipeOffset] = useState(0)
+  const [swipeDragRotation, setSwipeDragRotation] = useState(0)
   const [viewport, setViewport] = useState(() =>
     typeof window === "undefined"
       ? { width: 1000, height: 1000 }
@@ -455,9 +460,6 @@ export function ImageStackPreview({
   const imageCount = images.length
   const canNavigate = imageCount > 1
   const activeSrc = images[activeIndex]
-  const activeImageRotation = activeSrc
-    ? getPreviewImageRotation(activeSrc, activeIndex, imageCount)
-    : 0
   const activeImageSize = activeSrc ? imageSizes[activeSrc] : null
   const fitBaseScale = activeImageSize
     ? Math.min(
@@ -485,10 +487,6 @@ export function ImageStackPreview({
     : 280
   const previewFrameSize = getPreviewFrameSize(activeImageSize, viewport, fitMode)
   const visualSwipeX = useTransform(swipeX, (value) => value * stackOffsetCompensation)
-  const browseSwipeRotate = useTransform(visualSwipeX, (value) => {
-    const dragRotation = Math.max(-4.5, Math.min(4.5, value / 58))
-    return activeImageRotation + rotation + dragRotation
-  })
   const stackTransition = shouldReduceMotion
     ? { duration: 0 }
     : { type: "spring" as const, stiffness: 340, damping: 38, mass: 0.75 }
@@ -516,6 +514,7 @@ export function ImageStackPreview({
     y.set(0)
     swipeX.set(0)
     setSwipeOffset(0)
+    setSwipeDragRotation(0)
     setRotation(0)
   }, [rawScale, swipeX, x, y])
 
@@ -556,6 +555,7 @@ export function ImageStackPreview({
     setTimeout(() => {
       setIsDragging(false)
       setSwipeOffset(0)
+      setSwipeDragRotation(0)
     }, 100)
 
     if (!canNavigate || !isBrowseMode) return
@@ -577,6 +577,7 @@ export function ImageStackPreview({
 
     swipeX.set(0)
     setSwipeOffset(0)
+    setSwipeDragRotation(0)
   }
 
   const handleTouchStart = (event: ReactTouchEvent<HTMLDivElement>) => {
@@ -589,6 +590,7 @@ export function ImageStackPreview({
     swipeX.set(0)
     setIsPinching(true)
     setSwipeOffset(0)
+    setSwipeDragRotation(0)
     pinchGestureRef.current = {
       startDistance: getTouchDistance(event.touches),
       startAngle: getTouchAngle(event.touches),
@@ -643,14 +645,16 @@ export function ImageStackPreview({
   useEffect(() => {
     if (!open) return
 
-    const timer = window.setTimeout(
+    const coverTimer = window.setTimeout(
       () => {
         setIsOpeningCover(false)
       },
-      shouldReduceMotion ? 0 : 120
+      shouldReduceMotion ? 0 : 300
     )
 
-    return () => window.clearTimeout(timer)
+    return () => {
+      window.clearTimeout(coverTimer)
+    }
   }, [open, shouldReduceMotion])
 
   useEffect(() => {
@@ -865,16 +869,30 @@ export function ImageStackPreview({
                 const isTop = offset === 0
                 const imageSize = imageSizes[src]
                 const frameSize = getPreviewFrameSize(imageSize, viewport, fitMode)
+                const originFrameSize = originRect
+                  ? { width: originRect.width, height: originRect.height }
+                  : frameSize
+                const originFrameMotion = {
+                  width: originFrameSize.width,
+                  height: originFrameSize.height,
+                  marginLeft: -originFrameSize.width / 2,
+                  marginTop: -originFrameSize.height / 2,
+                }
+                const previewFrameMotion = {
+                  width: frameSize.width,
+                  height: frameSize.height,
+                  marginLeft: -frameSize.width / 2,
+                  marginTop: -frameSize.height / 2,
+                }
                 const spread = getStackSpread(offset)
                 const restingX = spread * 18 * stackOffsetCompensation
                 const restingY = spread * 10 * stackOffsetCompensation
                 const restingScale = Math.max(0.72, 1 - spread * 0.035)
                 const restingRotate =
-                  getPreviewImageRotation(src, imageIndex, imageCount) + (isTop ? rotation : 0)
+                  getPreviewImageRotation(src, imageIndex, imageCount) +
+                  (isTop ? rotation + swipeDragRotation : 0)
                 const dragStyle =
-                  isTop && isBrowseMode && isDragging && !isPinching
-                    ? { x: visualSwipeX, rotate: browseSwipeRotate }
-                    : {}
+                  isTop && isBrowseMode && isDragging && !isPinching ? { x: visualSwipeX } : {}
 
                 return (
                   <motion.div
@@ -893,6 +911,7 @@ export function ImageStackPreview({
                         ? () => {
                             setIsDragging(true)
                             setSwipeOffset(0)
+                            setSwipeDragRotation(0)
                             swipeX.stop()
                           }
                         : undefined
@@ -901,24 +920,36 @@ export function ImageStackPreview({
                       isTop && isBrowseMode && !isPinching
                         ? (_, info) => {
                             setSwipeOffset(info.offset.x)
+                            setSwipeDragRotation(getSwipeDragRotation(info.offset.x))
                           }
                         : undefined
                     }
                     onDragEnd={isTop && isBrowseMode && !isPinching ? handleSwipeEnd : undefined}
-                    initial={false}
+                    initial={shouldReduceMotion ? false : originFrameMotion}
                     animate={{
+                      ...previewFrameMotion,
                       scale: restingScale,
                       x: restingX,
                       y: restingY,
                       rotate: restingRotate,
                     }}
+                    exit={
+                      shouldReduceMotion
+                        ? undefined
+                        : {
+                            ...originFrameMotion,
+                            x: restingX,
+                            y: restingY,
+                            scale: restingScale,
+                            rotate: restingRotate,
+                            transition: previewCloseTransition,
+                          }
+                    }
                     transition={stackTransition}
-                    className="pointer-events-auto absolute left-1/2 top-1/2 flex items-center justify-center"
+                    className="pointer-events-auto absolute flex items-center justify-center"
                     style={{
-                      width: frameSize.width,
-                      height: frameSize.height,
-                      marginLeft: -frameSize.width / 2,
-                      marginTop: -frameSize.height / 2,
+                      left: "50%",
+                      top: "50%",
                       zIndex: imageCount - offset,
                       touchAction: "none",
                       transformOrigin: "50% 50%",

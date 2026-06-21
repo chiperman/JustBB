@@ -207,7 +207,7 @@ describe("Derivative Memo Queries TDD", () => {
 
       expect(memo3?.is_owner).toBe(false)
       expect(memo3?.is_locked).toBe(true) // 私密且所有者是别人，锁定
-      expect(memo3?.content).toContain("locked-placeholder.png")
+      expect(memo3?.content).toBe("")
     })
   })
 

@@ -1,7 +1,12 @@
 "use client"
 
 import { HugeiconsIcon } from "@hugeicons/react"
-import { PinIcon, ChatLock01Icon as LockIcon, Link02Icon } from "@hugeicons/core-free-icons"
+import {
+  PinIcon,
+  ChatLock01Icon as LockIcon,
+  Link02Icon,
+  MoreHorizontalIcon,
+} from "@hugeicons/core-free-icons"
 import { cn, formatDate } from "@/shared/lib/utils"
 import { Button } from "@/shared/ui/button"
 import { Checkbox } from "@/shared/ui/checkbox"
@@ -89,66 +94,85 @@ export function MemoCardHeader({
           </span>
         )}
       </div>
-      {!memo.is_locked && (
-        <div
-          className={cn(
-            "flex items-center gap-2 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
-            isSelectionMode
-              ? "opacity-0 scale-95 pointer-events-none translate-x-2 invisible"
-              : "opacity-100 scale-100 pointer-events-auto translate-x-0 visible"
-          )}
-        >
-          {showOriginalOnly || showViewOriginal ? (
+      <div
+        className={cn(
+          "flex items-center gap-2 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+          isSelectionMode
+            ? "opacity-0 scale-95 pointer-events-none translate-x-2 invisible"
+            : "opacity-100 scale-100 pointer-events-auto translate-x-0 visible"
+        )}
+      >
+        {memo.is_locked ? (
+          <>
             <Button
               variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation()
-                e.preventDefault()
-                window.location.assign(`/?num=${memo.memo_number}`)
-              }}
-              className={cn(
-                "h-7 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-all z-10 pointer-events-auto",
-                !showViewOriginal && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-              )}
+              size="icon"
+              disabled
+              className="h-8 w-8 rounded-md text-muted-foreground/35 opacity-100"
+              aria-label="私密记录解锁后可查看引用"
+              title="私密记录解锁后可查看引用"
             >
-              查看原文
+              <HugeiconsIcon icon={Link02Icon} size={16} />
             </Button>
-          ) : (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onToggleBacklinks}
-                className={cn(
-                  "h-8 w-8 rounded-md transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 active:scale-95",
-                  showBacklinks
-                    ? "bg-primary/10 text-primary opacity-100"
-                    : "text-muted-foreground",
-                  (showBacklinks || isMenuOpen) && "opacity-100"
-                )}
-                aria-expanded={showBacklinks}
-                aria-label="查看引用"
-                title="查看引用"
-              >
-                <HugeiconsIcon icon={Link02Icon} size={16} />
-              </Button>
-              <MemoActions
-                id={memo.id}
-                isDeleted={!!memo.deleted_at}
-                isPinned={memo.is_pinned}
-                isPrivate={memo.is_private}
-                content={memo.content}
-                createdAt={memo.created_at}
-                tags={memo.tags ?? []}
-                onEdit={onEdit}
-                onOpenChange={onMenuOpenChange}
-                isOwner={memo.is_owner}
-              />
-            </>
-          )}
-        </div>
-      )}
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled
+              className="h-8 w-8 rounded-md text-muted-foreground/35 opacity-100"
+              aria-label="私密记录解锁后可使用更多操作"
+              title="私密记录解锁后可使用更多操作"
+            >
+              <HugeiconsIcon icon={MoreHorizontalIcon} size={16} />
+            </Button>
+          </>
+        ) : showOriginalOnly || showViewOriginal ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              e.preventDefault()
+              window.location.assign(`/?num=${memo.memo_number}`)
+            }}
+            className={cn(
+              "h-7 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-all z-10 pointer-events-auto",
+              !showViewOriginal && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+            )}
+          >
+            查看原文
+          </Button>
+        ) : (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleBacklinks}
+              className={cn(
+                "h-8 w-8 rounded-md transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 active:scale-95",
+                showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground",
+                (showBacklinks || isMenuOpen) && "opacity-100"
+              )}
+              aria-expanded={showBacklinks}
+              aria-label="查看引用"
+              title="查看引用"
+            >
+              <HugeiconsIcon icon={Link02Icon} size={16} />
+            </Button>
+            <MemoActions
+              id={memo.id}
+              isDeleted={!!memo.deleted_at}
+              isPinned={memo.is_pinned}
+              isPrivate={memo.is_private}
+              content={memo.content}
+              createdAt={memo.created_at}
+              tags={memo.tags ?? []}
+              onEdit={onEdit}
+              onOpenChange={onMenuOpenChange}
+              isOwner={memo.is_owner}
+            />
+          </>
+        )}
+      </div>
     </div>
   )
 }

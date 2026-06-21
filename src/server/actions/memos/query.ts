@@ -152,7 +152,7 @@ export async function getGalleryMemos(
 
     let content = memo.content || ""
     if (isLocked && !isOwner) {
-      content = "![Locked](/images/locked-placeholder.png)"
+      content = ""
     }
 
     return {

@@ -21,6 +21,7 @@ function createMemoResult(overrides: Record<string, unknown> = {}) {
       deleted_at: null,
       word_count: 100,
       locations: null,
+      images: ["https://example.com/secret.jpg"],
       access_code_hash: null,
       ...overrides,
     },
@@ -81,9 +82,7 @@ vi.mock("@/server/actions/shared/logger", () => ({
 vi.mock("bcryptjs", () => ({
   default: {
     genSalt: vi.fn().mockResolvedValue("salt"),
-    hash: vi.fn().mockImplementation((code: string) =>
-      Promise.resolve(`hashed:${code}`)
-    ),
+    hash: vi.fn().mockImplementation((code: string) => Promise.resolve(`hashed:${code}`)),
     compare: vi.fn().mockImplementation((code: string, hash: string) => {
       if (hash === null || hash === undefined) return Promise.resolve(false)
       const expectedHash = `hashed:${code}`
@@ -106,17 +105,14 @@ describe("verifyUnlockCode", () => {
   })
 
   it("口令正确时应返回成功", async () => {
-    mockClient.singleResult.set(
-      createMemoResult({ access_code_hash: `hashed:${CORRECT_CODE}` })
-    )
+    mockClient.singleResult.set(createMemoResult({ access_code_hash: `hashed:${CORRECT_CODE}` }))
     const result = await verifyUnlockCode(MOCK_MEMO_ID, CORRECT_CODE)
     expect(result.success).toBe(true)
+    expect(result.data?.images).toEqual(["https://example.com/secret.jpg"])
   })
 
   it("口令错误时应返回错误", async () => {
-    mockClient.singleResult.set(
-      createMemoResult({ access_code_hash: "hashed:other-password" })
-    )
+    mockClient.singleResult.set(createMemoResult({ access_code_hash: "hashed:other-password" }))
     const result = await verifyUnlockCode(MOCK_MEMO_ID, CORRECT_CODE)
     expect(result.success).toBe(false)
     expect(result.error).toBe("口令错误")
@@ -138,13 +134,9 @@ describe("verifyUnlockCode", () => {
 
   it("速率限制：5 次尝试后应返回错误", async () => {
     // 设置为一个与调用 code 不同的 hash，确保每次都返回"口令错误"
-    mockClient.singleResult.set(
-      createMemoResult({ access_code_hash: "hashed:other-password" })
-    )
+    mockClient.singleResult.set(createMemoResult({ access_code_hash: "hashed:other-password" }))
     const results = await Promise.all(
-      Array.from({ length: 6 }, () =>
-        verifyUnlockCode(MOCK_MEMO_ID, CORRECT_CODE)
-      )
+      Array.from({ length: 6 }, () => verifyUnlockCode(MOCK_MEMO_ID, CORRECT_CODE))
     )
     expect(results.slice(0, 5).every((r) => r.error === "口令错误")).toBe(true)
     expect(results[5].error).toBe("尝试次数过多，请稍后再试")

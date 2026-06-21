@@ -402,7 +402,7 @@ export async function verifyUnlockCode(
   const { data, error } = await supabase
     .from("memos")
     .select(
-      "id, memo_number, owner_id, content, tags, access_code_hint, is_private, is_pinned, pinned_at, created_at, updated_at, deleted_at, word_count, locations, access_code_hash"
+      "id, memo_number, owner_id, content, tags, access_code_hint, is_private, is_pinned, pinned_at, created_at, updated_at, deleted_at, word_count, locations, images, access_code_hash"
     )
     .eq("id", memoId)
     .single()

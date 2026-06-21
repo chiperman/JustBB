@@ -4,13 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { Memo } from "@/types/memo"
 import { AnimatePresence } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Image01Icon as GalleryIcon } from "@hugeicons/core-free-icons"
+import { ChatLock01Icon as LockIcon, Image01Icon as GalleryIcon } from "@hugeicons/core-free-icons"
 import {
   IMAGE_STACK_RETURN_DURATION_MS,
   type ImageStackOriginRect,
   ImageStackPreview,
   ImageStackThumbnail,
 } from "@/shared/ui/ImageStack"
+import { UnlockDialog } from "@/features/memos/components/UnlockDialog"
 
 interface GalleryGridProps {
   memos: Memo[]
@@ -91,10 +92,37 @@ function MemoMeta({ item }: { item: GalleryMemoItem }) {
   )
 }
 
+function LockedGalleryCard({ item, onUnlock }: { item: GalleryMemoItem; onUnlock: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onUnlock}
+      className="group relative block w-full overflow-hidden rounded-xl bg-[linear-gradient(135deg,rgba(246,245,244,0.78),rgba(255,255,255,0.92))] text-left shadow-[0_16px_40px_rgba(29,29,27,0.08)] ring-1 ring-border/35 outline-none transition-all hover:-translate-y-0.5 hover:shadow-[0_20px_48px_rgba(29,29,27,0.1)] focus-visible:ring-2 focus-visible:ring-primary/40"
+      style={{ aspectRatio: GALLERY_FALLBACK_ASPECT_RATIO }}
+      aria-label={`解锁 #${item.memo_number} 查看图片`}
+    >
+      <div className="absolute inset-0 bg-[repeating-linear-gradient(135deg,rgba(217,119,87,0.06)_0,rgba(217,119,87,0.06)_1px,transparent_1px,transparent_10px)] opacity-60" />
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-background/80 text-primary/75 ring-1 ring-primary/15 backdrop-blur-sm transition-transform group-hover:scale-105">
+          <HugeiconsIcon icon={LockIcon} size={22} aria-hidden="true" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-foreground/70">私密图片未解锁</p>
+          <p className="text-xs leading-5 text-muted-foreground/62">输入口令后即可查看原图</p>
+        </div>
+        <span className="badge-text rounded-sm bg-[#fdf5f2] px-1.5 py-0.5 text-[10px] font-semibold tracking-normal text-primary">
+          #{item.memo_number}
+        </span>
+      </div>
+    </button>
+  )
+}
+
 export function GalleryGrid({ memos }: GalleryGridProps) {
   const [previewItem, setPreviewItem] = useState<GalleryMemoItem | null>(null)
   const [returningPreviewId, setReturningPreviewId] = useState<string | null>(null)
   const [previewOriginRect, setPreviewOriginRect] = useState<ImageStackOriginRect | null>(null)
+  const [unlockMemo, setUnlockMemo] = useState<GalleryMemoItem | null>(null)
   const [aspectRatios, setAspectRatios] = useState<GalleryAspectRatioCache>({})
   const revealTimerRef = useRef<number | null>(null)
 
@@ -111,7 +139,7 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
 
   useEffect(() => {
     const missingItems = galleryItems.filter(
-      (item) => item.images[0] && aspectRatios[item.id]?.src !== item.images[0]
+      (item) => !item.is_locked && item.images[0] && aspectRatios[item.id]?.src !== item.images[0]
     )
     if (missingItems.length === 0) return
 
@@ -183,23 +211,27 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
     <div className="columns-1 gap-8 md:columns-2 lg:columns-3 lg:gap-10 xl:columns-4 xl:gap-12">
       {galleryItems.map((item) => (
         <div key={item.id} className="mb-9 break-inside-avoid">
-          <ImageStackThumbnail
-            images={item.images}
-            layoutId={`image-stack-${item.id}`}
-            alt="Memo multimedia content"
-            aspectRatio={aspectRatios[item.id]?.aspectRatio || GALLERY_FALLBACK_ASPECT_RATIO}
-            onOpen={(originRect) => {
-              setPreviewOriginRect(originRect)
-              setPreviewItem(item)
-            }}
-            isPreviewing={previewItem?.id === item.id || returningPreviewId === item.id}
-            overlay={
-              <>
-                <CardOverlay />
-                <MemoMeta item={item} />
-              </>
-            }
-          />
+          {item.is_locked ? (
+            <LockedGalleryCard item={item} onUnlock={() => setUnlockMemo(item)} />
+          ) : (
+            <ImageStackThumbnail
+              images={item.images}
+              layoutId={`image-stack-${item.id}`}
+              alt="Memo multimedia content"
+              aspectRatio={aspectRatios[item.id]?.aspectRatio || GALLERY_FALLBACK_ASPECT_RATIO}
+              onOpen={(originRect) => {
+                setPreviewOriginRect(originRect)
+                setPreviewItem(item)
+              }}
+              isPreviewing={previewItem?.id === item.id || returningPreviewId === item.id}
+              overlay={
+                <>
+                  <CardOverlay />
+                  <MemoMeta item={item} />
+                </>
+              }
+            />
+          )}
         </div>
       ))}
 
@@ -232,6 +264,15 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
           />
         )}
       </AnimatePresence>
+
+      {unlockMemo && (
+        <UnlockDialog
+          memoId={unlockMemo.id}
+          isOpen={!!unlockMemo}
+          onClose={() => setUnlockMemo(null)}
+          hint={unlockMemo.access_code_hint}
+        />
+      )}
     </div>
   )
 }

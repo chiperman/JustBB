@@ -50,6 +50,7 @@ const THUMBNAIL_MIN_ASPECT_RATIO = 0.96
 const THUMBNAIL_MAX_ASPECT_RATIO = 1.55
 const PINCH_ROTATION_THRESHOLD = 3
 const PREVIEW_SWITCH_DURATION_MS = 420
+const KEYBOARD_REPEAT_NAVIGATION_INTERVAL_MS = 560
 export const IMAGE_STACK_RETURN_DURATION_MS = 420
 const PREVIEW_FALLBACK_IMAGE_SIZE = { width: 560, height: 420 }
 
@@ -519,8 +520,11 @@ export function ImageStackPreview({
   const rawScale = useMotionValue(1)
   const scale = useSpring(rawScale, { stiffness: 260, damping: 32, mass: 0.72 })
   const pinchGestureRef = useRef<TouchGestureState | null>(null)
+  const lastKeyboardNavigationAtRef = useRef(0)
   const imageCount = images.length
   const canNavigate = imageCount > 1
+  const canNavigatePrevious = activeIndex > 0
+  const canNavigateNext = activeIndex < imageCount - 1
   const activeSrc = images[activeIndex]
   const activeImageSize = activeSrc ? imageSizes[activeSrc] : null
   const memoContent = memo?.content.trim() || ""
@@ -538,8 +542,9 @@ export function ImageStackPreview({
   const isBrowseMode = Math.abs(displayScale - fitBaseScale) <= defaultScaleTolerance
   const stackOffsetCompensation = 1
   const swipeDistance = Math.abs(swipeOffset)
+  const canNavigateSwipeDirection = swipeOffset < 0 ? canNavigateNext : canNavigatePrevious
   const showSwipeHint =
-    canNavigate && isBrowseMode && isDragging && !isPinching && swipeDistance > 12
+    canNavigateSwipeDirection && isBrowseMode && isDragging && !isPinching && swipeDistance > 12
   const swipeDirection = swipeOffset < 0 ? -1 : 1
   const swipeTargetLabel = swipeDirection < 0 ? "下一张" : "上一张"
   const swipeRemainingDistance = Math.max(0, Math.ceil(SWIPE_DISTANCE_THRESHOLD - swipeDistance))
@@ -644,15 +649,13 @@ export function ImageStackPreview({
   const moveBy = useCallback(
     (direction: number) => {
       if (imageCount <= 1) return
+      const nextIndex = activeIndex + direction
+      if (nextIndex < 0 || nextIndex >= imageCount) return
 
       resetTransform()
       setIsDragging(false)
-      prepareSwitchAnimation(
-        activeIndex,
-        (activeIndex + direction + imageCount) % imageCount,
-        direction < 0 ? -1 : 1
-      )
-      setActiveIndex((prev) => (prev + direction + imageCount) % imageCount)
+      prepareSwitchAnimation(activeIndex, nextIndex, direction < 0 ? -1 : 1)
+      setActiveIndex(nextIndex)
     },
     [activeIndex, imageCount, prepareSwitchAnimation, resetTransform]
   )
@@ -660,21 +663,15 @@ export function ImageStackPreview({
   const moveTo = useCallback(
     (nextIndex: number) => {
       if (imageCount <= 1) return
+      const boundedNextIndex = Math.min(Math.max(nextIndex, 0), imageCount - 1)
+      if (boundedNextIndex === activeIndex) return
 
       resetTransform()
       setIsDragging(false)
-      setActiveIndex((prev) => {
-        const normalizedNext = (nextIndex + imageCount) % imageCount
-        if (normalizedNext !== prev) {
-          const forwardDistance = (normalizedNext - prev + imageCount) % imageCount
-          const backwardDistance = (prev - normalizedNext + imageCount) % imageCount
-          prepareSwitchAnimation(prev, normalizedNext, forwardDistance <= backwardDistance ? 1 : -1)
-        }
-
-        return normalizedNext === prev ? prev : normalizedNext
-      })
+      prepareSwitchAnimation(activeIndex, boundedNextIndex, boundedNextIndex > activeIndex ? 1 : -1)
+      setActiveIndex(boundedNextIndex)
     },
-    [imageCount, prepareSwitchAnimation, resetTransform]
+    [activeIndex, imageCount, prepareSwitchAnimation, resetTransform]
   )
 
   const handleSwipeEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -858,14 +855,28 @@ export function ImageStackPreview({
   useEffect(() => {
     if (!open) return
 
+    const canRunKeyboardNavigation = (event: KeyboardEvent) => {
+      if (!event.repeat) return true
+
+      const now = Date.now()
+      if (now - lastKeyboardNavigationAtRef.current < KEYBOARD_REPEAT_NAVIGATION_INTERVAL_MS) {
+        return false
+      }
+
+      lastKeyboardNavigationAtRef.current = now
+      return true
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         handleClose()
       } else if (event.key === "ArrowRight" && canNavigate) {
         event.preventDefault()
+        if (!canRunKeyboardNavigation(event)) return
         moveBy(-1)
       } else if (event.key === "ArrowLeft" && canNavigate) {
         event.preventDefault()
+        if (!canRunKeyboardNavigation(event)) return
         moveBy(1)
       }
     }
@@ -928,38 +939,37 @@ export function ImageStackPreview({
     return () => window.clearTimeout(timer)
   }, [switchAnimation])
 
-  const stackImages = Array.from({ length: imageCount }, (_, offset) => offset)
+  const stackImages = Array.from({ length: imageCount - activeIndex }, (_, offset) => offset)
     .map((offset) => ({
-      src: images[(activeIndex + offset) % imageCount],
-      imageIndex: (activeIndex + offset) % imageCount,
+      src: images[activeIndex + offset],
+      imageIndex: activeIndex + offset,
       offset,
     }))
-    .filter(
-      ({ imageIndex, src }) =>
-        Boolean(src) &&
-        !(switchAnimation?.mode === "outgoing" && imageIndex === switchAnimation.imageIndex)
-    )
-  const outgoingFrameSize =
-    switchAnimation?.mode === "outgoing"
-      ? getPreviewFrameSize(switchAnimation.size, viewport, effectiveFitMode)
-      : null
+    .filter(({ src }) => Boolean(src))
+  if (
+    switchAnimation?.mode === "outgoing" &&
+    switchAnimation.imageIndex < activeIndex &&
+    switchAnimation.src
+  ) {
+    stackImages.push({
+      src: switchAnimation.src,
+      imageIndex: switchAnimation.imageIndex,
+      offset: 1,
+    })
+  }
   const switchTravelDistance = Math.min(500, Math.max(280, viewport.width * 0.34))
   const switchLiftDistance = Math.min(110, Math.max(56, viewport.height * 0.1))
-  const incomingStartX = switchAnimation?.mode === "incoming" ? switchTravelDistance * 0.34 : 0
-  const incomingStartY = switchAnimation?.mode === "incoming" ? switchLiftDistance * 1.05 : 0
-  const incomingStartRotate = switchAnimation?.mode === "incoming" ? 3.4 : 0
-  const incomingMidX = switchAnimation?.mode === "incoming" ? switchTravelDistance * 0.88 : 0
-  const incomingMidY = switchAnimation?.mode === "incoming" ? switchLiftDistance * 0.72 : 0
-  const incomingMidRotate = switchAnimation?.mode === "incoming" ? 7.5 : 0
+  const incomingStartX = switchAnimation?.mode === "incoming" ? switchTravelDistance * 0.3 : 0
+  const incomingStartY = switchAnimation?.mode === "incoming" ? switchLiftDistance * 1.15 : 0
+  const incomingStartRotate = switchAnimation?.mode === "incoming" ? 2.8 : 0
+  const incomingMidX = switchAnimation?.mode === "incoming" ? switchTravelDistance * 0.82 : 0
+  const incomingMidY = switchAnimation?.mode === "incoming" ? -switchLiftDistance * 0.25 : 0
+  const incomingMidRotate = switchAnimation?.mode === "incoming" ? 6.5 : 0
   const outgoingExitX = switchAnimation?.mode === "outgoing" ? -switchTravelDistance * 0.82 : 0
-  const outgoingExitY = switchAnimation?.mode === "outgoing" ? switchLiftDistance * 0.66 : 0
-  const outgoingExitRotate =
-    switchAnimation?.mode === "outgoing" ? -6.6 * Math.abs(switchAnimation.direction) : 0
-  const outgoingReturnX = switchAnimation?.mode === "outgoing" ? -switchTravelDistance * 0.34 : 0
-  const outgoingReturnY = switchAnimation?.mode === "outgoing" ? switchLiftDistance * 1.05 : 0
-  const outgoingReturnRotate =
-    switchAnimation?.mode === "outgoing" ? -3.4 * Math.abs(switchAnimation.direction) : 0
-  const outgoingPreviewImage = switchAnimation?.mode === "outgoing" ? switchAnimation : null
+  const outgoingExitY = switchAnimation?.mode === "outgoing" ? -switchLiftDistance * 0.25 : 0
+  const outgoingExitRotate = switchAnimation?.mode === "outgoing" ? -6.5 : 0
+  const outgoingImageIndex =
+    switchAnimation?.mode === "outgoing" ? switchAnimation.imageIndex : null
   const incomingImageIndex =
     switchAnimation?.mode === "incoming" ? switchAnimation.imageIndex : null
 
@@ -1060,12 +1070,13 @@ export function ImageStackPreview({
                 const restingX = spread * 18 * stackOffsetCompensation
                 const restingY = spread * 10 * stackOffsetCompensation
                 const restingScale = Math.max(0.72, 1 - spread * 0.035)
-                const restingRotate =
-                  getPreviewImageRotation(src, imageIndex, imageCount) +
-                  (isTop ? rotation + swipeDragRotation : 0)
+                const restingRotate = isTop
+                  ? rotation + swipeDragRotation
+                  : getPreviewImageRotation(src, imageIndex, imageCount)
                 const dragStyle =
                   isTop && isBrowseMode && isDragging && !isPinching ? { x: visualSwipeX } : {}
                 const isIncomingTop = isTop && incomingImageIndex === imageIndex
+                const isOutgoingFromTop = outgoingImageIndex === imageIndex
                 const isOutgoingRevealTop = isTop && switchAnimation?.mode === "outgoing"
 
                 return (
@@ -1101,33 +1112,47 @@ export function ImageStackPreview({
                     onDragEnd={isTop && isBrowseMode && !isPinching ? handleSwipeEnd : undefined}
                     initial={shouldReduceMotion ? false : originFrameMotion}
                     animate={
-                      isIncomingTop
+                      isOutgoingFromTop
                         ? {
                             ...previewFrameMotion,
-                            scale: [0.84, 0.96, restingScale],
-                            x: [incomingStartX, incomingMidX, restingX],
-                            y: [incomingStartY, incomingMidY, restingY],
-                            rotate: [incomingStartRotate, incomingMidRotate, restingRotate],
+                            scale: [1, 0.94, restingScale],
+                            x: [0, outgoingExitX, restingX],
+                            y: [0, outgoingExitY, restingY],
+                            rotate: [0, outgoingExitRotate, restingRotate],
+                            zIndex: [60, 50, imageCount - offset],
                           }
-                        : isOutgoingRevealTop
+                        : isIncomingTop
                           ? {
                               ...previewFrameMotion,
-                              scale: [0.9, 0.98, restingScale],
-                              x: [
-                                switchTravelDistance * 0.16,
-                                switchTravelDistance * 0.04,
-                                restingX,
-                              ],
-                              y: [switchLiftDistance * 0.55, switchLiftDistance * 0.12, restingY],
-                              rotate: [3.2, 0.8, restingRotate],
+                              scale: [0.78, 0.94, restingScale],
+                              x: [incomingStartX, incomingMidX, restingX],
+                              y: [incomingStartY, incomingMidY, restingY],
+                              rotate: [incomingStartRotate, incomingMidRotate, restingRotate],
+                              zIndex: 50,
                             }
-                          : {
-                              ...previewFrameMotion,
-                              scale: restingScale,
-                              x: restingX,
-                              y: restingY,
-                              rotate: restingRotate,
-                            }
+                          : isOutgoingRevealTop
+                            ? {
+                                ...previewFrameMotion,
+                                scale: [0.985, 0.998, restingScale],
+                                x: [
+                                  switchTravelDistance * 0.02,
+                                  switchTravelDistance * 0.005,
+                                  restingX,
+                                ],
+                                y: [
+                                  switchLiftDistance * 0.06,
+                                  switchLiftDistance * 0.015,
+                                  restingY,
+                                ],
+                                rotate: [0.4, 0.1, restingRotate],
+                              }
+                            : {
+                                ...previewFrameMotion,
+                                scale: restingScale,
+                                x: restingX,
+                                y: restingY,
+                                rotate: restingRotate,
+                              }
                     }
                     exit={
                       shouldReduceMotion
@@ -1142,7 +1167,11 @@ export function ImageStackPreview({
                           }
                     }
                     transition={
-                      isIncomingTop || isOutgoingRevealTop ? switchTransition : stackTransition
+                      isOutgoingFromTop
+                        ? switchTransition
+                        : isIncomingTop || isOutgoingRevealTop
+                          ? switchTransition
+                          : stackTransition
                     }
                     className="pointer-events-auto absolute flex items-center justify-center"
                     style={{
@@ -1221,46 +1250,6 @@ export function ImageStackPreview({
                   </motion.div>
                 )
               })}
-            {outgoingPreviewImage && outgoingFrameSize && (
-              <motion.div
-                key={`outgoing-${outgoingPreviewImage.imageIndex}-${outgoingPreviewImage.src}`}
-                initial={{
-                  width: outgoingFrameSize.width,
-                  height: outgoingFrameSize.height,
-                  marginLeft: -outgoingFrameSize.width / 2,
-                  marginTop: -outgoingFrameSize.height / 2,
-                  opacity: 1,
-                  scale: 1,
-                  x: 0,
-                  y: 0,
-                  rotate: 0,
-                }}
-                animate={{
-                  width: outgoingFrameSize.width,
-                  height: outgoingFrameSize.height,
-                  marginLeft: -outgoingFrameSize.width / 2,
-                  marginTop: -outgoingFrameSize.height / 2,
-                  opacity: [1, 0.96, 0],
-                  scale: [1, 0.97, 0.84],
-                  x: [0, outgoingExitX, outgoingReturnX],
-                  y: [0, outgoingExitY, outgoingReturnY],
-                  rotate: [0, outgoingExitRotate, outgoingReturnRotate],
-                }}
-                transition={switchTransition}
-                className="pointer-events-none absolute left-1/2 top-1/2 z-[60] flex items-center justify-center"
-                style={{
-                  touchAction: "none",
-                  transformOrigin: "50% 50%",
-                }}
-              >
-                <PreviewImage
-                  src={outgoingPreviewImage.src}
-                  alt={`图片 ${outgoingPreviewImage.imageIndex + 1}`}
-                  fitMode={fitMode}
-                  useCoverMode={false}
-                />
-              </motion.div>
-            )}
           </motion.div>
         </motion.div>
       </motion.div>
@@ -1354,7 +1343,7 @@ export function ImageStackPreview({
         <button
           type="button"
           onClick={() => moveTo(activeIndex - 1)}
-          disabled={!canNavigate}
+          disabled={!canNavigatePrevious}
           className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-foreground/20 disabled:hover:bg-transparent disabled:hover:text-foreground/20"
           title="上一张 (←)"
         >
@@ -1366,7 +1355,7 @@ export function ImageStackPreview({
         <button
           type="button"
           onClick={() => moveTo(activeIndex + 1)}
-          disabled={!canNavigate}
+          disabled={!canNavigateNext}
           className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-foreground/20 disabled:hover:bg-transparent disabled:hover:text-foreground/20"
           title="下一张 (→)"
         >

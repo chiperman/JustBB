@@ -99,7 +99,14 @@ export function MemoCardView({
             collapsedHeight={200}
           >
             {!showOriginalOnly && displayMemo.images && displayMemo.images.length > 0 && (
-              <MemoImageGrid images={displayMemo.images} />
+              <MemoImageGrid
+                images={displayMemo.images}
+                memo={{
+                  content: displayMemo.content,
+                  memoNumber: displayMemo.memo_number,
+                  createdAt: displayMemo.created_at,
+                }}
+              />
             )}
             <MemoContent content={displayMemo.content} disablePreview={showOriginalOnly} />
           </ExpandableContent>

@@ -11,6 +11,7 @@ import {
 } from "react"
 import { createPortal } from "react-dom"
 import {
+  AnimatePresence,
   motion,
   type PanInfo,
   useMotionValue,
@@ -22,18 +23,24 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ArrowLeft01Icon,
   ArrowRight01Icon,
+  BookOpen01Icon,
   Cancel01Icon,
-  Image01Icon,
   RotateTopRightIcon,
   SearchAddIcon,
   SearchMinusIcon,
   ZoomInAreaIcon,
 } from "@hugeicons/core-free-icons"
-import { SmartImage } from "./SmartImage"
+import { ImageErrorState, SmartImage } from "./SmartImage"
 import { cn } from "@/shared/lib/utils"
+import { MemoContent } from "@/features/memos/components/MemoContent"
+import {
+  getImageLoadSnapshot,
+  markImageError,
+  markImageLoaded,
+  useImageLoadState,
+} from "@/shared/hooks/useImageLoadState"
 
 type FitMode = "fit" | "original"
-type PreviewImageStatus = "loading" | "loaded" | "error"
 
 const SWIPE_DISTANCE_THRESHOLD = 140
 const QUICK_SWIPE_DISTANCE = 44
@@ -42,6 +49,7 @@ const STACK_FULL_SPREAD_LAYERS = 5
 const THUMBNAIL_MIN_ASPECT_RATIO = 0.96
 const THUMBNAIL_MAX_ASPECT_RATIO = 1.55
 const PINCH_ROTATION_THRESHOLD = 3
+const PREVIEW_SWITCH_DURATION_MS = 420
 export const IMAGE_STACK_RETURN_DURATION_MS = 420
 const PREVIEW_FALLBACK_IMAGE_SIZE = { width: 560, height: 420 }
 
@@ -67,6 +75,14 @@ interface TouchPair {
     clientX: number
     clientY: number
   }
+}
+
+interface PreviewSwitchAnimation {
+  mode: "incoming" | "outgoing"
+  src: string
+  imageIndex: number
+  direction: 1 | -1
+  size: { width: number; height: number }
 }
 
 function getStackSpread(offset: number) {
@@ -132,8 +148,7 @@ function getPreviewFrameSize(
     fitMode === "fit"
       ? Math.min(
           (viewport.width * 0.82) / imageSize.width,
-          (viewport.height * 0.72) / imageSize.height,
-          1
+          (viewport.height * 0.72) / imageSize.height
         )
       : 1
 
@@ -141,6 +156,14 @@ function getPreviewFrameSize(
     width: imageSize.width * fitScale,
     height: imageSize.height * fitScale,
   }
+}
+
+function formatPreviewDate(value: string | Date) {
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) return null
+
+  return date.toISOString().slice(0, 10)
 }
 
 function getTouchDistance(touches: TouchPair) {
@@ -188,6 +211,11 @@ interface ImageStackPreviewProps {
   images: string[]
   layoutId: string
   originRect?: ImageStackOriginRect | null
+  memo?: {
+    content: string
+    memoNumber?: number | string | null
+    createdAt?: string | Date | null
+  }
   open: boolean
   onClose: () => void
 }
@@ -205,21 +233,27 @@ function PreviewImage({
   useCoverMode?: boolean
   onLoadSize?: (size: { width: number; height: number }) => void
 }) {
-  const [status, setStatus] = useState<PreviewImageStatus>("loading")
+  const imageState = useImageLoadState(src)
+  const isLoaded = imageState.status === "loaded"
+  const isError = imageState.status === "error"
+  const isLoading = !isError && !isLoaded
 
   const imageClassName = useCoverMode
     ? "h-full w-full select-none rounded-xl object-cover shadow-[0_18px_48px_rgba(29,29,27,0.16)] dark:shadow-[0_18px_48px_rgba(0,0,0,0.28)]"
     : fitMode === "fit"
-      ? "h-full w-full max-h-[72vh] max-w-[82vw] select-none rounded-xl object-contain shadow-[0_18px_48px_rgba(29,29,27,0.16)] dark:shadow-[0_18px_48px_rgba(0,0,0,0.28)]"
-      : "max-h-none max-w-none select-none rounded-xl object-contain shadow-[0_18px_48px_rgba(29,29,27,0.16)] dark:shadow-[0_18px_48px_rgba(0,0,0,0.28)]"
+      ? "h-auto w-full max-h-none max-w-none select-none rounded-xl object-contain shadow-[0_18px_48px_rgba(29,29,27,0.16)] dark:shadow-[0_18px_48px_rgba(0,0,0,0.28)]"
+      : "h-auto w-auto max-h-none max-w-none select-none rounded-xl object-contain shadow-[0_18px_48px_rgba(29,29,27,0.16)] dark:shadow-[0_18px_48px_rgba(0,0,0,0.28)]"
 
   return (
-    <div className="relative flex h-full w-full items-center justify-center overflow-visible rounded-xl">
-      {status === "error" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-xl border border-border/50 bg-background px-8 text-muted-foreground shadow-[0_18px_48px_rgba(29,29,27,0.08)] dark:border-white/10 dark:bg-zinc-900">
-          <HugeiconsIcon icon={Image01Icon} size={32} strokeWidth={1.5} />
-          <span className="font-mono text-[12px] uppercase tracking-[0.32em]">图片不可用</span>
-        </div>
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-xl shadow-[0_18px_48px_rgba(29,29,27,0.16)] dark:shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
+      {isLoading && (
+        <div className="absolute inset-0 z-10 animate-pulse rounded-xl bg-gradient-to-br from-muted/40 via-background/70 to-muted/30 backdrop-blur-sm dark:from-white/10 dark:via-white/6 dark:to-white/10" />
+      )}
+      {isError && (
+        <ImageErrorState
+          isFullPage
+          className="rounded-xl border border-border/50 dark:border-white/10"
+        />
       )}
 
       <img
@@ -227,14 +261,20 @@ function PreviewImage({
         alt={alt}
         referrerPolicy="no-referrer"
         onLoad={(event) => {
-          setStatus("loaded")
-          onLoadSize?.({
+          const size = {
             width: event.currentTarget.naturalWidth,
             height: event.currentTarget.naturalHeight,
-          })
+          }
+
+          markImageLoaded(src, size)
+          onLoadSize?.(size)
         }}
-        onError={() => setStatus("error")}
-        className={`${imageClassName} relative z-10 ${status === "error" ? "pointer-events-none absolute opacity-0" : "opacity-100"}`}
+        onError={() => markImageError(src)}
+        className={cn(
+          imageClassName,
+          "relative z-10 transition-opacity duration-200",
+          isLoaded ? "opacity-100" : "pointer-events-none absolute opacity-0"
+        )}
         draggable={false}
       />
     </div>
@@ -425,6 +465,7 @@ export function ImageStackPreview({
   images,
   layoutId,
   originRect,
+  memo,
   open,
   onClose,
 }: ImageStackPreviewProps) {
@@ -437,6 +478,8 @@ export function ImageStackPreview({
   const [isPinching, setIsPinching] = useState(false)
   const [isOpeningCover, setIsOpeningCover] = useState(true)
   const [isClosing, setIsClosing] = useState(false)
+  const [isMemoPanelOpen, setIsMemoPanelOpen] = useState(false)
+  const [switchAnimation, setSwitchAnimation] = useState<PreviewSwitchAnimation | null>(null)
   const [swipeOffset, setSwipeOffset] = useState(0)
   const [swipeDragRotation, setSwipeDragRotation] = useState(0)
   const [viewport, setViewport] = useState(() =>
@@ -447,7 +490,19 @@ export function ImageStackPreview({
   const [imageSizes, setImageSizes] = useState<Record<string, { width: number; height: number }>>(
     () => {
       const firstSrc = images[0]
-      if (!firstSrc || !originRect?.imageWidth || !originRect.imageHeight) return {}
+      if (!firstSrc) return {}
+
+      const cached = getImageLoadSnapshot(firstSrc)
+      if (cached.status === "loaded" && cached.width && cached.height) {
+        return {
+          [firstSrc]: {
+            width: cached.width,
+            height: cached.height,
+          },
+        }
+      }
+
+      if (!originRect?.imageWidth || !originRect.imageHeight) return {}
 
       return {
         [firstSrc]: {
@@ -468,17 +523,20 @@ export function ImageStackPreview({
   const canNavigate = imageCount > 1
   const activeSrc = images[activeIndex]
   const activeImageSize = activeSrc ? imageSizes[activeSrc] : null
+  const memoContent = memo?.content.trim() || ""
+  const memoCreatedDate = memo?.createdAt ? formatPreviewDate(memo.createdAt) : null
+  const hasMemoContent = memoContent.length > 0
+  const effectiveFitMode = isMemoPanelOpen ? "fit" : fitMode
   const fitBaseScale = activeImageSize
     ? Math.min(
         (viewport.width * 0.82) / activeImageSize.width,
-        (viewport.height * 0.72) / activeImageSize.height,
-        1
+        (viewport.height * 0.72) / activeImageSize.height
       )
     : 1
-  const displayScale = (fitMode === "fit" ? fitBaseScale : 1) * currentScale
+  const displayScale = (effectiveFitMode === "fit" ? fitBaseScale : 1) * currentScale
   const defaultScaleTolerance = Math.max(0.02, fitBaseScale * 0.04)
   const isBrowseMode = Math.abs(displayScale - fitBaseScale) <= defaultScaleTolerance
-  const stackOffsetCompensation = currentScale > 0 ? 1 / currentScale : 1
+  const stackOffsetCompensation = 1
   const swipeDistance = Math.abs(swipeOffset)
   const showSwipeHint =
     canNavigate && isBrowseMode && isDragging && !isPinching && swipeDistance > 12
@@ -492,11 +550,30 @@ export function ImageStackPreview({
   const swipeFrameHeight = activeImageSize
     ? Math.max(220, activeImageSize.height * displayScale)
     : 280
-  const previewFrameSize = getPreviewFrameSize(activeImageSize, viewport, fitMode)
+  const previewFrameSize = getPreviewFrameSize(activeImageSize, viewport, effectiveFitMode)
+  const memoMaxScale = isMemoPanelOpen
+    ? Math.max(
+        1,
+        Math.min(
+          1.8,
+          (viewport.width * 0.9) / Math.max(previewFrameSize.width, 1),
+          (viewport.height * 0.78) / Math.max(previewFrameSize.height, 1)
+        )
+      )
+    : 3
+  const memoPanelOffset =
+    hasMemoContent && isMemoPanelOpen ? -Math.min(190, viewport.width * 0.13) : 0
   const visualSwipeX = useTransform(swipeX, (value) => value * stackOffsetCompensation)
   const stackTransition = shouldReduceMotion
     ? { duration: 0 }
     : { type: "spring" as const, stiffness: 340, damping: 38, mass: 0.75 }
+  const switchTransition = shouldReduceMotion
+    ? { duration: 0 }
+    : {
+        duration: PREVIEW_SWITCH_DURATION_MS / 1000,
+        ease: [0.22, 1, 0.36, 1] as const,
+        times: [0, 0.58, 1],
+      }
   const previewOpenTransition = shouldReduceMotion
     ? { duration: 0 }
     : { duration: 0.28, ease: [0.2, 0.8, 0.2, 1] as const }
@@ -533,15 +610,51 @@ export function ImageStackPreview({
     resetTransform()
   }, [resetTransform])
 
+  const clampInteractiveScale = useCallback(
+    (value: number) => Math.min(clampPreviewScale(value), memoMaxScale),
+    [memoMaxScale]
+  )
+
+  const handleToggleMemoPanel = useCallback(() => {
+    if (!isMemoPanelOpen) {
+      setFitMode("fit")
+      resetTransform()
+    }
+
+    setIsMemoPanelOpen((value) => !value)
+  }, [isMemoPanelOpen, resetTransform])
+
+  const prepareSwitchAnimation = useCallback(
+    (fromIndex: number, toIndex: number, direction: 1 | -1) => {
+      const imageIndex = direction > 0 ? fromIndex : toIndex
+      const src = images[imageIndex]
+      if (!src) return
+
+      setSwitchAnimation({
+        mode: direction > 0 ? "outgoing" : "incoming",
+        src,
+        imageIndex,
+        direction,
+        size: imageSizes[src] || PREVIEW_FALLBACK_IMAGE_SIZE,
+      })
+    },
+    [imageSizes, images]
+  )
+
   const moveBy = useCallback(
     (direction: number) => {
       if (imageCount <= 1) return
 
       resetTransform()
       setIsDragging(false)
+      prepareSwitchAnimation(
+        activeIndex,
+        (activeIndex + direction + imageCount) % imageCount,
+        direction < 0 ? -1 : 1
+      )
       setActiveIndex((prev) => (prev + direction + imageCount) % imageCount)
     },
-    [imageCount, resetTransform]
+    [activeIndex, imageCount, prepareSwitchAnimation, resetTransform]
   )
 
   const moveTo = useCallback(
@@ -552,10 +665,16 @@ export function ImageStackPreview({
       setIsDragging(false)
       setActiveIndex((prev) => {
         const normalizedNext = (nextIndex + imageCount) % imageCount
+        if (normalizedNext !== prev) {
+          const forwardDistance = (normalizedNext - prev + imageCount) % imageCount
+          const backwardDistance = (prev - normalizedNext + imageCount) % imageCount
+          prepareSwitchAnimation(prev, normalizedNext, forwardDistance <= backwardDistance ? 1 : -1)
+        }
+
         return normalizedNext === prev ? prev : normalizedNext
       })
     },
-    [imageCount, resetTransform]
+    [imageCount, prepareSwitchAnimation, resetTransform]
   )
 
   const handleSwipeEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -615,7 +734,7 @@ export function ImageStackPreview({
     event.stopPropagation()
 
     const distanceRatio = getTouchDistance(event.touches) / gesture.startDistance
-    rawScale.set(clampPreviewScale(gesture.startScale * distanceRatio))
+    rawScale.set(clampInteractiveScale(gesture.startScale * distanceRatio))
 
     const angleDelta = getShortestAngleDelta(getTouchAngle(event.touches), gesture.startAngle)
     const shouldRotate = gesture.hasRotated || Math.abs(angleDelta) >= PINCH_ROTATION_THRESHOLD
@@ -637,6 +756,7 @@ export function ImageStackPreview({
     if (isClosing) return
 
     resetPreviewState()
+    setIsMemoPanelOpen(false)
     setIsClosing(true)
 
     window.requestAnimationFrame(() => {
@@ -668,12 +788,32 @@ export function ImageStackPreview({
     if (!open) return
 
     images.forEach((src) => {
+      const cached = getImageLoadSnapshot(src)
+      if (cached.status === "loaded" && cached.width && cached.height) {
+        const cachedSize = { width: cached.width, height: cached.height }
+
+        setImageSizes((prev) => {
+          const existing = prev[src]
+          if (
+            existing &&
+            existing.width === cachedSize.width &&
+            existing.height === cachedSize.height
+          ) {
+            return prev
+          }
+
+          return { ...prev, [src]: cachedSize }
+        })
+        return
+      }
+
       const image = new window.Image()
       image.referrerPolicy = "no-referrer"
       image.onload = () => {
+        const size = { width: image.naturalWidth, height: image.naturalHeight }
+        markImageLoaded(src, size)
         setImageSizes((prev) => {
           const cached = prev[src]
-          const size = { width: image.naturalWidth, height: image.naturalHeight }
           if (cached && cached.width === size.width && cached.height === size.height) {
             return prev
           }
@@ -682,6 +822,7 @@ export function ImageStackPreview({
         })
       }
       image.onerror = () => {
+        markImageError(src)
         setImageSizes((prev) => {
           const cached = prev[src]
           if (
@@ -699,9 +840,10 @@ export function ImageStackPreview({
       image
         .decode?.()
         .then(() => {
+          const size = { width: image.naturalWidth, height: image.naturalHeight }
+          markImageLoaded(src, size)
           setImageSizes((prev) => {
             const cached = prev[src]
-            const size = { width: image.naturalWidth, height: image.naturalHeight }
             if (cached && cached.width === size.width && cached.height === size.height) {
               return prev
             }
@@ -721,10 +863,10 @@ export function ImageStackPreview({
         handleClose()
       } else if (event.key === "ArrowRight" && canNavigate) {
         event.preventDefault()
-        moveBy(1)
+        moveBy(-1)
       } else if (event.key === "ArrowLeft" && canNavigate) {
         event.preventDefault()
-        moveBy(-1)
+        moveBy(1)
       }
     }
 
@@ -748,13 +890,19 @@ export function ImageStackPreview({
       wheelEvent.preventDefault()
       wheelEvent.stopPropagation()
 
-      const nextScale = clampPreviewScale(rawScale.get() - wheelEvent.deltaY * 0.01)
+      const nextScale = clampInteractiveScale(rawScale.get() - wheelEvent.deltaY * 0.01)
       rawScale.set(nextScale)
     }
 
     window.addEventListener("wheel", onWheel, { passive: false, capture: true })
     return () => window.removeEventListener("wheel", onWheel, { capture: true })
-  }, [open, rawScale])
+  }, [clampInteractiveScale, open, rawScale])
+
+  useEffect(() => {
+    if (!isMemoPanelOpen) return
+
+    rawScale.set(clampInteractiveScale(rawScale.get()))
+  }, [clampInteractiveScale, isMemoPanelOpen, rawScale])
 
   useEffect(() => {
     const handleResize = () => setViewport({ width: window.innerWidth, height: window.innerHeight })
@@ -770,13 +918,50 @@ export function ImageStackPreview({
     })
   }, [scale])
 
+  useEffect(() => {
+    if (!switchAnimation) return
+
+    const timer = window.setTimeout(() => {
+      setSwitchAnimation(null)
+    }, PREVIEW_SWITCH_DURATION_MS)
+
+    return () => window.clearTimeout(timer)
+  }, [switchAnimation])
+
   const stackImages = Array.from({ length: imageCount }, (_, offset) => offset)
     .map((offset) => ({
       src: images[(activeIndex + offset) % imageCount],
       imageIndex: (activeIndex + offset) % imageCount,
       offset,
     }))
-    .filter(({ src }) => Boolean(src))
+    .filter(
+      ({ imageIndex, src }) =>
+        Boolean(src) &&
+        !(switchAnimation?.mode === "outgoing" && imageIndex === switchAnimation.imageIndex)
+    )
+  const outgoingFrameSize =
+    switchAnimation?.mode === "outgoing"
+      ? getPreviewFrameSize(switchAnimation.size, viewport, effectiveFitMode)
+      : null
+  const switchTravelDistance = Math.min(500, Math.max(280, viewport.width * 0.34))
+  const switchLiftDistance = Math.min(110, Math.max(56, viewport.height * 0.1))
+  const incomingStartX = switchAnimation?.mode === "incoming" ? switchTravelDistance * 0.34 : 0
+  const incomingStartY = switchAnimation?.mode === "incoming" ? switchLiftDistance * 1.05 : 0
+  const incomingStartRotate = switchAnimation?.mode === "incoming" ? 3.4 : 0
+  const incomingMidX = switchAnimation?.mode === "incoming" ? switchTravelDistance * 0.88 : 0
+  const incomingMidY = switchAnimation?.mode === "incoming" ? switchLiftDistance * 0.72 : 0
+  const incomingMidRotate = switchAnimation?.mode === "incoming" ? 7.5 : 0
+  const outgoingExitX = switchAnimation?.mode === "outgoing" ? -switchTravelDistance * 0.82 : 0
+  const outgoingExitY = switchAnimation?.mode === "outgoing" ? switchLiftDistance * 0.66 : 0
+  const outgoingExitRotate =
+    switchAnimation?.mode === "outgoing" ? -6.6 * Math.abs(switchAnimation.direction) : 0
+  const outgoingReturnX = switchAnimation?.mode === "outgoing" ? -switchTravelDistance * 0.34 : 0
+  const outgoingReturnY = switchAnimation?.mode === "outgoing" ? switchLiftDistance * 1.05 : 0
+  const outgoingReturnRotate =
+    switchAnimation?.mode === "outgoing" ? -3.4 * Math.abs(switchAnimation.direction) : 0
+  const outgoingPreviewImage = switchAnimation?.mode === "outgoing" ? switchAnimation : null
+  const incomingImageIndex =
+    switchAnimation?.mode === "incoming" ? switchAnimation.imageIndex : null
 
   if (!open || typeof document === "undefined") return null
 
@@ -803,6 +988,8 @@ export function ImageStackPreview({
 
       <motion.div
         data-image-stack-layout-id={layoutId}
+        animate={{ x: memoPanelOffset }}
+        transition={previewOpenTransition}
         className="pointer-events-none relative z-10 flex h-[76vh] w-[92vw] transform-gpu items-center justify-center will-change-transform"
       >
         <motion.div
@@ -837,36 +1024,14 @@ export function ImageStackPreview({
           }}
         >
           <motion.div
-            className="relative flex h-full w-full transform-gpu cursor-grab items-center justify-center active:cursor-grabbing"
-            drag={!isBrowseMode && !isPinching}
-            dragElastic={0}
-            dragMomentum={false}
-            dragTransition={{ bounceStiffness: 500, bounceDamping: 36 }}
-            onDragStart={
-              !isBrowseMode && !isPinching
-                ? () => {
-                    setIsDragging(true)
-                    x.stop()
-                    y.stop()
-                  }
-                : undefined
-            }
-            onDragEnd={
-              !isBrowseMode && !isPinching
-                ? () => {
-                    setTimeout(() => setIsDragging(false), 100)
-                  }
-                : undefined
-            }
+            className="relative flex h-full w-full transform-gpu items-center justify-center"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             onTouchCancel={handleTouchEnd}
             style={{
-              scale,
               touchAction: "none",
               transformOrigin: "50% 50%",
-              ...(!isBrowseMode && !isPinching ? { x, y } : {}),
             }}
           >
             {stackImages
@@ -875,7 +1040,7 @@ export function ImageStackPreview({
               .map(({ src, imageIndex, offset }) => {
                 const isTop = offset === 0
                 const imageSize = imageSizes[src]
-                const frameSize = getPreviewFrameSize(imageSize, viewport, fitMode)
+                const frameSize = getPreviewFrameSize(imageSize, viewport, effectiveFitMode)
                 const originFrameSize = originRect
                   ? { width: originRect.width, height: originRect.height }
                   : frameSize
@@ -900,6 +1065,8 @@ export function ImageStackPreview({
                   (isTop ? rotation + swipeDragRotation : 0)
                 const dragStyle =
                   isTop && isBrowseMode && isDragging && !isPinching ? { x: visualSwipeX } : {}
+                const isIncomingTop = isTop && incomingImageIndex === imageIndex
+                const isOutgoingRevealTop = isTop && switchAnimation?.mode === "outgoing"
 
                 return (
                   <motion.div
@@ -933,13 +1100,35 @@ export function ImageStackPreview({
                     }
                     onDragEnd={isTop && isBrowseMode && !isPinching ? handleSwipeEnd : undefined}
                     initial={shouldReduceMotion ? false : originFrameMotion}
-                    animate={{
-                      ...previewFrameMotion,
-                      scale: restingScale,
-                      x: restingX,
-                      y: restingY,
-                      rotate: restingRotate,
-                    }}
+                    animate={
+                      isIncomingTop
+                        ? {
+                            ...previewFrameMotion,
+                            scale: [0.84, 0.96, restingScale],
+                            x: [incomingStartX, incomingMidX, restingX],
+                            y: [incomingStartY, incomingMidY, restingY],
+                            rotate: [incomingStartRotate, incomingMidRotate, restingRotate],
+                          }
+                        : isOutgoingRevealTop
+                          ? {
+                              ...previewFrameMotion,
+                              scale: [0.9, 0.98, restingScale],
+                              x: [
+                                switchTravelDistance * 0.16,
+                                switchTravelDistance * 0.04,
+                                restingX,
+                              ],
+                              y: [switchLiftDistance * 0.55, switchLiftDistance * 0.12, restingY],
+                              rotate: [3.2, 0.8, restingRotate],
+                            }
+                          : {
+                              ...previewFrameMotion,
+                              scale: restingScale,
+                              x: restingX,
+                              y: restingY,
+                              rotate: restingRotate,
+                            }
+                    }
                     exit={
                       shouldReduceMotion
                         ? undefined
@@ -952,7 +1141,9 @@ export function ImageStackPreview({
                             transition: previewCloseTransition,
                           }
                     }
-                    transition={stackTransition}
+                    transition={
+                      isIncomingTop || isOutgoingRevealTop ? switchTransition : stackTransition
+                    }
                     className="pointer-events-auto absolute flex items-center justify-center"
                     style={{
                       left: "50%",
@@ -963,36 +1154,149 @@ export function ImageStackPreview({
                       ...dragStyle,
                     }}
                   >
-                    <PreviewImage
-                      src={src}
-                      alt={`图片 ${imageIndex + 1}`}
-                      fitMode={fitMode}
-                      useCoverMode={isOpeningCover || isClosing}
-                      onLoadSize={
-                        isTop
-                          ? (size) => {
-                              setImageSizes((prev) => {
-                                const cached = prev[src]
-                                if (
-                                  cached &&
-                                  cached.width === size.width &&
-                                  cached.height === size.height
-                                ) {
-                                  return prev
-                                }
-
-                                return { ...prev, [src]: size }
-                              })
+                    <motion.div
+                      className={cn(
+                        "flex h-full w-full items-center justify-center",
+                        isTop &&
+                          !isBrowseMode &&
+                          !isPinching &&
+                          "cursor-grab active:cursor-grabbing"
+                      )}
+                      drag={isTop && !isBrowseMode && !isPinching}
+                      dragElastic={0}
+                      dragMomentum={false}
+                      dragTransition={{ bounceStiffness: 500, bounceDamping: 36 }}
+                      onDragStart={
+                        isTop && !isBrowseMode && !isPinching
+                          ? () => {
+                              setIsDragging(true)
+                              x.stop()
+                              y.stop()
                             }
                           : undefined
                       }
-                    />
+                      onDragEnd={
+                        isTop && !isBrowseMode && !isPinching
+                          ? () => {
+                              setTimeout(() => setIsDragging(false), 100)
+                            }
+                          : undefined
+                      }
+                      style={
+                        isTop
+                          ? {
+                              scale,
+                              x: !isBrowseMode && !isPinching ? x : undefined,
+                              y: !isBrowseMode && !isPinching ? y : undefined,
+                              transformOrigin: "50% 50%",
+                            }
+                          : undefined
+                      }
+                    >
+                      <PreviewImage
+                        src={src}
+                        alt={`图片 ${imageIndex + 1}`}
+                        fitMode={fitMode}
+                        useCoverMode={isOpeningCover || isClosing}
+                        onLoadSize={
+                          isTop
+                            ? (size) => {
+                                setImageSizes((prev) => {
+                                  const cached = prev[src]
+                                  if (
+                                    cached &&
+                                    cached.width === size.width &&
+                                    cached.height === size.height
+                                  ) {
+                                    return prev
+                                  }
+
+                                  return { ...prev, [src]: size }
+                                })
+                              }
+                            : undefined
+                        }
+                      />
+                    </motion.div>
                   </motion.div>
                 )
               })}
+            {outgoingPreviewImage && outgoingFrameSize && (
+              <motion.div
+                key={`outgoing-${outgoingPreviewImage.imageIndex}-${outgoingPreviewImage.src}`}
+                initial={{
+                  width: outgoingFrameSize.width,
+                  height: outgoingFrameSize.height,
+                  marginLeft: -outgoingFrameSize.width / 2,
+                  marginTop: -outgoingFrameSize.height / 2,
+                  opacity: 1,
+                  scale: 1,
+                  x: 0,
+                  y: 0,
+                  rotate: 0,
+                }}
+                animate={{
+                  width: outgoingFrameSize.width,
+                  height: outgoingFrameSize.height,
+                  marginLeft: -outgoingFrameSize.width / 2,
+                  marginTop: -outgoingFrameSize.height / 2,
+                  opacity: [1, 0.96, 0],
+                  scale: [1, 0.97, 0.84],
+                  x: [0, outgoingExitX, outgoingReturnX],
+                  y: [0, outgoingExitY, outgoingReturnY],
+                  rotate: [0, outgoingExitRotate, outgoingReturnRotate],
+                }}
+                transition={switchTransition}
+                className="pointer-events-none absolute left-1/2 top-1/2 z-[60] flex items-center justify-center"
+                style={{
+                  touchAction: "none",
+                  transformOrigin: "50% 50%",
+                }}
+              >
+                <PreviewImage
+                  src={outgoingPreviewImage.src}
+                  alt={`图片 ${outgoingPreviewImage.imageIndex + 1}`}
+                  fitMode={fitMode}
+                  useCoverMode={false}
+                />
+              </motion.div>
+            )}
           </motion.div>
         </motion.div>
       </motion.div>
+
+      <AnimatePresence>
+        {hasMemoContent && isMemoPanelOpen && (
+          <motion.aside
+            initial={{ opacity: 0, x: 28, scale: 0.98 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 18, scale: 0.98 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
+            className="pointer-events-auto absolute top-1/2 right-[6vw] z-20 flex max-h-[72vh] w-[min(400px,32vw)] -translate-y-1/2 flex-col text-left"
+          >
+            <div className="mb-5">
+              <div className="min-w-0">
+                <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-primary/80">
+                  Memo Content
+                </p>
+                <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  {memo?.memoNumber ? <span>#{memo.memoNumber}</span> : <span>正文</span>}
+                  {memoCreatedDate && (
+                    <span className="truncate font-mono text-[11px] font-normal text-muted-foreground">
+                      {memoCreatedDate}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <MemoContent
+              content={memoContent}
+              disablePreview
+              className="min-h-0 overflow-y-auto pr-2 text-[15px] leading-7 text-foreground/78 [&_.link-preview-card]:my-2 [&_.link-preview-card]:max-w-full"
+            />
+          </motion.aside>
+        )}
+      </AnimatePresence>
 
       {showSwipeHint && (
         <motion.div
@@ -1073,7 +1377,7 @@ export function ImageStackPreview({
 
         <button
           type="button"
-          onClick={() => rawScale.set(clampPreviewScale(rawScale.get() - 0.25))}
+          onClick={() => rawScale.set(clampInteractiveScale(rawScale.get() - 0.25))}
           className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
           title="缩小"
         >
@@ -1084,7 +1388,7 @@ export function ImageStackPreview({
         </span>
         <button
           type="button"
-          onClick={() => rawScale.set(clampPreviewScale(rawScale.get() + 0.25))}
+          onClick={() => rawScale.set(clampInteractiveScale(rawScale.get() + 0.25))}
           className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
           title="放大"
         >
@@ -1093,15 +1397,25 @@ export function ImageStackPreview({
         <button
           type="button"
           onClick={() => {
+            if (isMemoPanelOpen) return
             setFitMode((value) => (value === "fit" ? "original" : "fit"))
             resetTransform()
           }}
+          disabled={isMemoPanelOpen}
           className={
-            fitMode === "original"
-              ? "flex h-8 w-8 items-center justify-center rounded-md text-primary transition-all hover:bg-muted hover:text-primary active:scale-95"
-              : "flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
+            isMemoPanelOpen
+              ? "flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-md text-foreground/25"
+              : fitMode === "original"
+                ? "flex h-8 w-8 items-center justify-center rounded-md text-primary transition-all hover:bg-muted hover:text-primary active:scale-95"
+                : "flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
           }
-          title={fitMode === "fit" ? "原始尺寸" : "适应页面"}
+          title={
+            isMemoPanelOpen
+              ? "查看正文时不可用原始尺寸"
+              : fitMode === "fit"
+                ? "原始尺寸"
+                : "适应页面"
+          }
         >
           <HugeiconsIcon icon={ZoomInAreaIcon} size={15} strokeWidth={2} />
         </button>
@@ -1116,6 +1430,24 @@ export function ImageStackPreview({
         >
           <HugeiconsIcon icon={RotateTopRightIcon} size={15} strokeWidth={2} />
         </button>
+        {hasMemoContent && (
+          <>
+            <div className="mx-1 h-3.5 w-px bg-border" />
+            <button
+              type="button"
+              onClick={handleToggleMemoPanel}
+              className={
+                isMemoPanelOpen
+                  ? "flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary transition-all hover:bg-primary/14 active:scale-95"
+                  : "flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
+              }
+              title={isMemoPanelOpen ? "隐藏正文" : "查看正文"}
+              aria-label={isMemoPanelOpen ? "隐藏正文" : "查看正文"}
+            >
+              <HugeiconsIcon icon={BookOpen01Icon} size={15} strokeWidth={2} />
+            </button>
+          </>
+        )}
       </motion.div>
 
       <motion.button

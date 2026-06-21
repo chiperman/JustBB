@@ -215,6 +215,11 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
             images={previewItem.images}
             layoutId={`image-stack-${previewItem.id}`}
             originRect={previewOriginRect}
+            memo={{
+              content: previewItem.content,
+              memoNumber: previewItem.memo_number,
+              createdAt: previewItem.created_at,
+            }}
             open={!!previewItem}
             onClose={() => {
               setReturningPreviewId(previewItem.id)

@@ -11,12 +11,17 @@ import {
 
 interface MemoImageGridProps {
   images: string[]
+  memo?: {
+    content: string
+    memoNumber?: number | string | null
+    createdAt?: string | Date | null
+  }
 }
 
 const THUMBNAIL_REVEAL_BEFORE_EXIT_MS = 90
 const THUMBNAIL_REVEAL_DELAY_MS = IMAGE_STACK_RETURN_DURATION_MS - THUMBNAIL_REVEAL_BEFORE_EXIT_MS
 
-export function MemoImageGrid({ images }: MemoImageGridProps) {
+export function MemoImageGrid({ images, memo }: MemoImageGridProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [isReturningPreview, setIsReturningPreview] = useState(false)
   const [previewOriginRect, setPreviewOriginRect] = useState<ImageStackOriginRect | null>(null)
@@ -71,6 +76,7 @@ export function MemoImageGrid({ images }: MemoImageGridProps) {
             images={images}
             layoutId={layoutId}
             originRect={previewOriginRect}
+            memo={memo}
             open={isPreviewOpen}
             onClose={() => {
               setIsReturningPreview(true)

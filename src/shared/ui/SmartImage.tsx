@@ -5,6 +5,11 @@ import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/shared/lib/utils"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Image01Icon } from "@hugeicons/core-free-icons"
+import {
+  markImageError,
+  markImageLoaded,
+  useImageLoadState,
+} from "@/shared/hooks/useImageLoadState"
 
 interface SmartImageProps extends Omit<
   React.ImgHTMLAttributes<HTMLImageElement>,
@@ -15,7 +20,7 @@ interface SmartImageProps extends Omit<
   isFullPage?: boolean
 }
 
-function ImageErrorState({
+export function ImageErrorState({
   isFullPage = false,
   className,
 }: {
@@ -66,18 +71,11 @@ export function SmartImage({
   isFullPage,
   ...props
 }: SmartImageProps) {
-  const [status, setStatus] = React.useState<"loading" | "error" | "success">(
-    src ? "loading" : "error"
-  )
-
-  // 当 src 变化时重置状态
-  React.useEffect(() => {
-    if (src) {
-      setStatus("loading")
-    } else {
-      setStatus("error")
-    }
-  }, [src])
+  const imageSrc = typeof src === "string" ? src : undefined
+  const imageState = useImageLoadState(imageSrc)
+  const isLoaded = imageState.status === "loaded"
+  const isError = imageState.status === "error"
+  const isLoading = !isError && !isLoaded
 
   return (
     <div
@@ -87,7 +85,7 @@ export function SmartImage({
       )}
     >
       <AnimatePresence>
-        {status === "loading" && (
+        {isLoading && (
           <motion.div
             key="loading"
             initial={{ opacity: 0 }}
@@ -105,33 +103,36 @@ export function SmartImage({
           </motion.div>
         )}
 
-        {status === "error" && (
-          <ImageErrorState isFullPage={isFullPage} className={fallbackClassName} />
-        )}
+        {isError && <ImageErrorState isFullPage={isFullPage} className={fallbackClassName} />}
       </AnimatePresence>
 
-      {src && (
+      {imageSrc && (
         <motion.div
           key="image"
           initial={{ opacity: 0 }}
-          animate={{ opacity: status === "success" ? 1 : 0 }}
+          animate={{ opacity: isLoaded ? 1 : 0 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
           className={cn(
             "w-full",
             containerClassName?.includes("h-auto") ? "h-auto" : "h-full",
-            status !== "success" && "invisible"
+            !isLoaded && "invisible"
           )}
         >
           <img
-            src={src}
+            src={imageSrc}
             alt={alt}
             referrerPolicy="no-referrer"
-            onLoad={() => setStatus("success")}
-            onError={() => setStatus("error")}
+            onLoad={(event) => {
+              markImageLoaded(imageSrc, {
+                width: event.currentTarget.naturalWidth,
+                height: event.currentTarget.naturalHeight,
+              })
+            }}
+            onError={() => markImageError(imageSrc)}
             className={cn(
               "w-full transition-transform duration-700",
               containerClassName?.includes("h-auto") ? "h-auto" : "h-full",
-              status === "success" ? "scale-100" : "scale-105",
+              isLoaded ? "scale-100" : "scale-105",
               className
             )}
             {...props}

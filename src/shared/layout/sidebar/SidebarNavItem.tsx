@@ -12,9 +12,18 @@ interface SidebarNavItemProps {
   isActive: boolean
   isCollapsed: boolean
   onClick: (href: string) => void
+  onMouseEnter?: (href: string) => void
+  onMouseLeave?: () => void
 }
 
-export function SidebarNavItem({ item, isActive, isCollapsed, onClick }: SidebarNavItemProps) {
+export function SidebarNavItem({
+  item,
+  isActive,
+  isCollapsed,
+  onClick,
+  onMouseEnter,
+  onMouseLeave,
+}: SidebarNavItemProps) {
   const { animationMultiplier } = useLayout()
 
   const labelTransition = {
@@ -31,6 +40,8 @@ export function SidebarNavItem({ item, isActive, isCollapsed, onClick }: Sidebar
           event.preventDefault()
           onClick(item.href)
         }}
+        onMouseEnter={() => onMouseEnter?.(item.href)}
+        onMouseLeave={onMouseLeave}
         style={{
           transitionDuration: `${200 * animationMultiplier}ms`,
         }}

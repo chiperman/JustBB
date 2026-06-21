@@ -3,6 +3,9 @@
 import { useState, useEffect, ComponentType } from "react"
 import { getMemosWithLocations } from "@/server/actions/memos/query"
 import { locationCache, type MapMarker } from "@/shared/lib/location-cache"
+import { groupMemosByLocation } from "@/shared/lib/map-markers"
+import { getMapCacheKey } from "@/shared/lib/page-cache-keys"
+import { usePageDataCache } from "@/state/PageDataCache"
 import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
 
 // 模块级预加载
@@ -18,18 +21,31 @@ interface MapViewProps {
 
 export function useMapMemos() {
   const { unlockedMemoIds } = useUnlockedMemos()
-  const [markers, setMarkers] = useState<MapMarker[]>([])
+  const { getCache, setCache } = usePageDataCache()
+  const cacheKey = getMapCacheKey(unlockedMemoIds)
+  const cached = getCache(cacheKey)
+  const cachedMarkers = cached?.markers as MapMarker[] | undefined
+  const [markers, setMarkers] = useState<MapMarker[]>(cachedMarkers ?? [])
   const [isLoading, setIsLoading] = useState(true)
-  const [MapView, setMapView] = useState<ComponentType<MapViewProps> | null>(
-    null
-  )
+  const [MapView, setMapView] = useState<ComponentType<MapViewProps> | null>(null)
 
   useEffect(() => {
     let isMounted = true
 
     const load = async () => {
+      const cachedData = getCache(cacheKey)
+      const cachedMarkers = cachedData?.markers as MapMarker[] | undefined
+      if (cachedMarkers) {
+        setMarkers(cachedMarkers)
+        const mapModule = await mapViewPromise
+        if (!isMounted) return
+
+        setMapView(() => mapModule.MapView)
+        setIsLoading(false)
+      }
+
       const hasCache =
-        locationCache.getInitialized() && unlockedMemoIds.length === 0
+        !cachedMarkers && locationCache.getInitialized() && unlockedMemoIds.length === 0
       if (hasCache) {
         setMarkers(locationCache.getMarkers())
       }
@@ -44,22 +60,10 @@ export function useMapMemos() {
       setMapView(() => mapModule.MapView)
 
       if (result.success && isMounted) {
-        const groupedMap = new Map<string, MapMarker>()
         const data = result.data || []
-
-        data.forEach((memo) => {
-          memo.locations.forEach((loc) => {
-            const key = `${loc.lat.toFixed(6)},${loc.lng.toFixed(6)}`
-            if (groupedMap.has(key)) {
-              groupedMap.get(key)!.items.push(memo)
-            } else {
-              groupedMap.set(key, { ...loc, items: [memo] })
-            }
-          })
-        })
-
-        const allMarkers = Array.from(groupedMap.values())
+        const allMarkers = groupMemosByLocation(data)
         locationCache.setMarkers(allMarkers)
+        setCache(cacheKey, { markers: allMarkers, memos: data })
         setMarkers(allMarkers)
       }
 
@@ -74,7 +78,7 @@ export function useMapMemos() {
       isMounted = false
       setIsLoading(true)
     }
-  }, [unlockedMemoIds])
+  }, [cacheKey, getCache, setCache, unlockedMemoIds])
 
   return { markers, isLoading, MapView }
 }

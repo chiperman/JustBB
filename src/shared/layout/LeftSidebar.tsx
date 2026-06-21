@@ -10,6 +10,7 @@ import { SidebarSettings } from "./SidebarSettings"
 import { motion } from "framer-motion"
 
 import { useSidebarNavigation } from "@/shared/hooks/useSidebarNavigation"
+import { useSidebarPagePrefetch } from "@/shared/hooks/useSidebarPagePrefetch"
 import { SidebarNavItem } from "./sidebar/SidebarNavItem"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { useLayout } from "@/state/LayoutContext"
@@ -49,6 +50,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
   const hasMounted = useHasMounted()
 
   const { navItems, currentView, handleNavigate } = useSidebarNavigation()
+  const { schedulePrefetch, cancelPrefetch } = useSidebarPagePrefetch()
   const { animationMultiplier } = useLayout()
 
   const sidebarTransition = {
@@ -167,6 +169,8 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
             }
             isCollapsed={effectiveIsCollapsed}
             onClick={(href) => handleNavigate(href, isMobile, onClose)}
+            onMouseEnter={schedulePrefetch}
+            onMouseLeave={cancelPrefetch}
           />
         ))}
       </motion.nav>

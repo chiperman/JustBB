@@ -4,10 +4,13 @@ import { useEffect, useState, useRef, useCallback } from "react"
 import { GalleryGrid } from "./components/GalleryGrid"
 import { Memo } from "@/types/memo"
 import { getGalleryMemos } from "@/server/actions/memos/query"
+import { getGalleryCacheKey } from "@/shared/lib/page-cache-keys"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Image01Icon as GalleryIcon, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { motion } from "framer-motion"
 import { ContextPageShell, ContextPageHeader } from "@/shared/layout/ContextPageShell"
+import { usePageDataCache } from "@/state/PageDataCache"
+import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
 
 interface GalleryPageContentProps {
   memos?: Memo[]
@@ -18,33 +21,65 @@ const INITIAL_PAGE_SIZE = 20
 const LOAD_MORE_PAGE_SIZE = 30
 
 export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: GalleryPageContentProps) {
-  const [memos, setMemos] = useState<Memo[]>(initialMemos)
+  const { getCache, setCache } = usePageDataCache()
+  const { unlockedMemoIds } = useUnlockedMemos()
+  const cacheKey = getGalleryCacheKey(unlockedMemoIds)
+  const cached = getCache(cacheKey)
+  const bootMemos = initialMemos.length > 0 ? initialMemos : (cached?.memos as Memo[] | undefined)
+  const [memos, setMemos] = useState<Memo[]>(bootMemos ?? EMPTY_MEMOS)
   const [isLoading, setIsLoading] = useState(false)
-  const [hasMore, setHasMore] = useState(initialMemos.length >= INITIAL_PAGE_SIZE)
-  const [offset, setOffset] = useState(initialMemos.length)
+  const [hasMore, setHasMore] = useState(
+    typeof cached?.hasMore === "boolean"
+      ? cached.hasMore
+      : (bootMemos?.length ?? 0) >= INITIAL_PAGE_SIZE
+  )
+  const [offset, setOffset] = useState(bootMemos?.length ?? 0)
   const observerTarget = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (initialMemos.length === 0) return
+
     setMemos(initialMemos)
     setHasMore(initialMemos.length >= INITIAL_PAGE_SIZE)
     setOffset(initialMemos.length)
+    setCache(cacheKey, {
+      memos: initialMemos,
+      hasMore: initialMemos.length >= INITIAL_PAGE_SIZE,
+    })
     setIsLoading(false)
-  }, [initialMemos])
+  }, [cacheKey, initialMemos, setCache])
 
   useEffect(() => {
     let cancelled = false
 
     const loadInitialMemos = async () => {
+      const cachedData = getCache(cacheKey)
+      const cachedMemos = cachedData?.memos as Memo[] | undefined
+      if (cachedMemos) {
+        const cachedHasMore = cachedData?.hasMore
+        setMemos(cachedMemos)
+        setHasMore(
+          typeof cachedHasMore === "boolean"
+            ? cachedHasMore
+            : cachedMemos.length >= INITIAL_PAGE_SIZE
+        )
+        setOffset(cachedMemos.length)
+        setIsLoading(false)
+        return
+      }
+
       setIsLoading(true)
       try {
-        const res = await getGalleryMemos(INITIAL_PAGE_SIZE, 0)
+        const res = await getGalleryMemos(INITIAL_PAGE_SIZE, 0, unlockedMemoIds)
         const nextMemos = res.success ? res.data || [] : []
+        const nextHasMore = nextMemos.length >= INITIAL_PAGE_SIZE
 
         if (cancelled) return
 
         setMemos(nextMemos)
-        setHasMore(nextMemos.length >= INITIAL_PAGE_SIZE)
+        setHasMore(nextHasMore)
         setOffset(nextMemos.length)
+        setCache(cacheKey, { memos: nextMemos, hasMore: nextHasMore })
       } catch (err) {
         console.error("Failed to bootstrap gallery memos:", err)
         if (!cancelled) {
@@ -62,17 +97,18 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [cacheKey, getCache, setCache, unlockedMemoIds])
 
   const loadMore = useCallback(async () => {
     if (isLoading || !hasMore) return
 
     setIsLoading(true)
     try {
-      const res = await getGalleryMemos(LOAD_MORE_PAGE_SIZE, offset)
+      const res = await getGalleryMemos(LOAD_MORE_PAGE_SIZE, offset, unlockedMemoIds)
       const nextMemos = res.success ? res.data || [] : []
+      const nextHasMore = nextMemos.length >= LOAD_MORE_PAGE_SIZE
 
-      if (nextMemos.length < LOAD_MORE_PAGE_SIZE) {
+      if (!nextHasMore) {
         setHasMore(false)
       }
 
@@ -80,7 +116,9 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
         setMemos((prev) => {
           const existingIds = new Set(prev.map((m) => m.id))
           const uniqueNew = nextMemos.filter((m) => !existingIds.has(m.id))
-          return [...prev, ...uniqueNew]
+          const merged = [...prev, ...uniqueNew]
+          setCache(cacheKey, { memos: merged, hasMore: nextHasMore })
+          return merged
         })
         setOffset((prev) => prev + nextMemos.length)
       }
@@ -90,7 +128,7 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
     } finally {
       setIsLoading(false)
     }
-  }, [isLoading, hasMore, offset])
+  }, [cacheKey, isLoading, hasMore, offset, setCache, unlockedMemoIds])
 
   useEffect(() => {
     const target = observerTarget.current

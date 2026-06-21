@@ -1,10 +1,15 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Memo } from "@/types/memo"
+import { AnimatePresence } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Image01Icon as GalleryIcon } from "@hugeicons/core-free-icons"
-import { ImageStackPreview, ImageStackThumbnail } from "@/shared/ui/ImageStack"
+import {
+  type ImageStackOriginRect,
+  ImageStackPreview,
+  ImageStackThumbnail,
+} from "@/shared/ui/ImageStack"
 
 interface GalleryGridProps {
   memos: Memo[]
@@ -12,6 +17,29 @@ interface GalleryGridProps {
 
 type GalleryMemoItem = Memo & {
   images: string[]
+}
+
+type GalleryAspectRatioCache = Record<
+  string,
+  {
+    src: string
+    aspectRatio: string
+  }
+>
+
+const GALLERY_FALLBACK_ASPECT_RATIO = "1.18 / 1"
+const GALLERY_MIN_ASPECT_RATIO = 0.78
+const GALLERY_MAX_ASPECT_RATIO = 1.75
+
+function getGalleryAspectRatio(width: number, height: number): string {
+  if (width <= 0 || height <= 0) return GALLERY_FALLBACK_ASPECT_RATIO
+
+  const ratio = Math.min(
+    Math.max(width / height, GALLERY_MIN_ASPECT_RATIO),
+    GALLERY_MAX_ASPECT_RATIO
+  )
+
+  return `${ratio} / 1`
 }
 
 function formatDate(date: Date | string): string {
@@ -62,6 +90,9 @@ function MemoMeta({ item }: { item: GalleryMemoItem }) {
 
 export function GalleryGrid({ memos }: GalleryGridProps) {
   const [previewItem, setPreviewItem] = useState<GalleryMemoItem | null>(null)
+  const [returningPreviewId, setReturningPreviewId] = useState<string | null>(null)
+  const [previewOriginRect, setPreviewOriginRect] = useState<ImageStackOriginRect | null>(null)
+  const [aspectRatios, setAspectRatios] = useState<GalleryAspectRatioCache>({})
 
   const galleryItems = useMemo<GalleryMemoItem[]>(
     () =>
@@ -73,6 +104,54 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
         .filter((memo) => memo.images.length > 0),
     [memos]
   )
+
+  useEffect(() => {
+    const missingItems = galleryItems.filter(
+      (item) => item.images[0] && aspectRatios[item.id]?.src !== item.images[0]
+    )
+    if (missingItems.length === 0) return
+
+    let isMounted = true
+
+    const loadAspectRatios = async () => {
+      const entries = await Promise.all(
+        missingItems.map(
+          (item) =>
+            new Promise<[string, GalleryAspectRatioCache[string]]>((resolve) => {
+              const src = item.images[0]
+              const image = new window.Image()
+              image.referrerPolicy = "no-referrer"
+              image.onload = () => {
+                resolve([
+                  item.id,
+                  {
+                    src,
+                    aspectRatio: getGalleryAspectRatio(image.naturalWidth, image.naturalHeight),
+                  },
+                ])
+              }
+              image.onerror = () => {
+                resolve([item.id, { src, aspectRatio: GALLERY_FALLBACK_ASPECT_RATIO }])
+              }
+              image.src = src
+            })
+        )
+      )
+
+      if (!isMounted) return
+
+      setAspectRatios((prev) => ({
+        ...prev,
+        ...Object.fromEntries(entries),
+      }))
+    }
+
+    void loadAspectRatios()
+
+    return () => {
+      isMounted = false
+    }
+  }, [aspectRatios, galleryItems])
 
   if (!memos || memos.length === 0) {
     return (
@@ -89,15 +168,19 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
   }
 
   return (
-    <div className="columns-1 gap-6 md:columns-2 lg:columns-3 xl:columns-4">
+    <div className="columns-1 gap-8 md:columns-2 lg:columns-3 lg:gap-10 xl:columns-4 xl:gap-12">
       {galleryItems.map((item) => (
-        <div key={item.id} className="mb-7 break-inside-avoid pb-3 pr-4">
+        <div key={item.id} className="mb-9 break-inside-avoid">
           <ImageStackThumbnail
             images={item.images}
             layoutId={`image-stack-${item.id}`}
             alt="Memo multimedia content"
-            preserveNaturalAspectRatio
-            onOpen={() => setPreviewItem(item)}
+            aspectRatio={aspectRatios[item.id]?.aspectRatio || GALLERY_FALLBACK_ASPECT_RATIO}
+            onOpen={(originRect) => {
+              setPreviewOriginRect(originRect)
+              setPreviewItem(item)
+            }}
+            isPreviewing={previewItem?.id === item.id || returningPreviewId === item.id}
             overlay={
               <>
                 <CardOverlay />
@@ -108,14 +191,26 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
         </div>
       ))}
 
-      {previewItem && (
-        <ImageStackPreview
-          images={previewItem.images}
-          layoutId={`image-stack-${previewItem.id}`}
-          open={!!previewItem}
-          onClose={() => setPreviewItem(null)}
-        />
-      )}
+      <AnimatePresence
+        onExitComplete={() => {
+          setReturningPreviewId(null)
+          setPreviewOriginRect(null)
+        }}
+      >
+        {previewItem && (
+          <ImageStackPreview
+            key={previewItem.id}
+            images={previewItem.images}
+            layoutId={`image-stack-${previewItem.id}`}
+            originRect={previewOriginRect}
+            open={!!previewItem}
+            onClose={() => {
+              setReturningPreviewId(previewItem.id)
+              setPreviewItem(null)
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

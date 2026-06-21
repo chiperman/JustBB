@@ -1,7 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { ImageStackPreview, ImageStackThumbnail } from "@/shared/ui/ImageStack"
+import { AnimatePresence } from "framer-motion"
+import {
+  type ImageStackOriginRect,
+  ImageStackPreview,
+  ImageStackThumbnail,
+} from "@/shared/ui/ImageStack"
 
 interface MemoImageGridProps {
   images: string[]
@@ -9,6 +14,8 @@ interface MemoImageGridProps {
 
 export function MemoImageGrid({ images }: MemoImageGridProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [isReturningPreview, setIsReturningPreview] = useState(false)
+  const [previewOriginRect, setPreviewOriginRect] = useState<ImageStackOriginRect | null>(null)
 
   if (!images || images.length === 0) return null
 
@@ -23,7 +30,11 @@ export function MemoImageGrid({ images }: MemoImageGridProps) {
           layoutId={layoutId}
           alt="Memo attachment"
           aspectRatio="4 / 3"
-          onOpen={() => setIsPreviewOpen(true)}
+          onOpen={(originRect) => {
+            setPreviewOriginRect(originRect)
+            setIsPreviewOpen(true)
+          }}
+          isPreviewing={isPreviewOpen || isReturningPreview}
           className="cursor-zoom-in"
           imageContainerClassName="min-h-[150px]"
           badge={
@@ -36,12 +47,25 @@ export function MemoImageGrid({ images }: MemoImageGridProps) {
         />
       </div>
 
-      <ImageStackPreview
-        images={images}
-        layoutId={layoutId}
-        open={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
-      />
+      <AnimatePresence
+        onExitComplete={() => {
+          setIsReturningPreview(false)
+          setPreviewOriginRect(null)
+        }}
+      >
+        {isPreviewOpen && (
+          <ImageStackPreview
+            images={images}
+            layoutId={layoutId}
+            originRect={previewOriginRect}
+            open={isPreviewOpen}
+            onClose={() => {
+              setIsReturningPreview(true)
+              setIsPreviewOpen(false)
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

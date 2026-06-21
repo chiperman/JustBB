@@ -1,6 +1,14 @@
 "use client"
 
-import { ReactNode, useCallback, useEffect, useRef, useState } from "react"
+import {
+  type ReactNode,
+  type TouchEvent as ReactTouchEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+} from "react"
 import { createPortal } from "react-dom"
 import {
   motion,
@@ -31,8 +39,35 @@ const SWIPE_DISTANCE_THRESHOLD = 140
 const QUICK_SWIPE_DISTANCE = 44
 const QUICK_SWIPE_VELOCITY = 360
 const STACK_FULL_SPREAD_LAYERS = 5
-const THUMBNAIL_MIN_ASPECT_RATIO = 0.82
-const THUMBNAIL_MAX_ASPECT_RATIO = 2.1
+const THUMBNAIL_MIN_ASPECT_RATIO = 0.96
+const THUMBNAIL_MAX_ASPECT_RATIO = 1.55
+const PINCH_ROTATION_THRESHOLD = 3
+export const IMAGE_STACK_RETURN_DURATION_MS = 420
+const PREVIEW_FALLBACK_IMAGE_SIZE = { width: 560, height: 420 }
+
+export interface ImageStackOriginRect {
+  top: number
+  left: number
+  width: number
+  height: number
+  imageWidth?: number
+  imageHeight?: number
+}
+
+interface TouchGestureState {
+  startDistance: number
+  startAngle: number
+  startScale: number
+  startRotation: number
+  hasRotated: boolean
+}
+
+interface TouchPair {
+  readonly [index: number]: {
+    clientX: number
+    clientY: number
+  }
+}
 
 function getStackSpread(offset: number) {
   const visibleSpread = Math.min(offset, STACK_FULL_SPREAD_LAYERS)
@@ -59,6 +94,10 @@ function getImageRotation(src: string, imageIndex: number) {
   return direction * angle
 }
 
+function getStackOffsetDirection(index: number) {
+  return index % 2 === 0 ? 1 : -1
+}
+
 function getPreviewImageRotation(src: string, imageIndex: number, imageCount: number) {
   return imageCount <= 1 ? 0 : getImageRotation(src, imageIndex)
 }
@@ -74,6 +113,58 @@ function getClampedAspectRatio(width: number, height: number) {
   return `${ratio} / 1`
 }
 
+function clampPreviewScale(value: number) {
+  return Math.min(Math.max(value, 0.25), 3)
+}
+
+function getPreviewFrameSize(
+  imageSize: { width: number; height: number } | null | undefined,
+  viewport: { width: number; height: number },
+  fitMode: FitMode
+) {
+  if (!imageSize) return PREVIEW_FALLBACK_IMAGE_SIZE
+
+  const fitScale =
+    fitMode === "fit"
+      ? Math.min(
+          (viewport.width * 0.82) / imageSize.width,
+          (viewport.height * 0.72) / imageSize.height,
+          1
+        )
+      : 1
+
+  return {
+    width: imageSize.width * fitScale,
+    height: imageSize.height * fitScale,
+  }
+}
+
+function getTouchDistance(touches: TouchPair) {
+  const [firstTouch, secondTouch] = [touches[0], touches[1]]
+
+  return Math.hypot(
+    secondTouch.clientX - firstTouch.clientX,
+    secondTouch.clientY - firstTouch.clientY
+  )
+}
+
+function getTouchAngle(touches: TouchPair) {
+  const [firstTouch, secondTouch] = [touches[0], touches[1]]
+
+  return (
+    (Math.atan2(
+      secondTouch.clientY - firstTouch.clientY,
+      secondTouch.clientX - firstTouch.clientX
+    ) *
+      180) /
+    Math.PI
+  )
+}
+
+function getShortestAngleDelta(currentAngle: number, startAngle: number) {
+  return ((((currentAngle - startAngle) % 360) + 540) % 360) - 180
+}
+
 interface ImageStackThumbnailProps {
   images: string[]
   layoutId: string
@@ -83,14 +174,16 @@ interface ImageStackThumbnailProps {
   className?: string
   imageContainerClassName?: string
   imageClassName?: string
+  isPreviewing?: boolean
   badge?: ReactNode
   overlay?: ReactNode
-  onOpen: () => void
+  onOpen: (originRect: ImageStackOriginRect | null) => void
 }
 
 interface ImageStackPreviewProps {
   images: string[]
   layoutId: string
+  originRect?: ImageStackOriginRect | null
   open: boolean
   onClose: () => void
 }
@@ -99,32 +192,29 @@ function PreviewImage({
   src,
   alt,
   fitMode,
+  useCoverMode,
   onLoadSize,
 }: {
   src: string
   alt: string
   fitMode: FitMode
+  useCoverMode?: boolean
   onLoadSize?: (size: { width: number; height: number }) => void
 }) {
   const [status, setStatus] = useState<PreviewImageStatus>("loading")
 
-  const imageClassName =
-    fitMode === "fit"
-      ? "max-h-[72vh] max-w-[82vw] select-none rounded-lg object-contain shadow-[0_18px_48px_rgba(29,29,27,0.16)] dark:shadow-[0_18px_48px_rgba(0,0,0,0.28)]"
-      : "max-h-none max-w-none select-none rounded-lg object-contain shadow-[0_18px_48px_rgba(29,29,27,0.16)] dark:shadow-[0_18px_48px_rgba(0,0,0,0.28)]"
+  const imageClassName = useCoverMode
+    ? "h-full w-full select-none rounded-xl object-cover shadow-[0_18px_48px_rgba(29,29,27,0.16)] dark:shadow-[0_18px_48px_rgba(0,0,0,0.28)]"
+    : fitMode === "fit"
+      ? "h-full w-full max-h-[72vh] max-w-[82vw] select-none rounded-xl object-contain shadow-[0_18px_48px_rgba(29,29,27,0.16)] dark:shadow-[0_18px_48px_rgba(0,0,0,0.28)]"
+      : "max-h-none max-w-none select-none rounded-xl object-contain shadow-[0_18px_48px_rgba(29,29,27,0.16)] dark:shadow-[0_18px_48px_rgba(0,0,0,0.28)]"
 
   return (
-    <div className="relative flex min-h-[220px] min-w-[220px] items-center justify-center">
-      {status === "loading" && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-lg border border-border/45 bg-card shadow-[0_18px_48px_rgba(29,29,27,0.08)] dark:border-white/10 dark:bg-zinc-900">
-          <div className="h-full min-h-[220px] w-full min-w-[220px] rounded-lg bg-gradient-to-br from-muted via-background to-muted/70 dark:from-white/10 dark:via-zinc-900 dark:to-white/8" />
-        </div>
-      )}
-
+    <div className="relative flex h-full min-h-[220px] w-full min-w-[220px] items-center justify-center overflow-visible rounded-xl">
       {status === "error" && (
-        <div className="flex min-h-[220px] min-w-[220px] flex-col items-center justify-center gap-2 rounded-lg border border-border/50 bg-card px-6 text-muted-foreground shadow-[0_18px_48px_rgba(29,29,27,0.08)] dark:border-white/10 dark:bg-zinc-900">
-          <HugeiconsIcon icon={Image01Icon} size={24} strokeWidth={1.5} />
-          <span className="font-mono text-[10px] uppercase tracking-[0.28em]">图片不可用</span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-xl border border-border/50 bg-background px-8 text-muted-foreground shadow-[0_18px_48px_rgba(29,29,27,0.08)] dark:border-white/10 dark:bg-zinc-900">
+          <HugeiconsIcon icon={Image01Icon} size={32} strokeWidth={1.5} />
+          <span className="font-mono text-[12px] uppercase tracking-[0.32em]">图片不可用</span>
         </div>
       )}
 
@@ -140,7 +230,7 @@ function PreviewImage({
           })
         }}
         onError={() => setStatus("error")}
-        className={`${imageClassName} ${status === "loaded" ? "opacity-100" : "pointer-events-none absolute opacity-0"} transition-opacity duration-200`}
+        className={`${imageClassName} relative z-10 ${status === "error" ? "pointer-events-none absolute opacity-0" : "opacity-100"}`}
         draggable={false}
       />
     </div>
@@ -156,15 +246,17 @@ export function ImageStackThumbnail({
   className,
   imageContainerClassName,
   imageClassName,
+  isPreviewing = false,
   badge,
   overlay,
   onOpen,
 }: ImageStackThumbnailProps) {
+  const primaryFrameRef = useRef<HTMLDivElement>(null)
   const [naturalAspectRatio, setNaturalAspectRatio] = useState<{
     src: string
     aspectRatio: string | null
   } | null>(null)
-  const visibleBackImages = images.slice(1)
+  const visibleBackImages = images.slice(1, 4)
   const isStacked = images.length > 1
   const primaryImage = images[0]
   const matchedNaturalAspectRatio =
@@ -201,11 +293,29 @@ export function ImageStackThumbnail({
 
   if (images.length === 0) return null
 
+  const handleOpen = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    event.preventDefault()
+
+    const rect = primaryFrameRef.current?.getBoundingClientRect()
+    const image = primaryFrameRef.current?.querySelector("img")
+    onOpen(
+      rect
+        ? {
+            top: rect.top,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height,
+            imageWidth: image?.naturalWidth || undefined,
+            imageHeight: image?.naturalHeight || undefined,
+          }
+        : null
+    )
+  }
+
   return (
     <motion.button
       type="button"
-      layoutId={layoutId}
-      onClick={onOpen}
+      onClick={handleOpen}
       whileHover="hover"
       whileTap={{ scale: 0.985 }}
       className={cn(
@@ -215,23 +325,29 @@ export function ImageStackThumbnail({
       aria-label={`打开 ${images.length} 张图片的预览`}
     >
       {isStacked && (
-        <div className="absolute inset-0">
+        <div
+          className={cn(
+            "absolute inset-0 transition-opacity duration-100",
+            isPreviewing && "opacity-0"
+          )}
+        >
           {visibleBackImages.map((src, index) => {
             const offset = index + 1
             const spread = getStackSpread(offset)
-            const stackRotation = getImageRotation(src, offset)
+            const direction = getStackOffsetDirection(index)
+            const stackRotation = Math.abs(getImageRotation(src, offset)) * direction
 
             return (
               <motion.div
                 key={`${src}-${index}`}
                 animate={{
-                  x: spread * 12,
+                  x: direction * spread * 12,
                   y: spread * 5,
                   rotate: stackRotation,
                 }}
                 variants={{
                   hover: {
-                    x: spread * 16,
+                    x: direction * spread * 16,
                     y: spread * 6,
                     rotate: stackRotation * 1.18,
                   },
@@ -260,43 +376,82 @@ export function ImageStackThumbnail({
       )}
 
       <motion.div
+        ref={primaryFrameRef}
+        data-image-stack-primary
         variants={{ hover: { scale: 1.01, y: -2 } }}
         transition={{ type: "spring", stiffness: 280, damping: 24 }}
-        className="relative overflow-hidden rounded-xl bg-card shadow-[0_16px_40px_rgba(29,29,27,0.08)] ring-1 ring-border/35"
+        className={cn(
+          "relative overflow-hidden rounded-xl shadow-[0_16px_40px_rgba(29,29,27,0.08)] ring-1 transition-[background-color,box-shadow] duration-100",
+          isPreviewing ? "bg-transparent shadow-none ring-transparent" : "bg-card ring-border/35"
+        )}
         style={{ aspectRatio: thumbnailAspectRatio, zIndex: 10 }}
       >
-        <SmartImage
-          src={images[0]}
-          alt={alt}
-          containerClassName={cn("h-full min-h-[140px] w-full rounded-xl", imageContainerClassName)}
-          className={cn("h-full w-full object-cover", imageClassName)}
-          loading="lazy"
-        />
-        {overlay}
-        {badge}
+        <motion.div
+          data-image-stack-layout-id={layoutId}
+          className="absolute inset-0 overflow-hidden rounded-xl"
+          animate={{ opacity: isPreviewing ? 0 : 1 }}
+          transition={{ duration: isPreviewing ? 0 : 0.08, ease: "easeOut" }}
+        >
+          <SmartImage
+            src={images[0]}
+            alt={alt}
+            containerClassName={cn(
+              "h-full min-h-[140px] w-full rounded-xl",
+              imageContainerClassName
+            )}
+            className={cn("h-full w-full object-cover", imageClassName)}
+            loading="lazy"
+          />
+        </motion.div>
+        {!isPreviewing && overlay}
+        {!isPreviewing && badge}
       </motion.div>
     </motion.button>
   )
 }
 
-export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStackPreviewProps) {
+export function ImageStackPreview({
+  images,
+  layoutId,
+  originRect,
+  open,
+  onClose,
+}: ImageStackPreviewProps) {
   const shouldReduceMotion = useReducedMotion()
   const [activeIndex, setActiveIndex] = useState(0)
   const [fitMode, setFitMode] = useState<FitMode>("fit")
   const [rotation, setRotation] = useState(0)
   const [currentScale, setCurrentScale] = useState(1)
   const [isDragging, setIsDragging] = useState(false)
+  const [isPinching, setIsPinching] = useState(false)
+  const [isOpeningCover, setIsOpeningCover] = useState(true)
+  const [isClosing, setIsClosing] = useState(false)
   const [swipeOffset, setSwipeOffset] = useState(0)
-  const [viewport, setViewport] = useState({ width: 1000, height: 1000 })
+  const [viewport, setViewport] = useState(() =>
+    typeof window === "undefined"
+      ? { width: 1000, height: 1000 }
+      : { width: window.innerWidth, height: window.innerHeight }
+  )
   const [imageSizes, setImageSizes] = useState<Record<string, { width: number; height: number }>>(
-    {}
+    () => {
+      const firstSrc = images[0]
+      if (!firstSrc || !originRect?.imageWidth || !originRect.imageHeight) return {}
+
+      return {
+        [firstSrc]: {
+          width: originRect.imageWidth,
+          height: originRect.imageHeight,
+        },
+      }
+    }
   )
   const containerRef = useRef<HTMLDivElement>(null)
   const x = useMotionValue(0)
   const y = useMotionValue(0)
   const swipeX = useMotionValue(0)
   const rawScale = useMotionValue(1)
-  const scale = useSpring(rawScale, { stiffness: 350, damping: 35 })
+  const scale = useSpring(rawScale, { stiffness: 260, damping: 32, mass: 0.72 })
+  const pinchGestureRef = useRef<TouchGestureState | null>(null)
   const imageCount = images.length
   const canNavigate = imageCount > 1
   const activeSrc = images[activeIndex]
@@ -316,7 +471,8 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
   const isBrowseMode = Math.abs(displayScale - fitBaseScale) <= defaultScaleTolerance
   const stackOffsetCompensation = currentScale > 0 ? 1 / currentScale : 1
   const swipeDistance = Math.abs(swipeOffset)
-  const showSwipeHint = canNavigate && isBrowseMode && isDragging && swipeDistance > 12
+  const showSwipeHint =
+    canNavigate && isBrowseMode && isDragging && !isPinching && swipeDistance > 12
   const swipeDirection = swipeOffset < 0 ? -1 : 1
   const swipeTargetLabel = swipeDirection < 0 ? "下一张" : "上一张"
   const swipeRemainingDistance = Math.max(0, Math.ceil(SWIPE_DISTANCE_THRESHOLD - swipeDistance))
@@ -327,6 +483,7 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
   const swipeFrameHeight = activeImageSize
     ? Math.max(220, activeImageSize.height * displayScale)
     : 280
+  const previewFrameSize = getPreviewFrameSize(activeImageSize, viewport, fitMode)
   const visualSwipeX = useTransform(swipeX, (value) => value * stackOffsetCompensation)
   const browseSwipeRotate = useTransform(visualSwipeX, (value) => {
     const dragRotation = Math.max(-4.5, Math.min(4.5, value / 58))
@@ -337,7 +494,18 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
     : { type: "spring" as const, stiffness: 340, damping: 38, mass: 0.75 }
   const previewOpenTransition = shouldReduceMotion
     ? { duration: 0 }
-    : { type: "spring" as const, stiffness: 210, damping: 28, mass: 0.9 }
+    : { duration: 0.28, ease: [0.2, 0.8, 0.2, 1] as const }
+  const previewCloseTransition = shouldReduceMotion
+    ? { duration: 0 }
+    : { duration: IMAGE_STACK_RETURN_DURATION_MS / 1000, ease: [0.4, 0, 0.2, 1] as const }
+  const originMotion = originRect
+    ? {
+        x: originRect.left + originRect.width / 2 - viewport.width / 2,
+        y: originRect.top + originRect.height / 2 - viewport.height / 2,
+        width: originRect.width,
+        height: originRect.height,
+      }
+    : null
 
   const resetTransform = useCallback(() => {
     x.stop()
@@ -355,6 +523,7 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
     setActiveIndex(0)
     setFitMode("fit")
     setIsDragging(false)
+    setIsPinching(false)
     resetTransform()
   }, [resetTransform])
 
@@ -410,16 +579,79 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
     setSwipeOffset(0)
   }
 
-  const handleBackgroundClick = () => {
-    if (isDragging) return
-    resetPreviewState()
-    onClose()
+  const handleTouchStart = (event: ReactTouchEvent<HTMLDivElement>) => {
+    if (event.touches.length !== 2) return
+
+    event.stopPropagation()
+    x.stop()
+    y.stop()
+    swipeX.stop()
+    swipeX.set(0)
+    setIsPinching(true)
+    setSwipeOffset(0)
+    pinchGestureRef.current = {
+      startDistance: getTouchDistance(event.touches),
+      startAngle: getTouchAngle(event.touches),
+      startScale: rawScale.get(),
+      startRotation: rotation,
+      hasRotated: false,
+    }
+  }
+
+  const handleTouchMove = (event: ReactTouchEvent<HTMLDivElement>) => {
+    const gesture = pinchGestureRef.current
+    if (!gesture || event.touches.length !== 2 || gesture.startDistance <= 0) return
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    const distanceRatio = getTouchDistance(event.touches) / gesture.startDistance
+    rawScale.set(clampPreviewScale(gesture.startScale * distanceRatio))
+
+    const angleDelta = getShortestAngleDelta(getTouchAngle(event.touches), gesture.startAngle)
+    const shouldRotate = gesture.hasRotated || Math.abs(angleDelta) >= PINCH_ROTATION_THRESHOLD
+    if (!shouldRotate) return
+
+    gesture.hasRotated = true
+    setRotation(gesture.startRotation + angleDelta)
+  }
+
+  const handleTouchEnd = (event: ReactTouchEvent<HTMLDivElement>) => {
+    if (!pinchGestureRef.current || event.touches.length >= 2) return
+
+    pinchGestureRef.current = null
+    setIsPinching(false)
+    setTimeout(() => setIsDragging(false), 100)
   }
 
   const handleClose = useCallback(() => {
+    if (isClosing) return
+
     resetPreviewState()
-    onClose()
-  }, [onClose, resetPreviewState])
+    setIsClosing(true)
+
+    window.requestAnimationFrame(() => {
+      onClose()
+    })
+  }, [isClosing, onClose, resetPreviewState])
+
+  const handleBackgroundClick = () => {
+    if (isDragging || isPinching) return
+    handleClose()
+  }
+
+  useEffect(() => {
+    if (!open) return
+
+    const timer = window.setTimeout(
+      () => {
+        setIsOpeningCover(false)
+      },
+      shouldReduceMotion ? 0 : 120
+    )
+
+    return () => window.clearTimeout(timer)
+  }, [open, shouldReduceMotion])
 
   useEffect(() => {
     if (!open) return
@@ -436,6 +668,20 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
           }
 
           return { ...prev, [src]: size }
+        })
+      }
+      image.onerror = () => {
+        setImageSizes((prev) => {
+          const cached = prev[src]
+          if (
+            cached &&
+            cached.width === PREVIEW_FALLBACK_IMAGE_SIZE.width &&
+            cached.height === PREVIEW_FALLBACK_IMAGE_SIZE.height
+          ) {
+            return prev
+          }
+
+          return { ...prev, [src]: PREVIEW_FALLBACK_IMAGE_SIZE }
         })
       }
       image.src = src
@@ -491,7 +737,7 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
       wheelEvent.preventDefault()
       wheelEvent.stopPropagation()
 
-      const nextScale = Math.min(Math.max(rawScale.get() - wheelEvent.deltaY * 0.01, 0.25), 3)
+      const nextScale = clampPreviewScale(rawScale.get() - wheelEvent.deltaY * 0.01)
       rawScale.set(nextScale)
     }
 
@@ -526,6 +772,8 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
   return createPortal(
     <motion.div
       ref={containerRef}
+      exit={{ opacity: 1 }}
+      transition={{ duration: IMAGE_STACK_RETURN_DURATION_MS / 1000 }}
       className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden px-5 py-8 md:px-10"
     >
       <motion.button
@@ -534,134 +782,177 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: shouldReduceMotion ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
+        transition={{
+          duration: shouldReduceMotion ? 0 : 0.24,
+          ease: [0.16, 1, 0.3, 1],
+        }}
         className="absolute inset-0 bg-background/62 backdrop-blur-xl dark:bg-black/48"
         onClick={handleBackgroundClick}
       />
 
       <motion.div
-        layoutId={layoutId}
-        initial={shouldReduceMotion ? false : { scale: 0.94, y: 18 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={shouldReduceMotion ? undefined : { scale: 0.97, y: 10 }}
-        transition={previewOpenTransition}
-        className="pointer-events-none relative z-10 flex h-[76vh] w-[92vw] items-center justify-center"
+        data-image-stack-layout-id={layoutId}
+        className="pointer-events-none relative z-10 flex h-[76vh] w-[92vw] transform-gpu items-center justify-center will-change-transform"
       >
         <motion.div
-          className="relative flex cursor-grab items-center justify-center active:cursor-grabbing"
-          drag={!isBrowseMode}
-          dragElastic={0}
-          dragMomentum={false}
-          dragTransition={{ bounceStiffness: 500, bounceDamping: 36 }}
-          onDragStart={
-            !isBrowseMode
-              ? () => {
-                  setIsDragging(true)
-                  x.stop()
-                  y.stop()
-                }
-              : undefined
+          initial={
+            shouldReduceMotion
+              ? false
+              : originMotion
+                ? { opacity: 1, ...originMotion }
+                : { opacity: 0, scale: 0.98 }
           }
-          onDragEnd={
-            !isBrowseMode
-              ? () => {
-                  setTimeout(() => setIsDragging(false), 100)
-                }
-              : undefined
+          animate={{
+            opacity: 1,
+            x: 0,
+            y: 0,
+            scale: 1,
+            width: previewFrameSize.width,
+            height: previewFrameSize.height,
+          }}
+          exit={
+            shouldReduceMotion
+              ? undefined
+              : originMotion
+                ? { opacity: 1, ...originMotion, transition: previewCloseTransition }
+                : { opacity: 0, scale: 0.98, transition: previewCloseTransition }
           }
+          transition={previewOpenTransition}
+          className="relative flex transform-gpu items-center justify-center overflow-visible rounded-xl will-change-transform"
           style={{
-            scale,
-            touchAction: isBrowseMode ? "pan-y" : "none",
-            ...(!isBrowseMode ? { x, y } : {}),
+            width: previewFrameSize.width,
+            height: previewFrameSize.height,
+            transformOrigin: "50% 50%",
           }}
         >
-          {stackImages
-            .slice()
-            .reverse()
-            .map(({ src, imageIndex, offset }) => {
-              const isTop = offset === 0
-              const spread = getStackSpread(offset)
-              const restingX = spread * 18 * stackOffsetCompensation
-              const restingY = spread * 10 * stackOffsetCompensation
-              const restingScale = Math.max(0.72, 1 - spread * 0.035)
-              const restingRotate =
-                getPreviewImageRotation(src, imageIndex, imageCount) + (isTop ? rotation : 0)
-              const dragStyle =
-                isTop && isBrowseMode && isDragging
-                  ? { x: visualSwipeX, rotate: browseSwipeRotate }
-                  : {}
+          <motion.div
+            className="relative flex h-full w-full transform-gpu cursor-grab items-center justify-center active:cursor-grabbing"
+            drag={!isBrowseMode && !isPinching}
+            dragElastic={0}
+            dragMomentum={false}
+            dragTransition={{ bounceStiffness: 500, bounceDamping: 36 }}
+            onDragStart={
+              !isBrowseMode && !isPinching
+                ? () => {
+                    setIsDragging(true)
+                    x.stop()
+                    y.stop()
+                  }
+                : undefined
+            }
+            onDragEnd={
+              !isBrowseMode && !isPinching
+                ? () => {
+                    setTimeout(() => setIsDragging(false), 100)
+                  }
+                : undefined
+            }
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
+            style={{
+              scale,
+              touchAction: "none",
+              transformOrigin: "50% 50%",
+              ...(!isBrowseMode && !isPinching ? { x, y } : {}),
+            }}
+          >
+            {stackImages
+              .slice()
+              .reverse()
+              .map(({ src, imageIndex, offset }) => {
+                const isTop = offset === 0
+                const imageSize = imageSizes[src]
+                const frameSize = getPreviewFrameSize(imageSize, viewport, fitMode)
+                const spread = getStackSpread(offset)
+                const restingX = spread * 18 * stackOffsetCompensation
+                const restingY = spread * 10 * stackOffsetCompensation
+                const restingScale = Math.max(0.72, 1 - spread * 0.035)
+                const restingRotate =
+                  getPreviewImageRotation(src, imageIndex, imageCount) + (isTop ? rotation : 0)
+                const dragStyle =
+                  isTop && isBrowseMode && isDragging && !isPinching
+                    ? { x: visualSwipeX, rotate: browseSwipeRotate }
+                    : {}
 
-              return (
-                <motion.div
-                  key={`${imageIndex}-${src}`}
-                  drag={isTop && isBrowseMode ? "x" : false}
-                  dragConstraints={isBrowseMode ? { left: 0, right: 0 } : false}
-                  dragElastic={isBrowseMode ? 0.24 : 0}
-                  dragMomentum={isBrowseMode}
-                  dragTransition={
-                    isBrowseMode
-                      ? { bounceStiffness: 280, bounceDamping: 24 }
-                      : { bounceStiffness: 500, bounceDamping: 36 }
-                  }
-                  onDragStart={
-                    isTop && isBrowseMode
-                      ? () => {
-                          setIsDragging(true)
-                          setSwipeOffset(0)
-                          swipeX.stop()
-                        }
-                      : undefined
-                  }
-                  onDrag={
-                    isTop && isBrowseMode
-                      ? (_, info) => {
-                          setSwipeOffset(info.offset.x)
-                        }
-                      : undefined
-                  }
-                  onDragEnd={isTop && isBrowseMode ? handleSwipeEnd : undefined}
-                  initial={false}
-                  animate={{
-                    scale: restingScale,
-                    x: restingX,
-                    y: restingY,
-                    rotate: restingRotate,
-                  }}
-                  transition={stackTransition}
-                  className="pointer-events-auto absolute flex items-center justify-center"
-                  style={{
-                    zIndex: imageCount - offset,
-                    touchAction: isTop && isBrowseMode ? "pan-y" : "auto",
-                    transformOrigin: "50% 50%",
-                    ...dragStyle,
-                  }}
-                >
-                  <PreviewImage
-                    src={src}
-                    alt={`图片 ${imageIndex + 1}`}
-                    fitMode={fitMode}
-                    onLoadSize={
-                      isTop
-                        ? (size) => {
-                            setImageSizes((prev) => {
-                              const cached = prev[src]
-                              if (
-                                cached &&
-                                cached.width === size.width &&
-                                cached.height === size.height
-                              ) {
-                                return prev
-                              }
-
-                              return { ...prev, [src]: size }
-                            })
+                return (
+                  <motion.div
+                    key={`${imageIndex}-${src}`}
+                    drag={isTop && isBrowseMode && !isPinching ? "x" : false}
+                    dragConstraints={isBrowseMode && !isPinching ? { left: 0, right: 0 } : false}
+                    dragElastic={isBrowseMode && !isPinching ? 0.24 : 0}
+                    dragMomentum={isBrowseMode && !isPinching}
+                    dragTransition={
+                      isBrowseMode && !isPinching
+                        ? { bounceStiffness: 280, bounceDamping: 24 }
+                        : { bounceStiffness: 500, bounceDamping: 36 }
+                    }
+                    onDragStart={
+                      isTop && isBrowseMode && !isPinching
+                        ? () => {
+                            setIsDragging(true)
+                            setSwipeOffset(0)
+                            swipeX.stop()
                           }
                         : undefined
                     }
-                  />
-                </motion.div>
-              )
-            })}
+                    onDrag={
+                      isTop && isBrowseMode && !isPinching
+                        ? (_, info) => {
+                            setSwipeOffset(info.offset.x)
+                          }
+                        : undefined
+                    }
+                    onDragEnd={isTop && isBrowseMode && !isPinching ? handleSwipeEnd : undefined}
+                    initial={false}
+                    animate={{
+                      scale: restingScale,
+                      x: restingX,
+                      y: restingY,
+                      rotate: restingRotate,
+                    }}
+                    transition={stackTransition}
+                    className="pointer-events-auto absolute left-1/2 top-1/2 flex items-center justify-center"
+                    style={{
+                      width: frameSize.width,
+                      height: frameSize.height,
+                      marginLeft: -frameSize.width / 2,
+                      marginTop: -frameSize.height / 2,
+                      zIndex: imageCount - offset,
+                      touchAction: "none",
+                      transformOrigin: "50% 50%",
+                      ...dragStyle,
+                    }}
+                  >
+                    <PreviewImage
+                      src={src}
+                      alt={`图片 ${imageIndex + 1}`}
+                      fitMode={fitMode}
+                      useCoverMode={isOpeningCover || isClosing}
+                      onLoadSize={
+                        isTop
+                          ? (size) => {
+                              setImageSizes((prev) => {
+                                const cached = prev[src]
+                                if (
+                                  cached &&
+                                  cached.width === size.width &&
+                                  cached.height === size.height
+                                ) {
+                                  return prev
+                                }
+
+                                return { ...prev, [src]: size }
+                              })
+                            }
+                          : undefined
+                      }
+                    />
+                  </motion.div>
+                )
+              })}
+          </motion.div>
         </motion.div>
       </motion.div>
 
@@ -711,7 +1002,11 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        transition={{
+          delay: shouldReduceMotion ? 0 : 0.08,
+          duration: 0.26,
+          ease: [0.16, 1, 0.3, 1],
+        }}
         className="pointer-events-auto absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-inner border border-border/40 bg-popover px-3 py-1.5 backdrop-blur-xl"
       >
         <button
@@ -740,7 +1035,7 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
 
         <button
           type="button"
-          onClick={() => rawScale.set(Math.max(rawScale.get() - 0.25, 0.25))}
+          onClick={() => rawScale.set(clampPreviewScale(rawScale.get() - 0.25))}
           className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
           title="缩小"
         >
@@ -751,7 +1046,7 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
         </span>
         <button
           type="button"
-          onClick={() => rawScale.set(Math.min(rawScale.get() + 0.25, 3))}
+          onClick={() => rawScale.set(clampPreviewScale(rawScale.get() + 0.25))}
           className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
           title="放大"
         >
@@ -788,7 +1083,11 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
       <motion.button
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.2, ease: "easeOut", delay: 0.05 }}
+        exit={{ opacity: 0, scale: 0.96 }}
+        transition={{
+          opacity: { duration: shouldReduceMotion ? 0 : 0.1, ease: "easeOut" },
+          scale: { duration: shouldReduceMotion ? 0 : 0.1, ease: "easeOut" },
+        }}
         onClick={(event) => {
           event.stopPropagation()
           handleClose()

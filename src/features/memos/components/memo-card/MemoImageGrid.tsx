@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { AnimatePresence } from "framer-motion"
 import {
+  IMAGE_STACK_RETURN_DURATION_MS,
   type ImageStackOriginRect,
   ImageStackPreview,
   ImageStackThumbnail,
@@ -12,10 +13,22 @@ interface MemoImageGridProps {
   images: string[]
 }
 
+const THUMBNAIL_REVEAL_BEFORE_EXIT_MS = 90
+const THUMBNAIL_REVEAL_DELAY_MS = IMAGE_STACK_RETURN_DURATION_MS - THUMBNAIL_REVEAL_BEFORE_EXIT_MS
+
 export function MemoImageGrid({ images }: MemoImageGridProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [isReturningPreview, setIsReturningPreview] = useState(false)
   const [previewOriginRect, setPreviewOriginRect] = useState<ImageStackOriginRect | null>(null)
+  const revealTimerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (revealTimerRef.current !== null) {
+        window.clearTimeout(revealTimerRef.current)
+      }
+    }
+  }, [])
 
   if (!images || images.length === 0) return null
 
@@ -61,6 +74,10 @@ export function MemoImageGrid({ images }: MemoImageGridProps) {
             open={isPreviewOpen}
             onClose={() => {
               setIsReturningPreview(true)
+              revealTimerRef.current = window.setTimeout(() => {
+                setIsReturningPreview(false)
+                revealTimerRef.current = null
+              }, THUMBNAIL_REVEAL_DELAY_MS)
               setIsPreviewOpen(false)
             }}
           />

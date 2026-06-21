@@ -262,6 +262,7 @@ export function ImageStackThumbnail({
   } | null>(null)
   const visibleBackImages = images.slice(1, 4)
   const isStacked = images.length > 1
+  const thumbnailContentOpacity = isPreviewing ? 0 : 1
   const primaryImage = images[0]
   const matchedNaturalAspectRatio =
     naturalAspectRatio?.src === primaryImage ? naturalAspectRatio.aspectRatio : null
@@ -331,8 +332,8 @@ export function ImageStackThumbnail({
       {isStacked && (
         <div
           className={cn(
-            "absolute inset-0 transition-opacity duration-100",
-            isPreviewing && "opacity-0"
+            "absolute inset-0 transition-opacity ease-out",
+            isPreviewing ? "opacity-0 duration-0" : "opacity-100 duration-100"
           )}
         >
           {visibleBackImages.map((src, index) => {
@@ -393,8 +394,8 @@ export function ImageStackThumbnail({
         <motion.div
           data-image-stack-layout-id={layoutId}
           className="absolute inset-0 overflow-hidden rounded-xl"
-          animate={{ opacity: isPreviewing ? 0 : 1 }}
-          transition={{ duration: isPreviewing ? 0 : 0.08, ease: "easeOut" }}
+          animate={{ opacity: thumbnailContentOpacity }}
+          transition={{ duration: isPreviewing ? 0 : 0.1, ease: "easeOut" }}
         >
           <SmartImage
             src={images[0]}
@@ -407,8 +408,14 @@ export function ImageStackThumbnail({
             loading="lazy"
           />
         </motion.div>
-        {!isPreviewing && overlay}
-        {!isPreviewing && badge}
+        <motion.div
+          className="pointer-events-none absolute inset-0"
+          animate={{ opacity: thumbnailContentOpacity }}
+          transition={{ duration: isPreviewing ? 0 : 0.1, ease: "easeOut" }}
+        >
+          {overlay}
+          {badge}
+        </motion.div>
       </motion.div>
     </motion.button>
   )

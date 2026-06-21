@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Memo } from "@/types/memo"
 import { AnimatePresence } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Image01Icon as GalleryIcon } from "@hugeicons/core-free-icons"
 import {
+  IMAGE_STACK_RETURN_DURATION_MS,
   type ImageStackOriginRect,
   ImageStackPreview,
   ImageStackThumbnail,
@@ -30,6 +31,8 @@ type GalleryAspectRatioCache = Record<
 const GALLERY_FALLBACK_ASPECT_RATIO = "1.18 / 1"
 const GALLERY_MIN_ASPECT_RATIO = 0.78
 const GALLERY_MAX_ASPECT_RATIO = 1.75
+const THUMBNAIL_REVEAL_BEFORE_EXIT_MS = 90
+const THUMBNAIL_REVEAL_DELAY_MS = IMAGE_STACK_RETURN_DURATION_MS - THUMBNAIL_REVEAL_BEFORE_EXIT_MS
 
 function getGalleryAspectRatio(width: number, height: number): string {
   if (width <= 0 || height <= 0) return GALLERY_FALLBACK_ASPECT_RATIO
@@ -93,6 +96,7 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
   const [returningPreviewId, setReturningPreviewId] = useState<string | null>(null)
   const [previewOriginRect, setPreviewOriginRect] = useState<ImageStackOriginRect | null>(null)
   const [aspectRatios, setAspectRatios] = useState<GalleryAspectRatioCache>({})
+  const revealTimerRef = useRef<number | null>(null)
 
   const galleryItems = useMemo<GalleryMemoItem[]>(
     () =>
@@ -153,6 +157,14 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
     }
   }, [aspectRatios, galleryItems])
 
+  useEffect(() => {
+    return () => {
+      if (revealTimerRef.current !== null) {
+        window.clearTimeout(revealTimerRef.current)
+      }
+    }
+  }, [])
+
   if (!memos || memos.length === 0) {
     return (
       <div className="flex h-full min-h-[500px] flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(250,247,245,0.36))] px-6 py-24 text-center text-muted-foreground">
@@ -206,6 +218,10 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
             open={!!previewItem}
             onClose={() => {
               setReturningPreviewId(previewItem.id)
+              revealTimerRef.current = window.setTimeout(() => {
+                setReturningPreviewId(null)
+                revealTimerRef.current = null
+              }, THUMBNAIL_REVEAL_DELAY_MS)
               setPreviewItem(null)
             }}
           />

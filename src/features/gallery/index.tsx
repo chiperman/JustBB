@@ -32,8 +32,6 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
   }, [initialMemos])
 
   useEffect(() => {
-    if (initialMemos.length > 0) return
-
     let cancelled = false
 
     const loadInitialMemos = async () => {
@@ -64,7 +62,7 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
     return () => {
       cancelled = true
     }
-  }, [initialMemos])
+  }, [])
 
   const loadMore = useCallback(async () => {
     if (isLoading || !hasMore) return

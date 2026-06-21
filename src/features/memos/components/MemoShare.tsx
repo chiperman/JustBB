@@ -31,9 +31,7 @@ interface MemoShareProps {
 export function MemoShare({ memo, trigger }: MemoShareProps) {
   const [open, setOpen] = useState(false)
   const posterRef = useRef<HTMLDivElement>(null)
-  const [activeAction, setActiveAction] = useState<"copy" | "download" | null>(
-    null
-  )
+  const [activeAction, setActiveAction] = useState<"copy" | "download" | null>(null)
   const [activeThemeId, setActiveThemeId] = useState("classic")
   const [showDate, setShowDate] = useState(true)
   const [showQR, setShowQR] = useState(true)
@@ -71,17 +69,13 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
       })
 
       try {
-        await navigator.clipboard.write([
-          new ClipboardItem({ "image/png": blobPromise }),
-        ])
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blobPromise })])
       } catch (e) {
         console.warn("ClipboardItem Promise rejected, trying fallback...", e)
         const blob = await blobPromise
         if (!blob) throw new Error("Blob generation yielded no data")
 
-        await navigator.clipboard.write([
-          new ClipboardItem({ "image/png": blob }),
-        ])
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })])
       }
 
       toast({ title: "已复制到剪贴板" })
@@ -101,9 +95,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
   const handleDownload = useCallback(async () => {
     try {
       setActiveAction("download")
-      await new Promise((resolve) =>
-        requestAnimationFrame(() => setTimeout(resolve, 50))
-      )
+      await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 50)))
 
       const blob = await generateBlob(2.5)
       if (!blob) return
@@ -131,11 +123,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
       <div onClick={() => setOpen(true)} className="contents">
         {trigger || (
           <Button variant="ghost" size="icon" className="rounded-full">
-            <HugeiconsIcon
-              icon={Share2}
-              size={16}
-              className="text-muted-foreground"
-            />
+            <HugeiconsIcon icon={Share2} size={16} className="text-muted-foreground" />
           </Button>
         )}
       </div>
@@ -177,8 +165,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                       key={i}
                       className="w-[10px] h-[8px]"
                       style={{
-                        backgroundColor:
-                          activeTheme.styles.container.backgroundColor,
+                        backgroundColor: activeTheme.styles.container.backgroundColor,
                         clipPath: "polygon(0% 100%, 50% 0%, 100% 100%)",
                       }}
                     />
@@ -202,7 +189,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                         fontSize: activeTheme.styles.header.fontSize,
                       }}
                     >
-                      JustBB
+                      JustMemo
                     </span>
                   ) : (
                     <div />
@@ -250,7 +237,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                     className="text-[10px] font-medium tracking-widest uppercase opacity-50"
                     style={{ color: activeTheme.styles.footer.textColor }}
                   >
-                    Captured via JustBB
+                    Captured via JustMemo
                   </span>
                   <span
                     className="text-[9px] opacity-30"
@@ -302,8 +289,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                         key={i}
                         className="w-[10px] h-[8px]"
                         style={{
-                          backgroundColor:
-                            activeTheme.styles.container.backgroundColor,
+                          backgroundColor: activeTheme.styles.container.backgroundColor,
                           clipPath: "polygon(0% 0%, 50% 100%, 100% 0%)",
                         }}
                       />
@@ -327,9 +313,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                     onClick={() => setActiveThemeId(t.id)}
                     className={cn(
                       "px-3 py-0.5 text-[11px] rounded-full",
-                      activeThemeId === t.id
-                        ? "bg-background font-medium"
-                        : "text-muted-foreground"
+                      activeThemeId === t.id ? "bg-background font-medium" : "text-muted-foreground"
                     )}
                   >
                     {t.name}
@@ -360,9 +344,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                   <span
                     className={cn(
                       "text-[12px]",
-                      item.state
-                        ? "text-foreground font-medium"
-                        : "text-muted-foreground"
+                      item.state ? "text-foreground font-medium" : "text-muted-foreground"
                     )}
                   >
                     {item.label}
@@ -415,9 +397,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
               {activeAction === "download" && (
                 <div className="absolute inset-0 flex items-center justify-center gap-2 bg-primary/40 backdrop-blur-[2px] animate-in fade-in duration-200">
                   <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin [will-change:transform]" />
-                  <span className="font-medium text-primary-foreground">
-                    生成中...
-                  </span>
+                  <span className="font-medium text-primary-foreground">生成中...</span>
                 </div>
               )}
             </Button>

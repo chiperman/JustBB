@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="JustMemo">
+  <rect x="96" y="96" width="832" height="832" rx="220" fill="#ffffff" />
+  <path
+    d="M318 634C252 634 206 588 210 528C214 466 260 420 326 410C358 334 432 288 512 288C592 288 666 334 698 410C764 420 810 466 814 528C818 588 772 634 706 634M318 634C358 596 414 596 452 634M706 634C666 596 610 596 572 634"
+    fill="none"
+    stroke="#111111"
+    stroke-width="76"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="512" cy="548" r="50" fill="#111111" />
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">JustMemo Logo</title>
+  <desc id="desc">一个像云、像山，也像私人记忆容器的极简圆润符号。</desc>
+  <path
+    d="M314 632C246 632 198 584 202 522C206 458 252 410 318 400C350 324 425 276 512 276C599 276 674 324 706 400C772 410 818 458 822 522C826 584 778 632 710 632M314 632C354 592 416 592 454 632M710 632C670 592 608 592 570 632"
+    fill="none"
+    stroke="#111111"
+    stroke-width="52"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="512" cy="546" r="32" fill="#111111" />
+</svg>

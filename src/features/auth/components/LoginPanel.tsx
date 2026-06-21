@@ -131,7 +131,7 @@ export function LoginPanel() {
     startTransition(() => {
       verifyOtp(email, otpCode).then((res) => {
         if (res.success && res.data) {
-          toast({ title: "账号已激活", description: "欢迎加入 JustBB" })
+          toast({ title: "账号已激活", description: "欢迎加入 JustMemo" })
           resetForm()
           setUser(res.data.user)
           setViewMode("HOME_FOCUS")

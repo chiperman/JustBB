@@ -1,4 +1,4 @@
-import { mergeTagsIntoContent, removeTagsFromContent } from "./parser"
+import { extractImagesFromContent, mergeTagsIntoContent, removeTagsFromContent } from "./parser"
 
 describe("mergeTagsIntoContent", () => {
   it("应该能向已有内容中添加新标签", () => {
@@ -82,5 +82,37 @@ describe("removeTagsFromContent", () => {
     const result = removeTagsFromContent("", [], ["标签"])
     expect(result.content).toBe("")
     expect(result.tags).toEqual([])
+  })
+})
+
+describe("extractImagesFromContent", () => {
+  it("应该把 Markdown 图片提取到独立图片数组，并从正文移除", () => {
+    const result = extractImagesFromContent("今天拍了 ![猫](https://example.com/cat.jpg) 很可爱")
+
+    expect(result.content).toBe("今天拍了 很可爱")
+    expect(result.images).toEqual(["https://example.com/cat.jpg"])
+  })
+
+  it("应该把 image 模式的 smart-link 提取到独立图片数组", () => {
+    const result = extractImagesFromContent(
+      "开头 🔗[图片](https://example.com/photo.png|image) 结尾",
+      ["https://example.com/existing.jpg"]
+    )
+
+    expect(result.content).toBe("开头 结尾")
+    expect(result.images).toEqual([
+      "https://example.com/existing.jpg",
+      "https://example.com/photo.png",
+    ])
+  })
+
+  it("应该去重并允许只有图片的 Memo 正文为空", () => {
+    const result = extractImagesFromContent(
+      "![图片](https://example.com/photo.png)\n🔗[图片](https://example.com/photo.png|image)",
+      ["https://example.com/photo.png"]
+    )
+
+    expect(result.content).toBe("")
+    expect(result.images).toEqual(["https://example.com/photo.png"])
   })
 })

@@ -2,7 +2,14 @@
 
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { motion, type PanInfo, useMotionValue, useSpring, useTransform } from "framer-motion"
+import {
+  motion,
+  type PanInfo,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+  useTransform,
+} from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ArrowLeft01Icon,
@@ -23,12 +30,56 @@ type PreviewImageStatus = "loading" | "loaded" | "error"
 const SWIPE_DISTANCE_THRESHOLD = 140
 const QUICK_SWIPE_DISTANCE = 44
 const QUICK_SWIPE_VELOCITY = 360
+const STACK_FULL_SPREAD_LAYERS = 5
+const THUMBNAIL_MIN_ASPECT_RATIO = 0.82
+const THUMBNAIL_MAX_ASPECT_RATIO = 2.1
+
+function getStackSpread(offset: number) {
+  const visibleSpread = Math.min(offset, STACK_FULL_SPREAD_LAYERS)
+  const compressedSpread = Math.max(0, offset - STACK_FULL_SPREAD_LAYERS) * 0.28
+
+  return visibleSpread + compressedSpread
+}
+
+function getStableHash(input: string) {
+  let hash = 0
+
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (hash * 31 + input.charCodeAt(i)) % 9973
+  }
+
+  return hash
+}
+
+function getImageRotation(src: string, imageIndex: number) {
+  const hash = getStableHash(src)
+  const direction = imageIndex % 2 === 0 ? -1 : 1
+  const angle = 1.4 + (hash % 9) * 0.42
+
+  return direction * angle
+}
+
+function getPreviewImageRotation(src: string, imageIndex: number, imageCount: number) {
+  return imageCount <= 1 ? 0 : getImageRotation(src, imageIndex)
+}
+
+function getClampedAspectRatio(width: number, height: number) {
+  if (width <= 0 || height <= 0) return null
+
+  const ratio = Math.min(
+    Math.max(width / height, THUMBNAIL_MIN_ASPECT_RATIO),
+    THUMBNAIL_MAX_ASPECT_RATIO
+  )
+
+  return `${ratio} / 1`
+}
 
 interface ImageStackThumbnailProps {
   images: string[]
   layoutId: string
   alt?: string
   aspectRatio?: string
+  preserveNaturalAspectRatio?: boolean
   className?: string
   imageContainerClassName?: string
   imageClassName?: string
@@ -65,13 +116,13 @@ function PreviewImage({
   return (
     <div className="relative flex min-h-[220px] min-w-[220px] items-center justify-center">
       {status === "loading" && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-muted/30 shadow-[0_18px_48px_rgba(29,29,27,0.08)] backdrop-blur-sm dark:bg-white/8">
-          <div className="h-full min-h-[220px] w-full min-w-[220px] animate-pulse rounded-lg bg-gradient-to-br from-muted/40 via-background/70 to-muted/30 dark:from-white/10 dark:via-white/6 dark:to-white/10" />
+        <div className="absolute inset-0 flex items-center justify-center rounded-lg border border-border/45 bg-card shadow-[0_18px_48px_rgba(29,29,27,0.08)] dark:border-white/10 dark:bg-zinc-900">
+          <div className="h-full min-h-[220px] w-full min-w-[220px] rounded-lg bg-gradient-to-br from-muted via-background to-muted/70 dark:from-white/10 dark:via-zinc-900 dark:to-white/8" />
         </div>
       )}
 
       {status === "error" && (
-        <div className="flex min-h-[220px] min-w-[220px] flex-col items-center justify-center gap-2 rounded-lg bg-muted/30 px-6 text-muted-foreground shadow-[0_18px_48px_rgba(29,29,27,0.08)] backdrop-blur-sm dark:bg-white/8">
+        <div className="flex min-h-[220px] min-w-[220px] flex-col items-center justify-center gap-2 rounded-lg border border-border/50 bg-card px-6 text-muted-foreground shadow-[0_18px_48px_rgba(29,29,27,0.08)] dark:border-white/10 dark:bg-zinc-900">
           <HugeiconsIcon icon={Image01Icon} size={24} strokeWidth={1.5} />
           <span className="font-mono text-[10px] uppercase tracking-[0.28em]">图片不可用</span>
         </div>
@@ -101,6 +152,7 @@ export function ImageStackThumbnail({
   layoutId,
   alt = "图片预览",
   aspectRatio = "4 / 3",
+  preserveNaturalAspectRatio = false,
   className,
   imageContainerClassName,
   imageClassName,
@@ -108,8 +160,44 @@ export function ImageStackThumbnail({
   overlay,
   onOpen,
 }: ImageStackThumbnailProps) {
-  const visibleBackImages = images.slice(1, 3)
+  const [naturalAspectRatio, setNaturalAspectRatio] = useState<{
+    src: string
+    aspectRatio: string | null
+  } | null>(null)
+  const visibleBackImages = images.slice(1)
   const isStacked = images.length > 1
+  const primaryImage = images[0]
+  const matchedNaturalAspectRatio =
+    naturalAspectRatio?.src === primaryImage ? naturalAspectRatio.aspectRatio : null
+  const thumbnailAspectRatio = preserveNaturalAspectRatio
+    ? matchedNaturalAspectRatio || aspectRatio
+    : aspectRatio
+
+  useEffect(() => {
+    if (!preserveNaturalAspectRatio || !primaryImage) return
+
+    let isMounted = true
+    const image = new window.Image()
+    image.referrerPolicy = "no-referrer"
+    image.onload = () => {
+      if (!isMounted) return
+
+      setNaturalAspectRatio({
+        src: primaryImage,
+        aspectRatio: getClampedAspectRatio(image.naturalWidth, image.naturalHeight),
+      })
+    }
+    image.onerror = () => {
+      if (!isMounted) return
+
+      setNaturalAspectRatio({ src: primaryImage, aspectRatio: null })
+    }
+    image.src = primaryImage
+
+    return () => {
+      isMounted = false
+    }
+  }, [preserveNaturalAspectRatio, primaryImage])
 
   if (images.length === 0) return null
 
@@ -128,37 +216,46 @@ export function ImageStackThumbnail({
     >
       {isStacked && (
         <div className="absolute inset-0">
-          {visibleBackImages.map((src, index) => (
-            <motion.div
-              key={`${src}-${index}`}
-              animate={{
-                x: (index + 1) * 12,
-                y: (index + 1) * 5,
-                rotate: (index + 1) * 1.8,
-              }}
-              variants={{
-                hover: {
-                  x: (index + 1) * 18,
-                  y: (index + 1) * 7,
-                  rotate: (index + 1) * 2.5,
-                },
-              }}
-              transition={{ type: "spring", stiffness: 260, damping: 24 }}
-              className="absolute inset-0 rounded-xl bg-muted/20 shadow-[0_14px_34px_rgba(29,29,27,0.12)]"
-              style={{ aspectRatio, zIndex: visibleBackImages.length - index }}
-            >
-              <SmartImage
-                src={src}
-                alt={`${alt} ${index + 2}`}
-                containerClassName={cn(
-                  "h-full min-h-[140px] w-full rounded-xl",
-                  imageContainerClassName
-                )}
-                className={cn("h-full w-full object-cover opacity-95", imageClassName)}
-                loading="lazy"
-              />
-            </motion.div>
-          ))}
+          {visibleBackImages.map((src, index) => {
+            const offset = index + 1
+            const spread = getStackSpread(offset)
+            const stackRotation = getImageRotation(src, offset)
+
+            return (
+              <motion.div
+                key={`${src}-${index}`}
+                animate={{
+                  x: spread * 12,
+                  y: spread * 5,
+                  rotate: stackRotation,
+                }}
+                variants={{
+                  hover: {
+                    x: spread * 16,
+                    y: spread * 6,
+                    rotate: stackRotation * 1.18,
+                  },
+                }}
+                transition={{ type: "spring", stiffness: 260, damping: 24 }}
+                className="absolute inset-0 rounded-xl bg-muted/20 shadow-[0_14px_34px_rgba(29,29,27,0.12)]"
+                style={{
+                  aspectRatio: thumbnailAspectRatio,
+                  zIndex: visibleBackImages.length - index,
+                }}
+              >
+                <SmartImage
+                  src={src}
+                  alt={`${alt} ${index + 2}`}
+                  containerClassName={cn(
+                    "h-full min-h-[140px] w-full rounded-xl",
+                    imageContainerClassName
+                  )}
+                  className={cn("h-full w-full object-cover", imageClassName)}
+                  loading="lazy"
+                />
+              </motion.div>
+            )
+          })}
         </div>
       )}
 
@@ -166,7 +263,7 @@ export function ImageStackThumbnail({
         variants={{ hover: { scale: 1.01, y: -2 } }}
         transition={{ type: "spring", stiffness: 280, damping: 24 }}
         className="relative overflow-hidden rounded-xl bg-card shadow-[0_16px_40px_rgba(29,29,27,0.08)] ring-1 ring-border/35"
-        style={{ aspectRatio, zIndex: 10 }}
+        style={{ aspectRatio: thumbnailAspectRatio, zIndex: 10 }}
       >
         <SmartImage
           src={images[0]}
@@ -183,6 +280,7 @@ export function ImageStackThumbnail({
 }
 
 export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStackPreviewProps) {
+  const shouldReduceMotion = useReducedMotion()
   const [activeIndex, setActiveIndex] = useState(0)
   const [fitMode, setFitMode] = useState<FitMode>("fit")
   const [rotation, setRotation] = useState(0)
@@ -202,6 +300,9 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
   const imageCount = images.length
   const canNavigate = imageCount > 1
   const activeSrc = images[activeIndex]
+  const activeImageRotation = activeSrc
+    ? getPreviewImageRotation(activeSrc, activeIndex, imageCount)
+    : 0
   const activeImageSize = activeSrc ? imageSizes[activeSrc] : null
   const fitBaseScale = activeImageSize
     ? Math.min(
@@ -229,8 +330,14 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
   const visualSwipeX = useTransform(swipeX, (value) => value * stackOffsetCompensation)
   const browseSwipeRotate = useTransform(visualSwipeX, (value) => {
     const dragRotation = Math.max(-4.5, Math.min(4.5, value / 58))
-    return rotation + dragRotation
+    return activeImageRotation + rotation + dragRotation
   })
+  const stackTransition = shouldReduceMotion
+    ? { duration: 0 }
+    : { type: "spring" as const, stiffness: 340, damping: 38, mass: 0.75 }
+  const previewOpenTransition = shouldReduceMotion
+    ? { duration: 0 }
+    : { type: "spring" as const, stiffness: 210, damping: 28, mass: 0.9 }
 
   const resetTransform = useCallback(() => {
     x.stop()
@@ -251,18 +358,29 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
     resetTransform()
   }, [resetTransform])
 
+  const moveBy = useCallback(
+    (direction: number) => {
+      if (imageCount <= 1) return
+
+      resetTransform()
+      setIsDragging(false)
+      setActiveIndex((prev) => (prev + direction + imageCount) % imageCount)
+    },
+    [imageCount, resetTransform]
+  )
+
   const moveTo = useCallback(
     (nextIndex: number) => {
+      if (imageCount <= 1) return
+
+      resetTransform()
+      setIsDragging(false)
       setActiveIndex((prev) => {
-        if (imageCount <= 1) return prev
         const normalizedNext = (nextIndex + imageCount) % imageCount
-        return normalizedNext
+        return normalizedNext === prev ? prev : normalizedNext
       })
-      swipeX.stop()
-      swipeX.set(0)
-      setSwipeOffset(0)
     },
-    [imageCount, swipeX]
+    [imageCount, resetTransform]
   )
 
   const handleSwipeEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -283,9 +401,9 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
     if (!isMostlyHorizontal || (!isQuickSwipe && !isLongSwipe)) return
 
     if (info.offset.x < 0) {
-      moveTo(activeIndex + 1)
+      moveBy(1)
     } else {
-      moveTo(activeIndex - 1)
+      moveBy(-1)
     }
 
     swipeX.set(0)
@@ -345,9 +463,11 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
       if (event.key === "Escape") {
         handleClose()
       } else if (event.key === "ArrowRight" && canNavigate) {
-        moveTo(activeIndex + 1)
+        event.preventDefault()
+        moveBy(1)
       } else if (event.key === "ArrowLeft" && canNavigate) {
-        moveTo(activeIndex - 1)
+        event.preventDefault()
+        moveBy(-1)
       }
     }
 
@@ -359,7 +479,7 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
       document.body.style.overflow = previousOverflow
       window.removeEventListener("keydown", handleKeyDown)
     }
-  }, [activeIndex, canNavigate, handleClose, moveTo, open])
+  }, [canNavigate, handleClose, moveBy, open])
 
   useEffect(() => {
     if (!open) return
@@ -393,7 +513,7 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
     })
   }, [scale])
 
-  const stackImages = Array.from({ length: Math.min(imageCount, 3) }, (_, offset) => offset)
+  const stackImages = Array.from({ length: imageCount }, (_, offset) => offset)
     .map((offset) => ({
       src: images[(activeIndex + offset) % imageCount],
       imageIndex: (activeIndex + offset) % imageCount,
@@ -414,12 +534,17 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        transition={{ duration: shouldReduceMotion ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
         className="absolute inset-0 bg-background/62 backdrop-blur-xl dark:bg-black/48"
         onClick={handleBackgroundClick}
       />
 
       <motion.div
         layoutId={layoutId}
+        initial={shouldReduceMotion ? false : { scale: 0.94, y: 18 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={shouldReduceMotion ? undefined : { scale: 0.97, y: 10 }}
+        transition={previewOpenTransition}
         className="pointer-events-none relative z-10 flex h-[76vh] w-[92vw] items-center justify-center"
       >
         <motion.div
@@ -455,6 +580,16 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
             .reverse()
             .map(({ src, imageIndex, offset }) => {
               const isTop = offset === 0
+              const spread = getStackSpread(offset)
+              const restingX = spread * 18 * stackOffsetCompensation
+              const restingY = spread * 10 * stackOffsetCompensation
+              const restingScale = Math.max(0.72, 1 - spread * 0.035)
+              const restingRotate =
+                getPreviewImageRotation(src, imageIndex, imageCount) + (isTop ? rotation : 0)
+              const dragStyle =
+                isTop && isBrowseMode && isDragging
+                  ? { x: visualSwipeX, rotate: browseSwipeRotate }
+                  : {}
 
               return (
                 <motion.div
@@ -487,26 +622,23 @@ export function ImageStackPreview({ images, layoutId, open, onClose }: ImageStac
                   onDragEnd={isTop && isBrowseMode ? handleSwipeEnd : undefined}
                   initial={false}
                   animate={{
-                    opacity: 1,
-                    scale: 1 - offset * 0.045,
-                    x: offset * 18 * stackOffsetCompensation,
-                    y: offset * 10 * stackOffsetCompensation,
-                    rotate: isTop && isBrowseMode ? undefined : isTop ? rotation : offset * 2.4,
+                    scale: restingScale,
+                    x: restingX,
+                    y: restingY,
+                    rotate: restingRotate,
                   }}
-                  transition={{ type: "spring", stiffness: 280, damping: 30 }}
+                  transition={stackTransition}
                   className="pointer-events-auto absolute flex items-center justify-center"
                   style={{
-                    zIndex: 10 - offset,
+                    zIndex: imageCount - offset,
                     touchAction: isTop && isBrowseMode ? "pan-y" : "auto",
-                    transformOrigin: "50% 100%",
-                    ...(isTop && isBrowseMode
-                      ? { x: visualSwipeX, rotate: browseSwipeRotate }
-                      : {}),
+                    transformOrigin: "50% 50%",
+                    ...dragStyle,
                   }}
                 >
                   <PreviewImage
                     src={src}
-                    alt={`图片 ${((activeIndex + offset) % imageCount) + 1}`}
+                    alt={`图片 ${imageIndex + 1}`}
                     fitMode={fitMode}
                     onLoadSize={
                       isTop

@@ -36,14 +36,24 @@ const arrayPreprocessor = (val: unknown) => {
 /**
  * 基础 Memo 内容 Schema
  */
-export const memoContentSchema = z.object({
-  content: z.string().min(1, "内容不能为空"),
-  is_pinned: z.preprocess(booleanPreprocessor, z.boolean().default(false)),
-  is_private: z.preprocess(booleanPreprocessor, z.boolean().default(false)),
-  access_code_hint: z.string().optional().nullable(),
-  access_code: z.string().optional().nullable(),
-  images: z.preprocess(arrayPreprocessor, z.array(z.string()).optional().default([])),
-})
+export const memoContentSchema = z
+  .object({
+    content: z.string(),
+    is_pinned: z.preprocess(booleanPreprocessor, z.boolean().default(false)),
+    is_private: z.preprocess(booleanPreprocessor, z.boolean().default(false)),
+    access_code_hint: z.string().optional().nullable(),
+    access_code: z.string().optional().nullable(),
+    images: z.preprocess(arrayPreprocessor, z.array(z.string()).optional().default([])),
+  })
+  .superRefine((data, ctx) => {
+    if (data.content.trim() || data.images.length > 0) return
+
+    ctx.addIssue({
+      code: "custom",
+      path: ["content"],
+      message: "内容不能为空",
+    })
+  })
 
 /**
  * 创建 Memo 的 Schema

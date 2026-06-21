@@ -23,6 +23,7 @@ interface EditorToolbarProps {
   isPending: boolean
   isUploadingImage: boolean
   content: string
+  hasImages: boolean
   mode: "create" | "edit"
   onTogglePrivate: () => void
   onTogglePinned: () => void
@@ -41,6 +42,7 @@ export function EditorToolbar({
   isPending,
   isUploadingImage,
   content,
+  hasImages,
   mode,
   onTogglePrivate,
   onTogglePinned,
@@ -87,9 +89,7 @@ export function EditorToolbar({
             ) : (
               <HugeiconsIcon icon={LockOpen} size={16} />
             )}
-            <span className="text-xs font-medium">
-              {isPrivate ? "私密" : "公开"}
-            </span>
+            <span className="text-xs font-medium">{isPrivate ? "私密" : "公开"}</span>
           </Button>
 
           <Button
@@ -98,16 +98,10 @@ export function EditorToolbar({
             onClick={onTogglePinned}
             className={cn(
               "h-8 px-2 gap-1.5 transition-all text-muted-foreground",
-              isPinned
-                ? "text-primary bg-[#fdf5f2] hover:text-primary/80"
-                : "hover:text-foreground"
+              isPinned ? "text-primary bg-[#fdf5f2] hover:text-primary/80" : "hover:text-foreground"
             )}
           >
-            <HugeiconsIcon
-              icon={Pin}
-              size={16}
-              className={cn(isPinned && "fill-current")}
-            />
+            <HugeiconsIcon icon={Pin} size={16} className={cn(isPinned && "fill-current")} />
             <span className="text-xs font-medium">置顶</span>
           </Button>
 
@@ -146,9 +140,7 @@ export function EditorToolbar({
               size={16}
               className={isUploadingImage ? "animate-spin" : ""}
             />
-            <span className="text-xs font-medium">
-              {isUploadingImage ? "上传中" : "图片"}
-            </span>
+            <span className="text-xs font-medium">{isUploadingImage ? "上传中" : "图片"}</span>
           </Button>
         </div>
 
@@ -159,7 +151,7 @@ export function EditorToolbar({
             </span>
           )}
           <div className="flex items-center gap-2">
-            {(mode === "edit" || content.trim()) && (
+            {(mode === "edit" || content.trim() || hasImages) && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -172,7 +164,7 @@ export function EditorToolbar({
             <Button
               size="sm"
               onClick={onPublish}
-              disabled={!content.trim() || isPending}
+              disabled={(!content.trim() && !hasImages) || isPending}
               className="h-8 px-4 bg-primary text-primary-foreground transition-all"
             >
               {isPending ? "提交中..." : mode === "edit" ? "保存" : "发布"}

@@ -46,6 +46,36 @@ export function calculateWordCount(content: string): number {
 }
 
 /**
+ * 将正文中的图片标记迁移到独立图片数组。
+ */
+export function extractImagesFromContent(
+  content: string,
+  existingImages: string[] = []
+): { content: string; images: string[] } {
+  const images = new Set(existingImages.filter(Boolean))
+  let updatedContent = content || ""
+
+  const collectImage = (_match: string, _title: string, url: string) => {
+    images.add(url)
+    return ""
+  }
+
+  updatedContent = updatedContent
+    .replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g, collectImage)
+    .replace(/🔗\[([^\]]+)\]\((https?:\/\/[^\s|]+)\|image\)/g, collectImage)
+    .split("\n")
+    .map((line) => line.replace(/[ \t]{2,}/g, " ").trimEnd())
+    .filter((line, index, lines) => line.trim() || (index > 0 && index < lines.length - 1))
+    .join("\n")
+    .trim()
+
+  return {
+    content: updatedContent,
+    images: Array.from(images),
+  }
+}
+
+/**
  * 将新的标签合并到现有的内容和标签数组中
  */
 export function mergeTagsIntoContent(

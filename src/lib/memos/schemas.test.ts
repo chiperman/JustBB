@@ -1,5 +1,28 @@
 import { describe, it, expect } from "vitest"
-import { batchAddTagsSchema } from "./schemas"
+import { batchAddTagsSchema, createMemoSchema } from "./schemas"
+
+describe("createMemoSchema", () => {
+  it("空正文且没有图片时应该校验失败", () => {
+    const result = createMemoSchema.safeParse({
+      content: "",
+      images: "[]",
+    })
+
+    expect(result.success).toBe(false)
+  })
+
+  it("空正文但有图片时应该允许保存", () => {
+    const result = createMemoSchema.safeParse({
+      content: "",
+      images: JSON.stringify(["https://example.com/photo.jpg"]),
+    })
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.images).toEqual(["https://example.com/photo.jpg"])
+    }
+  })
+})
 
 describe("batchAddTagsSchema", () => {
   const validUuid1 = "12345678-1234-1234-1234-123456789012"

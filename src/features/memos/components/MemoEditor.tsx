@@ -83,6 +83,14 @@ function isPristineEmptyEditor(editor: Editor | null) {
   )
 }
 
+function getPendingLinkDeleteTo(doc: Editor["state"]["doc"], pos: number) {
+  const node = doc.nodeAt(pos)
+  if (!node) return pos + 1
+
+  const to = pos + node.nodeSize
+  return doc.textBetween(to, to + 1) === " " ? to + 1 : to
+}
+
 export function MemoEditor({
   mode = "create",
   memo,
@@ -232,6 +240,13 @@ export function MemoEditor({
     [setImages]
   )
 
+  const addImageUrlAttachment = useCallback(
+    (url: string) => {
+      setImages((prev) => (prev.includes(url) ? prev : [...prev, url]))
+    },
+    [setImages]
+  )
+
   const handleRemoveQueuedImage = useCallback((idToRemove: string) => {
     setQueuedImages((prev) => {
       const target = prev.find((image) => image.id === idToRemove)
@@ -374,6 +389,8 @@ export function MemoEditor({
     !isFocused &&
     !isAnyDialogOpen &&
     !content.trim() &&
+    images.length === 0 &&
+    queuedImages.length === 0 &&
     mode === "create"
   const shouldAnimateCollapse = enableCollapseAnimation
   const needsPrivateDialog = isPrivate && (mode === "create" || !memo?.is_private)
@@ -390,12 +407,9 @@ export function MemoEditor({
         const isImg = isImageUrl(pendingPasteUrl)
 
         if (isImg) {
-          // 如果是图片，默认直接转为图片语法
-          view.dispatch(
-            view.state.tr
-              .delete(pendingLink.pos, pendingLink.pos + 1)
-              .insertText(`![图片](${pendingPasteUrl}) `, pendingLink.pos)
-          )
+          const deleteTo = getPendingLinkDeleteTo(view.state.doc, pendingLink.pos)
+          view.dispatch(view.state.tr.delete(pendingLink.pos, deleteTo))
+          addImageUrlAttachment(pendingPasteUrl)
         } else {
           const node = view.state.doc.nodeAt(pendingLink.pos)
           if (node) {
@@ -413,7 +427,7 @@ export function MemoEditor({
         }
       }
     },
-    [pendingPasteUrl, pendingPastePos, fetchedMeta]
+    [addImageUrlAttachment, pendingPasteUrl, pendingPastePos, fetchedMeta]
   )
 
   // 关闭粘贴菜单并清理状态
@@ -855,21 +869,28 @@ export function MemoEditor({
       previousPendingRef.current &&
       !isPending &&
       content === "" &&
+      images.length === 0 &&
+      queuedImages.length === 0 &&
       isPristineEmptyEditor(editor)
     ) {
       setShowPlaceholder(true)
     }
 
     previousPendingRef.current = isPending
-  }, [content, editor, isPending, mode])
+  }, [content, editor, images.length, isPending, mode, queuedImages.length])
 
   useEffect(() => {
     if (mode !== "create" || !editor) {
       return
     }
 
-    setShowPlaceholder(content.trim() === "" && isPristineEmptyEditor(editor))
-  }, [content, editor, mode])
+    setShowPlaceholder(
+      content.trim() === "" &&
+        images.length === 0 &&
+        queuedImages.length === 0 &&
+        isPristineEmptyEditor(editor)
+    )
+  }, [content, editor, images.length, mode, queuedImages.length])
 
   useEffect(() => {
     if (!editor || !pendingPasteUrl) {
@@ -1033,15 +1054,16 @@ export function MemoEditor({
             const isImg = isImageUrl(pendingPasteUrl)
 
             if (isImg) {
+              const deleteTo = getPendingLinkDeleteTo(editor.state.doc, pendingLink.pos)
               editor
                 .chain()
                 .deleteRange({
                   from: pendingLink.pos,
-                  to: pendingLink.pos + 1,
+                  to: deleteTo,
                 })
-                .insertContentAt(pendingLink.pos, `![图片](${pendingPasteUrl}) `)
                 .focus()
                 .run()
+              addImageUrlAttachment(pendingPasteUrl)
             } else {
               const finalTitle =
                 fetchedMeta?.title || fetchedMeta?.domain || deriveTitleFromUrl(pendingPasteUrl)
@@ -1068,15 +1090,16 @@ export function MemoEditor({
               pos: pendingPastePos,
             })
             if (pendingLink) {
+              const deleteTo = getPendingLinkDeleteTo(editor.state.doc, pendingLink.pos)
               editor
                 .chain()
                 .deleteRange({
                   from: pendingLink.pos,
-                  to: pendingLink.pos + 1,
+                  to: deleteTo,
                 })
-                .insertContentAt(pendingLink.pos, `![图片](${pendingPasteUrl}) `)
                 .focus()
                 .run()
+              addImageUrlAttachment(pendingPasteUrl)
             }
             closePasteMenu()
             return

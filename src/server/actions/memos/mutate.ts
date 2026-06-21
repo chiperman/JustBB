@@ -8,6 +8,7 @@ import { Memo } from "@/types/memo"
 import { getCurrentUserId, isAdmin } from "@/features/auth/actions"
 import {
   calculateWordCount,
+  extractImagesFromContent,
   extractLocations,
   mergeTagsIntoContent,
   removeTagsFromContent,
@@ -106,13 +107,14 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
   }
 
   const { content, is_private, is_pinned, access_code, access_code_hint, images } = validation.data
+  const normalizedMemo = extractImagesFromContent(content, images)
   const supabase = await getClient()
 
   const payload: Partial<MemoInsert> = {
     owner_id: viewerId,
     is_private,
-    images,
-    ...buildMemoPayload(content, { isPinned: is_pinned }),
+    images: normalizedMemo.images,
+    ...buildMemoPayload(normalizedMemo.content, { isPinned: is_pinned }),
   }
 
   if (is_private && access_code) {
@@ -164,13 +166,14 @@ export async function updateMemoContent(formData: FormData): Promise<ActionRespo
   }
 
   const { id, content, images } = validation.data
+  const normalizedMemo = extractImagesFromContent(content, images)
   const supabase = await getClient()
 
   const { data, error } = await supabase
     .from("memos")
     .update({
-      ...buildMemoPayload(content),
-      images,
+      ...buildMemoPayload(normalizedMemo.content),
+      images: normalizedMemo.images,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)

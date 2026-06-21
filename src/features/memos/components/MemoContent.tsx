@@ -17,6 +17,8 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/shared/ui/hover-card"
 import { toast } from "@/shared/hooks/use-toast"
+import { ImageZoom } from "@/shared/ui/ImageZoom"
+import { SmartImage } from "@/shared/ui/SmartImage"
 
 interface MemoContentProps {
   content: string
@@ -122,6 +124,10 @@ export function MemoContent({
                 </LocationHoverPreview>
               )
             case "markupLink":
+              if (token.mode === "image") {
+                return <InlineMemoImage key={`mlink-${index}`} src={token.url} alt={token.title} />
+              }
+
               if (token.mode === "mention") {
                 return (
                   <span
@@ -205,6 +211,8 @@ export function MemoContent({
                   showCopyButton
                 />
               )
+            case "image":
+              return <InlineMemoImage key={`image-${index}`} src={token.url} alt={token.alt} />
             case "link":
               return <LinkPreview key={`link-${index}`} url={token.value} showCopyButton />
             case "email":
@@ -232,6 +240,19 @@ export function MemoContent({
     >
       {renderContent(content)}
     </div>
+  )
+}
+
+function InlineMemoImage({ src, alt }: { src: string; alt?: string }) {
+  return (
+    <ImageZoom src={src} alt={alt || "图片"} noHoverScale>
+      <SmartImage
+        src={src}
+        alt={alt || "图片"}
+        containerClassName="my-2 h-auto max-h-[520px] w-full max-w-2xl rounded-md border border-border/50 bg-muted/20"
+        className="h-auto max-h-[520px] w-full cursor-zoom-in object-contain"
+      />
+    </ImageZoom>
   )
 }
 

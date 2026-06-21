@@ -164,6 +164,10 @@ export function MemoEditorLayout({
 }: MemoEditorLayoutProps) {
   const { animationMultiplier } = useLayout()
   const attachmentStripRef = React.useRef<HTMLDivElement>(null)
+  const hasImageAttachments =
+    Boolean(uploadedImages?.length) ||
+    Boolean(queuedImages?.length) ||
+    Boolean(uploadingImages?.length)
   const attachmentDragRef = React.useRef({
     active: false,
     moved: false,
@@ -345,9 +349,7 @@ export function MemoEditorLayout({
             <EditorContent editor={editor} className="flex-1 flex flex-col min-h-0" />
 
             {/* 上传图片缩略图展示区 */}
-            {((uploadedImages && uploadedImages.length > 0) ||
-              (queuedImages && queuedImages.length > 0) ||
-              (uploadingImages && uploadingImages.length > 0)) && (
+            {hasImageAttachments && (
               <div
                 ref={attachmentStripRef}
                 className="flex flex-nowrap gap-2 mt-3 mb-1 select-none relative z-10 overflow-x-auto overflow-y-hidden pb-2 scrollbar-hover cursor-grab active:cursor-grabbing"
@@ -574,6 +576,7 @@ export function MemoEditorLayout({
           isPending={isPending}
           isUploadingImage={isUploadingImage}
           content={content}
+          hasImages={hasImageAttachments}
           mode={mode}
           onTogglePrivate={onTogglePrivate}
           onTogglePinned={onTogglePinned}

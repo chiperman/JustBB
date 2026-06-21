@@ -7,11 +7,7 @@ import { PluginKey } from "@tiptap/pm/state"
 import type { Editor } from "@tiptap/core"
 import { parseContentTokens } from "@/shared/lib/contentParser"
 import { CustomSuggestionProps } from "../../hooks/useEditorSuggestions"
-import {
-  escapeHtml,
-  formatSmartLinkToken,
-  serializeSmartLinkHtml,
-} from "./smartLink"
+import { escapeHtml, formatSmartLinkToken, serializeSmartLinkHtml } from "./smartLink"
 
 export const mentionPluginKey = new PluginKey("mention")
 export const hashtagPluginKey = new PluginKey("hashtag")
@@ -65,19 +61,15 @@ function deleteAtomicNodeForward(editor: Editor, extensionName: string) {
       let targetPos: number | null = null
       let targetSize = 0
 
-      state.doc.nodesBetween(
-        anchor,
-        Math.min(state.doc.content.size, anchor + 1),
-        (node, pos) => {
-          if (node.type.name === extensionName) {
-            targetPos = pos
-            targetSize = node.nodeSize
-            return false
-          }
-
-          return true
+      state.doc.nodesBetween(anchor, Math.min(state.doc.content.size, anchor + 1), (node, pos) => {
+        if (node.type.name === extensionName) {
+          targetPos = pos
+          targetSize = node.nodeSize
+          return false
         }
-      )
+
+        return true
+      })
 
       if (targetPos === null) {
         return false
@@ -114,6 +106,12 @@ export function textToTiptapHtml(text: string): string {
                 url: token.url,
                 mode: token.mode,
                 isPending: (token as { isPending?: boolean }).isPending,
+              })
+            case "image":
+              return serializeSmartLinkHtml({
+                title: token.alt,
+                url: token.url,
+                mode: "image",
               })
             case "text":
               return escapeHtml(token.value)
@@ -154,11 +152,7 @@ export const getExtensions = (options: ExtensionOptions) => [
       return [{ tag: 'span[data-type="mention"]' }]
     },
     renderHTML({ node }) {
-      return [
-        "span",
-        this.options.HTMLAttributes,
-        `@${node.attrs.label ?? node.attrs.id}`,
-      ]
+      return ["span", this.options.HTMLAttributes, `@${node.attrs.label ?? node.attrs.id}`]
     },
   }).configure({
     HTMLAttributes: {
@@ -183,11 +177,7 @@ export const getExtensions = (options: ExtensionOptions) => [
       return [{ tag: 'span[data-type="hashtag"]' }]
     },
     renderHTML({ node }) {
-      return [
-        "span",
-        this.options.HTMLAttributes,
-        `#${node.attrs.label ?? node.attrs.id}`,
-      ]
+      return ["span", this.options.HTMLAttributes, `#${node.attrs.label ?? node.attrs.id}`]
     },
   }).configure({
     HTMLAttributes: {
@@ -214,25 +204,20 @@ export const getExtensions = (options: ExtensionOptions) => [
         ...this.parent?.(),
         mentionSuggestionChar: {
           default: "🔗",
-          parseHTML: (element) =>
-            element.getAttribute("data-mention-suggestion-char") || "🔗",
+          parseHTML: (element) => element.getAttribute("data-mention-suggestion-char") || "🔗",
           renderHTML: (attributes) => ({
-            "data-mention-suggestion-char":
-              attributes.mentionSuggestionChar || "🔗",
+            "data-mention-suggestion-char": attributes.mentionSuggestionChar || "🔗",
           }),
         },
         mode: {
           default: "mention",
-          parseHTML: (element) =>
-            element.getAttribute("data-mode") || "mention",
+          parseHTML: (element) => element.getAttribute("data-mode") || "mention",
           renderHTML: (attributes) => ({ "data-mode": attributes.mode }),
         },
         isPending: {
           default: false,
-          parseHTML: (element) =>
-            element.getAttribute("data-pending") === "true",
-          renderHTML: (attributes) =>
-            attributes.isPending ? { "data-pending": "true" } : {},
+          parseHTML: (element) => element.getAttribute("data-pending") === "true",
+          renderHTML: (attributes) => (attributes.isPending ? { "data-pending": "true" } : {}),
         },
       }
     },

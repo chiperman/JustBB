@@ -87,7 +87,7 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
       return false
     }
 
-    if (!textContent.trim()) {
+    if (!textContent.trim() && imageUrls.length === 0) {
       const message = "内容为空，无法保存。"
       setError(message)
       toast({

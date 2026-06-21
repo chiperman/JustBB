@@ -18,6 +18,7 @@ import {
 } from "@/shared/ui/dropdown-menu"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/shared/ui/hover-card"
 import { useToast } from "@/shared/hooks/use-toast"
+import { SmartImage } from "@/shared/ui/SmartImage"
 import type { LinkRenderMode } from "./smartLink"
 
 export const LinkNodeView = (props: NodeViewProps) => {
@@ -145,6 +146,20 @@ export const LinkNodeView = (props: NodeViewProps) => {
       {mode === "card" && (
         <div className="relative group max-w-2xl my-2">
           <LinkPreview url={url} customTitle={title} className="m-0" />
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-md border border-border/50 p-0.5 z-10">
+            {renderMenu()}
+          </div>
+        </div>
+      )}
+
+      {mode === "image" && (
+        <div className="relative group my-2 max-w-2xl overflow-hidden rounded-md border border-border/50 bg-muted/20">
+          <SmartImage
+            src={url}
+            alt={title || "图片"}
+            className="max-h-[420px] w-full object-contain"
+            draggable={false}
+          />
           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-md border border-border/50 p-0.5 z-10">
             {renderMenu()}
           </div>

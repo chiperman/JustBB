@@ -22,21 +22,6 @@ function formatDate(date: Date | string): string {
   return `${year}.${month}.${day}`
 }
 
-function getStableNumber(input: string): number {
-  let hash = 0
-
-  for (let i = 0; i < input.length; i += 1) {
-    hash = (hash * 31 + input.charCodeAt(i)) % 997
-  }
-
-  return hash
-}
-
-function getGalleryAspectRatio(item: GalleryMemoItem): string {
-  const ratios = item.images.length > 1 ? ["4 / 3", "5 / 4", "3 / 2"] : ["4 / 3", "1 / 1", "5 / 4"]
-  return ratios[getStableNumber(item.id) % ratios.length]
-}
-
 function CardOverlay() {
   return (
     <>
@@ -104,14 +89,14 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
   }
 
   return (
-    <div className="columns-1 gap-7 md:columns-2 lg:columns-3">
+    <div className="columns-1 gap-6 md:columns-2 lg:columns-3 xl:columns-4">
       {galleryItems.map((item) => (
-        <div key={item.id} className="mb-8 break-inside-avoid pb-3 pr-5">
+        <div key={item.id} className="mb-7 break-inside-avoid pb-3 pr-4">
           <ImageStackThumbnail
             images={item.images}
             layoutId={`image-stack-${item.id}`}
             alt="Memo multimedia content"
-            aspectRatio={getGalleryAspectRatio(item)}
+            preserveNaturalAspectRatio
             onOpen={() => setPreviewItem(item)}
             overlay={
               <>

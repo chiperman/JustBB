@@ -54,6 +54,37 @@ describe("parseContentTokens", () => {
     expect(parseContentTokens(input)).toEqual(expected)
   })
 
+  it("should parse markdown images as images", () => {
+    const input = "Here is a pic ![猫](https://foo.com/bar.jpg) nice"
+    const expected = [
+      { type: "text", value: "Here is a pic " },
+      {
+        type: "image",
+        value: "![猫](https://foo.com/bar.jpg)",
+        alt: "猫",
+        url: "https://foo.com/bar.jpg",
+      },
+      { type: "text", value: " nice" },
+    ]
+
+    expect(parseContentTokens(input)).toEqual(expected)
+  })
+
+  it("should parse image smart links with image mode", () => {
+    const input = "🔗[图片](https://foo.com/bar.jpg|image)"
+    const expected = [
+      {
+        type: "markupLink",
+        value: "🔗[图片](https://foo.com/bar.jpg|image)",
+        title: "图片",
+        url: "https://foo.com/bar.jpg",
+        mode: "image",
+      },
+    ]
+
+    expect(parseContentTokens(input)).toEqual(expected)
+  })
+
   it("should handle multiple matches adjacent", () => {
     const input = "#tag1@123"
     // Note: Logic might split this depending on regex.

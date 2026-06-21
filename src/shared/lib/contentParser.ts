@@ -5,13 +5,14 @@ export type ContentToken =
   | { type: "code"; value: string; lang?: string }
   | { type: "location"; value: string; name: string; lat: number; lng: number }
   | { type: "email"; value: string }
+  | { type: "image"; value: string; alt: string; url: string }
   | { type: "link"; value: string }
   | {
       type: "markupLink"
       value: string
       title: string
       url: string
-      mode?: "mention" | "pill" | "card"
+      mode?: "mention" | "pill" | "card" | "image"
     }
 
 export function parseContentTokens(text: string): ContentToken[] {
@@ -21,8 +22,9 @@ export function parseContentTokens(text: string): ContentToken[] {
   // 3. 引用匹配: @数字
   // 4. Tag匹配: #标签 (不含空格，中文或字母数字)
   // 5. Email匹配: test@example.com
-  // 6. 标记链接: 🔗[名称](链接|显示模式)
-  // 7. 原始链接匹配: http(s)://...
+  // 6. Markdown 图片: ![替代文本](图片链接)
+  // 7. 标记链接: 🔗[名称](链接|显示模式)
+  // 8. 原始链接匹配: http(s)://...
 
   // 预处理：移除异常的调试用标签 (如 < a id=0 >, < span id=1 >)
   // 这些可能是历史数据中混入的 React/DevTools 调试残留
@@ -37,11 +39,12 @@ export function parseContentTokens(text: string): ContentToken[] {
     ref: /(@\d+)/,
     tag: /(?<=^|\s|[^a-zA-Z0-9])(#[\w\u4e00-\u9fa5]+)/,
     email: /([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)/,
-    markupLink: /🔗\[([^\]]+)\]\(([^\s\|]+)(?:\|(pill|card))?\)/,
+    markdownImage: /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/,
+    markupLink: /🔗\[([^\]]+)\]\(([^\s\|]+)(?:\|(pill|card|image))?\)/,
     link: /(https?:\/\/[^\s\u4e00-\u9fa5<]+[^\s\u4e00-\u9fa5<.,;:!?'"”’。，！？）】])/,
   } as const
 
-  // 按优先级组合（代码块 > 定位 > 引用 > 标签 > 邮件 > 标记链接 > 原始链接）
+  // 按优先级组合（代码块 > 定位 > 引用 > 标签 > 邮件 > Markdown 图片 > 标记链接 > 原始链接）
   const regex = new RegExp(
     Object.values(PATTERNS)
       .map((p) => p.source)
@@ -64,6 +67,8 @@ export function parseContentTokens(text: string): ContentToken[] {
       atRef,
       hashTag,
       email,
+      markdownImageAlt,
+      markdownImageUrl,
       markupLinkTitle,
       markupLinkUrl,
       markupLinkMode,
@@ -91,13 +96,20 @@ export function parseContentTokens(text: string): ContentToken[] {
         tokens.push({ type: "tag", value: hashTag })
       } else if (email) {
         tokens.push({ type: "email", value: email })
+      } else if (markdownImageUrl !== undefined) {
+        tokens.push({
+          type: "image",
+          value: match,
+          alt: markdownImageAlt || "图片",
+          url: markdownImageUrl,
+        })
       } else if (markupLinkTitle !== undefined && markupLinkUrl !== undefined) {
         tokens.push({
           type: "markupLink",
           value: match,
           title: markupLinkTitle,
           url: markupLinkUrl,
-          mode: (markupLinkMode as "pill" | "card") || "mention",
+          mode: (markupLinkMode as "pill" | "card" | "image") || "mention",
         })
       } else if (rawLink) {
         tokens.push({ type: "link", value: rawLink })

@@ -9,14 +9,21 @@ describe("textToTiptapHtml", () => {
 
     expect(html).toContain('data-type="markupLink"')
     expect(html).toContain('data-mode="card"')
-    expect(html).toContain(
-      'data-label="Fish &amp; &quot;Chips&quot; &lt;Menu&gt;"'
-    )
+    expect(html).toContain('data-label="Fish &amp; &quot;Chips&quot; &lt;Menu&gt;"')
     expect(html).toContain('data-id="https://example.com?q=fish&amp;lang=zh"')
     expect(html).toContain(
       "🔗[Fish &amp; &quot;Chips&quot; &lt;Menu&gt;](https://example.com?q=fish&amp;lang=zh|card)"
     )
     expect(html).not.toContain('data-label="Fish & "Chips" <Menu>"')
+  })
+
+  it("会把 Markdown 图片转换成 image 模式的 smart-link 节点", () => {
+    const html = textToTiptapHtml("![图片](https://example.com/cat.jpg)")
+
+    expect(html).toContain('data-type="markupLink"')
+    expect(html).toContain('data-mode="image"')
+    expect(html).toContain('data-label="图片"')
+    expect(html).toContain('data-id="https://example.com/cat.jpg"')
   })
 })
 
@@ -35,9 +42,7 @@ describe("getExtensions", () => {
       onHashtagKeyDown: vi.fn(() => false),
     })
 
-    const markupLink = extensions.find(
-      (extension) => extension.name === "markupLink"
-    )
+    const markupLink = extensions.find((extension) => extension.name === "markupLink")
 
     // 使用类型断言访问自定义配置项
     const options = markupLink?.options as unknown as Record<string, unknown>

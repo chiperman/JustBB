@@ -1,48 +1,23 @@
 "use client"
 
-import Link from "next/link"
 import { motion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ArrowRight01Icon, Delete02Icon } from "@hugeicons/core-free-icons"
-
-import { Button } from "@/shared/ui/button"
+import { Delete02Icon } from "@hugeicons/core-free-icons"
 
 export function TrashEmptyState() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-card/30 px-6 py-16 text-center"
+      className="rounded-2xl border border-dashed border-border/60 bg-card/30 px-6 py-16 text-center"
     >
-      <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-background/80">
-        <HugeiconsIcon
-          icon={Delete02Icon}
-          size={24}
-          className="text-primary/60"
-        />
+      <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-md border border-border/50 bg-background/70">
+        <HugeiconsIcon icon={Delete02Icon} size={18} className="text-muted-foreground/60" />
       </div>
 
-      <div className="space-y-2">
-        <h2 className="text-lg font-medium tracking-tight text-foreground">
-          回收站现在是空的
-        </h2>
-        <p className="max-w-md text-sm leading-6 text-muted-foreground">
-          新删除的 Memo
-          会先来到这里。你可以稍后回来恢复它们，或者继续回到首页写新的记录。
-        </p>
-      </div>
-
-      <Button
-        asChild
-        variant="outline"
-        size="sm"
-        className="mt-6 border-border/60 bg-background/80"
-      >
-        <Link href="/">
-          返回首页
-          <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
-        </Link>
-      </Button>
+      <p className="text-sm text-muted-foreground">
+        暂无回收记录。删除后的 Memo 会暂存在这里，方便之后恢复或彻底清理。
+      </p>
     </motion.div>
   )
 }

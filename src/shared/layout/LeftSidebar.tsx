@@ -14,6 +14,7 @@ import { useSidebarPagePrefetch } from "@/shared/hooks/useSidebarPagePrefetch"
 import { SidebarNavItem } from "./sidebar/SidebarNavItem"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { useLayout } from "@/state/LayoutContext"
+import { useTags } from "@/state/TagsContext"
 import {
   LEFT_SIDEBAR_COOKIE_KEY,
   LEFT_SIDEBAR_STORAGE_EVENT,
@@ -52,6 +53,8 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
   const { navItems, currentView, handleNavigate } = useSidebarNavigation()
   const { schedulePrefetch, cancelPrefetch } = useSidebarPagePrefetch()
   const { animationMultiplier } = useLayout()
+  const { tags } = useTags()
+  const shouldShowPopularTags = tags.length > 0
 
   const sidebarTransition = {
     duration: 0.28 * animationMultiplier,
@@ -175,36 +178,37 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
         ))}
       </motion.nav>
 
-      {/* Popular Tags */}
-      <motion.div
-        initial={false}
-        className="shrink-0 overflow-hidden"
-        animate={{
-          height: effectiveIsCollapsed ? 0 : TAGS_SLOT_HEIGHT,
-          opacity: effectiveIsCollapsed ? 0 : 1,
-        }}
-        transition={{
-          height: sidebarTransition,
-          opacity: sidebarTransition,
-        }}
-      >
-        <div className="w-[264px] shrink-0 border-t border-border px-1 pt-4 pb-4">
-          <h3 className="mb-4 flex items-center gap-2 card-title">热门标签</h3>
-          <Suspense
-            fallback={
-              <div className="space-y-2">
-                <div className="flex flex-wrap gap-2">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="h-6 w-12 rounded-md bg-muted/20 animate-pulse" />
-                  ))}
+      {shouldShowPopularTags && (
+        <motion.div
+          initial={false}
+          className="shrink-0 overflow-hidden"
+          animate={{
+            height: effectiveIsCollapsed ? 0 : TAGS_SLOT_HEIGHT,
+            opacity: effectiveIsCollapsed ? 0 : 1,
+          }}
+          transition={{
+            height: sidebarTransition,
+            opacity: sidebarTransition,
+          }}
+        >
+          <div className="w-[264px] shrink-0 border-t border-border px-1 pt-4 pb-4">
+            <h3 className="mb-4 flex items-center gap-2 card-title">热门标签</h3>
+            <Suspense
+              fallback={
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="h-6 w-12 rounded-md bg-muted/20 animate-pulse" />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            }
-          >
-            <TagCloud />
-          </Suspense>
-        </div>
-      </motion.div>
+              }
+            >
+              <TagCloud />
+            </Suspense>
+          </div>
+        </motion.div>
+      )}
 
       {/* Bottom Settings Area: 设置按钮移至此处，带 mt-auto 置底 */}
       <div className="shrink-0 border-t border-border mt-auto pt-2 flex items-center pl-1 w-full">

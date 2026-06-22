@@ -49,7 +49,7 @@ const STACK_FULL_SPREAD_LAYERS = 5
 const THUMBNAIL_MIN_ASPECT_RATIO = 0.96
 const THUMBNAIL_MAX_ASPECT_RATIO = 1.55
 const PINCH_ROTATION_THRESHOLD = 3
-const PREVIEW_SWITCH_DURATION_MS = 420
+const PREVIEW_SWITCH_DURATION_MS = 1800
 const KEYBOARD_REPEAT_NAVIGATION_INTERVAL_MS = 560
 export const IMAGE_STACK_RETURN_DURATION_MS = 420
 const PREVIEW_FALLBACK_IMAGE_SIZE = { width: 560, height: 420 }
@@ -636,6 +636,7 @@ export function ImageStackPreview({
         ease: [0.22, 1, 0.36, 1] as const,
         times: [0, 0.58, 1],
       }
+  const outgoingSwitchTransition = switchTransition
   const previewOpenTransition = shouldReduceMotion
     ? { duration: 0 }
     : { duration: 0.28, ease: [0.2, 0.8, 0.2, 1] as const }
@@ -1023,11 +1024,11 @@ export function ImageStackPreview({
   const incomingMidY = switchAnimation?.mode === "incoming" ? -switchLiftDistance * 0.25 : 0
   const incomingMidRotate = switchAnimation?.mode === "incoming" ? 6.5 * switchDirection : 0
   const outgoingExitX = switchAnimation?.mode === "outgoing" ? -switchTravelDistance * 0.82 : 0
-  const outgoingExitY = switchAnimation?.mode === "outgoing" ? -switchLiftDistance * 0.66 : 0
-  const outgoingExitRotate = switchAnimation?.mode === "outgoing" ? -6.6 : 0
-  const outgoingReturnX = switchAnimation?.mode === "outgoing" ? switchTravelDistance * 0.34 : 0
-  const outgoingReturnY = switchAnimation?.mode === "outgoing" ? switchLiftDistance * 1.05 : 0
-  const outgoingReturnRotate = switchAnimation?.mode === "outgoing" ? 3.4 : 0
+  const outgoingExitY = switchAnimation?.mode === "outgoing" ? -switchLiftDistance * 0.25 : 0
+  const outgoingExitRotate = switchAnimation?.mode === "outgoing" ? -6.5 : 0
+  const outgoingReturnX = switchAnimation?.mode === "outgoing" ? -switchTravelDistance * 0.34 : 0
+  const outgoingReturnY = switchAnimation?.mode === "outgoing" ? switchLiftDistance * 1.15 : 0
+  const outgoingReturnRotate = switchAnimation?.mode === "outgoing" ? -2.8 : 0
   const outgoingPreviewImage = switchAnimation?.mode === "outgoing" ? switchAnimation : null
   const incomingImageIndex =
     switchAnimation?.mode === "incoming" ? switchAnimation.imageIndex : null
@@ -1177,6 +1178,7 @@ export function ImageStackPreview({
                             x: [incomingStartX, incomingMidX, restingX],
                             y: [incomingStartY, incomingMidY, restingY],
                             rotate: [incomingStartRotate, incomingMidRotate, restingRotate],
+                            opacity: [0.45, 0.88, 1],
                             zIndex: [70, 72, imageCount - offset],
                           }
                         : isOutgoingRevealTop
@@ -1300,18 +1302,21 @@ export function ImageStackPreview({
                   x: 0,
                   y: 0,
                   rotate: 0,
+                  zIndex: 60,
                 }}
                 animate={{
                   width: outgoingFrameSize.width,
                   height: outgoingFrameSize.height,
                   marginLeft: -outgoingFrameSize.width / 2,
                   marginTop: -outgoingFrameSize.height / 2,
-                  scale: [1, 0.97, 0.84],
+                  scale: [1, 0.97, 0.68],
                   x: [0, outgoingExitX, outgoingReturnX],
                   y: [0, outgoingExitY, outgoingReturnY],
                   rotate: [0, outgoingExitRotate, outgoingReturnRotate],
+                  opacity: [1, 0.7, 0.4],
+                  zIndex: 60,
                 }}
-                transition={switchTransition}
+                transition={outgoingSwitchTransition}
                 className="pointer-events-none absolute left-1/2 top-1/2 z-[60] flex items-center justify-center"
                 style={{
                   touchAction: "none",

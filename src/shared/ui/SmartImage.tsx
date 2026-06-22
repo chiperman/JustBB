@@ -62,6 +62,40 @@ export function ImageErrorState({
   )
 }
 
+export function ImageLoadingState({
+  isFullPage = false,
+  className,
+}: {
+  isFullPage?: boolean
+  className?: string
+}) {
+  return (
+    <motion.div
+      key="loading"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className={cn(
+        "absolute inset-0 z-10 flex select-none items-center justify-center overflow-hidden p-4 text-muted-foreground/28",
+        "bg-[#f8f7f6]/82 backdrop-blur-sm backdrop-saturate-110",
+        "shadow-[inset_0_1px_0_rgba(255,255,255,0.72),inset_0_-18px_34px_rgba(29,29,27,0.024)]",
+        "before:absolute before:inset-0 before:animate-pulse before:bg-[linear-gradient(110deg,transparent_0%,rgba(255,255,255,0.54)_42%,transparent_74%)]",
+        "dark:bg-background/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),inset_0_-18px_34px_rgba(0,0,0,0.22)] dark:before:bg-[linear-gradient(110deg,transparent_0%,rgba(255,255,255,0.08)_42%,transparent_74%)]",
+        isFullPage && "bg-background/65",
+        className
+      )}
+    >
+      <div className="pointer-events-none absolute inset-2 rounded-lg border border-border/30 bg-background/18" />
+      <HugeiconsIcon
+        icon={Image01Icon}
+        size={isFullPage ? 32 : 22}
+        strokeWidth={1.2}
+        className="relative z-10 animate-pulse text-muted-foreground/28"
+      />
+    </motion.div>
+  )
+}
+
 export function SmartImage({
   src,
   alt,
@@ -74,8 +108,8 @@ export function SmartImage({
   const imageSrc = typeof src === "string" ? src : undefined
   const imageState = useImageLoadState(imageSrc)
   const isLoaded = imageState.status === "loaded"
-  const isError = imageState.status === "error"
-  const isLoading = !isError && !isLoaded
+  const isError = !imageSrc || imageState.status === "error"
+  const isLoading = !!imageSrc && !isError && !isLoaded
 
   return (
     <div
@@ -85,23 +119,7 @@ export function SmartImage({
       )}
     >
       <AnimatePresence>
-        {isLoading && (
-          <motion.div
-            key="loading"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 flex items-center justify-center z-10"
-          >
-            <div
-              className={cn(
-                "h-full w-full animate-pulse bg-muted/40",
-                isFullPage &&
-                  "rounded-lg bg-gradient-to-br from-muted/40 via-background/70 to-muted/30 shadow-[0_18px_48px_rgba(29,29,27,0.08)] backdrop-blur-sm dark:from-white/10 dark:via-white/6 dark:to-white/10"
-              )}
-            />
-          </motion.div>
-        )}
+        {isLoading && <ImageLoadingState isFullPage={isFullPage} />}
 
         {isError && <ImageErrorState isFullPage={isFullPage} className={fallbackClassName} />}
       </AnimatePresence>

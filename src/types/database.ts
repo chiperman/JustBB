@@ -36,6 +36,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           id: string
+          image_metadata: Json
           images: string[]
           is_pinned: boolean
           is_private: boolean
@@ -54,6 +55,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          image_metadata?: Json
           images?: string[]
           is_pinned?: boolean
           is_private?: boolean
@@ -72,6 +74,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          image_metadata?: Json
           images?: string[]
           is_pinned?: boolean
           is_private?: boolean
@@ -146,6 +149,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          image_metadata: Json
           images: string[]
           is_locked: boolean
           is_owner: boolean

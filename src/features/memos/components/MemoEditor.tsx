@@ -17,12 +17,13 @@ import { useState } from "react"
 import { toast } from "@/shared/hooks/use-toast"
 
 import { useMemoEditor, DRAFT_CONTENT_KEY } from "@/features/memos/hooks/useMemoEditor"
-import { useImageUpload } from "@/features/memos/hooks/useImageUpload"
+import { useImageUpload, type UploadedImage } from "@/features/memos/hooks/useImageUpload"
 import {
   useEditorSuggestions,
   CustomSuggestionProps,
 } from "@/features/memos/hooks/useEditorSuggestions"
 import { Memo } from "@/types/memo"
+import type { ImageMetadata } from "@/types/memo"
 
 interface MemoEditorProps {
   mode?: "create" | "edit"
@@ -38,10 +39,22 @@ const IMAGE_URL_RE = /\.(?:jpe?g|png|gif|webp|avif|svg|bmp|ico|tiff?)(?:\?|#|$)/
 
 type LocalImageAttachment = {
   id: string
-  file: File
+  file?: File
   previewUrl: string
   progress?: number
   isUploading?: boolean
+  publishStatus?: "queued" | "uploading" | "saving"
+  uploaded?: UploadedImage
+}
+
+function revokePreviewUrl(url: string) {
+  if (url.startsWith("blob:")) {
+    URL.revokeObjectURL(url)
+  }
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms))
 }
 
 function isImageUrl(url: string): boolean {
@@ -125,6 +138,8 @@ export function MemoEditor({
     setContent,
     images,
     setImages,
+    imageMetadata,
+    setImageMetadata,
     isPending,
     isPrivate,
     accessCode,
@@ -166,7 +181,11 @@ export function MemoEditor({
 
       if (isQueuedAttachment) {
         setQueuedImages((prev) =>
-          prev.map((img) => (img.id === id ? { ...img, progress: 0, isUploading: true } : img))
+          prev.map((img) =>
+            img.id === id
+              ? { ...img, progress: 0, isUploading: true, publishStatus: "uploading" }
+              : img
+          )
         )
       } else {
         setUploadingImages((prev) => [...prev, { id, previewUrl, progress: 0 }])
@@ -188,7 +207,13 @@ export function MemoEditor({
         setQueuedImages((prev) =>
           prev.map((img) =>
             img.id === id
-              ? { ...img, progress: result.url ? 100 : undefined, isUploading: false }
+              ? {
+                  ...img,
+                  progress: result.url ? 100 : undefined,
+                  isUploading: false,
+                  publishStatus: result.url ? "queued" : "queued",
+                  uploaded: result.image ?? img.uploaded,
+                }
               : img
           )
         )
@@ -204,7 +229,17 @@ export function MemoEditor({
             description: result.warning,
           })
         }
-        return result.url
+        const uploadedImage = result.image
+        if (uploadedImage?.url && uploadedImage.width && uploadedImage.height) {
+          setImageMetadata((prev) => ({
+            ...prev,
+            [uploadedImage.url]: {
+              width: uploadedImage.width!,
+              height: uploadedImage.height!,
+            },
+          }))
+        }
+        return uploadedImage
       } else if (result.error) {
         toast({
           title: "图片上传失败",
@@ -215,8 +250,43 @@ export function MemoEditor({
 
       return null
     },
-    [uploadFile]
+    [setImageMetadata, uploadFile]
   )
+
+  const handleLinkedImageUpload = useCallback(async (image: LocalImageAttachment) => {
+    const progressSteps = [0, 18, 36, 58, 78, 92, 100]
+
+    for (const progress of progressSteps) {
+      setQueuedImages((prev) =>
+        prev.map((item) =>
+          item.id === image.id
+            ? {
+                ...item,
+                progress,
+                isUploading: true,
+                publishStatus: "uploading",
+              }
+            : item
+        )
+      )
+      await wait(progress === 100 ? 80 : 120)
+    }
+
+    setQueuedImages((prev) =>
+      prev.map((item) =>
+        item.id === image.id
+          ? {
+              ...item,
+              progress: 100,
+              isUploading: false,
+              publishStatus: "queued",
+            }
+          : item
+      )
+    )
+
+    return image.uploaded ?? { url: image.previewUrl }
+  }, [])
 
   const handleImageFiles = useCallback((files: File[] | FileList) => {
     const imageFiles = Array.from(files).filter((file) => file.type.startsWith("image/"))
@@ -236,21 +306,42 @@ export function MemoEditor({
   const handleRemoveUploadedImage = useCallback(
     (urlToRemove: string) => {
       setImages((prev) => prev.filter((url) => url !== urlToRemove))
+      setImageMetadata((prev) => {
+        const next = { ...prev }
+        delete next[urlToRemove]
+        return next
+      })
     },
-    [setImages]
+    [setImageMetadata, setImages]
   )
 
   const addImageUrlAttachment = useCallback(
     (url: string) => {
-      setImages((prev) => (prev.includes(url) ? prev : [...prev, url]))
+      if (images.includes(url)) return
+
+      setQueuedImages((prev) => {
+        if (prev.some((image) => image.uploaded?.url === url || image.previewUrl === url)) {
+          return prev
+        }
+
+        return [
+          ...prev,
+          {
+            id: Math.random().toString(36).substring(2, 9),
+            previewUrl: url,
+            publishStatus: "queued",
+            uploaded: { url },
+          },
+        ]
+      })
     },
-    [setImages]
+    [images]
   )
 
   const handleRemoveQueuedImage = useCallback((idToRemove: string) => {
     setQueuedImages((prev) => {
       const target = prev.find((image) => image.id === idToRemove)
-      if (target) URL.revokeObjectURL(target.previewUrl)
+      if (target) revokePreviewUrl(target.previewUrl)
       return prev.filter((image) => image.id !== idToRemove)
     })
   }, [])
@@ -315,40 +406,89 @@ export function MemoEditor({
 
   useEffect(
     () => () => {
-      queuedImagesRef.current.forEach((image) => URL.revokeObjectURL(image.previewUrl))
+      queuedImagesRef.current.forEach((image) => revokePreviewUrl(image.previewUrl))
     },
     []
   )
 
   const clearQueuedImages = useCallback(() => {
     setQueuedImages((prev) => {
-      prev.forEach((image) => URL.revokeObjectURL(image.previewUrl))
+      prev.forEach((image) => revokePreviewUrl(image.previewUrl))
       return []
     })
   }, [])
 
   const uploadQueuedImages = useCallback(async () => {
-    if (queuedImages.length === 0) return images
+    if (queuedImages.length === 0) return { urls: images, metadata: imageMetadata }
 
     setIsPublishingQueuedImages(true)
     try {
-      const urls = (
-        await Promise.all(
-          queuedImages.map((image) =>
-            handleImageFileUpload(image.file, { id: image.id, previewUrl: image.previewUrl })
+      const uploadedImages = await Promise.all(
+        queuedImages.map((image) =>
+          image.file
+            ? handleImageFileUpload(image.file, { id: image.id, previewUrl: image.previewUrl })
+            : handleLinkedImageUpload(image)
+        )
+      )
+      const validImages = uploadedImages.filter((image): image is UploadedImage =>
+        Boolean(image?.url)
+      )
+
+      if (validImages.length !== queuedImages.length) {
+        setQueuedImages((prev) =>
+          prev.map((image) =>
+            image.uploaded?.url
+              ? image
+              : {
+                  ...image,
+                  progress: undefined,
+                  isUploading: false,
+                  publishStatus: "queued",
+                }
           )
         )
-      ).filter((url): url is string => Boolean(url))
-
-      if (urls.length !== queuedImages.length) {
         return null
       }
 
-      return [...images, ...urls]
+      const nextMetadata: ImageMetadata = { ...imageMetadata }
+      validImages.forEach((image) => {
+        if (image.width && image.height) {
+          nextMetadata[image.url] = {
+            width: image.width,
+            height: image.height,
+          }
+        }
+      })
+
+      setImageMetadata(nextMetadata)
+      const uploadedById = new Map(
+        queuedImages.map((image, index) => [image.id, validImages[index]] as const)
+      )
+      setQueuedImages((prev) =>
+        prev.map((image) => ({
+          ...image,
+          progress: 100,
+          isUploading: true,
+          publishStatus: "saving",
+          uploaded: uploadedById.get(image.id) ?? image.uploaded,
+        }))
+      )
+
+      return {
+        urls: [...images, ...validImages.map((image) => image.url)],
+        metadata: nextMetadata,
+      }
     } finally {
       setIsPublishingQueuedImages(false)
     }
-  }, [handleImageFileUpload, images, queuedImages])
+  }, [
+    handleImageFileUpload,
+    handleLinkedImageUpload,
+    imageMetadata,
+    images,
+    queuedImages,
+    setImageMetadata,
+  ])
 
   // 智能链接系统相关状态
   const [pendingPasteUrl, setPendingPasteUrl] = useState<string | null>(null)
@@ -441,12 +581,20 @@ export function MemoEditor({
   const handlePublishWithQueuedImages = useCallback(async () => {
     const currentEditor = editorRef.current
     resolvePendingLink(currentEditor?.view)
-    const imageUrls = await uploadQueuedImages()
-    if (!imageUrls) return
+    const uploaded = await uploadQueuedImages()
+    if (!uploaded) return
 
-    const didPublish = await performPublish(currentEditor, imageUrls)
+    const didPublish = await performPublish(currentEditor, uploaded.urls, uploaded.metadata)
     if (didPublish) {
       clearQueuedImages()
+    } else {
+      setQueuedImages((prev) =>
+        prev.map((image) => ({
+          ...image,
+          isUploading: false,
+          publishStatus: "queued",
+        }))
+      )
     }
   }, [clearQueuedImages, performPublish, resolvePendingLink, uploadQueuedImages])
 
@@ -986,7 +1134,7 @@ export function MemoEditor({
       isPrivate={isPrivate}
       isPinned={isPinned}
       isPending={isPending || isPublishingQueuedImages}
-      isUploadingImage={isUploading || isPublishingQueuedImages}
+      isUploadingImage={isUploading || isPublishingQueuedImages || isPending}
       content={content}
       uploadedImages={images}
       queuedImages={queuedImages}

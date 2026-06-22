@@ -6,6 +6,14 @@ export type Location = {
   lng: number
 }
 
+export type ImageMetadata = Record<
+  string,
+  {
+    width: number
+    height: number
+  }
+>
+
 // 从数据库生成的类型中提取 Row 类型
 type DBRow = Database["public"]["Tables"]["memos"]["Row"]
 
@@ -15,7 +23,10 @@ type DBRow = Database["public"]["Tables"]["memos"]["Row"]
  * 我们基于数据库生成的 Row 类型进行扩展，
  * 显式排除敏感字段（如 access_code_hash），并对 JSON 类型进行具体化。
  */
-export interface Memo extends Omit<DBRow, "locations" | "images" | "access_code_hash"> {
+export interface Memo extends Omit<
+  DBRow,
+  "locations" | "images" | "image_metadata" | "access_code_hash"
+> {
   /**
    * 从正文解析出的定位数组
    * 在数据库中以 JSON 存储，业务层需要明确其结构
@@ -26,6 +37,11 @@ export interface Memo extends Omit<DBRow, "locations" | "images" | "access_code_
    * 独立存储的图片附件链接数组
    */
   images?: string[] | null
+
+  /**
+   * 图片 URL 对应的宽高元数据，用于加载前稳定预留比例
+   */
+  image_metadata?: ImageMetadata | null
 
   /**
    * 临时状态：是否已被锁定（用于口令检查逻辑）

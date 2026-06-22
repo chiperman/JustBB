@@ -20,6 +20,11 @@ const MAGIC_BYTES: Record<string, { ext: string; type: string }> = {
   "52494646": { ext: "webp", type: "image/webp" },
 }
 
+type ImageSize = {
+  width: number
+  height: number
+}
+
 function validateMagicBytes(buffer: Buffer): { ext: string; type: string } | null {
   if (buffer.length < 4) return null
 
@@ -28,6 +33,84 @@ function validateMagicBytes(buffer: Buffer): { ext: string; type: string } | nul
   for (const [magic, info] of Object.entries(MAGIC_BYTES)) {
     if (hex.startsWith(magic)) return info
   }
+
+  return null
+}
+
+function readJpegSize(buffer: Buffer): ImageSize | null {
+  let offset = 2
+
+  while (offset + 9 < buffer.length) {
+    if (buffer[offset] !== 0xff) return null
+
+    const marker = buffer[offset + 1]
+    const length = buffer.readUInt16BE(offset + 2)
+    const isStartOfFrame =
+      (marker >= 0xc0 && marker <= 0xc3) ||
+      (marker >= 0xc5 && marker <= 0xc7) ||
+      (marker >= 0xc9 && marker <= 0xcb) ||
+      (marker >= 0xcd && marker <= 0xcf)
+
+    if (isStartOfFrame) {
+      return {
+        height: buffer.readUInt16BE(offset + 5),
+        width: buffer.readUInt16BE(offset + 7),
+      }
+    }
+
+    offset += 2 + length
+  }
+
+  return null
+}
+
+function readWebpSize(buffer: Buffer): ImageSize | null {
+  if (buffer.length < 30 || buffer.toString("ascii", 8, 12) !== "WEBP") return null
+
+  const chunkType = buffer.toString("ascii", 12, 16)
+
+  if (chunkType === "VP8X") {
+    return {
+      width: buffer.readUIntLE(24, 3) + 1,
+      height: buffer.readUIntLE(27, 3) + 1,
+    }
+  }
+
+  if (chunkType === "VP8 ") {
+    return {
+      width: buffer.readUInt16LE(26) & 0x3fff,
+      height: buffer.readUInt16LE(28) & 0x3fff,
+    }
+  }
+
+  if (chunkType === "VP8L" && buffer.length >= 25) {
+    const bits = buffer.readUInt32LE(21)
+    return {
+      width: (bits & 0x3fff) + 1,
+      height: ((bits >> 14) & 0x3fff) + 1,
+    }
+  }
+
+  return null
+}
+
+function readImageSize(buffer: Buffer, type: string): ImageSize | null {
+  if (type === "image/png" && buffer.length >= 24) {
+    return {
+      width: buffer.readUInt32BE(16),
+      height: buffer.readUInt32BE(20),
+    }
+  }
+
+  if (type === "image/gif" && buffer.length >= 10) {
+    return {
+      width: buffer.readUInt16LE(6),
+      height: buffer.readUInt16LE(8),
+    }
+  }
+
+  if (type === "image/jpeg") return readJpegSize(buffer)
+  if (type === "image/webp") return readWebpSize(buffer)
 
   return null
 }
@@ -133,6 +216,7 @@ export async function POST(request: NextRequest) {
   // 生成文件路径
   const ext = magicInfo.ext
   const finalContentType = magicInfo.type
+  const imageSize = readImageSize(buffer, finalContentType)
   const timestamp = Date.now()
   const random = Math.random().toString(36).slice(2, 8)
   const key = `JustMemo/${user.id}/${timestamp}-${random}.${ext}`
@@ -162,10 +246,16 @@ export async function POST(request: NextRequest) {
   if (!reachable) {
     return NextResponse.json({
       url,
+      width: imageSize?.width ?? null,
+      height: imageSize?.height ?? null,
       warning:
         "图片已上传，但公开访问 URL 暂时无法读取。Memo 已继续发布，请检查 R2 Bucket 公开访问或公开访问 URL 配置。",
     })
   }
 
-  return NextResponse.json({ url })
+  return NextResponse.json({
+    url,
+    width: imageSize?.width ?? null,
+    height: imageSize?.height ?? null,
+  })
 }

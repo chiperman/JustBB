@@ -93,7 +93,13 @@ export interface MemoEditorLayoutProps {
   // Optional
   className?: string
   uploadedImages?: string[]
-  queuedImages?: { id: string; previewUrl: string; progress?: number; isUploading?: boolean }[]
+  queuedImages?: {
+    id: string
+    previewUrl: string
+    progress?: number
+    isUploading?: boolean
+    publishStatus?: "queued" | "uploading" | "saving"
+  }[]
   uploadingImages?: { id: string; previewUrl: string; progress: number }[]
   onRemoveImage?: (url: string) => void
   onRemoveQueuedImage?: (id: string) => void
@@ -434,9 +440,13 @@ export function MemoEditorLayout({
                         />
                       </ImageZoom>
                       <span className="pointer-events-none absolute bottom-1 left-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[9px] font-medium text-white">
-                        {img.isUploading ? "上传中" : "待发布"}
+                        {img.publishStatus === "saving"
+                          ? "保存中"
+                          : img.publishStatus === "uploading"
+                            ? "上传中"
+                            : "待发布"}
                       </span>
-                      {img.isUploading && (
+                      {(img.isUploading || typeof img.progress === "number") && (
                         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/35 backdrop-blur-[0.5px]">
                           <div className="relative w-10 h-10 flex items-center justify-center">
                             <svg className="w-full h-full transform -rotate-90">
@@ -466,16 +476,23 @@ export function MemoEditorLayout({
                               {img.progress ?? 0}%
                             </span>
                           </div>
+                          <div className="absolute inset-x-1.5 bottom-1 h-1 overflow-hidden rounded-full bg-zinc-200/30">
+                            <div
+                              className="h-full rounded-full bg-zinc-100 transition-[width] duration-200"
+                              style={{ width: `${img.progress ?? 0}%` }}
+                            />
+                          </div>
                         </div>
                       )}
                       <button
                         type="button"
+                        disabled={img.isUploading}
                         onClick={(e) => {
                           e.stopPropagation()
                           onAttachmentInteract?.()
                           onRemoveQueuedImage?.(img.id)
                         }}
-                        className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-0.5 opacity-100 md:opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer flex items-center justify-center w-5 h-5 border-none z-20"
+                        className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-0.5 opacity-100 md:opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed disabled:opacity-35 flex items-center justify-center w-5 h-5 border-none z-20"
                         title="移除图片"
                       >
                         <svg

@@ -33,6 +33,27 @@ const arrayPreprocessor = (val: unknown) => {
   return []
 }
 
+const imageMetadataPreprocessor = (val: unknown) => {
+  if (typeof val === "string") {
+    if (val.trim() === "") return {}
+    try {
+      return JSON.parse(val)
+    } catch {
+      return {}
+    }
+  }
+  if (val && typeof val === "object" && !Array.isArray(val)) return val
+  return {}
+}
+
+const imageMetadataSchema = z.record(
+  z.string(),
+  z.object({
+    width: z.number().positive(),
+    height: z.number().positive(),
+  })
+)
+
 /**
  * 基础 Memo 内容 Schema
  */
@@ -44,6 +65,10 @@ export const memoContentSchema = z
     access_code_hint: z.string().optional().nullable(),
     access_code: z.string().optional().nullable(),
     images: z.preprocess(arrayPreprocessor, z.array(z.string()).optional().default([])),
+    image_metadata: z.preprocess(
+      imageMetadataPreprocessor,
+      imageMetadataSchema.optional().default({})
+    ),
   })
   .superRefine((data, ctx) => {
     if (data.content.trim() || data.images.length > 0) return

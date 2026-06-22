@@ -17,6 +17,8 @@ export function shouldRefreshMemoDerivedData(payload: MemoEventPayload) {
     payload.updates.word_count !== undefined ||
     payload.updates.created_at !== undefined ||
     payload.updates.deleted_at !== undefined ||
+    payload.updates.images !== undefined ||
+    payload.updates.image_metadata !== undefined ||
     payload.updates.is_private !== undefined
   )
 }

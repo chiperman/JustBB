@@ -32,8 +32,25 @@ type GalleryAspectRatioCache = Record<
 const GALLERY_FALLBACK_ASPECT_RATIO = "1.18 / 1"
 const GALLERY_MIN_ASPECT_RATIO = 0.78
 const GALLERY_MAX_ASPECT_RATIO = 1.75
+const GALLERY_MASONRY_DEFAULT_COLUMN_WIDTH_PX = 260
+const GALLERY_STACKED_INLINE_PADDING_PX = 32
 const THUMBNAIL_REVEAL_BEFORE_EXIT_MS = 90
 const THUMBNAIL_REVEAL_DELAY_MS = IMAGE_STACK_RETURN_DURATION_MS - THUMBNAIL_REVEAL_BEFORE_EXIT_MS
+
+function getGalleryColumnCount(width: number): number {
+  if (width >= 1280) return 4
+  if (width >= 1024) return 3
+  if (width >= 768) return 2
+
+  return 1
+}
+
+function getGalleryColumnGap(columnCount: number): number {
+  if (columnCount >= 4) return 80
+  if (columnCount >= 3) return 64
+
+  return 48
+}
 
 function getGalleryAspectRatio(width: number, height: number): string {
   if (width <= 0 || height <= 0) return GALLERY_FALLBACK_ASPECT_RATIO
@@ -44,6 +61,29 @@ function getGalleryAspectRatio(width: number, height: number): string {
   )
 
   return `${ratio} / 1`
+}
+
+function getGalleryItemAspectRatio(
+  item: GalleryMemoItem,
+  aspectRatios: GalleryAspectRatioCache
+): string {
+  if (item.is_locked) return GALLERY_FALLBACK_ASPECT_RATIO
+
+  const primaryImage = item.images[0]
+  const metadata = primaryImage ? item.image_metadata?.[primaryImage] : null
+  if (metadata) return getGalleryAspectRatio(metadata.width, metadata.height)
+
+  return aspectRatios[item.id]?.aspectRatio || GALLERY_FALLBACK_ASPECT_RATIO
+}
+
+function getGalleryStackedInlinePadding(
+  item: GalleryMemoItem,
+  columnWidth: number,
+  columnCount: number
+): number {
+  if (columnCount <= 1 || item.images.length <= 1) return 0
+
+  return Math.min(GALLERY_STACKED_INLINE_PADDING_PX, Math.max(12, columnWidth * 0.08))
 }
 
 function formatDate(date: Date | string): string {
@@ -124,6 +164,11 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
   const [previewOriginRect, setPreviewOriginRect] = useState<ImageStackOriginRect | null>(null)
   const [unlockMemo, setUnlockMemo] = useState<GalleryMemoItem | null>(null)
   const [aspectRatios, setAspectRatios] = useState<GalleryAspectRatioCache>({})
+  const [galleryWidth, setGalleryWidth] = useState(0)
+  const [columnCount, setColumnCount] = useState(() =>
+    typeof window === "undefined" ? 1 : getGalleryColumnCount(window.innerWidth)
+  )
+  const galleryRef = useRef<HTMLDivElement>(null)
   const revealTimerRef = useRef<number | null>(null)
 
   const galleryItems = useMemo<GalleryMemoItem[]>(
@@ -137,9 +182,58 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
     [memos]
   )
 
+  const columnWidth = useMemo(() => {
+    if (galleryWidth <= 0) return GALLERY_MASONRY_DEFAULT_COLUMN_WIDTH_PX
+
+    return (
+      (galleryWidth - getGalleryColumnGap(columnCount) * Math.max(0, columnCount - 1)) / columnCount
+    )
+  }, [columnCount, galleryWidth])
+
+  const masonryColumns = useMemo(() => {
+    const columns = Array.from({ length: columnCount }, () => [] as GalleryMemoItem[])
+
+    galleryItems.forEach((item, index) => {
+      columns[index % columnCount].push(item)
+    })
+
+    return columns
+  }, [columnCount, galleryItems])
+
+  useEffect(() => {
+    const updateColumnCount = () => setColumnCount(getGalleryColumnCount(window.innerWidth))
+
+    updateColumnCount()
+    window.addEventListener("resize", updateColumnCount)
+
+    return () => window.removeEventListener("resize", updateColumnCount)
+  }, [])
+
+  useEffect(() => {
+    const gallery = galleryRef.current
+    if (!gallery) return
+
+    const updateGalleryWidth = () => setGalleryWidth(gallery.getBoundingClientRect().width)
+    updateGalleryWidth()
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateGalleryWidth)
+      return () => window.removeEventListener("resize", updateGalleryWidth)
+    }
+
+    const resizeObserver = new ResizeObserver(updateGalleryWidth)
+    resizeObserver.observe(gallery)
+
+    return () => resizeObserver.disconnect()
+  }, [])
+
   useEffect(() => {
     const missingItems = galleryItems.filter(
-      (item) => !item.is_locked && item.images[0] && aspectRatios[item.id]?.src !== item.images[0]
+      (item) =>
+        !item.is_locked &&
+        item.images[0] &&
+        !item.image_metadata?.[item.images[0]] &&
+        aspectRatios[item.id]?.src !== item.images[0]
     )
     if (missingItems.length === 0) return
 
@@ -208,30 +302,43 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
   }
 
   return (
-    <div className="columns-1 gap-8 md:columns-2 lg:columns-3 lg:gap-10 xl:columns-4 xl:gap-12">
-      {galleryItems.map((item) => (
-        <div key={item.id} className="mb-9 break-inside-avoid">
-          {item.is_locked ? (
-            <LockedGalleryCard item={item} onUnlock={() => setUnlockMemo(item)} />
-          ) : (
-            <ImageStackThumbnail
-              images={item.images}
-              layoutId={`image-stack-${item.id}`}
-              alt="Memo multimedia content"
-              aspectRatio={aspectRatios[item.id]?.aspectRatio || GALLERY_FALLBACK_ASPECT_RATIO}
-              onOpen={(originRect) => {
-                setPreviewOriginRect(originRect)
-                setPreviewItem(item)
+    <div
+      ref={galleryRef}
+      className="grid grid-cols-1 items-start gap-x-8 md:grid-cols-2 md:gap-x-12 lg:grid-cols-3 lg:gap-x-16 xl:grid-cols-4 xl:gap-x-20"
+    >
+      {masonryColumns.map((column, columnIndex) => (
+        <div key={columnIndex} className="flex min-w-0 flex-col gap-6">
+          {column.map((item) => (
+            <div
+              key={item.id}
+              className="min-w-0"
+              style={{
+                paddingInline: getGalleryStackedInlinePadding(item, columnWidth, columnCount),
               }}
-              isPreviewing={previewItem?.id === item.id || returningPreviewId === item.id}
-              overlay={
-                <>
-                  <CardOverlay />
-                  <MemoMeta item={item} />
-                </>
-              }
-            />
-          )}
+            >
+              {item.is_locked ? (
+                <LockedGalleryCard item={item} onUnlock={() => setUnlockMemo(item)} />
+              ) : (
+                <ImageStackThumbnail
+                  images={item.images}
+                  layoutId={`image-stack-${item.id}`}
+                  alt="Memo multimedia content"
+                  aspectRatio={getGalleryItemAspectRatio(item, aspectRatios)}
+                  onOpen={(originRect) => {
+                    setPreviewOriginRect(originRect)
+                    setPreviewItem(item)
+                  }}
+                  isPreviewing={previewItem?.id === item.id || returningPreviewId === item.id}
+                  overlay={
+                    <>
+                      <CardOverlay />
+                      <MemoMeta item={item} />
+                    </>
+                  }
+                />
+              )}
+            </div>
+          ))}
         </div>
       ))}
 

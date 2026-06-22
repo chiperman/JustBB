@@ -7,7 +7,15 @@ const MAX_DIMENSION = 2048 // 最大宽/高
 
 type UploadResponse = {
   url: string
+  width?: number | null
+  height?: number | null
   warning?: string | null
+}
+
+export type UploadedImage = {
+  url: string
+  width?: number | null
+  height?: number | null
 }
 
 async function compressImage(file: File): Promise<File> {
@@ -52,12 +60,18 @@ export function useImageUpload() {
     async (
       file: File,
       onProgress?: (progress: number) => void
-    ): Promise<{ url: string | null; error: string | null; warning?: string | null }> => {
+    ): Promise<{
+      image: UploadedImage | null
+      url: string | null
+      error: string | null
+      warning?: string | null
+    }> => {
       setPendingUploads((count) => count + 1)
       setError(null)
 
       try {
         const processed = await compressImage(file)
+        onProgress?.(5)
 
         const formData = new FormData()
         formData.append("file", processed)
@@ -69,7 +83,10 @@ export function useImageUpload() {
           if (xhr.upload && onProgress) {
             xhr.upload.onprogress = (event) => {
               if (event.lengthComputable) {
-                const percentComplete = Math.round((event.loaded / event.total) * 100)
+                const percentComplete = Math.min(
+                  95,
+                  Math.max(5, Math.round((event.loaded / event.total) * 95))
+                )
                 onProgress(percentComplete)
               }
             }
@@ -83,6 +100,7 @@ export function useImageUpload() {
                   reject(new Error("上传响应缺少图片地址"))
                   return
                 }
+                onProgress?.(100)
                 resolve(parsed)
               } catch (e) {
                 reject(new Error("解析响应失败"))
@@ -104,11 +122,20 @@ export function useImageUpload() {
           xhr.send(formData)
         })
 
-        return { url: response.url, error: null, warning: response.warning ?? null }
+        return {
+          image: {
+            url: response.url,
+            width: response.width ?? null,
+            height: response.height ?? null,
+          },
+          url: response.url,
+          error: null,
+          warning: response.warning ?? null,
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : "上传失败"
         setError(message)
-        return { url: null, error: message }
+        return { image: null, url: null, error: message }
       } finally {
         setPendingUploads((count) => Math.max(0, count - 1))
       }

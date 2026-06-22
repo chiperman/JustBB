@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Memo } from "@/types/memo"
+import { ImageMetadata, Memo } from "@/types/memo"
 import { createMemo, updateMemoContent } from "@/server/actions/memos/mutate"
 import { dispatchMemoEvent } from "@/lib/memos/events"
 import { memoCache } from "@/shared/lib/memo-cache"
@@ -29,6 +29,9 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
 
   const [content, setContent] = useState(initialMemo?.content || "")
   const [images, setImages] = useState<string[]>(initialMemo?.images || [])
+  const [imageMetadata, setImageMetadata] = useState<ImageMetadata>(
+    initialMemo?.image_metadata || {}
+  )
   const [isPending, setIsPending] = useState(false)
   const [isPrivate, setIsPrivate] = useState(initialMemo?.is_private || false)
   const [accessCode, setAccessCode] = useState("")
@@ -78,7 +81,11 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
     }
   }, [isPrivate, mode])
 
-  const performPublish = async (editor: Editor | null, imageUrls: string[] = images) => {
+  const performPublish = async (
+    editor: Editor | null,
+    imageUrls: string[] = images,
+    metadata: ImageMetadata = imageMetadata
+  ) => {
     const textContent = editor?.getText({ blockSeparator: "\n" }) || content
     if (isPending) {
       const message = "正在提交，请稍候。"
@@ -107,6 +114,7 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
     formData.append("is_private", String(isPrivate))
     formData.append("is_pinned", String(isPinned))
     formData.append("images", JSON.stringify(imageUrls))
+    formData.append("image_metadata", JSON.stringify(metadata))
 
     if (isPrivate && accessCode) {
       formData.append("access_code", accessCode)
@@ -158,12 +166,16 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
           setAccessHint("")
           setIsPinned(false)
           setImages([])
+          setImageMetadata({})
 
           if (newMemo) {
             dispatchMemoEvent({ type: "create", memo: newMemo })
           }
           toast({ title: "已发布" })
         } else {
+          if (newMemo) {
+            dispatchMemoEvent({ type: "update", id: newMemo.id, updates: newMemo })
+          }
           toast({ title: "已保存" })
           onSuccess?.(newMemo)
         }
@@ -204,6 +216,7 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
       setAccessHint("")
       setIsPinned(false)
       setImages([])
+      setImageMetadata({})
       setError(null)
       setShowPrivateDialog(false)
       setShowLocationPicker(false)
@@ -216,6 +229,8 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
     setContent,
     images,
     setImages,
+    imageMetadata,
+    setImageMetadata,
     isPending,
     setIsPending,
     isPrivate,

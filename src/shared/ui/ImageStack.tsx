@@ -30,7 +30,7 @@ import {
   SearchMinusIcon,
   ZoomInAreaIcon,
 } from "@hugeicons/core-free-icons"
-import { ImageErrorState, SmartImage } from "./SmartImage"
+import { ImageErrorState, ImageLoadingState, SmartImage } from "./SmartImage"
 import { cn } from "@/shared/lib/utils"
 import { MemoContent } from "@/features/memos/components/MemoContent"
 import {
@@ -248,7 +248,10 @@ function PreviewImage({
   return (
     <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-xl shadow-[0_18px_48px_rgba(29,29,27,0.16)] dark:shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
       {isLoading && (
-        <div className="absolute inset-0 z-10 animate-pulse rounded-xl bg-gradient-to-br from-muted/40 via-background/70 to-muted/30 backdrop-blur-sm dark:from-white/10 dark:via-white/6 dark:to-white/10" />
+        <ImageLoadingState
+          isFullPage
+          className="rounded-xl border border-border/50 dark:border-white/10"
+        />
       )}
       {isError && (
         <ImageErrorState
@@ -870,11 +873,11 @@ export function ImageStackPreview({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         handleClose()
-      } else if (event.key === "ArrowRight" && canNavigate) {
+      } else if (event.key === "ArrowLeft" && canNavigate) {
         event.preventDefault()
         if (!canRunKeyboardNavigation(event)) return
         moveBy(-1)
-      } else if (event.key === "ArrowLeft" && canNavigate) {
+      } else if (event.key === "ArrowRight" && canNavigate) {
         event.preventDefault()
         if (!canRunKeyboardNavigation(event)) return
         moveBy(1)
@@ -945,31 +948,35 @@ export function ImageStackPreview({
       imageIndex: activeIndex + offset,
       offset,
     }))
-    .filter(({ src }) => Boolean(src))
-  if (
-    switchAnimation?.mode === "outgoing" &&
-    switchAnimation.imageIndex < activeIndex &&
-    switchAnimation.src
-  ) {
-    stackImages.push({
-      src: switchAnimation.src,
-      imageIndex: switchAnimation.imageIndex,
-      offset: 1,
-    })
-  }
+    .filter(
+      ({ imageIndex, src }) =>
+        Boolean(src) &&
+        !(switchAnimation?.mode === "outgoing" && imageIndex === switchAnimation.imageIndex)
+    )
+  const outgoingFrameSize =
+    switchAnimation?.mode === "outgoing"
+      ? getPreviewFrameSize(switchAnimation.size, viewport, effectiveFitMode)
+      : null
   const switchTravelDistance = Math.min(500, Math.max(280, viewport.width * 0.34))
   const switchLiftDistance = Math.min(110, Math.max(56, viewport.height * 0.1))
-  const incomingStartX = switchAnimation?.mode === "incoming" ? switchTravelDistance * 0.3 : 0
+  const switchDirection = switchAnimation?.direction ?? 1
+  const incomingStartX =
+    switchAnimation?.mode === "incoming" ? switchTravelDistance * 0.34 * switchDirection : 0
   const incomingStartY = switchAnimation?.mode === "incoming" ? switchLiftDistance * 1.15 : 0
-  const incomingStartRotate = switchAnimation?.mode === "incoming" ? 2.8 : 0
-  const incomingMidX = switchAnimation?.mode === "incoming" ? switchTravelDistance * 0.82 : 0
+  const incomingStartRotate = switchAnimation?.mode === "incoming" ? 2.8 * switchDirection : 0
+  const incomingMidX =
+    switchAnimation?.mode === "incoming" ? switchTravelDistance * 0.82 * switchDirection : 0
   const incomingMidY = switchAnimation?.mode === "incoming" ? -switchLiftDistance * 0.25 : 0
-  const incomingMidRotate = switchAnimation?.mode === "incoming" ? 6.5 : 0
+  const incomingMidRotate = switchAnimation?.mode === "incoming" ? 6.5 * switchDirection : 0
   const outgoingExitX = switchAnimation?.mode === "outgoing" ? -switchTravelDistance * 0.82 : 0
-  const outgoingExitY = switchAnimation?.mode === "outgoing" ? -switchLiftDistance * 0.25 : 0
-  const outgoingExitRotate = switchAnimation?.mode === "outgoing" ? -6.5 : 0
-  const outgoingImageIndex =
-    switchAnimation?.mode === "outgoing" ? switchAnimation.imageIndex : null
+  const outgoingExitY = switchAnimation?.mode === "outgoing" ? switchLiftDistance * 0.66 : 0
+  const outgoingExitRotate =
+    switchAnimation?.mode === "outgoing" ? -6.6 * Math.abs(switchAnimation.direction) : 0
+  const outgoingReturnX = switchAnimation?.mode === "outgoing" ? -switchTravelDistance * 0.34 : 0
+  const outgoingReturnY = switchAnimation?.mode === "outgoing" ? switchLiftDistance * 1.05 : 0
+  const outgoingReturnRotate =
+    switchAnimation?.mode === "outgoing" ? -3.4 * Math.abs(switchAnimation.direction) : 0
+  const outgoingPreviewImage = switchAnimation?.mode === "outgoing" ? switchAnimation : null
   const incomingImageIndex =
     switchAnimation?.mode === "incoming" ? switchAnimation.imageIndex : null
 
@@ -1076,7 +1083,6 @@ export function ImageStackPreview({
                 const dragStyle =
                   isTop && isBrowseMode && isDragging && !isPinching ? { x: visualSwipeX } : {}
                 const isIncomingTop = isTop && incomingImageIndex === imageIndex
-                const isOutgoingFromTop = outgoingImageIndex === imageIndex
                 const isOutgoingRevealTop = isTop && switchAnimation?.mode === "outgoing"
 
                 return (
@@ -1112,47 +1118,30 @@ export function ImageStackPreview({
                     onDragEnd={isTop && isBrowseMode && !isPinching ? handleSwipeEnd : undefined}
                     initial={shouldReduceMotion ? false : originFrameMotion}
                     animate={
-                      isOutgoingFromTop
+                      isIncomingTop
                         ? {
                             ...previewFrameMotion,
-                            scale: [1, 0.94, restingScale],
-                            x: [0, outgoingExitX, restingX],
-                            y: [0, outgoingExitY, restingY],
-                            rotate: [0, outgoingExitRotate, restingRotate],
-                            zIndex: [60, 50, imageCount - offset],
+                            scale: [0.78, 0.94, restingScale],
+                            x: [incomingStartX, incomingMidX, restingX],
+                            y: [incomingStartY, incomingMidY, restingY],
+                            rotate: [incomingStartRotate, incomingMidRotate, restingRotate],
+                            zIndex: [70, 72, imageCount - offset],
                           }
-                        : isIncomingTop
+                        : isOutgoingRevealTop
                           ? {
                               ...previewFrameMotion,
-                              scale: [0.78, 0.94, restingScale],
-                              x: [incomingStartX, incomingMidX, restingX],
-                              y: [incomingStartY, incomingMidY, restingY],
-                              rotate: [incomingStartRotate, incomingMidRotate, restingRotate],
-                              zIndex: 50,
+                              scale: restingScale,
+                              x: restingX,
+                              y: restingY,
+                              rotate: restingRotate,
                             }
-                          : isOutgoingRevealTop
-                            ? {
-                                ...previewFrameMotion,
-                                scale: [0.985, 0.998, restingScale],
-                                x: [
-                                  switchTravelDistance * 0.02,
-                                  switchTravelDistance * 0.005,
-                                  restingX,
-                                ],
-                                y: [
-                                  switchLiftDistance * 0.06,
-                                  switchLiftDistance * 0.015,
-                                  restingY,
-                                ],
-                                rotate: [0.4, 0.1, restingRotate],
-                              }
-                            : {
-                                ...previewFrameMotion,
-                                scale: restingScale,
-                                x: restingX,
-                                y: restingY,
-                                rotate: restingRotate,
-                              }
+                          : {
+                              ...previewFrameMotion,
+                              scale: restingScale,
+                              x: restingX,
+                              y: restingY,
+                              rotate: restingRotate,
+                            }
                     }
                     exit={
                       shouldReduceMotion
@@ -1167,11 +1156,7 @@ export function ImageStackPreview({
                           }
                     }
                     transition={
-                      isOutgoingFromTop
-                        ? switchTransition
-                        : isIncomingTop || isOutgoingRevealTop
-                          ? switchTransition
-                          : stackTransition
+                      isIncomingTop || isOutgoingRevealTop ? switchTransition : stackTransition
                     }
                     className="pointer-events-auto absolute flex items-center justify-center"
                     style={{
@@ -1250,6 +1235,46 @@ export function ImageStackPreview({
                   </motion.div>
                 )
               })}
+            {outgoingPreviewImage && outgoingFrameSize && (
+              <motion.div
+                key={`outgoing-${outgoingPreviewImage.imageIndex}-${outgoingPreviewImage.src}`}
+                initial={{
+                  width: outgoingFrameSize.width,
+                  height: outgoingFrameSize.height,
+                  marginLeft: -outgoingFrameSize.width / 2,
+                  marginTop: -outgoingFrameSize.height / 2,
+                  opacity: 1,
+                  scale: 1,
+                  x: 0,
+                  y: 0,
+                  rotate: 0,
+                }}
+                animate={{
+                  width: outgoingFrameSize.width,
+                  height: outgoingFrameSize.height,
+                  marginLeft: -outgoingFrameSize.width / 2,
+                  marginTop: -outgoingFrameSize.height / 2,
+                  opacity: [1, 0.96, 0],
+                  scale: [1, 0.97, 0.84],
+                  x: [0, outgoingExitX, outgoingReturnX],
+                  y: [0, outgoingExitY, outgoingReturnY],
+                  rotate: [0, outgoingExitRotate, outgoingReturnRotate],
+                }}
+                transition={switchTransition}
+                className="pointer-events-none absolute left-1/2 top-1/2 z-[60] flex items-center justify-center"
+                style={{
+                  touchAction: "none",
+                  transformOrigin: "50% 50%",
+                }}
+              >
+                <PreviewImage
+                  src={outgoingPreviewImage.src}
+                  alt={`图片 ${outgoingPreviewImage.imageIndex + 1}`}
+                  fitMode={fitMode}
+                  useCoverMode={false}
+                />
+              </motion.div>
+            )}
           </motion.div>
         </motion.div>
       </motion.div>

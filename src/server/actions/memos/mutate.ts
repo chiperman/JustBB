@@ -14,7 +14,7 @@ import {
   removeTagsFromContent,
 } from "@/lib/memos/parser"
 import { buildMemoPayload } from "./helpers"
-import { Database } from "@/types/database"
+import { Database, Json } from "@/types/database"
 import {
   createMemoSchema,
   updateMemoContentSchema,
@@ -89,6 +89,28 @@ function logValidationFailure(
   console.error(action, context)
 }
 
+function normalizeImageMetadata(
+  images: string[],
+  metadata: Record<string, { width: number; height: number }>
+): Json {
+  return Object.fromEntries(
+    images
+      .map((url) => {
+        const item = metadata[url]
+        if (!item) return null
+
+        return [
+          url,
+          {
+            width: item.width,
+            height: item.height,
+          },
+        ]
+      })
+      .filter((entry): entry is [string, { width: number; height: number }] => Boolean(entry))
+  ) as Json
+}
+
 /**
  * 创建新笔记
  */
@@ -106,7 +128,8 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
     return { success: false, error: validation.error.issues[0].message }
   }
 
-  const { content, is_private, is_pinned, access_code, access_code_hint, images } = validation.data
+  const { content, is_private, is_pinned, access_code, access_code_hint, images, image_metadata } =
+    validation.data
   const normalizedMemo = extractImagesFromContent(content, images)
   const supabase = await getClient()
 
@@ -114,6 +137,7 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
     owner_id: viewerId,
     is_private,
     images: normalizedMemo.images,
+    image_metadata: normalizeImageMetadata(normalizedMemo.images, image_metadata),
     ...buildMemoPayload(normalizedMemo.content, { isPinned: is_pinned }),
   }
 
@@ -135,6 +159,7 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
   }
 
   revalidatePath("/")
+  revalidatePath("/gallery")
   return {
     success: true,
     error: null,
@@ -165,7 +190,7 @@ export async function updateMemoContent(formData: FormData): Promise<ActionRespo
     return { success: false, error: issue.message }
   }
 
-  const { id, content, images } = validation.data
+  const { id, content, images, image_metadata } = validation.data
   const normalizedMemo = extractImagesFromContent(content, images)
   const supabase = await getClient()
 
@@ -174,6 +199,7 @@ export async function updateMemoContent(formData: FormData): Promise<ActionRespo
     .update({
       ...buildMemoPayload(normalizedMemo.content),
       images: normalizedMemo.images,
+      image_metadata: normalizeImageMetadata(normalizedMemo.images, image_metadata),
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
@@ -196,6 +222,7 @@ export async function updateMemoContent(formData: FormData): Promise<ActionRespo
   }
 
   revalidatePath("/")
+  revalidatePath("/gallery")
   return {
     success: true,
     error: null,

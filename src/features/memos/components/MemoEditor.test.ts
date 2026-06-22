@@ -64,6 +64,9 @@ describe("MemoEditor image upload", () => {
   it("发布时直接在待发布图片上显示上传进度", () => {
     expect(source).toMatch(/setQueuedImages\([\s\S]*progress: 0[\s\S]*isUploading: true/)
     expect(source).toMatch(/handleImageFileUpload\(image\.file, \{ id: image\.id/)
-    expect(layoutSource).toContain('{img.isUploading ? "上传中" : "待发布"}')
+    expect(source).toContain("handleLinkedImageUpload")
+    expect(layoutSource).toContain('img.publishStatus === "uploading"')
+    expect(layoutSource).toContain('img.publishStatus === "saving"')
+    expect(layoutSource).toContain("transition-[width]")
   })
 })

@@ -106,13 +106,13 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
           initial={false}
           animate={{
             opacity: effectiveIsCollapsed ? 0 : 1,
-            width: effectiveIsCollapsed ? 0 : 149,
+            width: effectiveIsCollapsed ? 0 : 92,
             x: effectiveIsCollapsed ? -10 : 0,
             display: effectiveIsCollapsed ? "none" : "flex",
           }}
           transition={sidebarTransition}
           className={cn(
-            "overflow-hidden whitespace-nowrap flex items-center select-none cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-md p-1 -ml-1 bg-transparent text-left border-none",
+            "flex h-9 items-center overflow-hidden whitespace-nowrap select-none cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-md px-1 -ml-1 bg-transparent text-left border-none",
             effectiveIsCollapsed && "pointer-events-none"
           )}
           title="返回首页"

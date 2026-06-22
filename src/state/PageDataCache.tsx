@@ -1,13 +1,8 @@
 "use client"
 
-import {
-  createContext,
-  useContext,
-  useCallback,
-  useRef,
-  ReactNode,
-} from "react"
+import { createContext, useContext, useCallback, useRef, ReactNode } from "react"
 import { Memo } from "@/types/memo"
+import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
 
 interface PageData {
   memos?: Memo[]
@@ -22,11 +17,14 @@ interface PageDataCacheContextType {
   getCache: (path: string) => PageData | null
   /** 设置指定路径的缓存数据 */
   setCache: (path: string, data: PageData) => void
+  /** 清理符合条件的页面缓存 */
+  invalidateCache: (matcher: (path: string) => boolean) => void
 }
 
 const PageDataCacheContext = createContext<PageDataCacheContextType>({
   getCache: () => null,
   setCache: () => {},
+  invalidateCache: () => {},
 })
 
 export function usePageDataCache() {
@@ -62,8 +60,23 @@ export function PageDataCacheProvider({ children }: { children: ReactNode }) {
     map.set(path, data)
   }, [])
 
+  const invalidateCache = useCallback((matcher: (path: string) => boolean) => {
+    const map = cacheRef.current
+    Array.from(map.keys()).forEach((path) => {
+      if (matcher(path)) {
+        map.delete(path)
+      }
+    })
+  }, [])
+
+  useMemoSync((payload) => {
+    if (!shouldRefreshMemoDerivedData(payload)) return
+
+    invalidateCache((path) => path.startsWith("/gallery"))
+  })
+
   return (
-    <PageDataCacheContext.Provider value={{ getCache, setCache }}>
+    <PageDataCacheContext.Provider value={{ getCache, setCache, invalidateCache }}>
       {children}
     </PageDataCacheContext.Provider>
   )

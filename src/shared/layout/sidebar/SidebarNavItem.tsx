@@ -30,7 +30,7 @@ export function SidebarNavItem({
   }
 
   return (
-    <motion.div layout="position">
+    <div>
       <Link
         href={item.href}
         onClick={(event) => {
@@ -87,6 +87,6 @@ export function SidebarNavItem({
           <span className="block truncate">{item.label}</span>
         </motion.span>
       </Link>
-    </motion.div>
+    </div>
   )
 }

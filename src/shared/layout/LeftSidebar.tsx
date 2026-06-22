@@ -142,7 +142,6 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
 
       {/* Navigation */}
       <motion.nav
-        layout
         transition={SIDEBAR_TRANSITION}
         className={cn(
           "relative min-h-0 flex-1 overflow-x-hidden px-1 pb-4 custom-scrollbar",
@@ -150,7 +149,6 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
         )}
       >
         <motion.div
-          layout
           transition={SIDEBAR_TRANSITION}
           className={cn("mb-3 border-t border-border", effectiveIsCollapsed ? "mx-1" : "mx-2")}
         />

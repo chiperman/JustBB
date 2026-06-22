@@ -247,18 +247,8 @@ function PreviewImage({
 
   return (
     <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-xl shadow-[0_18px_48px_rgba(29,29,27,0.16)] dark:shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
-      {isLoading && (
-        <ImageLoadingState
-          isFullPage
-          className="rounded-xl border border-border/50 dark:border-white/10"
-        />
-      )}
-      {isError && (
-        <ImageErrorState
-          isFullPage
-          className="rounded-xl border border-border/50 dark:border-white/10"
-        />
-      )}
+      {isLoading && <ImageLoadingState isFullPage className="rounded-xl border border-border/50" />}
+      {isError && <ImageErrorState isFullPage className="rounded-xl border border-border/50" />}
 
       <img
         src={src}
@@ -1061,7 +1051,7 @@ export function ImageStackPreview({
           duration: shouldReduceMotion ? 0 : 0.24,
           ease: [0.16, 1, 0.3, 1],
         }}
-        className="absolute inset-0 bg-background/62 backdrop-blur-xl dark:bg-black/48"
+        className="absolute inset-0 bg-background/62 backdrop-blur-xl dark:bg-background/78"
         onClick={handleBackgroundClick}
       />
 
@@ -1541,7 +1531,7 @@ export function ImageStackPreview({
           event.stopPropagation()
           handleClose()
         }}
-        className="group/close absolute top-8 right-8 z-20 rounded-2xl border border-border/50 bg-background/70 p-3 text-foreground shadow-[0_12px_34px_rgba(29,29,27,0.12)] backdrop-blur-md transition-all hover:bg-background/88 active:scale-95 dark:border-white/10 dark:bg-white/10 dark:text-white dark:shadow-none dark:hover:bg-white/20"
+        className="group/close absolute top-8 right-8 z-20 rounded-2xl border border-border/50 bg-background/70 p-3 text-foreground shadow-[0_12px_34px_rgba(29,29,27,0.12)] backdrop-blur-md transition-all hover:bg-accent active:scale-95 dark:bg-card/72 dark:shadow-none"
         aria-label="关闭预览"
       >
         <HugeiconsIcon

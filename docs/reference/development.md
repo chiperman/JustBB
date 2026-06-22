@@ -117,6 +117,7 @@ docs/
     testing.md
   interface/
     design.md
+    vercel-design-dark.md
 ```
 
 过程产物不进入 Git，并已通过 `.gitignore` 排除：
@@ -136,11 +137,12 @@ docs/
 
 ## 9. 什么时候更新哪篇文档
 
-| 变更类型                                 | 文档                                 |
-| ---------------------------------------- | ------------------------------------ |
-| 页面、Provider、缓存、Context、路由协同  | `docs/reference/architecture.md`     |
-| 私密 Memo、RLS、RPC、API、数据库规则     | `docs/reference/privacy-and-data.md` |
-| 时间轴、地图、画廊、导出、备份、内容体验 | `docs/reference/product.md`          |
-| 技术栈、目录结构、开发规范、文档治理     | `docs/reference/development.md`      |
-| 测试命令、测试分层、回归策略             | `docs/reference/testing.md`          |
-| UI、视觉、交互一致性                     | `docs/interface/design.md`           |
+| 变更类型                                 | 文档                                   |
+| ---------------------------------------- | -------------------------------------- |
+| 页面、Provider、缓存、Context、路由协同  | `docs/reference/architecture.md`       |
+| 私密 Memo、RLS、RPC、API、数据库规则     | `docs/reference/privacy-and-data.md`   |
+| 时间轴、地图、画廊、导出、备份、内容体验 | `docs/reference/product.md`            |
+| 技术栈、目录结构、开发规范、文档治理     | `docs/reference/development.md`        |
+| 测试命令、测试分层、回归策略             | `docs/reference/testing.md`            |
+| UI、视觉、交互一致性                     | `docs/interface/design.md`             |
+| 外部设计系统参考                         | `docs/interface/vercel-design-dark.md` |

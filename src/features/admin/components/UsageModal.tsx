@@ -15,10 +15,7 @@ import {
 import { Button } from "@/shared/ui/button"
 import { cn } from "@/shared/lib/utils"
 import { UsageProgress } from "./UsageProgress"
-import {
-  getSupabaseUsageStats,
-  type SupabaseUsageResult,
-} from "@/server/actions/usage"
+import { getSupabaseUsageStats, type SupabaseUsageResult } from "@/server/actions/usage"
 import { motion, AnimatePresence } from "framer-motion"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip"
@@ -46,15 +43,7 @@ const EMPTY_USAGE_STATS: SupabaseUsageResult = {
   },
 }
 
-function InfoHint({
-  label,
-  tip,
-  muted = false,
-}: {
-  label: string
-  tip: string
-  muted?: boolean
-}) {
+function InfoHint({ label, tip, muted = false }: { label: string; tip: string; muted?: boolean }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -71,7 +60,7 @@ function InfoHint({
           <HugeiconsIcon icon={InformationCircleIcon} size={12} />
         </button>
       </TooltipTrigger>
-      <TooltipContent className="max-w-52 rounded-xl border border-[#1d1d1b]/10 bg-white dark:bg-[#1a1a18] px-3 py-2 text-[11px] font-medium leading-relaxed">
+      <TooltipContent className="max-w-52 rounded-xl border border-border bg-popover px-3 py-2 text-[11px] font-medium leading-relaxed">
         <p>{tip}</p>
       </TooltipContent>
     </Tooltip>
@@ -123,15 +112,11 @@ function MetricCard({
   )
 }
 
-export function UsageModal({
-  open: controlledOpen,
-  onOpenChange,
-}: UsageModalProps) {
+export function UsageModal({ open: controlledOpen, onOpenChange }: UsageModalProps) {
   const [internalOpen, setInternalOpen] = React.useState(false)
   const isControlled = controlledOpen !== undefined
   const isOpen = isControlled ? controlledOpen : internalOpen
-  const setIsOpen =
-    isControlled && onOpenChange ? onOpenChange : setInternalOpen
+  const setIsOpen = isControlled && onOpenChange ? onOpenChange : setInternalOpen
 
   const [loading, setLoading] = React.useState(false)
   const [stats, setStats] = React.useState<SupabaseUsageResult | null>(null)
@@ -149,8 +134,7 @@ export function UsageModal({
     try {
       const result = await getSupabaseUsageStats()
       const elapsedTime = Date.now() - startTime
-      if (elapsedTime < 800)
-        await new Promise((r) => setTimeout(r, 800 - elapsedTime))
+      if (elapsedTime < 800) await new Promise((r) => setTimeout(r, 800 - elapsedTime))
       if (result.success) setStats(result)
       else setError(result.error || "获取失败")
     } catch {
@@ -179,14 +163,10 @@ export function UsageModal({
           variant="ghost"
           size="icon"
           onClick={fetchData}
-          className="h-8 w-8 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-all active:scale-90"
+          className="h-8 w-8 rounded-lg transition-all hover:bg-accent active:scale-90"
           disabled={loading}
         >
-          <HugeiconsIcon
-            icon={ReloadIcon}
-            size={15}
-            className={cn(loading && "animate-spin")}
-          />
+          <HugeiconsIcon icon={ReloadIcon} size={15} className={cn(loading && "animate-spin")} />
         </Button>
       }
       footer={
@@ -261,12 +241,8 @@ export function UsageModal({
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
               >
-                <div className="px-4 py-2.5 bg-[#d97757]/5 border-t border-[#1d1d1b]/5 dark:border-white/5 flex items-center gap-2 text-[#d97757]/80">
-                  <HugeiconsIcon
-                    icon={Alert01Icon}
-                    size={12}
-                    className="shrink-0"
-                  />
+                <div className="px-4 py-2.5 bg-primary/5 border-t border-border/60 flex items-center gap-2 text-primary/80">
+                  <HugeiconsIcon icon={Alert01Icon} size={12} className="shrink-0" />
                   <p className="text-[11px] font-semibold leading-none tracking-tight">
                     {!displayStats.managementApiConfigured
                       ? "未配置 Management API，正在使用回退数据。"
@@ -368,9 +344,7 @@ export function UsageModal({
             <MetricCard
               label="完整性"
               value={displayStats.isFullIndicator ? "全量" : "基础"}
-              footnote={
-                displayStats.isFullIndicator ? "API Sync" : "Basic Mode"
-              }
+              footnote={displayStats.isFullIndicator ? "API Sync" : "Basic Mode"}
               hint="数据同步模式说明"
               accent={displayStats.isFullIndicator ? "green" : "orange"}
               muted={isPlaceholder}

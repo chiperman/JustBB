@@ -74,20 +74,20 @@ export function LoginTransitionWrapper({
   const creditOpacity = !user && isSplitView ? 0.012 : 0.03
 
   return (
-    <div className="fixed inset-0 isolate overflow-hidden bg-[#fdfcf9] paper-texture">
+    <div className="fixed inset-0 isolate overflow-hidden bg-background paper-texture">
       {/* Background Decorative Text */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
         <motion.span
           animate={{ opacity: draftOpacity }}
           transition={FADE_TRANSITION}
-          className="absolute top-[10%] left-[5%] text-[10vw] font-editorial italic text-black dark:text-white"
+          className="absolute top-[10%] left-[5%] text-[10vw] font-editorial italic text-foreground"
         >
           JustMemo Draft
         </motion.span>
         <motion.span
           animate={{ opacity: creditOpacity }}
           transition={FADE_TRANSITION}
-          className="absolute bottom-[15%] right-[10%] text-[4vw] font-editorial text-black dark:text-white"
+          className="absolute bottom-[15%] right-[10%] text-[4vw] font-editorial text-foreground"
         >
           with ❤️ by chiperman
         </motion.span>
@@ -115,7 +115,7 @@ export function LoginTransitionWrapper({
           )}
           <div
             className={cn(
-              "home-card-shell h-full w-full overflow-hidden border border-black/5 dark:border-white/5",
+              "home-card-shell h-full w-full overflow-hidden border border-border/60",
               isSplitView && "rounded-[24px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.12)]"
             )}
             style={{
@@ -136,7 +136,7 @@ export function LoginTransitionWrapper({
           initial="home"
           animate={variant}
           className={cn(
-            "login-card-shell fixed left-0 top-0 z-20 flex h-full w-[50%] items-center justify-center overflow-hidden rounded-[24px] border border-black/5 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] p-12 dark:border-white/5",
+            "login-card-shell fixed left-0 top-0 z-20 flex h-full w-[50%] items-center justify-center overflow-hidden rounded-[24px] border border-border/60 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] p-12",
             isSplitView ? "pointer-events-auto" : "pointer-events-none"
           )}
           style={{ backgroundColor: "var(--card)" }}

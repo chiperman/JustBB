@@ -16,7 +16,7 @@ export function PageEmptyState({ icon, title, description, className }: PageEmpt
   return (
     <div
       className={cn(
-        "flex h-full min-h-[500px] flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(250,247,245,0.36))] px-6 py-24 text-center text-muted-foreground",
+        "flex h-full min-h-[500px] flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(250,247,245,0.36))] px-6 py-24 text-center text-muted-foreground dark:bg-[linear-gradient(180deg,rgba(31,30,28,0.58),rgba(37,36,33,0.28))]",
         className
       )}
     >

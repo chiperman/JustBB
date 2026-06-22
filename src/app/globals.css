@@ -100,29 +100,31 @@
 }
 
 .dark {
-  --background: #1d1d1b;
-  --foreground: #f6f5f4;
-  --card: #31302e; /* Warm Dark */
-  --card-foreground: #f6f5f4;
-  --popover: rgba(49, 48, 46, 0.9);
-  --popover-foreground: #f6f5f4;
-  --primary: #d97757;
+  color-scheme: dark;
+
+  --background: #141412;
+  --foreground: #f3f1ee;
+  --card: #1f1e1c; /* Warm Dark */
+  --card-foreground: #f3f1ee;
+  --popover: rgba(31, 30, 28, 0.94);
+  --popover-foreground: #f3f1ee;
+  --primary: #e08767;
   --primary-foreground: #ffffff;
-  --secondary: rgba(246, 245, 244, 0.1);
-  --secondary-foreground: #f6f5f4;
-  --muted: #31302e;
-  --muted-foreground: #a39e98; /* Warm Gray 300 */
-  --accent: rgba(246, 245, 244, 0.1);
-  --accent-foreground: #f6f5f4;
+  --secondary: rgba(246, 245, 244, 0.07);
+  --secondary-foreground: #f3f1ee;
+  --muted: #252421;
+  --muted-foreground: #b3aea7; /* Warm Gray 300 */
+  --accent: rgba(246, 245, 244, 0.08);
+  --accent-foreground: #f3f1ee;
   --destructive: #dd5b00;
   --destructive-foreground: #ffffff;
-  --border: rgba(246, 245, 244, 0.1);
-  --input: #6b6964;
-  --ring: #b78676;
+  --border: rgba(246, 245, 244, 0.12);
+  --input: rgba(246, 245, 244, 0.16);
+  --ring: #d89a82;
 
-  --active-clay: #c46648;
-  --badge-clay-bg: rgba(217, 119, 87, 0.1);
-  --badge-clay-text: #d97757;
+  --active-clay: #c96d4e;
+  --badge-clay-bg: rgba(224, 135, 103, 0.12);
+  --badge-clay-text: #e08767;
 
   /* Heatmap Colors (Dark) */
   --heatmap-0: #2d333b;
@@ -220,7 +222,7 @@ body {
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.43;
-  color: #6b6964;
+  color: var(--muted-foreground);
 }
 
 @utility badge-text {
@@ -293,11 +295,11 @@ body {
 }
 
 .whisper-border {
-  border: 1px solid rgba(29, 29, 27, 0.1);
+  border: 1px solid var(--border);
 }
 
 .dark .whisper-border {
-  border: 1px solid rgba(246, 245, 244, 0.1);
+  border: 1px solid var(--border);
 }
 
 /* Custom Scrollbar */
@@ -311,12 +313,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(29, 29, 27, 0.05);
+  background-color: var(--secondary);
   border-radius: 12px;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background-color: rgba(246, 245, 244, 0.1);
+  background-color: var(--secondary);
 }
 
 /* 稳定滚动条布局，防止滚动条隐现导致容器宽度抖动 */

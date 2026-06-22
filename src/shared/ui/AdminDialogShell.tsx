@@ -50,19 +50,17 @@ export function AdminDialogShell({
           className="flex flex-col"
         >
           {/* 页头：低语分割线，Anthropic Clay 强调色 */}
-          <DialogHeader className="px-8 py-5 border-b border-[#1d1d1b]/5 dark:border-white/5 flex flex-row items-center justify-between space-y-0 shrink-0">
+          <DialogHeader className="px-8 py-5 border-b border-border/60 flex flex-row items-center justify-between space-y-0 shrink-0">
             <div className="flex items-center gap-4">
               <div className="bg-[#d97757]/10 p-2.5 rounded-xl text-[#d97757]">
                 <HugeiconsIcon icon={Icon} size={22} />
               </div>
               <div>
-                <DialogTitle className="text-[18px] font-bold tracking-tight text-[#1d1d1b] dark:text-white/90 antialiased">
+                <DialogTitle className="text-[18px] font-bold tracking-tight text-foreground antialiased">
                   {title}
                 </DialogTitle>
                 {subtitle && (
-                  <p className="text-[12px] text-[#6b6964] dark:text-[#a39e98] font-medium mt-0.5">
-                    {subtitle}
-                  </p>
+                  <p className="text-[12px] text-muted-foreground font-medium mt-0.5">{subtitle}</p>
                 )}
               </div>
             </div>
@@ -72,7 +70,7 @@ export function AdminDialogShell({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-md hover:bg-black/5 dark:hover:bg-white/10 text-[#1d1d1b] dark:text-white/90 transition-all active:scale-95"
+                  className="h-8 w-8 rounded-md text-foreground transition-all hover:bg-accent active:scale-95"
                 >
                   <HugeiconsIcon icon={CloseIcon} size={16} />
                 </Button>

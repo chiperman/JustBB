@@ -25,6 +25,7 @@
 如果你更关心页面和交互，再继续看：
 
 - [设计系统](./interface/design.md)
+- [Vercel Geist 深色参考](./interface/vercel-design-dark.md)
 
 ## 2. 文档分区
 
@@ -43,6 +44,7 @@
 视觉系统与交互规则：
 
 - [设计系统](./interface/design.md)
+- [Vercel Geist 深色参考](./interface/vercel-design-dark.md)
 
 ## 3. docs 之外的项目文档
 

@@ -253,24 +253,24 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                 transition={viewTransition}
                 className="relative flex flex-col gap-6 overflow-visible heatmap-modal-tooltip-wrapper"
               >
-                <div className="flex flex-col gap-4 rounded-2xl border border-[#1d1d1b]/8 bg-[#f6f5f4]/70 px-5 py-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-col gap-4 rounded-2xl border border-border/70 bg-muted/70 px-5 py-4 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#d97757]">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
                       浏览范围
                     </p>
-                    <p className="mt-1 text-sm font-medium text-[#6b6964]">
+                    <p className="mt-1 text-sm font-medium text-muted-foreground">
                       按月份查看每日记录密度与字数分布
                     </p>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a39e98]">
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                       年份
                     </span>
                     <Select value={selectedYear} onValueChange={handleSelectedYearChange}>
                       <SelectTrigger
                         variant="ghost"
-                        className="h-9 min-w-[104px] rounded-md border border-[#1d1d1b]/8 bg-white px-3 text-sm font-semibold text-[#1d1d1b] hover:bg-white data-[state=open]:bg-white"
+                        className="h-9 min-w-[104px] rounded-md border border-border bg-card px-3 text-sm font-semibold text-foreground hover:bg-card data-[state=open]:bg-card"
                       >
                         <SelectValue placeholder="年份" />
                       </SelectTrigger>
@@ -313,7 +313,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                 {hoveredDay && (
                   <div
                     className={cn(
-                      "absolute z-[999] mt-[-8px] rounded-md border border-[#1d1d1b]/10 bg-white/96 px-3 py-2 text-[11px] text-[#1d1d1b] backdrop-blur-md pointer-events-none animate-in fade-in zoom-in duration-100 whitespace-nowrap shadow-[0_12px_30px_rgba(29,29,27,0.08)]",
+                      "absolute z-[999] mt-[-8px] rounded-md border border-border bg-popover px-3 py-2 text-[11px] text-foreground backdrop-blur-md pointer-events-none animate-in fade-in zoom-in duration-100 whitespace-nowrap shadow-[0_12px_30px_rgba(29,29,27,0.08)]",
                       hoveredDay.align === "center" && "-translate-x-1/2 -translate-y-full",
                       hoveredDay.align === "left" && "-translate-y-full",
                       hoveredDay.align === "right" && "-translate-x-full -translate-y-full"
@@ -321,11 +321,13 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                     style={{ left: hoveredDay.left, top: hoveredDay.top }}
                   >
                     <div className="flex items-center gap-2 tabular-nums">
-                      <span className="font-bold text-[#d97757]">{hoveredDay.count} 笔记</span>
+                      <span className="font-bold text-primary">{hoveredDay.count} 笔记</span>
                       <span className="opacity-30">/</span>
-                      <span className="font-medium text-[#6b6964]">{hoveredDay.wordCount} 字</span>
+                      <span className="font-medium text-muted-foreground">
+                        {hoveredDay.wordCount} 字
+                      </span>
                     </div>
-                    <div className="mt-1 text-[10px] font-medium text-[#a39e98] tabular-nums">
+                    <div className="mt-1 text-[10px] font-medium text-muted-foreground tabular-nums">
                       {hoveredDay.date}
                     </div>
                   </div>
@@ -338,7 +340,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
                 transition={viewTransition}
-                className="rounded-2xl border border-[#1d1d1b]/8 bg-[#f6f5f4]/45 p-5"
+                className="rounded-2xl border border-border/70 bg-muted/45 p-5"
               >
                 <YearlyStats stats={stats.days} firstMemoDate={stats.firstMemoDate} />
               </motion.div>
@@ -381,14 +383,14 @@ const MonthCalendar = memo(function MonthCalendar({
   }, [stats, monthStart, monthEnd])
 
   return (
-    <div className="flex h-full flex-col gap-4 rounded-2xl border border-[#1d1d1b]/8 bg-white p-5">
+    <div className="flex h-full flex-col gap-4 rounded-2xl border border-border/70 bg-card p-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-[22px] font-bold tracking-tight text-[#1d1d1b]">
+        <h3 className="text-[22px] font-bold tracking-tight text-foreground">
           {getYear(date) !== new Date().getFullYear()
             ? format(date, "yyyy年 M月")
             : format(date, "M月")}
         </h3>
-        <div className="flex gap-3 text-[11px] font-semibold text-[#a39e98]">
+        <div className="flex gap-3 text-[11px] font-semibold text-muted-foreground">
           <span className="tabular-nums">{monthStats.count} 笔记</span>
           <span className="tabular-nums">{monthStats.daysWithMemos} 记录天数</span>
         </div>
@@ -396,7 +398,7 @@ const MonthCalendar = memo(function MonthCalendar({
 
       <div className="grid grid-cols-7 gap-2 text-center">
         {["一", "二", "三", "四", "五", "六", "日"].map((d) => (
-          <span key={d} className="pb-1 text-[10px] font-semibold text-[#a39e98]">
+          <span key={d} className="pb-1 text-[10px] font-semibold text-muted-foreground">
             {d}
           </span>
         ))}
@@ -423,7 +425,7 @@ const MonthCalendar = memo(function MonthCalendar({
                     ? "opacity-0 pointer-events-none"
                     : cn(
                         colorFn(count),
-                        count === 0 ? "bg-[#f1f2f4] text-[#a39e98]" : "border-black/0"
+                        count === 0 ? "bg-muted text-muted-foreground" : "border-transparent"
                       )
                 )}
               />
@@ -431,7 +433,7 @@ const MonthCalendar = memo(function MonthCalendar({
                 <span
                   className={cn(
                     "pointer-events-none absolute text-[11px] font-semibold tabular-nums",
-                    count > 5 ? "text-white/95" : "text-[#6b6964]"
+                    count > 5 ? "text-white/95" : "text-muted-foreground"
                   )}
                 >
                   {format(day, "d")}

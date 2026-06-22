@@ -73,10 +73,7 @@ export function UsageProgress({
             )}
           >
             <span
-              className={cn(
-                "h-1.5 w-1.5 rounded-full transition-all duration-500",
-                statusDotClass
-              )}
+              className={cn("h-1.5 w-1.5 rounded-full transition-all duration-500", statusDotClass)}
             />
             <span>{label}</span>
             {info && (
@@ -115,7 +112,7 @@ export function UsageProgress({
 
       <div
         className={cn(
-          "h-1.5 w-full rounded-full overflow-hidden relative border border-white/5 dark:border-white/5 transition-colors duration-500",
+          "h-1.5 w-full rounded-full overflow-hidden relative border border-border/40 transition-colors duration-500",
           getBgColorClass(percentage)
         )}
       >

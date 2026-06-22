@@ -46,7 +46,7 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 h-8 w-8 flex items-center justify-center rounded-md text-foreground transition-all hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 disabled:pointer-events-none data-[state=open]:bg-secondary data-[state=open]:text-muted-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring">
+      <DialogPrimitive.Close className="absolute right-4 top-4 h-8 w-8 flex items-center justify-center rounded-md text-foreground transition-all hover:bg-accent active:scale-95 disabled:pointer-events-none data-[state=open]:bg-secondary data-[state=open]:text-muted-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring">
         {closeIcon || <HugeiconsIcon icon={X} size={16} />}
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
@@ -55,29 +55,14 @@ const DialogContent = React.forwardRef<
 ))
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
-const DialogHeader = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col space-y-1.5 text-center sm:text-left",
-      className
-    )}
-    {...props}
-  />
+const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)} {...props} />
 )
 DialogHeader.displayName = "DialogHeader"
 
-const DialogFooter = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
-      className
-    )}
+    className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)}
     {...props}
   />
 )
@@ -89,10 +74,7 @@ const DialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn(
-      "text-lg font-semibold leading-none tracking-tight text-balance",
-      className
-    )}
+    className={cn("text-lg font-semibold leading-none tracking-tight text-balance", className)}
     {...props}
   />
 ))

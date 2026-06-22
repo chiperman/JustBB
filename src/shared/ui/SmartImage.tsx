@@ -34,7 +34,7 @@ export function ImageErrorState({
       animate={{ opacity: 1, scale: 1 }}
       className={cn(
         "absolute inset-0 z-10 flex select-none flex-col items-center justify-center gap-2.5 overflow-hidden p-4 text-muted-foreground/45",
-        "bg-[#f6f5f4]/75 backdrop-blur-md backdrop-saturate-125",
+        "bg-muted/75 backdrop-blur-md backdrop-saturate-125",
         "shadow-[inset_0_1px_0_rgba(255,255,255,0.72),inset_0_-18px_40px_rgba(29,29,27,0.035)]",
         "before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_50%_32%,rgba(255,255,255,0.62),rgba(255,255,255,0.18)_44%,rgba(29,29,27,0.025)_100%)]",
         "after:absolute after:inset-0 after:bg-[repeating-radial-gradient(circle_at_18%_22%,rgba(29,29,27,0.035)_0_1px,transparent_1px_4px),linear-gradient(135deg,rgba(255,255,255,0.28),rgba(255,255,255,0)_48%,rgba(29,29,27,0.04))] after:opacity-35",
@@ -77,7 +77,7 @@ export function ImageLoadingState({
       exit={{ opacity: 0 }}
       className={cn(
         "absolute inset-0 z-10 flex select-none items-center justify-center overflow-hidden p-4 text-muted-foreground/28",
-        "bg-[#f8f7f6]/82 backdrop-blur-sm backdrop-saturate-110",
+        "bg-muted/82 backdrop-blur-sm backdrop-saturate-110",
         "shadow-[inset_0_1px_0_rgba(255,255,255,0.72),inset_0_-18px_34px_rgba(29,29,27,0.024)]",
         "before:absolute before:inset-0 before:animate-pulse before:bg-[linear-gradient(110deg,transparent_0%,rgba(255,255,255,0.54)_42%,transparent_74%)]",
         "dark:bg-background/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),inset_0_-18px_34px_rgba(0,0,0,0.22)] dark:before:bg-[linear-gradient(110deg,transparent_0%,rgba(255,255,255,0.08)_42%,transparent_74%)]",

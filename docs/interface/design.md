@@ -21,6 +21,19 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 
 ## 2. Color Palette & Roles
 
+### Dark Mode Adaptation
+
+JustBB's dark mode borrows a few principles from Vercel Geist's dark theme, documented in [Vercel Geist Dark Reference](./vercel-design-dark.md), but does not adopt the palette wholesale. Geist's near-black base, alpha borders, and clear text hierarchy are useful references; JustBB keeps its warmer notebook atmosphere and Anthropic Clay accent.
+
+Practical rules:
+
+- Use a deeper warm canvas (`#141412`) instead of pure black to reduce glare without losing the paper-like warmth.
+- Keep content surfaces only one tonal step above the canvas (`#1f1e1c` for cards, `#252421` for muted areas); avoid stacking multiple dark panels.
+- Prefer translucent warm borders (`rgba(246,245,244,0.12)`) over shadows for separation.
+- Raise secondary text slightly in dark mode (`#b3aea7`) so metadata, captions, and placeholders remain readable.
+- Let Clay become a touch brighter in dark mode (`#e08767`) for links, CTAs, badges, and focus affordances.
+- Treat Vercel's blue focus/error/success scale as a reference for contrast discipline, not as a brand replacement.
+
 ### Primary
 
 - **Anthropic Black** (`#1d1d1b`): Primary text, headings, body copy. The warm tone softens pure black without sacrificing readability.
@@ -56,6 +69,7 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 ### Borders & Division
 
 - **Whisper Border** (`1px solid rgba(29,29,27,0.1)`): Standard division border -- cards, dividers, sections.
+- **Dark Whisper Border** (`1px solid rgba(246,245,244,0.12)`): Dark mode division border, slightly stronger than light mode so flat surfaces stay legible.
 - **Focus Clay** (`1px solid #d97757`): Active focus state ring.
 
 ## 3. Typography Rules
@@ -204,3 +218,7 @@ What makes this visual language distinctive is its border philosophy. Rather tha
 - Border: `1px solid rgba(29,29,27,0.1)`
 - Link: Anthropic Clay (`#d97757`)
 - Focus ring: Soft Clay (`#e7b8a8`)
+- Dark background: Deep Warm Canvas (`#141412`)
+- Dark card: Warm Ink Surface (`#1f1e1c`)
+- Dark text: Warm Paper (`#f3f1ee`)
+- Dark muted text: Warm Gray (`#b3aea7`)

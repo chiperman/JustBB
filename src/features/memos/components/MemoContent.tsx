@@ -91,7 +91,7 @@ export function MemoContent({
                 <Link
                   key={`tag-${index}`}
                   href={`/?tag=${encodeURIComponent(token.value.slice(1))}`}
-                  className="mx-0.5 my-0.5 px-1 rounded-md font-mono font-medium text-[#2a9d99] bg-[#2a9d99]/5 transition-colors hover:text-[#2a9d99] hover:bg-[#2a9d99]/10 hover:underline hover:ring-1 hover:ring-border/40 focus-visible:ring-1 focus-visible:ring-[#2a9d99]/30 outline-none inline-block align-middle"
+                  className="mx-0.5 my-0.5 px-1 rounded-md font-mono font-medium text-(--memo-tag-text) bg-(--memo-tag-bg) transition-colors hover:text-(--memo-tag-text) hover:bg-(--memo-tag-hover-bg) hover:underline hover:ring-1 hover:ring-border/40 focus-visible:ring-1 focus-visible:ring-primary/25 outline-none inline-block align-middle"
                 >
                   {token.value}
                 </Link>

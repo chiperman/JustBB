@@ -81,6 +81,9 @@
   --active-clay: #c46648;
   --badge-clay-bg: #fdf5f2;
   --badge-clay-text: #d97757;
+  --memo-tag-bg: rgba(196, 102, 72, 0.08);
+  --memo-tag-text: #a9573e;
+  --memo-tag-hover-bg: rgba(196, 102, 72, 0.14);
 
   --chart-1: #d97757;
   --chart-2: #2a9d99; /* Teal */
@@ -124,14 +127,17 @@
 
   --active-clay: #c96d4e;
   --badge-clay-bg: rgba(224, 135, 103, 0.12);
-  --badge-clay-text: #e08767;
+  --badge-clay-text: #d08a73;
+  --memo-tag-bg: rgba(201, 109, 78, 0.12);
+  --memo-tag-text: #c97859;
+  --memo-tag-hover-bg: rgba(201, 109, 78, 0.18);
 
   /* Heatmap Colors (Dark) */
-  --heatmap-0: #2d333b;
-  --heatmap-1: #0e4429;
-  --heatmap-2: #006d32;
-  --heatmap-3: #26a641;
-  --heatmap-4: #39d353;
+  --heatmap-0: #2a2926;
+  --heatmap-1: #45342d;
+  --heatmap-2: #664436;
+  --heatmap-3: #965f49;
+  --heatmap-4: #c97859;
 }
 
 body {

@@ -1023,13 +1023,11 @@ export function ImageStackPreview({
   const incomingMidY = switchAnimation?.mode === "incoming" ? -switchLiftDistance * 0.25 : 0
   const incomingMidRotate = switchAnimation?.mode === "incoming" ? 6.5 * switchDirection : 0
   const outgoingExitX = switchAnimation?.mode === "outgoing" ? -switchTravelDistance * 0.82 : 0
-  const outgoingExitY = switchAnimation?.mode === "outgoing" ? switchLiftDistance * 0.66 : 0
-  const outgoingExitRotate =
-    switchAnimation?.mode === "outgoing" ? -6.6 * Math.abs(switchAnimation.direction) : 0
-  const outgoingReturnX = switchAnimation?.mode === "outgoing" ? -switchTravelDistance * 0.34 : 0
+  const outgoingExitY = switchAnimation?.mode === "outgoing" ? -switchLiftDistance * 0.66 : 0
+  const outgoingExitRotate = switchAnimation?.mode === "outgoing" ? -6.6 : 0
+  const outgoingReturnX = switchAnimation?.mode === "outgoing" ? switchTravelDistance * 0.34 : 0
   const outgoingReturnY = switchAnimation?.mode === "outgoing" ? switchLiftDistance * 1.05 : 0
-  const outgoingReturnRotate =
-    switchAnimation?.mode === "outgoing" ? -3.4 * Math.abs(switchAnimation.direction) : 0
+  const outgoingReturnRotate = switchAnimation?.mode === "outgoing" ? 3.4 : 0
   const outgoingPreviewImage = switchAnimation?.mode === "outgoing" ? switchAnimation : null
   const incomingImageIndex =
     switchAnimation?.mode === "incoming" ? switchAnimation.imageIndex : null
@@ -1308,7 +1306,6 @@ export function ImageStackPreview({
                   height: outgoingFrameSize.height,
                   marginLeft: -outgoingFrameSize.width / 2,
                   marginTop: -outgoingFrameSize.height / 2,
-                  opacity: [1, 0.96, 0],
                   scale: [1, 0.97, 0.84],
                   x: [0, outgoingExitX, outgoingReturnX],
                   y: [0, outgoingExitY, outgoingReturnY],

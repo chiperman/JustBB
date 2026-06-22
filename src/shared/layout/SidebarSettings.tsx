@@ -23,7 +23,7 @@ import { logout } from "@/features/auth/actions"
 import { supabase } from "@/lib/supabase"
 import { DRAFT_CONTENT_KEY, DRAFT_IS_PRIVATE_KEY } from "@/features/memos/hooks/useMemoEditor"
 import { cn } from "@/shared/lib/utils"
-import { useLayout, AnimationSpeed } from "@/state/LayoutContext"
+import { useLayout } from "@/state/LayoutContext"
 import { useUser } from "@/state/UserContext"
 import { motion } from "framer-motion"
 import {
@@ -52,7 +52,7 @@ interface SidebarSettingsProps {
 
 export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
   const { user, setUser } = useUser()
-  const { setViewMode, animationSpeed, setAnimationSpeed, animationMultiplier } = useLayout()
+  const { setViewMode } = useLayout()
   const { theme, setTheme } = useTheme()
   const [loggingOut, setLoggingOut] = React.useState(false)
   const [hasMounted, setHasMounted] = React.useState(false)
@@ -94,14 +94,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
 
   if (!hasMounted) {
     return (
-      <Button
-        variant="ghost"
-        className={triggerClassName}
-        style={{
-          transitionDuration: `${200 * animationMultiplier}ms`,
-        }}
-        aria-label="账号与设置"
-      >
+      <Button variant="ghost" className={triggerClassName} aria-label="账号与设置">
         <div className="shrink-0 flex h-9 w-9 items-center justify-center">
           <HugeiconsIcon icon={Settings} size={16} className="text-muted-foreground" />
         </div>
@@ -116,14 +109,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className={triggerClassName}
-            style={{
-              transitionDuration: `${200 * animationMultiplier}ms`,
-            }}
-            aria-label="账号与设置"
-          >
+          <Button variant="ghost" className={triggerClassName} aria-label="账号与设置">
             {/* 固定宽高的图标包裹层，提供绝对静止的定位基准 */}
             <div className="shrink-0 flex h-9 w-9 items-center justify-center relative">
               <HugeiconsIcon icon={Settings} size={16} className="text-muted-foreground" />
@@ -151,9 +137,9 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                     }
               }
               transition={{
-                duration: 0.18 * animationMultiplier,
+                duration: 0.18,
                 ease: [0.4, 0, 0.2, 1] as const,
-                delay: isCollapsed ? 0 : 0.05 * animationMultiplier,
+                delay: isCollapsed ? 0 : 0.05,
               }}
               className="min-w-0 overflow-hidden whitespace-nowrap nav-button-text tracking-tight block text-left"
               aria-hidden={isCollapsed}
@@ -226,34 +212,6 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                         className="mr-2 text-primary opacity-80"
                       />
                       <span className="nav-button-text">跟随系统</span>
-                    </DropdownMenuRadioItem>
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuSubContent>
-              </DropdownMenuPortal>
-            </DropdownMenuSub>
-
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="h-10">
-                <HugeiconsIcon icon={FlashIcon} size={16} className="mr-2 text-primary" />
-                <span className="nav-button-text">动画速度</span>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuPortal>
-                <DropdownMenuSubContent className="ml-1">
-                  <DropdownMenuRadioGroup
-                    value={animationSpeed}
-                    onValueChange={(val) => setAnimationSpeed(val as AnimationSpeed)}
-                  >
-                    <DropdownMenuRadioItem value="normal" className="h-9">
-                      <span className="nav-button-text">正常 (1.0x)</span>
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="slow" className="h-9">
-                      <span className="nav-button-text">慢速 (0.5x)</span>
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="very-slow" className="h-9">
-                      <span className="nav-button-text">极慢 (0.2x)</span>
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="super-slow" className="h-9">
-                      <span className="nav-button-text">超慢 (0.1x)</span>
                     </DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
                 </DropdownMenuSubContent>

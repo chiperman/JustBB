@@ -31,6 +31,10 @@ import {
 } from "@/shared/lib/layout-preferences"
 
 const RIGHT_SIDEBAR_EXPANDED_WIDTH = 320
+const RIGHT_SIDEBAR_TRANSITION = {
+  duration: 0.28,
+  ease: [0.22, 1, 0.36, 1] as const,
+}
 
 export function RightSidebar({
   initialCollapsed = false,
@@ -44,15 +48,6 @@ export function RightSidebar({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { animationMultiplier } = useLayout()
-
-  const rightSidebarTransition = useMemo(
-    () => ({
-      duration: 0.28 * animationMultiplier,
-      ease: [0.22, 1, 0.36, 1] as const,
-    }),
-    [animationMultiplier]
-  )
   const isCollapsed = useSyncExternalStore(
     (onStoreChange) =>
       subscribeToLayoutPreference(
@@ -318,7 +313,7 @@ export function RightSidebar({
       <motion.div
         initial={false}
         animate={{ width: isCollapsed ? 0 : RIGHT_SIDEBAR_EXPANDED_WIDTH }}
-        transition={rightSidebarTransition}
+        transition={RIGHT_SIDEBAR_TRANSITION}
         style={{
           willChange: "width",
           width: isCollapsed ? 0 : RIGHT_SIDEBAR_EXPANDED_WIDTH,

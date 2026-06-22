@@ -12,14 +12,12 @@ import { getMemos } from "@/server/actions/memos/query"
 import { useSearchParams } from "next/navigation"
 import { useUser } from "@/state/UserContext"
 import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
-import { useLayout } from "@/state/LayoutContext"
 
 export function MainLayoutClient() {
   const searchParams = useSearchParams()
   const { getCache, setCache } = usePageDataCache()
   const { user } = useUser()
   const { unlockedMemoIds } = useUnlockedMemos()
-  const { animationMultiplier } = useLayout()
   const unlockedMemoIdsRef = useRef(unlockedMemoIds)
   useEffect(() => {
     unlockedMemoIdsRef.current = unlockedMemoIds
@@ -178,9 +176,9 @@ export function MainLayoutClient() {
                     marginTop: 0,
                   }}
                   transition={{
-                    opacity: { duration: 0.2 * animationMultiplier },
-                    height: { duration: 0.3 * animationMultiplier, ease: [0.22, 1, 0.36, 1] },
-                    marginTop: { duration: 0.3 * animationMultiplier, ease: [0.22, 1, 0.36, 1] },
+                    opacity: { duration: 0.2 },
+                    height: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+                    marginTop: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
                   }}
                   className="overflow-hidden mt-6"
                 >

@@ -14,7 +14,6 @@ import { EditorToolbar } from "@/features/memos/components/editor/EditorToolbar"
 import { LinkPasteMenu } from "@/features/memos/components/editor/LinkPasteMenu"
 import type { LinkRenderMode } from "@/features/memos/components/editor/smartLink"
 import { PLACEHOLDER_TEXT } from "@/features/memos/components/MemoEditor"
-import { useLayout } from "@/state/LayoutContext"
 import { ImageZoom } from "@/shared/ui/ImageZoom"
 import { SmartImage } from "@/shared/ui/SmartImage"
 
@@ -168,7 +167,6 @@ export function MemoEditorLayout({
   onRemoveImage,
   onRemoveQueuedImage,
 }: MemoEditorLayoutProps) {
-  const { animationMultiplier } = useLayout()
   const attachmentStripRef = React.useRef<HTMLDivElement>(null)
   const hasImageAttachments =
     Boolean(uploadedImages?.length) ||
@@ -241,29 +239,25 @@ export function MemoEditorLayout({
         borderWidth: 0,
         boxShadow: "none",
         transition: {
-          opacity: { duration: shouldAnimateCollapse ? 0.2 * animationMultiplier : 0 },
+          opacity: { duration: shouldAnimateCollapse ? 0.2 : 0 },
           height: {
-            duration: shouldAnimateCollapse ? 0.3 * animationMultiplier : 0,
+            duration: shouldAnimateCollapse ? 0.3 : 0,
             ease: [0.22, 1, 0.36, 1],
           },
-          paddingTop: { duration: shouldAnimateCollapse ? 0.3 * animationMultiplier : 0 },
-          paddingBottom: { duration: shouldAnimateCollapse ? 0.3 * animationMultiplier : 0 },
-          borderWidth: { duration: shouldAnimateCollapse ? 0.3 * animationMultiplier : 0 },
+          paddingTop: { duration: shouldAnimateCollapse ? 0.3 : 0 },
+          paddingBottom: { duration: shouldAnimateCollapse ? 0.3 : 0 },
+          borderWidth: { duration: shouldAnimateCollapse ? 0.3 : 0 },
         },
       }}
       transition={{
         height: isActuallyCollapsed
           ? shouldAnimateCollapse
-            ? {
-                type: "spring",
-                stiffness: 350 / (animationMultiplier * animationMultiplier),
-                damping: 40 / animationMultiplier,
-              }
+            ? { type: "spring", stiffness: 350, damping: 40 }
             : { duration: 0 }
           : shouldAnimateCollapse
-            ? { duration: 0.4 * animationMultiplier, ease: [0.22, 1, 0.36, 1] }
+            ? { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
             : { duration: 0 },
-        opacity: { duration: shouldAnimateCollapse ? 0.2 * animationMultiplier : 0 },
+        opacity: { duration: shouldAnimateCollapse ? 0.2 : 0 },
       }}
       onAnimationStart={() => undefined}
       onAnimationComplete={() => undefined}

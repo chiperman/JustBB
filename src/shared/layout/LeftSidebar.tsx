@@ -13,7 +13,6 @@ import { useSidebarNavigation } from "@/shared/hooks/useSidebarNavigation"
 import { useSidebarPagePrefetch } from "@/shared/hooks/useSidebarPagePrefetch"
 import { SidebarNavItem } from "./sidebar/SidebarNavItem"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
-import { useLayout } from "@/state/LayoutContext"
 import { useTags } from "@/state/TagsContext"
 import {
   LEFT_SIDEBAR_COOKIE_KEY,
@@ -32,6 +31,10 @@ export interface LeftSidebarProps {
 
 const SIDEBAR_EXPANDED_WIDTH = 280
 const SIDEBAR_COLLAPSED_WIDTH = 60
+const SIDEBAR_TRANSITION = {
+  duration: 0.28,
+  ease: [0.22, 1, 0.36, 1] as const,
+}
 const HEATMAP_SLOT_HEIGHT = 248
 const TAGS_SLOT_HEIGHT = "auto"
 
@@ -52,18 +55,8 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
 
   const { navItems, currentView, handleNavigate } = useSidebarNavigation()
   const { schedulePrefetch, cancelPrefetch } = useSidebarPagePrefetch()
-  const { animationMultiplier } = useLayout()
   const { tags } = useTags()
   const shouldShowPopularTags = tags.length > 0
-
-  const sidebarTransition = {
-    duration: 0.28 * animationMultiplier,
-    ease: [0.22, 1, 0.36, 1] as const,
-  }
-  const contentFadeTransition = {
-    duration: 0.14 * animationMultiplier,
-    ease: [0.4, 0, 0.2, 1] as const,
-  }
 
   useEffect(() => {
     syncLayoutPreferenceCookie(LEFT_SIDEBAR_STORAGE_KEY, LEFT_SIDEBAR_COOKIE_KEY)
@@ -90,7 +83,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       animate={{
         width: effectiveIsCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH,
       }}
-      transition={sidebarTransition}
+      transition={SIDEBAR_TRANSITION}
       style={{ willChange: "width" }}
       className="relative flex h-full shrink-0 flex-col overflow-hidden border-r border-border bg-muted p-2"
     >
@@ -113,7 +106,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
             x: effectiveIsCollapsed ? -10 : 0,
             display: effectiveIsCollapsed ? "none" : "flex",
           }}
-          transition={sidebarTransition}
+          transition={SIDEBAR_TRANSITION}
           className={cn(
             "flex h-9 items-center overflow-hidden whitespace-nowrap select-none cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-md px-1 -ml-1 bg-transparent text-left border-none",
             effectiveIsCollapsed && "pointer-events-none"
@@ -133,13 +126,13 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
           height: effectiveIsCollapsed ? 0 : HEATMAP_SLOT_HEIGHT,
           marginBottom: effectiveIsCollapsed ? 0 : 20,
         }}
-        transition={sidebarTransition}
+        transition={SIDEBAR_TRANSITION}
       >
         <motion.div
           initial={false}
           className="h-full w-[264px] shrink-0"
           animate={{ opacity: effectiveIsCollapsed ? 0 : 1 }}
-          transition={sidebarTransition}
+          transition={SIDEBAR_TRANSITION}
         >
           <Suspense fallback={<div className="h-40 w-full animate-pulse rounded bg-muted/20" />}>
             <Heatmap />
@@ -150,7 +143,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       {/* Navigation */}
       <motion.nav
         layout
-        transition={sidebarTransition}
+        transition={SIDEBAR_TRANSITION}
         className={cn(
           "relative min-h-0 flex-1 overflow-x-hidden px-1 pb-4 custom-scrollbar",
           effectiveIsCollapsed ? "overflow-y-hidden" : "overflow-y-auto"
@@ -158,7 +151,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       >
         <motion.div
           layout
-          transition={sidebarTransition}
+          transition={SIDEBAR_TRANSITION}
           className={cn("mb-3 border-t border-border", effectiveIsCollapsed ? "mx-1" : "mx-2")}
         />
 
@@ -187,8 +180,8 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
             opacity: effectiveIsCollapsed ? 0 : 1,
           }}
           transition={{
-            height: sidebarTransition,
-            opacity: sidebarTransition,
+            height: SIDEBAR_TRANSITION,
+            opacity: SIDEBAR_TRANSITION,
           }}
         >
           <div className="w-[264px] shrink-0 border-t border-border px-1 pt-4 pb-4">

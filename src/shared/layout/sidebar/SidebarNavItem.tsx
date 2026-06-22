@@ -5,7 +5,6 @@ import { motion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { cn } from "@/shared/lib/utils"
 import { NavigationItem } from "@/config/navigation"
-import { useLayout } from "@/state/LayoutContext"
 
 interface SidebarNavItemProps {
   item: NavigationItem
@@ -24,12 +23,10 @@ export function SidebarNavItem({
   onMouseEnter,
   onMouseLeave,
 }: SidebarNavItemProps) {
-  const { animationMultiplier } = useLayout()
-
   const labelTransition = {
-    duration: 0.18 * animationMultiplier,
+    duration: 0.18,
     ease: [0.4, 0, 0.2, 1] as const,
-    delay: isCollapsed ? 0 : 0.05 * animationMultiplier,
+    delay: isCollapsed ? 0 : 0.05,
   }
 
   return (
@@ -42,9 +39,6 @@ export function SidebarNavItem({
         }}
         onMouseEnter={() => onMouseEnter?.(item.href)}
         onMouseLeave={onMouseLeave}
-        style={{
-          transitionDuration: `${200 * animationMultiplier}ms`,
-        }}
         className={cn(
           "group relative flex h-9 items-center rounded-md text-left transition-all duration-200 hover:scale-102 active:scale-95",
           isCollapsed ? "w-9" : "w-full",

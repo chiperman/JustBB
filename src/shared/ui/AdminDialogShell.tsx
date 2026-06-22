@@ -1,17 +1,13 @@
 "use client"
 
 import * as React from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 import { Button } from "@/shared/ui/button"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import { Cancel01Icon as CloseIcon } from "@hugeicons/core-free-icons"
 import { DialogClose } from "@/shared/ui/dialog"
 import { cn } from "@/shared/lib/utils"
+import { motion, type Transition } from "framer-motion"
 
 interface AdminDialogShellProps {
   open: boolean
@@ -24,6 +20,8 @@ interface AdminDialogShellProps {
   headerActions?: React.ReactNode
   maxWidth?: string
   contentClassName?: string
+  animateLayout?: boolean
+  layoutTransition?: Transition
 }
 
 export function AdminDialogShell({
@@ -37,6 +35,8 @@ export function AdminDialogShell({
   headerActions,
   maxWidth = "max-w-[640px]",
   contentClassName,
+  animateLayout = false,
+  layoutTransition,
 }: AdminDialogShellProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -44,7 +44,11 @@ export function AdminDialogShell({
         onOpenAutoFocus={(e) => e.preventDefault()}
         className={cn("p-0 overflow-hidden [&>button]:hidden", maxWidth)}
       >
-        <div className="flex flex-col">
+        <motion.div
+          layout={animateLayout ? "size" : false}
+          transition={layoutTransition}
+          className="flex flex-col"
+        >
           {/* 页头：低语分割线，Anthropic Clay 强调色 */}
           <DialogHeader className="px-8 py-5 border-b border-[#1d1d1b]/5 dark:border-white/5 flex flex-row items-center justify-between space-y-0 shrink-0">
             <div className="flex items-center gap-4">
@@ -87,10 +91,8 @@ export function AdminDialogShell({
           </div>
 
           {/* 页脚：极致纯净布局 */}
-          {footer && (
-            <div className="px-8 pb-8 flex items-center shrink-0">{footer}</div>
-          )}
-        </div>
+          {footer && <div className="px-8 pb-8 flex items-center shrink-0">{footer}</div>}
+        </motion.div>
       </DialogContent>
     </Dialog>
   )

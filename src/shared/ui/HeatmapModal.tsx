@@ -63,6 +63,18 @@ const itemVariants = {
   },
 }
 
+const dialogLayoutTransition = {
+  type: "spring",
+  stiffness: 260,
+  damping: 30,
+  mass: 0.8,
+} as const
+
+const viewTransition = {
+  opacity: { duration: 0.16 },
+  y: { duration: 0.2, ease: [0.33, 1, 0.68, 1] },
+} as const
+
 type HoveredDay = {
   date: string
   count: number
@@ -180,6 +192,8 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
         icon={CalendarIcon}
         maxWidth="max-w-[1100px]"
         contentClassName="px-8 py-7 max-h-[78vh]"
+        animateLayout
+        layoutTransition={dialogLayoutTransition}
         headerActions={
           <div className="flex items-center rounded-md bg-secondary/80 p-0.5 whisper-border pointer-events-auto relative">
             <Button
@@ -229,14 +243,14 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
           className="relative flex flex-col gap-6 heatmap-modal-wrapper"
           onMouseLeave={clearHoveredDay}
         >
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence mode="popLayout" initial={false}>
             {viewMode === "month" ? (
               <motion.div
                 key="month-view"
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
-                transition={{ duration: 0.18 }}
+                transition={viewTransition}
                 className="relative flex flex-col gap-6 overflow-visible heatmap-modal-tooltip-wrapper"
               >
                 <div className="flex flex-col gap-4 rounded-2xl border border-[#1d1d1b]/8 bg-[#f6f5f4]/70 px-5 py-4 md:flex-row md:items-center md:justify-between">
@@ -256,7 +270,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                     <Select value={selectedYear} onValueChange={handleSelectedYearChange}>
                       <SelectTrigger
                         variant="ghost"
-                        className="h-9 min-w-[104px] rounded-xl border border-[#1d1d1b]/8 bg-white px-3 text-sm font-semibold text-[#1d1d1b] hover:bg-white data-[state=open]:bg-white"
+                        className="h-9 min-w-[104px] rounded-md border border-[#1d1d1b]/8 bg-white px-3 text-sm font-semibold text-[#1d1d1b] hover:bg-white data-[state=open]:bg-white"
                       >
                         <SelectValue placeholder="年份" />
                       </SelectTrigger>
@@ -323,7 +337,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
-                transition={{ duration: 0.18 }}
+                transition={viewTransition}
                 className="rounded-2xl border border-[#1d1d1b]/8 bg-[#f6f5f4]/45 p-5"
               >
                 <YearlyStats stats={stats.days} firstMemoDate={stats.firstMemoDate} />

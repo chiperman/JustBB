@@ -3,10 +3,7 @@ import path from "node:path"
 import { describe, expect, it } from "vitest"
 
 describe("HeatmapModal tooltip positioning regressions", () => {
-  const source = fs.readFileSync(
-    path.join(process.cwd(), "src/shared/ui/HeatmapModal.tsx"),
-    "utf8"
-  )
+  const source = fs.readFileSync(path.join(process.cwd(), "src/shared/ui/HeatmapModal.tsx"), "utf8")
 
   it("tracks tooltip placement with container-relative offsets", () => {
     expect(source).toContain("getBoundingClientRect()")
@@ -29,5 +26,13 @@ describe("HeatmapModal tooltip positioning regressions", () => {
     expect(source).toContain('from "@/shared/ui/AdminDialogShell"')
     expect(source).toContain("<AdminDialogShell")
     expect(source).not.toContain("max-w-6xl h-[90vh]")
+  })
+
+  it("animates the dialog shell size when switching month and year views", () => {
+    expect(source).toContain("const dialogLayoutTransition")
+    expect(source).toContain("animateLayout")
+    expect(source).toContain("layoutTransition={dialogLayoutTransition}")
+    expect(source).toContain('<AnimatePresence mode="popLayout" initial={false}>')
+    expect(source).toContain("transition={viewTransition}")
   })
 })

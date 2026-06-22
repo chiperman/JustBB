@@ -304,6 +304,16 @@ export function ImageStackThumbnail({
     src: string
     aspectRatio: string | null
   } | null>(null)
+  const [prevIsPreviewing, setPrevIsPreviewing] = useState(isPreviewing)
+  const [localHoverEnabled, setLocalHoverEnabled] = useState(true)
+
+  if (isPreviewing !== prevIsPreviewing) {
+    setPrevIsPreviewing(isPreviewing)
+    if (isPreviewing) {
+      setLocalHoverEnabled(false)
+    }
+  }
+
   const visibleBackImages = images.slice(1, 4)
   const isStacked = images.length > 1
   const thumbnailContentOpacity = isPreviewing ? 0 : 1
@@ -313,6 +323,15 @@ export function ImageStackThumbnail({
   const thumbnailAspectRatio = preserveNaturalAspectRatio
     ? matchedNaturalAspectRatio || aspectRatio
     : aspectRatio
+
+  useEffect(() => {
+    if (!isPreviewing) {
+      const timer = setTimeout(() => {
+        setLocalHoverEnabled(true)
+      }, 150)
+      return () => clearTimeout(timer)
+    }
+  }, [isPreviewing])
 
   useEffect(() => {
     if (!preserveNaturalAspectRatio || !primaryImage) return
@@ -347,18 +366,49 @@ export function ImageStackThumbnail({
 
     const rect = primaryFrameRef.current?.getBoundingClientRect()
     const image = primaryFrameRef.current?.querySelector("img")
-    onOpen(
-      rect
-        ? {
-            top: rect.top,
-            left: rect.left,
-            width: rect.width,
-            height: rect.height,
-            imageWidth: image?.naturalWidth || undefined,
-            imageHeight: image?.naturalHeight || undefined,
+
+    if (rect && primaryFrameRef.current) {
+      let left = rect.left
+      let top = rect.top
+      let width = rect.width
+      let height = rect.height
+
+      try {
+        const style = window.getComputedStyle(primaryFrameRef.current)
+        const transform = style.transform
+        if (transform && transform !== "none") {
+          const matches = transform.match(
+            /^matrix\(([^,]+),\s*([^,]+),\s*([^,]+),\s*([^,]+),\s*([^,]+),\s*([^,]+)\)$/
+          )
+          if (matches) {
+            const a = parseFloat(matches[1]) // scaleX
+            const d = parseFloat(matches[4]) // scaleY
+            const e = parseFloat(matches[5]) // translateX
+            const f = parseFloat(matches[6]) // translateY
+
+            width = rect.width / a
+            height = rect.height / d
+            const cx = rect.left + rect.width / 2 - e
+            const cy = rect.top + rect.height / 2 - f
+            left = cx - width / 2
+            top = cy - height / 2
           }
-        : null
-    )
+        }
+      } catch (e) {
+        console.error("Failed to parse transform matrix for origin rect calculation", e)
+      }
+
+      onOpen({
+        top,
+        left,
+        width,
+        height,
+        imageWidth: image?.naturalWidth || undefined,
+        imageHeight: image?.naturalHeight || undefined,
+      })
+    } else {
+      onOpen(null)
+    }
   }
 
   return (
@@ -394,13 +444,17 @@ export function ImageStackThumbnail({
                   y: spread * 5,
                   rotate: stackRotation,
                 }}
-                variants={{
-                  hover: {
-                    x: direction * spread * 16,
-                    y: spread * 6,
-                    rotate: stackRotation * 1.18,
-                  },
-                }}
+                variants={
+                  localHoverEnabled
+                    ? {
+                        hover: {
+                          x: direction * spread * 16,
+                          y: spread * 6,
+                          rotate: stackRotation * 1.18,
+                        },
+                      }
+                    : {}
+                }
                 transition={{ type: "spring", stiffness: 260, damping: 24 }}
                 className="absolute inset-0 rounded-xl bg-muted/20 shadow-[0_14px_34px_rgba(29,29,27,0.12)]"
                 style={{
@@ -427,7 +481,7 @@ export function ImageStackThumbnail({
       <motion.div
         ref={primaryFrameRef}
         data-image-stack-primary
-        variants={{ hover: { scale: 1.01, y: -2 } }}
+        variants={localHoverEnabled ? { hover: { scale: 1.01, y: -2 } } : {}}
         transition={{ type: "spring", stiffness: 280, damping: 24 }}
         className={cn(
           "relative overflow-hidden rounded-xl shadow-[0_16px_40px_rgba(29,29,27,0.08)] ring-1 transition-[background-color,box-shadow] duration-100",

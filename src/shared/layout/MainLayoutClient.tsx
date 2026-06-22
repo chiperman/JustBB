@@ -198,10 +198,10 @@ export function MainLayoutClient() {
 
       {/* 2. 底部滚动区域 (Scrollable Feed Area) */}
       <div ref={containerRef} className="flex-1 overflow-y-auto scrollbar-stable-both">
-        <div className="max-w-screen-md mx-auto">
+        <div className="max-w-screen-md mx-auto flex min-h-full flex-col">
           {/* Level 3: Visual Padding Area */}
-          <div className="px-6 pt-4 pb-20">
-            <div className="relative min-h-[400px]">
+          <div className="flex flex-1 flex-col px-6 pt-4 pb-20">
+            <div className="relative flex min-h-[400px] flex-1 flex-col">
               <AnimatePresence mode="wait">
                 {isLoading ? (
                   <motion.div
@@ -220,7 +220,7 @@ export function MainLayoutClient() {
                     key="feed"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="w-full"
+                    className="flex w-full flex-1 flex-col"
                   >
                     <MemoFeed
                       key={cacheKey}

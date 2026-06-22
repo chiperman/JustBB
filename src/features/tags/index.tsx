@@ -7,6 +7,7 @@ import { Cancel01Icon, Search01Icon, Tag01Icon as TagIcon } from "@hugeicons/cor
 
 import { ContextPageHeader, ContextPageShell } from "@/shared/layout/ContextPageShell"
 import { cn } from "@/shared/lib/utils"
+import { PageEmptyState } from "@/shared/ui/PageEmptyState"
 
 import { useTagGroups, TagData } from "./hooks/useTagGroups"
 import { TagCard } from "./components/TagCard"
@@ -42,9 +43,13 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
     if (!normalizedQuery) return sortedTags
     return sortedTags.filter((tag) => tag.tag_name.toLowerCase().includes(normalizedQuery))
   }, [normalizedQuery, sortedTags])
+  const isEmpty = !isLoading && (tags.length === 0 || visibleTags.length === 0)
 
   return (
     <ContextPageShell
+      scrollable={!isEmpty}
+      maxWidthClassName={isEmpty ? "max-w-screen-xl h-full flex flex-col min-h-0" : undefined}
+      contentClassName={isEmpty ? "flex-1 h-full min-h-0 pt-4 pb-6 flex flex-col" : undefined}
       header={
         <ContextPageHeader
           icon={TagIcon}
@@ -130,7 +135,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
         />
       }
     >
-      <div className="space-y-8">
+      <div className={isEmpty ? "flex flex-1 min-h-0 flex-col" : "space-y-8"}>
         {isLoading ? (
           <div className="space-y-6">
             <div className="h-4 w-20 rounded bg-muted/20 animate-pulse" />
@@ -144,15 +149,17 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
             </div>
           </div>
         ) : tags.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border/60 bg-card/30 px-6 py-16 text-center">
-            <p className="text-sm text-muted-foreground">
-              暂无标签记录。写下第一条带标签的 Memo 之后，这里会自动形成索引。
-            </p>
-          </div>
+          <PageEmptyState
+            icon={TagIcon}
+            title="暂无标签"
+            description="写下第一条带标签的 Memo 之后，这里会自动形成索引。"
+          />
         ) : visibleTags.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border/60 bg-card/30 px-6 py-16 text-center">
-            <p className="text-sm text-muted-foreground">没有找到匹配 “{query.trim()}” 的标签。</p>
-          </div>
+          <PageEmptyState
+            icon={Search01Icon}
+            title="没有找到匹配的标签"
+            description={`没有找到匹配 “${query.trim()}” 的标签。`}
+          />
         ) : (
           <section className="space-y-4">
             <div className="flex items-center gap-2">

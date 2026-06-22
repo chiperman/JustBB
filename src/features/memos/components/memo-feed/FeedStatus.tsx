@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
-import { MemoCardSkeleton } from "@/shared/ui/MemoCardSkeleton"
+import { Loading03Icon as Loader2, Note02Icon } from "@hugeicons/core-free-icons"
+import { PageEmptyState } from "@/shared/ui/PageEmptyState"
 
 interface FeedStatusProps {
   isLoadingOlder: boolean
@@ -11,11 +11,7 @@ interface FeedStatusProps {
   memosCount: number
 }
 
-export function FeedStatus({
-  isLoadingOlder,
-  hasMoreOlder,
-  memosCount,
-}: FeedStatusProps) {
+export function FeedStatus({ isLoadingOlder, hasMoreOlder, memosCount }: FeedStatusProps) {
   if (isLoadingOlder) {
     return (
       <div className="py-4 flex items-center justify-center min-h-[60px]">
@@ -31,9 +27,7 @@ export function FeedStatus({
               className="text-muted-foreground/50 transform-gpu will-change-transform"
             />
           </motion.div>
-          <span className="ml-2 text-xs text-muted-foreground/60">
-            加载更多...
-          </span>
+          <span className="ml-2 text-xs text-muted-foreground/60">加载更多...</span>
         </div>
       </div>
     )
@@ -49,9 +43,11 @@ export function FeedStatus({
 
   if (memosCount === 0) {
     return (
-      <div className="w-full">
-        <MemoCardSkeleton isEmpty={true} />
-      </div>
+      <PageEmptyState
+        icon={Note02Icon}
+        title="暂无记录"
+        description="写下第一条 Memo 后，它会在这里进入你的时间线。"
+      />
     )
   }
 

@@ -12,15 +12,15 @@ import { TrashItem } from "./components/TrashItem"
 
 export function TrashClient() {
   const { memos, isLoading, isPending, handleEmptyTrash } = useTrashMemos()
+  const isEmpty = !isLoading && memos.length === 0
 
   return (
     <ContextPageShell
+      scrollable={!isEmpty}
+      maxWidthClassName={isEmpty ? "max-w-screen-xl h-full flex flex-col min-h-0" : undefined}
+      contentClassName={isEmpty ? "flex-1 h-full min-h-0 pt-4 pb-6 flex flex-col" : undefined}
       header={
-        <TrashHeader
-          count={memos.length}
-          isPending={isPending}
-          onEmptyTrash={handleEmptyTrash}
-        />
+        <TrashHeader count={memos.length} isPending={isPending} onEmptyTrash={handleEmptyTrash} />
       }
     >
       {isLoading ? (

@@ -3,14 +3,15 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Memo } from "@/types/memo"
 import { AnimatePresence } from "framer-motion"
-import { HugeiconsIcon } from "@hugeicons/react"
 import { ChatLock01Icon as LockIcon, Image01Icon as GalleryIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import {
   IMAGE_STACK_RETURN_DURATION_MS,
   type ImageStackOriginRect,
   ImageStackPreview,
   ImageStackThumbnail,
 } from "@/shared/ui/ImageStack"
+import { PageEmptyState } from "@/shared/ui/PageEmptyState"
 import { UnlockDialog } from "@/features/memos/components/UnlockDialog"
 
 interface GalleryGridProps {
@@ -289,15 +290,11 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
 
   if (!memos || memos.length === 0) {
     return (
-      <div className="flex h-full min-h-[500px] flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(250,247,245,0.36))] px-6 py-24 text-center text-muted-foreground">
-        <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary/8 text-primary/55 ring-1 ring-primary/10">
-          <HugeiconsIcon icon={GalleryIcon} size={26} strokeWidth={1.7} />
-        </div>
-        <p className="text-lg font-semibold text-foreground/55">暂无图片</p>
-        <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground/55">
-          发布带图片的 Memo 后，影像会在这里汇集成你的私人画廊。
-        </p>
-      </div>
+      <PageEmptyState
+        icon={GalleryIcon}
+        title="暂无图片"
+        description="发布带图片的 Memo 后，影像会在这里汇集成你的私人画廊。"
+      />
     )
   }
 

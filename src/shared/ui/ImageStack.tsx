@@ -49,7 +49,7 @@ const STACK_FULL_SPREAD_LAYERS = 5
 const THUMBNAIL_MIN_ASPECT_RATIO = 0.96
 const THUMBNAIL_MAX_ASPECT_RATIO = 1.55
 const PINCH_ROTATION_THRESHOLD = 3
-const PREVIEW_SWITCH_DURATION_MS = 1800
+const PREVIEW_SWITCH_DURATION_MS = 420
 const KEYBOARD_REPEAT_NAVIGATION_INTERVAL_MS = 560
 export const IMAGE_STACK_RETURN_DURATION_MS = 420
 const PREVIEW_FALLBACK_IMAGE_SIZE = { width: 560, height: 420 }
@@ -636,7 +636,16 @@ export function ImageStackPreview({
         ease: [0.22, 1, 0.36, 1] as const,
         times: [0, 0.58, 1],
       }
-  const outgoingSwitchTransition = switchTransition
+  const outgoingSwitchTransition = shouldReduceMotion
+    ? { duration: 0 }
+    : {
+        ...switchTransition,
+        opacity: {
+          duration: PREVIEW_SWITCH_DURATION_MS / 1000,
+          times: [0, 0.8, 1],
+          ease: "linear" as const,
+        },
+      }
   const previewOpenTransition = shouldReduceMotion
     ? { duration: 0 }
     : { duration: 0.28, ease: [0.2, 0.8, 0.2, 1] as const }
@@ -1313,7 +1322,7 @@ export function ImageStackPreview({
                   x: [0, outgoingExitX, outgoingReturnX],
                   y: [0, outgoingExitY, outgoingReturnY],
                   rotate: [0, outgoingExitRotate, outgoingReturnRotate],
-                  opacity: [1, 0.7, 0.4],
+                  opacity: [1, 1, 0],
                   zIndex: 60,
                 }}
                 transition={outgoingSwitchTransition}

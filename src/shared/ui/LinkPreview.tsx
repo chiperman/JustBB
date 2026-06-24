@@ -7,6 +7,7 @@ import { Link01Icon, Copy01Icon } from "@hugeicons/core-free-icons"
 import { cn } from "@/shared/lib/utils"
 import { useToast } from "@/shared/hooks/use-toast"
 import { SmartImage } from "./SmartImage"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 
 interface LinkPreviewProps {
   url: string
@@ -208,11 +209,7 @@ export function LinkPreview({
           />
         ) : (
           <div className="relative w-24 self-stretch shrink-0 overflow-hidden bg-primary/5 border-r border-border flex items-center justify-center sm:w-[120px]">
-            <HugeiconsIcon
-              icon={Link01Icon}
-              size={32}
-              className="text-primary/30"
-            />
+            <HugeiconsIcon icon={Link01Icon} size={32} className="text-primary/30" />
           </div>
         )}
         <div className="flex flex-1 min-w-0 flex-col p-3 sm:p-4">
@@ -242,21 +239,21 @@ export function LinkPreview({
   )
 }
 
-function CopyButton({
-  onCopy,
-}: {
-  onCopy: (e: React.MouseEvent<HTMLElement>) => void
-}) {
+function CopyButton({ onCopy }: { onCopy: (e: React.MouseEvent<HTMLElement>) => void }) {
   return (
-    <button
-      type="button"
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={onCopy}
-      className="p-1 hover:bg-accent rounded-md transition-colors text-muted-foreground hover:text-foreground"
-      aria-label="拷贝链接"
-      title="拷贝链接"
-    >
-      <HugeiconsIcon icon={Copy01Icon} size={14} />
-    </button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={onCopy}
+          className="p-1 hover:bg-accent rounded-md transition-colors text-muted-foreground hover:text-foreground"
+          aria-label="拷贝链接"
+        >
+          <HugeiconsIcon icon={Copy01Icon} size={14} />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top">拷贝链接</TooltipContent>
+    </Tooltip>
   )
 }

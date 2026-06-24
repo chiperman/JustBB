@@ -85,7 +85,11 @@ describe("focus visibility regressions", () => {
   })
 
   it("keeps visible focus styles on feed header entry points", () => {
-    const html = renderToStaticMarkup(<FeedHeader />)
+    const html = renderToStaticMarkup(
+      <TooltipProvider>
+        <FeedHeader />
+      </TooltipProvider>
+    )
 
     expect(html).not.toContain("focus-visible:ring-0")
     expect(html).toContain("focus-visible:ring-1")
@@ -94,7 +98,11 @@ describe("focus visibility regressions", () => {
   })
 
   it("keeps visible focus styles on search input action buttons", () => {
-    const html = renderToStaticMarkup(<SearchInput />)
+    const html = renderToStaticMarkup(
+      <TooltipProvider>
+        <SearchInput />
+      </TooltipProvider>
+    )
     const focusMatches = html.match(/focus-visible:ring-1/g) ?? []
 
     expect(focusMatches.length).toBeGreaterThanOrEqual(1)

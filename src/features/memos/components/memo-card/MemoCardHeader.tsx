@@ -9,6 +9,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { cn, formatDate } from "@/shared/lib/utils"
 import { Button } from "@/shared/ui/button"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 import { Checkbox } from "@/shared/ui/checkbox"
 import { MemoActions } from "../MemoActions"
 import { Memo } from "@/types/memo"
@@ -99,33 +100,45 @@ export function MemoCardHeader({
       <div
         className={cn(
           "flex items-center gap-2 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
-          isSelectionMode
+          isSelectionMode && !memo.deleted_at
             ? "opacity-0 scale-95 pointer-events-none translate-x-2 invisible"
             : "opacity-100 scale-100 pointer-events-auto translate-x-0 visible"
         )}
       >
         {memo.is_locked ? (
           <>
-            <Button
-              variant="ghost"
-              size="icon"
-              disabled
-              className="h-8 w-8 rounded-md text-muted-foreground/35 opacity-100"
-              aria-label="私密记录解锁后可查看引用"
-              title="私密记录解锁后可查看引用"
-            >
-              <HugeiconsIcon icon={Link02Icon} size={16} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              disabled
-              className="h-8 w-8 rounded-md text-muted-foreground/35 opacity-100"
-              aria-label="私密记录解锁后可使用更多操作"
-              title="私密记录解锁后可使用更多操作"
-            >
-              <HugeiconsIcon icon={MoreHorizontalIcon} size={16} />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-block">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled
+                    className="h-8 w-8 rounded-md text-muted-foreground/35 opacity-100 pointer-events-none"
+                    aria-label="私密记录解锁后可查看引用"
+                  >
+                    <HugeiconsIcon icon={Link02Icon} size={16} />
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top">私密记录解锁后可查看引用</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-block">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled
+                    className="h-8 w-8 rounded-md text-muted-foreground/35 opacity-100 pointer-events-none"
+                    aria-label="私密记录解锁后可使用更多操作"
+                  >
+                    <HugeiconsIcon icon={MoreHorizontalIcon} size={16} />
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top">私密记录解锁后可使用更多操作</TooltipContent>
+            </Tooltip>
           </>
         ) : showOriginalOnly || showViewOriginal ? (
           <Button
@@ -145,21 +158,27 @@ export function MemoCardHeader({
           </Button>
         ) : (
           <>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggleBacklinks}
-              className={cn(
-                "h-8 w-8 rounded-md transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 active:scale-95",
-                showBacklinks ? "bg-primary/10 text-primary opacity-100" : "text-muted-foreground",
-                (showBacklinks || isMenuOpen) && "opacity-100"
-              )}
-              aria-expanded={showBacklinks}
-              aria-label="查看引用"
-              title="查看引用"
-            >
-              <HugeiconsIcon icon={Link02Icon} size={16} />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onToggleBacklinks}
+                  className={cn(
+                    "h-8 w-8 rounded-md transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 active:scale-95",
+                    showBacklinks
+                      ? "bg-primary/10 text-primary opacity-100"
+                      : "text-muted-foreground",
+                    (showBacklinks || isMenuOpen) && "opacity-100"
+                  )}
+                  aria-expanded={showBacklinks}
+                  aria-label="查看引用"
+                >
+                  <HugeiconsIcon icon={Link02Icon} size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">查看引用</TooltipContent>
+            </Tooltip>
             <MemoActions
               id={memo.id}
               isDeleted={!!memo.deleted_at}

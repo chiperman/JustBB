@@ -15,6 +15,7 @@ import {
   DropdownMenuRadioItem,
 } from "@/shared/ui/dropdown-menu"
 import { Button } from "@/shared/ui/button"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 import { SearchInput } from "./SearchInput"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -74,27 +75,32 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
       ) : (
         <div className="flex items-center gap-1.5 overflow-hidden">
           <div className="flex items-center whitespace-nowrap">
-            <Link
-              href="/"
-              onClick={() => {
-                router.push("/")
-              }}
-              className="group mr-1 flex items-center gap-1.5 rounded-md px-2 py-1 text-sm transition-all hover:bg-secondary active:scale-95 outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
-              title="回到首页"
-            >
-              {isRefreshing ? (
-                <HugeiconsIcon icon={Loader2} size={14} className="text-primary animate-spin" />
-              ) : (
-                <HugeiconsIcon
-                  icon={Home01Icon}
-                  size={14}
-                  className="text-primary/70 group-hover:text-primary transition-colors"
-                />
-              )}
-              <span className="font-bold tracking-tight text-primary group-hover:text-primary transition-colors">
-                JustMemo
-              </span>
-            </Link>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href="/"
+                  onClick={() => {
+                    router.push("/")
+                  }}
+                  className="group mr-1 flex items-center gap-1.5 rounded-md px-2 py-1 text-sm transition-all hover:bg-secondary active:scale-95 outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
+                  aria-label="回到首页"
+                >
+                  {isRefreshing ? (
+                    <HugeiconsIcon icon={Loader2} size={14} className="text-primary animate-spin" />
+                  ) : (
+                    <HugeiconsIcon
+                      icon={Home01Icon}
+                      size={14}
+                      className="text-primary/70 group-hover:text-primary transition-colors"
+                    />
+                  )}
+                  <span className="font-bold tracking-tight text-primary group-hover:text-primary transition-colors">
+                    JustMemo
+                  </span>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">回到首页</TooltipContent>
+            </Tooltip>
           </div>
 
           {hasMounted ? (

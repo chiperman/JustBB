@@ -15,6 +15,7 @@ import { LinkPasteMenu } from "@/features/memos/components/editor/LinkPasteMenu"
 import type { LinkRenderMode } from "@/features/memos/components/editor/smartLink"
 import { PLACEHOLDER_TEXT } from "@/features/memos/components/MemoEditor"
 import { ImageZoom } from "@/shared/ui/ImageZoom"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 import { SmartImage } from "@/shared/ui/SmartImage"
 
 export interface SuggestionItem {
@@ -383,30 +384,35 @@ export function MemoEditorLayout({
                           className="w-full h-full object-cover cursor-zoom-in"
                         />
                       </ImageZoom>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onAttachmentInteract?.()
-                          onRemoveImage?.(url)
-                        }}
-                        className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-0.5 opacity-100 md:opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer flex items-center justify-center w-5 h-5 border-none z-20"
-                        title="移除图片"
-                      >
-                        <svg
-                          className="w-2.5 h-2.5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2.5"
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onAttachmentInteract?.()
+                              onRemoveImage?.(url)
+                            }}
+                            className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-0.5 opacity-100 md:opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer flex items-center justify-center w-5 h-5 border-none z-20"
+                            aria-label="移除图片"
+                          >
+                            <svg
+                              className="w-2.5 h-2.5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2.5"
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">移除图片</TooltipContent>
+                      </Tooltip>
                     </div>
                   ))}
 
@@ -478,31 +484,36 @@ export function MemoEditorLayout({
                           </div>
                         </div>
                       )}
-                      <button
-                        type="button"
-                        disabled={img.isUploading}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onAttachmentInteract?.()
-                          onRemoveQueuedImage?.(img.id)
-                        }}
-                        className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-0.5 opacity-100 md:opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed disabled:opacity-35 flex items-center justify-center w-5 h-5 border-none z-20"
-                        title="移除图片"
-                      >
-                        <svg
-                          className="w-2.5 h-2.5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2.5"
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            disabled={img.isUploading}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onAttachmentInteract?.()
+                              onRemoveQueuedImage?.(img.id)
+                            }}
+                            className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-0.5 opacity-100 md:opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed disabled:opacity-35 flex items-center justify-center w-5 h-5 border-none z-20"
+                            aria-label="移除图片"
+                          >
+                            <svg
+                              className="w-2.5 h-2.5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2.5"
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">移除图片</TooltipContent>
+                      </Tooltip>
                     </div>
                   ))}
 

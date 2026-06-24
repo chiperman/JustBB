@@ -15,6 +15,7 @@ import {
   RotateTopRightIcon,
 } from "@hugeicons/core-free-icons"
 import { SmartImage } from "./SmartImage"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 
 interface ImageZoomProps {
   src: string
@@ -237,97 +238,127 @@ function PreviewContent({
         {/* 翻页控制 (仅当有多张图时展示) */}
         {groupImages.length > 1 && (
           <>
-            <button
-              onClick={handlePrev}
-              disabled={activeIndex === 0}
-              className={cn(
-                "w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all",
-                activeIndex === 0 &&
-                  "text-foreground/20 hover:text-foreground/20 hover:bg-transparent pointer-events-none cursor-not-allowed"
-              )}
-              title="上一张 (←)"
-            >
-              <HugeiconsIcon icon={ArrowLeft01Icon} size={15} strokeWidth={2} />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handlePrev}
+                  disabled={activeIndex === 0}
+                  className={cn(
+                    "w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all",
+                    activeIndex === 0 &&
+                      "text-foreground/20 hover:text-foreground/20 hover:bg-transparent pointer-events-none cursor-not-allowed"
+                  )}
+                  aria-label="上一张 (←)"
+                >
+                  <HugeiconsIcon icon={ArrowLeft01Icon} size={15} strokeWidth={2} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">上一张 (←)</TooltipContent>
+            </Tooltip>
 
             <span className="text-foreground/90 font-mono text-[11px] min-w-[32px] h-8 flex items-center justify-center select-none">
               {activeIndex + 1}/{groupImages.length}
             </span>
 
-            <button
-              onClick={handleNext}
-              disabled={activeIndex === groupImages.length - 1}
-              className={cn(
-                "w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all",
-                activeIndex === groupImages.length - 1 &&
-                  "text-foreground/20 hover:text-foreground/20 hover:bg-transparent pointer-events-none cursor-not-allowed"
-              )}
-              title="下一张 (→)"
-            >
-              <HugeiconsIcon icon={ArrowRight01Icon} size={15} strokeWidth={2} />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleNext}
+                  disabled={activeIndex === groupImages.length - 1}
+                  className={cn(
+                    "w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all",
+                    activeIndex === groupImages.length - 1 &&
+                      "text-foreground/20 hover:text-foreground/20 hover:bg-transparent pointer-events-none cursor-not-allowed"
+                  )}
+                  aria-label="下一张 (→)"
+                >
+                  <HugeiconsIcon icon={ArrowRight01Icon} size={15} strokeWidth={2} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">下一张 (→)</TooltipContent>
+            </Tooltip>
 
             <div className="w-px h-3.5 bg-border mx-1" />
           </>
         )}
 
         {/* 缩放操作 */}
-        <button
-          onClick={() => {
-            const next = Math.max(rawScale.get() - 0.25, 0.25)
-            rawScale.set(next)
-          }}
-          className="w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all"
-          title="缩小"
-        >
-          <HugeiconsIcon icon={SearchMinusIcon} size={15} strokeWidth={2} />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => {
+                const next = Math.max(rawScale.get() - 0.25, 0.25)
+                rawScale.set(next)
+              }}
+              className="w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all"
+              aria-label="缩小"
+            >
+              <HugeiconsIcon icon={SearchMinusIcon} size={15} strokeWidth={2} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">缩小</TooltipContent>
+        </Tooltip>
 
         <span className="text-foreground font-mono text-[11px] min-w-[36px] h-8 flex items-center justify-center select-none">
           {Math.round(currentScale * 100)}%
         </span>
 
-        <button
-          onClick={() => {
-            const next = Math.min(rawScale.get() + 0.25, 3)
-            rawScale.set(next)
-          }}
-          className="w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all"
-          title="放大"
-        >
-          <HugeiconsIcon icon={SearchAddIcon} size={15} strokeWidth={2} />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => {
+                const next = Math.min(rawScale.get() + 0.25, 3)
+                rawScale.set(next)
+              }}
+              className="w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all"
+              aria-label="放大"
+            >
+              <HugeiconsIcon icon={SearchAddIcon} size={15} strokeWidth={2} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">放大</TooltipContent>
+        </Tooltip>
 
-        <button
-          onClick={() => {
-            if (fitMode === "fit") {
-              setFitMode("original")
-            } else {
-              setFitMode("fit")
-            }
-            resetTransform()
-          }}
-          className={cn(
-            "w-8 h-8 rounded-md flex items-center justify-center hover:bg-muted active:scale-95 transition-all",
-            fitMode === "original"
-              ? "text-primary hover:text-primary"
-              : "text-foreground/70 hover:text-foreground"
-          )}
-          title={fitMode === "fit" ? "100% 比例" : "适应屏幕"}
-        >
-          <HugeiconsIcon icon={ZoomInAreaIcon} size={15} strokeWidth={2} />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => {
+                if (fitMode === "fit") {
+                  setFitMode("original")
+                } else {
+                  setFitMode("fit")
+                }
+                resetTransform()
+              }}
+              className={cn(
+                "w-8 h-8 rounded-md flex items-center justify-center hover:bg-muted active:scale-95 transition-all",
+                fitMode === "original"
+                  ? "text-primary hover:text-primary"
+                  : "text-foreground/70 hover:text-foreground"
+              )}
+              aria-label={fitMode === "fit" ? "100% 比例" : "适应屏幕"}
+            >
+              <HugeiconsIcon icon={ZoomInAreaIcon} size={15} strokeWidth={2} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">{fitMode === "fit" ? "100% 比例" : "适应屏幕"}</TooltipContent>
+        </Tooltip>
 
         <div className="w-px h-3.5 bg-border mx-1" />
 
         {/* 旋转操作 */}
-        <button
-          onClick={() => setRotation((r) => r + 90)}
-          className="w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all"
-          title="顺时针旋转 90°"
-        >
-          <HugeiconsIcon icon={RotateTopRightIcon} size={15} strokeWidth={2} />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => setRotation((r) => r + 90)}
+              className="w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all"
+              aria-label="顺时针旋转 90°"
+            >
+              <HugeiconsIcon icon={RotateTopRightIcon} size={15} strokeWidth={2} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">顺时针旋转 90°</TooltipContent>
+        </Tooltip>
       </motion.div>
 
       {/* 关闭按钮 */}

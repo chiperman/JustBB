@@ -31,6 +31,7 @@ import {
   ZoomInAreaIcon,
 } from "@hugeicons/core-free-icons"
 import { ImageErrorState, ImageLoadingState, SmartImage } from "./SmartImage"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 import { cn } from "@/shared/lib/utils"
 import { MemoContent } from "@/features/memos/components/MemoContent"
 import {
@@ -1420,101 +1421,143 @@ export function ImageStackPreview({
         }}
         className="pointer-events-auto absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-inner border border-border/40 bg-popover px-3 py-1.5 backdrop-blur-xl"
       >
-        <button
-          type="button"
-          onClick={() => moveTo(activeIndex - 1)}
-          disabled={!canNavigatePrevious}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-foreground/20 disabled:hover:bg-transparent disabled:hover:text-foreground/20"
-          title="上一张 (←)"
-        >
-          <HugeiconsIcon icon={ArrowLeft01Icon} size={15} strokeWidth={2} />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => moveTo(activeIndex - 1)}
+              disabled={!canNavigatePrevious}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-foreground/20 disabled:hover:bg-transparent disabled:hover:text-foreground/20"
+              aria-label="上一张 (←)"
+            >
+              <HugeiconsIcon icon={ArrowLeft01Icon} size={15} strokeWidth={2} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">上一张 (←)</TooltipContent>
+        </Tooltip>
         <span className="flex h-8 min-w-[42px] select-none items-center justify-center font-mono text-[11px] text-foreground/90">
           {activeIndex + 1}/{imageCount}
         </span>
-        <button
-          type="button"
-          onClick={() => moveTo(activeIndex + 1)}
-          disabled={!canNavigateNext}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-foreground/20 disabled:hover:bg-transparent disabled:hover:text-foreground/20"
-          title="下一张 (→)"
-        >
-          <HugeiconsIcon icon={ArrowRight01Icon} size={15} strokeWidth={2} />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => moveTo(activeIndex + 1)}
+              disabled={!canNavigateNext}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-foreground/20 disabled:hover:bg-transparent disabled:hover:text-foreground/20"
+              aria-label="下一张 (→)"
+            >
+              <HugeiconsIcon icon={ArrowRight01Icon} size={15} strokeWidth={2} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">下一张 (→)</TooltipContent>
+        </Tooltip>
 
         <div className="mx-1 h-3.5 w-px bg-border" />
 
-        <button
-          type="button"
-          onClick={() => rawScale.set(clampInteractiveScale(rawScale.get() - 0.25))}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
-          title="缩小"
-        >
-          <HugeiconsIcon icon={SearchMinusIcon} size={15} strokeWidth={2} />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => rawScale.set(clampInteractiveScale(rawScale.get() - 0.25))}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
+              aria-label="缩小"
+            >
+              <HugeiconsIcon icon={SearchMinusIcon} size={15} strokeWidth={2} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">缩小</TooltipContent>
+        </Tooltip>
         <span className="flex h-8 min-w-[36px] select-none items-center justify-center font-mono text-[11px] text-foreground">
           {Math.round(displayScale * 100)}%
         </span>
-        <button
-          type="button"
-          onClick={() => rawScale.set(clampInteractiveScale(rawScale.get() + 0.25))}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
-          title="放大"
-        >
-          <HugeiconsIcon icon={SearchAddIcon} size={15} strokeWidth={2} />
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (isMemoPanelOpen) return
-            setFitMode((value) => (value === "fit" ? "original" : "fit"))
-            resetTransform()
-          }}
-          disabled={isMemoPanelOpen}
-          className={
-            isMemoPanelOpen
-              ? "flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-md text-foreground/25"
-              : fitMode === "original"
-                ? "flex h-8 w-8 items-center justify-center rounded-md text-primary transition-all hover:bg-muted hover:text-primary active:scale-95"
-                : "flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
-          }
-          title={
-            isMemoPanelOpen
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => rawScale.set(clampInteractiveScale(rawScale.get() + 0.25))}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
+              aria-label="放大"
+            >
+              <HugeiconsIcon icon={SearchAddIcon} size={15} strokeWidth={2} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">放大</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => {
+                if (isMemoPanelOpen) return
+                setFitMode((value) => (value === "fit" ? "original" : "fit"))
+                resetTransform()
+              }}
+              disabled={isMemoPanelOpen}
+              className={
+                isMemoPanelOpen
+                  ? "flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-md text-foreground/25"
+                  : fitMode === "original"
+                    ? "flex h-8 w-8 items-center justify-center rounded-md text-primary transition-all hover:bg-muted hover:text-primary active:scale-95"
+                    : "flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
+              }
+              aria-label={
+                isMemoPanelOpen
+                  ? "查看正文时不可用原始尺寸"
+                  : fitMode === "fit"
+                    ? "原始尺寸"
+                    : "适应页面"
+              }
+            >
+              <HugeiconsIcon icon={ZoomInAreaIcon} size={15} strokeWidth={2} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            {isMemoPanelOpen
               ? "查看正文时不可用原始尺寸"
               : fitMode === "fit"
                 ? "原始尺寸"
-                : "适应页面"
-          }
-        >
-          <HugeiconsIcon icon={ZoomInAreaIcon} size={15} strokeWidth={2} />
-        </button>
+                : "适应页面"}
+          </TooltipContent>
+        </Tooltip>
 
         <div className="mx-1 h-3.5 w-px bg-border" />
 
-        <button
-          type="button"
-          onClick={() => setRotation((value) => value + 90)}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
-          title="顺时针旋转 90°"
-        >
-          <HugeiconsIcon icon={RotateTopRightIcon} size={15} strokeWidth={2} />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => setRotation((value) => value + 90)}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
+              aria-label="顺时针旋转 90°"
+            >
+              <HugeiconsIcon icon={RotateTopRightIcon} size={15} strokeWidth={2} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">顺时针旋转 90°</TooltipContent>
+        </Tooltip>
         {hasMemoContent && (
           <>
             <div className="mx-1 h-3.5 w-px bg-border" />
-            <button
-              type="button"
-              onClick={handleToggleMemoPanel}
-              className={
-                isMemoPanelOpen
-                  ? "flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary transition-all hover:bg-primary/14 active:scale-95"
-                  : "flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
-              }
-              title={isMemoPanelOpen ? "隐藏正文" : "查看正文"}
-              aria-label={isMemoPanelOpen ? "隐藏正文" : "查看正文"}
-            >
-              <HugeiconsIcon icon={BookOpen01Icon} size={15} strokeWidth={2} />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={handleToggleMemoPanel}
+                  className={
+                    isMemoPanelOpen
+                      ? "flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary transition-all hover:bg-primary/14 active:scale-95"
+                      : "flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
+                  }
+                  aria-label={isMemoPanelOpen ? "隐藏正文" : "查看正文"}
+                >
+                  <HugeiconsIcon icon={BookOpen01Icon} size={15} strokeWidth={2} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                {isMemoPanelOpen ? "隐藏正文" : "查看正文"}
+              </TooltipContent>
+            </Tooltip>
           </>
         )}
       </motion.div>

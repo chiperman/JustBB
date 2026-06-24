@@ -16,6 +16,7 @@ import { Button } from "@/shared/ui/button"
 import { useUser } from "@/state/UserContext"
 import { motion, AnimatePresence } from "framer-motion"
 import { Skeleton } from "@/shared/ui/skeleton"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 
 export const UserStatus = memo(function UserStatus({
   isCollapsed = false,
@@ -43,10 +44,7 @@ export const UserStatus = memo(function UserStatus({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-          className={cn(
-            "space-y-2",
-            isCollapsed ? "flex flex-col items-center" : ""
-          )}
+          className={cn("space-y-2", isCollapsed ? "flex flex-col items-center" : "")}
         >
           <Skeleton
             className={cn(
@@ -54,9 +52,7 @@ export const UserStatus = memo(function UserStatus({
               isCollapsed ? "w-8" : "w-full"
             )}
           />
-          <Skeleton
-            className={cn("h-[40px] rounded", isCollapsed ? "w-8" : "w-full")}
-          />
+          <Skeleton className={cn("h-[40px] rounded", isCollapsed ? "w-8" : "w-full")} />
         </motion.div>
       ) : user ? (
         <motion.div
@@ -64,55 +60,77 @@ export const UserStatus = memo(function UserStatus({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-          className={cn(
-            "space-y-2",
-            isCollapsed ? "flex flex-col items-center" : ""
-          )}
+          className={cn("space-y-2", isCollapsed ? "flex flex-col items-center" : "")}
         >
-          <div
-            className={cn(
-              "flex items-center gap-2 p-2 bg-muted/40 rounded border border-border/50 group/status transition-all",
-              isCollapsed ? "justify-center" : "w-full"
-            )}
-            title={user.email || "用户"}
-          >
-            <HugeiconsIcon
-              icon={User}
-              size={16}
-              className={cn(
-                "shrink-0",
-                user.role === "admin" ? "text-primary" : "text-muted-foreground"
-              )}
-            />
-            {!isCollapsed && (
-              <span className="text-xs text-muted-foreground truncate flex-1 font-medium">
-                {user.email} {user.role === "admin" ? "(管理员)" : "(普通用户)"}
-              </span>
-            )}
-          </div>
-          <Button
-            variant="ghost"
-            onClick={handleLogout}
-            disabled={loggingOut}
-            className={cn(
-              "flex items-center justify-start gap-2 h-auto py-2.5 px-2.5 rounded hover:bg-accent text-muted-foreground font-normal active:scale-95 transition-all",
-              isCollapsed ? "justify-center px-0 w-10 h-10" : "w-full",
-              loggingOut && "opacity-50 cursor-not-allowed"
-            )}
-            aria-label="退出登录"
-            title={isCollapsed ? "退出登录" : undefined}
-          >
-            {loggingOut ? (
-              <HugeiconsIcon
-                icon={Loader2}
-                size={16}
-                className="animate-spin"
-              />
-            ) : (
-              <HugeiconsIcon icon={LogOut} size={16} />
-            )}
-            {!isCollapsed && <span>退出登录</span>}
-          </Button>
+          {(() => {
+            const statusInfo = (
+              <div
+                className={cn(
+                  "flex items-center gap-2 p-2 bg-muted/40 rounded border border-border/50 group/status transition-all",
+                  isCollapsed ? "justify-center w-10 h-10" : "w-full"
+                )}
+              >
+                <HugeiconsIcon
+                  icon={User}
+                  size={16}
+                  className={cn(
+                    "shrink-0",
+                    user.role === "admin" ? "text-primary" : "text-muted-foreground"
+                  )}
+                />
+                {!isCollapsed && (
+                  <span className="text-xs text-muted-foreground truncate flex-1 font-medium">
+                    {user.email} {user.role === "admin" ? "(管理员)" : "(普通用户)"}
+                  </span>
+                )}
+              </div>
+            )
+
+            const logoutButton = (
+              <Button
+                variant="ghost"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className={cn(
+                  "flex items-center justify-start gap-2 h-auto py-2.5 px-2.5 rounded hover:bg-accent text-muted-foreground font-normal active:scale-95 transition-all",
+                  isCollapsed ? "justify-center px-0 w-10 h-10" : "w-full",
+                  loggingOut && "opacity-50 cursor-not-allowed"
+                )}
+                aria-label="退出登录"
+              >
+                {loggingOut ? (
+                  <HugeiconsIcon icon={Loader2} size={16} className="animate-spin" />
+                ) : (
+                  <HugeiconsIcon icon={LogOut} size={16} />
+                )}
+                {!isCollapsed && <span>退出登录</span>}
+              </Button>
+            )
+
+            return (
+              <>
+                {isCollapsed ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>{statusInfo}</TooltipTrigger>
+                    <TooltipContent side="right">
+                      {user.email} {user.role === "admin" ? "(管理员)" : ""}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  statusInfo
+                )}
+
+                {isCollapsed ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>{logoutButton}</TooltipTrigger>
+                    <TooltipContent side="right">退出登录</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  logoutButton
+                )}
+              </>
+            )
+          })()}
         </motion.div>
       ) : (
         <motion.div
@@ -122,17 +140,29 @@ export const UserStatus = memo(function UserStatus({
           transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
           className="w-full"
         >
-          <Link
-            href="/"
-            className={cn(
-              "flex items-center gap-2 p-2.5 rounded hover:bg-accent transition-all text-sm text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
-              isCollapsed ? "justify-center" : "w-full"
-            )}
-            title={isCollapsed ? "管理员登录" : undefined}
-          >
-            <HugeiconsIcon icon={LogIn} size={16} />
-            {!isCollapsed && <span>管理员登录</span>}
-          </Link>
+          {(() => {
+            const loginLink = (
+              <Link
+                href="/"
+                className={cn(
+                  "flex items-center gap-2 p-2.5 rounded hover:bg-accent transition-all text-sm text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
+                  isCollapsed ? "justify-center w-10 h-10 px-0" : "w-full"
+                )}
+              >
+                <HugeiconsIcon icon={LogIn} size={16} />
+                {!isCollapsed && <span>管理员登录</span>}
+              </Link>
+            )
+
+            return isCollapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>{loginLink}</TooltipTrigger>
+                <TooltipContent side="right">管理员登录</TooltipContent>
+              </Tooltip>
+            ) : (
+              loginLink
+            )
+          })()}
         </motion.div>
       )}
     </AnimatePresence>

@@ -8,6 +8,7 @@ import { SidebarCollapseButton } from "./SidebarCollapseButton"
 import { BrandLogo } from "../ui/BrandLogo"
 import { SidebarSettings } from "./SidebarSettings"
 import { motion } from "framer-motion"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 
 import { useSidebarNavigation } from "@/shared/hooks/useSidebarNavigation"
 import { useSidebarPagePrefetch } from "@/shared/hooks/useSidebarPagePrefetch"
@@ -113,26 +114,30 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
               : undefined
           }
         />
-        <motion.button
-          onClick={() => handleNavigate("/", isMobile, onClose)}
-          disabled={effectiveIsCollapsed}
-          initial={false}
-          animate={{
-            opacity: effectiveIsCollapsed ? 0 : 1,
-            width: effectiveIsCollapsed ? 0 : 92,
-            x: effectiveIsCollapsed ? -10 : 0,
-            display: effectiveIsCollapsed ? "none" : "flex",
-          }}
-          transition={SIDEBAR_TRANSITION}
-          className={cn(
-            "flex h-9 items-center overflow-hidden whitespace-nowrap select-none cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-md px-1 -ml-1 bg-transparent text-left border-none",
-            effectiveIsCollapsed && "pointer-events-none"
-          )}
-          title="返回首页"
-          aria-label="返回首页"
-        >
-          <BrandLogo className="text-foreground/80 hover:text-foreground transition-colors duration-200 shrink-0" />
-        </motion.button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <motion.button
+              onClick={() => handleNavigate("/", isMobile, onClose)}
+              disabled={effectiveIsCollapsed}
+              initial={false}
+              animate={{
+                opacity: effectiveIsCollapsed ? 0 : 1,
+                width: effectiveIsCollapsed ? 0 : 92,
+                x: effectiveIsCollapsed ? -10 : 0,
+                display: effectiveIsCollapsed ? "none" : "flex",
+              }}
+              transition={SIDEBAR_TRANSITION}
+              className={cn(
+                "flex h-9 items-center overflow-hidden whitespace-nowrap select-none cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-md px-1 -ml-1 bg-transparent text-left border-none",
+                effectiveIsCollapsed && "pointer-events-none"
+              )}
+              aria-label="返回首页"
+            >
+              <BrandLogo className="text-foreground/80 hover:text-foreground transition-colors duration-200 shrink-0" />
+            </motion.button>
+          </TooltipTrigger>
+          <TooltipContent side="right">返回首页</TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Heatmap Area */}

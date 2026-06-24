@@ -1,18 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import {
-  deleteMemo,
-  restoreMemo,
-  permanentDeleteMemo,
-} from "@/server/actions/memos/trash"
+import { deleteMemo, restoreMemo, permanentDeleteMemo } from "@/server/actions/memos/trash"
 import { updateMemoState } from "@/server/actions/memos/mutate"
 import { dispatchMemoEvent } from "@/lib/memos/events"
 import { memoCache } from "@/shared/lib/memo-cache"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Delete02Icon,
-  RotateLeft01Icon,
+  ArchiveRestore,
   MoreHorizontalIcon,
   PencilEdit01Icon,
   Share01Icon,
@@ -28,6 +24,7 @@ import {
   DropdownMenuSeparator,
 } from "@/shared/ui/dropdown-menu"
 import { Button } from "@/shared/ui/button"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 import { AccessCodeDialog } from "@/features/memos/components/AccessCodeDialog"
 import { useToast } from "@/shared/hooks/use-toast"
 import { MemoShare } from "@/features/memos/components/MemoShare"
@@ -202,9 +199,7 @@ export function MemoActions({
       dispatchMemoEvent({ type: "update", id, updates: { is_private: true } })
       toast({
         title: "已设为私密",
-        description: code
-          ? "这条记录现在需要口令才能查看"
-          : "这条记录现在仅自己可见",
+        description: code ? "这条记录现在需要口令才能查看" : "这条记录现在仅自己可见",
       })
     }
     setIsPending(false)
@@ -215,26 +210,36 @@ export function MemoActions({
       <div className="flex items-center gap-2">
         {isOwner && (
           <>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleRestore}
-              disabled={isPending}
-              className="rounded-md text-green hover:bg-green/10 active:scale-95 transition-all"
-              title="恢复"
-            >
-              <HugeiconsIcon icon={RotateLeft01Icon} size={16} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handlePermanentDelete}
-              disabled={isPending}
-              className="rounded-md text-destructive hover:bg-destructive/10 active:scale-95 transition-all"
-              title="彻底删除"
-            >
-              <HugeiconsIcon icon={Delete02Icon} size={16} />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleRestore}
+                  disabled={isPending}
+                  className="rounded-md text-green hover:bg-green/10 active:scale-95 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                  aria-label="恢复"
+                >
+                  <HugeiconsIcon icon={ArchiveRestore} size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">恢复</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handlePermanentDelete}
+                  disabled={isPending}
+                  className="rounded-md text-destructive hover:bg-destructive/10 active:scale-95 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                  aria-label="彻底删除"
+                >
+                  <HugeiconsIcon icon={Delete02Icon} size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">彻底删除</TooltipContent>
+            </Tooltip>
           </>
         )}
       </div>
@@ -250,11 +255,7 @@ export function MemoActions({
             size="icon"
             className="h-8 w-8 p-0 hover:bg-accent rounded-md opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 transition-all active:scale-95"
           >
-            <HugeiconsIcon
-              icon={MoreHorizontalIcon}
-              size={16}
-              className="text-muted-foreground"
-            />
+            <HugeiconsIcon icon={MoreHorizontalIcon} size={16} className="text-muted-foreground" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
@@ -262,11 +263,7 @@ export function MemoActions({
             <>
               {isOwner && (
                 <DropdownMenuItem onClick={onEdit}>
-                  <HugeiconsIcon
-                    icon={PencilEdit01Icon}
-                    size={16}
-                    className="mr-2"
-                  />
+                  <HugeiconsIcon icon={PencilEdit01Icon} size={16} className="mr-2" />
                   编辑
                 </DropdownMenuItem>
               )}
@@ -286,11 +283,7 @@ export function MemoActions({
                   }
                   trigger={
                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <HugeiconsIcon
-                        icon={Share01Icon}
-                        size={16}
-                        className="mr-2"
-                      />
+                      <HugeiconsIcon icon={Share01Icon} size={16} className="mr-2" />
                       分享
                     </DropdownMenuItem>
                   }
@@ -305,10 +298,7 @@ export function MemoActions({
                 {isPinned ? "取消置顶" : "置顶"}
               </DropdownMenuItem>
 
-              <DropdownMenuItem
-                onClick={handleTogglePrivate}
-                disabled={isPending}
-              >
+              <DropdownMenuItem onClick={handleTogglePrivate} disabled={isPending}>
                 <HugeiconsIcon
                   icon={isPrivate ? ChatUnlock01Icon : ChatLock01Icon}
                   size={16}

@@ -8,6 +8,7 @@ import {
   ComputerIcon as Monitor,
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/shared/ui/button"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 import { useTheme } from "next-themes"
 import { Skeleton } from "./skeleton"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
@@ -47,23 +48,27 @@ export function ThemeToggle() {
   }
 
   return (
-    <Button
-      variant="outline"
-      size="icon"
-      onClick={cycleTheme}
-      className="rounded-full w-10 h-10 active:scale-95 transition-all"
-      title={`当前主题: ${currentTheme.label}`}
-      aria-label={`切换主题，当前: ${currentTheme.label}`}
-    >
-      {currentTheme.name === "light" && (
-        <HugeiconsIcon icon={Sun} size={16} aria-hidden="true" />
-      )}
-      {currentTheme.name === "dark" && (
-        <HugeiconsIcon icon={Moon} size={16} aria-hidden="true" />
-      )}
-      {currentTheme.name === "system" && (
-        <HugeiconsIcon icon={Monitor} size={16} aria-hidden="true" />
-      )}
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={cycleTheme}
+          className="rounded-full w-10 h-10 active:scale-95 transition-all"
+          aria-label={`切换主题，当前: ${currentTheme.label}`}
+        >
+          {currentTheme.name === "light" && (
+            <HugeiconsIcon icon={Sun} size={16} aria-hidden="true" />
+          )}
+          {currentTheme.name === "dark" && (
+            <HugeiconsIcon icon={Moon} size={16} aria-hidden="true" />
+          )}
+          {currentTheme.name === "system" && (
+            <HugeiconsIcon icon={Monitor} size={16} aria-hidden="true" />
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="top">当前主题: {currentTheme.label}</TooltipContent>
+    </Tooltip>
   )
 }

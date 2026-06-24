@@ -19,6 +19,7 @@ import {
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/shared/ui/hover-card"
 import { useToast } from "@/shared/hooks/use-toast"
 import { SmartImage } from "@/shared/ui/SmartImage"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 import type { LinkRenderMode } from "./smartLink"
 
 export const LinkNodeView = (props: NodeViewProps) => {
@@ -123,22 +124,32 @@ export const LinkNodeView = (props: NodeViewProps) => {
             {title}
           </span>
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={handleCopy}
-              className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              title="拷贝链接"
-            >
-              <HugeiconsIcon icon={Copy01Icon} size={12} />
-            </button>
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={handleEdit}
-              className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              title="编辑"
-            >
-              <HugeiconsIcon icon={PencilEdit02Icon} size={12} />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={handleCopy}
+                  className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  aria-label="拷贝链接"
+                >
+                  <HugeiconsIcon icon={Copy01Icon} size={12} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">拷贝链接</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={handleEdit}
+                  className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  aria-label="编辑"
+                >
+                  <HugeiconsIcon icon={PencilEdit02Icon} size={12} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">编辑</TooltipContent>
+            </Tooltip>
           </div>
         </div>
       )}

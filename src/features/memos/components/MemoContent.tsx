@@ -19,6 +19,7 @@ import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/shared/ui/hover
 import { toast } from "@/shared/hooks/use-toast"
 import { ImageZoom } from "@/shared/ui/ImageZoom"
 import { SmartImage } from "@/shared/ui/SmartImage"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 
 interface MemoContentProps {
   content: string
@@ -155,15 +156,19 @@ export function MemoContent({
                       </HoverCardContent>
                     </HoverCard>
                     <div className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        type="button"
-                        onClick={(e) => handleCopyLink(e, token.url)}
-                        className="p-1 hover:bg-primary/20 rounded-md transition-colors"
-                        title="拷贝链接"
-                        aria-label="拷贝链接"
-                      >
-                        <HugeiconsIcon icon={Copy} size={14} />
-                      </button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={(e) => handleCopyLink(e, token.url)}
+                            className="p-1 hover:bg-primary/20 rounded-md transition-colors"
+                            aria-label="拷贝链接"
+                          >
+                            <HugeiconsIcon icon={Copy} size={14} />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">拷贝链接</TooltipContent>
+                      </Tooltip>
                     </div>
                   </span>
                 )
@@ -190,15 +195,19 @@ export function MemoContent({
                         {token.title}
                       </span>
                     </a>
-                    <button
-                      type="button"
-                      onClick={(e) => handleCopyLink(e, token.url)}
-                      className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
-                      title="拷贝链接"
-                      aria-label="拷贝链接"
-                    >
-                      <HugeiconsIcon icon={Copy} size={12} />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={(e) => handleCopyLink(e, token.url)}
+                          className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
+                          aria-label="拷贝链接"
+                        >
+                          <HugeiconsIcon icon={Copy} size={12} />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">拷贝链接</TooltipContent>
+                    </Tooltip>
                   </span>
                 )
               }

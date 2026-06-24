@@ -5,6 +5,7 @@ import { useSelection } from "@/state/UIContext"
 import { usePathname, useRouter } from "next/navigation"
 import { AnimatePresence } from "framer-motion"
 import { Button } from "@/shared/ui/button"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Delete02Icon as Trash2,
@@ -227,7 +228,7 @@ export function SelectionToolbar() {
     <>
       <AnimatePresence>
         {isSelectionMode && (
-          <BaseFloatingCapsule className="min-w-[320px]">
+          <BaseFloatingCapsule className="w-auto">
             <div className="flex items-center gap-1.5 flex-1 px-1">
               {isTrashPage ? (
                 <>
@@ -285,24 +286,31 @@ export function SelectionToolbar() {
             <div className="w-px h-3.5 bg-border mx-1" />
 
             <div className="flex items-center gap-1.5">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearSelection}
-                disabled={!hasSelection || isPending}
-                className="h-8 w-8 p-0 flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted rounded-md active:scale-95 transition-all"
-                title="重置选择"
-              >
-                <HugeiconsIcon icon={RotateCcw} size={14} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleSelectionMode(false)}
-                className="h-8 w-8 p-0 flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted rounded-md active:scale-95 transition-all"
-              >
-                <HugeiconsIcon icon={X} size={15} />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearSelection}
+                    disabled={!hasSelection || isPending}
+                    className="h-8 w-8 p-0 flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted rounded-md active:scale-95 transition-all"
+                    aria-label="重置选择"
+                  >
+                    <HugeiconsIcon icon={RotateCcw} size={14} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">重置选择</TooltipContent>
+              </Tooltip>
+              {!isTrashPage && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleSelectionMode(false)}
+                  className="h-8 w-8 p-0 flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted rounded-md active:scale-95 transition-all"
+                >
+                  <HugeiconsIcon icon={X} size={15} />
+                </Button>
+              )}
             </div>
           </BaseFloatingCapsule>
         )}

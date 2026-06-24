@@ -217,31 +217,45 @@ export function SearchInput() {
 
         {/* 框内集成切换按钮 (当有 2 个及以上 tag 时显示) */}
         {activeChips.filter((c) => c.type === "tag").length >= 2 && (
-          <button
-            onClick={(e) => {
-              e.preventDefault()
-              toggleTagMode()
-            }}
-            className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-primary transition-colors mr-1 outline-none focus-visible:ring-1 focus-visible:ring-ring shrink-0 select-none"
-            title={
-              tagMode === "or"
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  toggleTagMode()
+                }}
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-primary transition-colors mr-1 outline-none focus-visible:ring-1 focus-visible:ring-ring shrink-0 select-none"
+                aria-label={
+                  tagMode === "or"
+                    ? "当前为：包含任一标签，点击切换为包含全部标签"
+                    : "当前为：包含全部标签，点击切换为包含任一标签"
+                }
+              >
+                {tagMode === "or" ? "OR" : "AND"}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[240px]">
+              {tagMode === "or"
                 ? "当前为：包含任一标签，点击切换为包含全部标签"
-                : "当前为：包含全部标签，点击切换为包含任一标签"
-            }
-          >
-            {tagMode === "or" ? "OR" : "AND"}
-          </button>
+                : "当前为：包含全部标签，点击切换为包含任一标签"}
+            </TooltipContent>
+          </Tooltip>
         )}
 
         {/* 清除文本按钮 */}
         {value && (
-          <button
-            onClick={handleClear}
-            className="p-1 text-muted-foreground/30 hover:text-muted-foreground hover:bg-primary/5 rounded-full transition-colors active:scale-95 outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            title="清空搜索"
-          >
-            <HugeiconsIcon icon={Cancel01Icon} size={14} />
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleClear}
+                className="p-1 text-muted-foreground/30 hover:text-muted-foreground hover:bg-primary/5 rounded-full transition-colors active:scale-95 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                aria-label="清空搜索"
+              >
+                <HugeiconsIcon icon={Cancel01Icon} size={14} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">清空搜索</TooltipContent>
+          </Tooltip>
         )}
       </div>
 
@@ -273,16 +287,21 @@ export function SearchInput() {
                   >
                     <HugeiconsIcon icon={icon} size={10} />
                     <SearchInputChipLabel label={chip.label} />
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        removeChip(chip)
-                      }}
-                      className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      title={`移除过滤: ${chip.label}`}
-                    >
-                      <HugeiconsIcon icon={Cancel01Icon} size={8} />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            removeChip(chip)
+                          }}
+                          className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-0.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          aria-label={`移除过滤: ${chip.label}`}
+                        >
+                          <HugeiconsIcon icon={Cancel01Icon} size={8} />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">{`移除过滤: ${chip.label}`}</TooltipContent>
+                    </Tooltip>
                   </motion.div>
                 )
               })}

@@ -133,11 +133,11 @@
   --memo-tag-hover-bg: rgba(201, 109, 78, 0.18);
 
   /* Heatmap Colors (Dark) */
-  --heatmap-0: #2a2926;
-  --heatmap-1: #45342d;
-  --heatmap-2: #664436;
-  --heatmap-3: #965f49;
-  --heatmap-4: #c97859;
+  --heatmap-0: #34322e;
+  --heatmap-1: #684337;
+  --heatmap-2: #8a5542;
+  --heatmap-3: #b86f51;
+  --heatmap-4: #e48b63;
 }
 
 body {

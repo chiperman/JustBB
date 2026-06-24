@@ -44,13 +44,13 @@ export function MemoCardHeader({
 }: MemoCardHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-4 min-h-[32px]">
-      <div className="flex items-center gap-3">
+      <div className={cn("flex items-center gap-3", isSelectionMode && "pl-8 lg:pl-0")}>
         <div
           className={cn(
             "absolute top-[26px] -translate-y-1/2 flex items-center justify-center z-20 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
             isSelectionMode
-              ? "opacity-100 scale-100 pointer-events-auto -left-6 sm:-left-8"
-              : "opacity-0 scale-75 pointer-events-none -left-9 sm:-left-11"
+              ? "left-6 opacity-100 scale-100 pointer-events-auto lg:-left-8"
+              : "left-3 opacity-0 scale-75 pointer-events-none lg:-left-11"
           )}
           onClick={(e: React.MouseEvent) => {
             e.stopPropagation()

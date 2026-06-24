@@ -81,20 +81,37 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
     <motion.aside
       initial={false}
       animate={{
-        width: effectiveIsCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH,
+        width: isMobile
+          ? "100%"
+          : effectiveIsCollapsed
+            ? SIDEBAR_COLLAPSED_WIDTH
+            : SIDEBAR_EXPANDED_WIDTH,
       }}
       transition={SIDEBAR_TRANSITION}
       style={{ willChange: "width" }}
-      className="relative flex h-full shrink-0 flex-col overflow-hidden border-r border-border bg-muted p-2"
+      className={cn(
+        "relative flex h-full shrink-0 flex-col overflow-hidden border-r border-border bg-muted p-2",
+        isMobile && "border-r-0 px-5 pt-5 pb-4 sm:border-r sm:p-2"
+      )}
     >
       {/* Top Area: 包含折叠按钮与品牌Logo */}
-      <div className="flex h-16 shrink-0 items-center pl-1 gap-2.5">
+      <div
+        className={cn(
+          "flex h-16 shrink-0 items-center pl-1 gap-2.5",
+          isMobile && "mx-auto h-12 w-full max-w-[430px] pl-0 sm:mx-0 sm:h-16 sm:max-w-none sm:pl-1"
+        )}
+      >
         <SidebarCollapseButton
           isCollapsed={effectiveIsCollapsed}
           onClick={toggleCollapsedState}
           side="left"
           isMobile={isMobile}
           label={isMobile ? "关闭侧边栏" : effectiveIsCollapsed ? "展开侧边栏" : "收起侧边栏"}
+          className={
+            isMobile
+              ? "rounded-full border border-border/40 bg-background/40 sm:border-0 sm:bg-transparent"
+              : undefined
+          }
         />
         <motion.button
           onClick={() => handleNavigate("/", isMobile, onClose)}
@@ -121,7 +138,10 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       {/* Heatmap Area */}
       <motion.div
         initial={false}
-        className="shrink-0 overflow-hidden px-1"
+        className={cn(
+          "shrink-0 overflow-hidden px-1",
+          isMobile && "px-0 !h-[300px] sm:!h-[248px] sm:px-1"
+        )}
         animate={{
           height: effectiveIsCollapsed ? 0 : HEATMAP_SLOT_HEIGHT,
           marginBottom: effectiveIsCollapsed ? 0 : 20,
@@ -130,12 +150,28 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       >
         <motion.div
           initial={false}
-          className="h-full w-[264px] shrink-0"
+          className={cn(
+            "h-full w-[264px] shrink-0",
+            isMobile && "mx-auto w-full max-w-[430px] sm:mx-0 sm:w-[264px] sm:max-w-none"
+          )}
           animate={{ opacity: effectiveIsCollapsed ? 0 : 1 }}
           transition={SIDEBAR_TRANSITION}
         >
           <Suspense fallback={<div className="h-40 w-full animate-pulse rounded bg-muted/20" />}>
-            <Heatmap />
+            {isMobile ? (
+              <>
+                <div className="sm:hidden">
+                  <div className="min-h-[280px]">
+                    <Heatmap variant="mobile-menu" onNavigate={onClose} />
+                  </div>
+                </div>
+                <div className="hidden sm:block">
+                  <Heatmap onNavigate={onClose} />
+                </div>
+              </>
+            ) : (
+              <Heatmap />
+            )}
           </Suspense>
         </motion.div>
       </motion.div>
@@ -145,6 +181,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
         transition={SIDEBAR_TRANSITION}
         className={cn(
           "relative min-h-0 flex-1 overflow-x-hidden px-1 pb-4 custom-scrollbar",
+          isMobile && "mx-auto w-full max-w-[430px] px-0 sm:mx-0 sm:max-w-none sm:px-1",
           effectiveIsCollapsed ? "overflow-y-hidden" : "overflow-y-auto"
         )}
       >
@@ -165,6 +202,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
             onClick={(href) => handleNavigate(href, isMobile, onClose)}
             onMouseEnter={schedulePrefetch}
             onMouseLeave={cancelPrefetch}
+            isMobile={isMobile}
           />
         ))}
       </motion.nav>
@@ -172,7 +210,7 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       {shouldShowPopularTags && (
         <motion.div
           initial={false}
-          className="shrink-0 overflow-hidden"
+          className={cn("shrink-0 overflow-hidden", isMobile && "hidden sm:block")}
           animate={{
             height: effectiveIsCollapsed ? 0 : TAGS_SLOT_HEIGHT,
             opacity: effectiveIsCollapsed ? 0 : 1,
@@ -182,7 +220,13 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
             opacity: SIDEBAR_TRANSITION,
           }}
         >
-          <div className="w-[264px] shrink-0 border-t border-border px-1 pt-4 pb-4">
+          <div
+            className={cn(
+              "w-[264px] shrink-0 border-t border-border px-1 pt-4 pb-4",
+              isMobile &&
+                "mx-auto w-full max-w-[430px] px-0 sm:mx-0 sm:w-[264px] sm:max-w-none sm:px-1"
+            )}
+          >
             <h3 className="mb-4 flex items-center gap-2 card-title">热门标签</h3>
             <Suspense
               fallback={
@@ -202,7 +246,12 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       )}
 
       {/* Bottom Settings Area: 设置按钮移至此处，带 mt-auto 置底 */}
-      <div className="shrink-0 border-t border-border mt-auto pt-2 flex items-center pl-1 w-full">
+      <div
+        className={cn(
+          "shrink-0 border-t border-border mt-auto pt-2 flex items-center pl-1 w-full",
+          isMobile && "mx-auto max-w-[430px] pl-0 sm:mx-0 sm:max-w-none sm:pl-1"
+        )}
+      >
         <SidebarSettings isCollapsed={effectiveIsCollapsed} />
       </div>
     </motion.aside>

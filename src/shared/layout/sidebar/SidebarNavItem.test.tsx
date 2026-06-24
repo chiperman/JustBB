@@ -6,7 +6,7 @@ import { SidebarNavItem } from "./SidebarNavItem"
 import type { NavigationItem } from "@/config/navigation"
 
 describe("SidebarNavItem", () => {
-  it("uses shared button scale interaction classes", () => {
+  it("uses bounded hover interaction classes", () => {
     const item: NavigationItem = {
       id: "home",
       href: "/",
@@ -15,16 +15,11 @@ describe("SidebarNavItem", () => {
     }
 
     const html = renderToStaticMarkup(
-      <SidebarNavItem
-        item={item}
-        isActive={false}
-        isCollapsed={false}
-        onClick={() => undefined}
-      />
+      <SidebarNavItem item={item} isActive={false} isCollapsed={false} onClick={() => undefined} />
     )
 
-    expect(html).toContain("transition-all")
-    expect(html).toContain("hover:scale-102")
+    expect(html).toContain("transition-[background-color,color,box-shadow]")
+    expect(html).toContain("hover:shadow-[inset_0_0_0_1px_hsl(var(--border)/0.4)]")
     expect(html).toContain("active:scale-95")
   })
 })

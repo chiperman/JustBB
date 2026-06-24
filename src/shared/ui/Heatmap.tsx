@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, memo, useCallback, useEffect } from "react"
+import { useState, useMemo, memo, useCallback, useEffect, useRef } from "react"
 import {
   startOfDay,
   subDays,
@@ -26,6 +26,7 @@ const HeatmapCell = memo(
     onBlur,
     onClick,
     shouldReduceMotion,
+    cellSize,
   }: {
     dateStr: string
     count: number
@@ -34,7 +35,11 @@ const HeatmapCell = memo(
     onBlur: () => void
     onClick: (e: React.MouseEvent | React.KeyboardEvent, date: string) => void
     shouldReduceMotion: boolean
+    cellSize: number
   }) => {
+    const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const longPressedRef = useRef(false)
+
     const getColorClass = (c: number) => {
       if (c === 0) return "bg-(--heatmap-0)"
       if (c <= 2) return "bg-(--heatmap-1)"
@@ -52,17 +57,48 @@ const HeatmapCell = memo(
         role="gridcell"
         aria-label={`${dateStr}: ${count} 记录`}
         className={cn(
-          "w-[14px] h-[14px] rounded transition-all outline-none",
+          "rounded transition-all outline-none",
           hasData &&
             "cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
           hasData && !shouldReduceMotion && "hover:scale-110",
           isActive && "ring-2 ring-primary ring-offset-1 z-10",
           getColorClass(count)
         )}
+        style={{ width: cellSize, height: cellSize }}
         onMouseEnter={(e) => onHover(e, dateStr, count)}
         onFocus={(e) => hasData && onHover(e, dateStr, count)}
         onBlur={() => hasData && onBlur()}
-        onClick={(e) => hasData && onClick(e, dateStr)}
+        onPointerDown={(e) => {
+          if (!hasData || e.pointerType !== "touch") return
+
+          longPressedRef.current = false
+          longPressTimerRef.current = setTimeout(() => {
+            longPressedRef.current = true
+            onHover(e, dateStr, count)
+          }, 450)
+        }}
+        onPointerUp={() => {
+          if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current)
+            longPressTimerRef.current = null
+          }
+        }}
+        onPointerCancel={() => {
+          if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current)
+            longPressTimerRef.current = null
+          }
+        }}
+        onClick={(e) => {
+          if (!hasData) return
+          if (longPressedRef.current) {
+            e.preventDefault()
+            e.stopPropagation()
+            longPressedRef.current = false
+            return
+          }
+          onClick(e, dateStr)
+        }}
         onKeyDown={(e) => {
           if (hasData && (e.key === "Enter" || e.key === " ")) {
             e.preventDefault()
@@ -84,13 +120,21 @@ type HoveredDate = {
   align: "left" | "center" | "right"
 }
 
-export const Heatmap = memo(function Heatmap() {
+interface HeatmapProps {
+  variant?: "default" | "mobile-menu"
+  onNavigate?: () => void
+}
+
+export const Heatmap = memo(function Heatmap({ variant = "default", onNavigate }: HeatmapProps) {
   const { stats, isLoading: contextLoading } = useStats()
   const [hoveredDate, setHoveredDate] = useState<HoveredDate | null>(null)
   const shouldReduceMotion = useReducedMotion()
   const router = useRouter()
   const searchParams = useSearchParams()
   const activeDate = searchParams.get("date")
+  const isMobileMenu = variant === "mobile-menu"
+  const cellSize = isMobileMenu ? 20 : 14
+  const cellGap = isMobileMenu ? 5 : 4
 
   const loading = contextLoading
 
@@ -176,9 +220,10 @@ export const Heatmap = memo(function Heatmap() {
       currentParams.delete("year")
       currentParams.delete("month")
       currentParams.set("date", date)
+      onNavigate?.()
       router.push(`/?${currentParams.toString()}`)
     },
-    [router, searchParams]
+    [onNavigate, router, searchParams]
   )
 
   useEffect(() => {
@@ -238,6 +283,8 @@ export const Heatmap = memo(function Heatmap() {
     </div>
   )
 
+  const heatmapGridWidth = Math.ceil(heatmapDays.length / 7) * (cellSize + cellGap) - cellGap
+
   const Skeleton = (
     <div className="w-full space-y-4 px-1 relative overflow-visible h-[240px] flex flex-col items-center justify-center bg-muted/5 rounded-card border border-border/50">
       <div className="grid grid-cols-3 gap-8 w-full max-w-sm px-4">
@@ -267,7 +314,10 @@ export const Heatmap = memo(function Heatmap() {
           <div className="relative overflow-visible heatmap-content-wrapper">
             <div
               className="grid grid-rows-7 grid-flow-col gap-[4px] justify-center"
-              style={{ gridTemplateRows: "repeat(7, 14px)" }}
+              style={{
+                gap: cellGap,
+                gridTemplateRows: `repeat(7, ${cellSize}px)`,
+              }}
             >
               {heatmapDays.map((dateStr) => (
                 <HeatmapCell
@@ -279,6 +329,7 @@ export const Heatmap = memo(function Heatmap() {
                   onBlur={() => setHoveredDate(null)}
                   onClick={handleCellClick}
                   shouldReduceMotion={!!shouldReduceMotion}
+                  cellSize={cellSize}
                 />
               ))}
             </div>
@@ -312,14 +363,14 @@ export const Heatmap = memo(function Heatmap() {
             <div
               className="relative"
               style={{
-                width: `${Math.ceil(heatmapDays.length / 7) * 18 - 4}px`,
+                width: `${heatmapGridWidth}px`,
               }}
             >
               {monthLabels.map(({ name, colIndex }, i) => (
                 <span
                   key={`${name}-${i}`}
                   className="absolute -translate-x-1"
-                  style={{ left: `${colIndex * 18}px` }}
+                  style={{ left: `${colIndex * (cellSize + cellGap)}px` }}
                 >
                   {name}
                 </span>

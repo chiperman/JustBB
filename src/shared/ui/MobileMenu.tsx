@@ -2,10 +2,7 @@
 
 import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  Menu01Icon as Menu,
-  Cancel01Icon as X,
-} from "@hugeicons/core-free-icons"
+import { Menu01Icon as Menu, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 
 interface MobileMenuButtonProps {
@@ -39,11 +36,7 @@ interface MobileMenuOverlayProps {
   children: React.ReactNode
 }
 
-export function MobileMenuOverlay({
-  isOpen,
-  onClose,
-  children,
-}: MobileMenuOverlayProps) {
+export function MobileMenuOverlay({ isOpen, onClose, children }: MobileMenuOverlayProps) {
   const shouldReduceMotion = useReducedMotion()
 
   return (
@@ -62,7 +55,7 @@ export function MobileMenuOverlay({
         )}
       </AnimatePresence>
 
-      {/* 侧边栏始终保持挂载，仅通过位移控制隐藏 */}
+      {/* 菜单始终保持挂载：手机全屏，较宽视口保持抽屉宽度。 */}
       <motion.div
         initial={false}
         animate={{
@@ -70,9 +63,7 @@ export function MobileMenuOverlay({
           visibility: (isOpen ? "visible" : "hidden") as "visible" | "hidden",
         }}
         transition={
-          shouldReduceMotion
-            ? { duration: 0 }
-            : { type: "spring", damping: 25, stiffness: 300 }
+          shouldReduceMotion ? { duration: 0 } : { type: "spring", damping: 25, stiffness: 300 }
         }
         className="lg:hidden fixed left-0 top-0 h-full w-72 z-50 bg-background pointer-events-auto"
         style={{

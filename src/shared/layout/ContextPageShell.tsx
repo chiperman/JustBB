@@ -82,7 +82,7 @@ export function ContextPageHeader({
 
   return (
     <header className={cn("space-y-3", className)}>
-      <div className="flex items-center justify-between gap-4 h-10">
+      <div className="flex items-center justify-between gap-4 h-10 pl-14 lg:pl-0">
         <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
           <Link
             href="/"

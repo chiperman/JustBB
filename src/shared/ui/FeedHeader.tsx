@@ -61,7 +61,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
   return (
     <div
       className={cn(
-        "flex h-10 items-center justify-between gap-4 transition-all duration-300",
+        "flex h-10 items-center justify-between gap-4 pl-14 transition-all duration-300 lg:pl-0",
         hasContext && "mb-9"
       )}
     >

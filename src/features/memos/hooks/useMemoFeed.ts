@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback, useEffect, useRef, useLayoutEffect } from "react"
 import { Memo } from "@/types/memo"
 import { getMemos } from "@/server/actions/memos/query"
 import { mergeMemos } from "@/shared/lib/streamUtils"
@@ -19,6 +19,7 @@ interface UseMemoFeedProps {
     sort?: string
     tagMode?: "and" | "or"
   }
+  scrollContainerRef?: React.RefObject<HTMLDivElement | null>
 }
 
 const INITIAL_MEMO_PAGE_SIZE = 30
@@ -53,7 +54,7 @@ export function reconcileUpdatedMemo(existingMemo: Memo, updatedMemo: Memo): Mem
   }
 }
 
-export function useMemoFeed({ initialMemos, searchParams }: UseMemoFeedProps) {
+export function useMemoFeed({ initialMemos, searchParams, scrollContainerRef }: UseMemoFeedProps) {
   const { unlockedMemoIds } = useUnlockedMemos()
   const { registerMemos } = useSelection()
   const [memos, setMemos] = useState<Memo[]>(initialMemos)
@@ -63,6 +64,34 @@ export function useMemoFeed({ initialMemos, searchParams }: UseMemoFeedProps) {
   const [lastCreatedId, setLastCreatedId] = useState<string | null>(null)
   const previousInitialIdsRef = useRef(new Set(initialMemos.map((memo) => memo.id)))
   const lastSearchParamsRef = useRef(searchParams)
+
+  // 置顶/取消置顶时的滚动位置恢复
+  const pendingScrollRestoreRef = useRef<number | null>(null)
+  // 标记当前是否处于 pin 重排中，供外部跳过动画
+  const [isPinReordering, setIsPinReordering] = useState(false)
+  const pinReorderTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // 组件卸载时清理定时器
+  useEffect(() => {
+    return () => {
+      if (pinReorderTimeoutRef.current) {
+        clearTimeout(pinReorderTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  // 在 DOM 更新后、浏览器绘制前恢复滚动位置
+  useLayoutEffect(() => {
+    if (pendingScrollRestoreRef.current != null) {
+      const container = scrollContainerRef?.current
+      if (container) {
+        container.scrollTop = pendingScrollRestoreRef.current
+      }
+      // 注意：不要在此处清空 pendingScrollRestoreRef.current，
+      // 因为接下来的 revalidatePath 引起的 initialMemos 变更还会触发一轮 layoutEffect。
+      // 我们在 800ms 后才由定时器完全重置和解锁。
+    }
+  }, [memos, scrollContainerRef])
 
   useEffect(() => {
     registerMemos(memos)
@@ -140,14 +169,44 @@ export function useMemoFeed({ initialMemos, searchParams }: UseMemoFeedProps) {
 
   useMemoSync(
     useCallback((payload: MemoEventPayload) => {
+      // 置顶/取消置顶时，在 state 更新前记录滚动位置，并在 800ms 内强制锁定
+      if (payload.type === "update" && payload.updates && "is_pinned" in payload.updates) {
+        if (typeof window !== "undefined" && document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur()
+        }
+        const container = scrollContainerRef?.current
+        if (container) {
+          pendingScrollRestoreRef.current = container.scrollTop
+        }
+
+        setIsPinReordering(true)
+        if (pinReorderTimeoutRef.current) {
+          clearTimeout(pinReorderTimeoutRef.current)
+        }
+        pinReorderTimeoutRef.current = setTimeout(() => {
+          pendingScrollRestoreRef.current = null
+          setIsPinReordering(false)
+        }, 800)
+
+        setMemos((prev) => {
+          const updated = prev.map((m) => (m.id === payload.id ? { ...m, ...payload.updates } : m))
+          return mergeMemos([], updated)
+        })
+        return
+      }
+
       setMemos((prev) => {
         switch (payload.type) {
           case "create":
             if (prev.some((m) => m.id === payload.memo.id)) return prev
             setLastCreatedId(payload.memo.id)
             return mergeMemos(prev, [payload.memo])
-          case "update":
-            return prev.map((m) => (m.id === payload.id ? { ...m, ...payload.updates } : m))
+          case "update": {
+            const updated = prev.map((m) =>
+              m.id === payload.id ? { ...m, ...payload.updates } : m
+            )
+            return updated
+          }
           case "delete":
             return prev.filter((m) => m.id !== payload.id)
           default:
@@ -167,5 +226,6 @@ export function useMemoFeed({ initialMemos, searchParams }: UseMemoFeedProps) {
     updateMemoInList,
     lastCreatedId,
     clearLastCreatedId,
+    isPinReordering,
   }
 }

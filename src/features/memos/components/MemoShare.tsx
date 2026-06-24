@@ -248,7 +248,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                 </div>
                 {showQR && (
                   <div
-                    className="p-1.5 rounded-lg"
+                    className="p-[5px] rounded-[10px]"
                     style={{
                       backgroundColor: activeTheme.styles.footer.qrBgColor,
                     }}
@@ -258,6 +258,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                       size={42}
                       fgColor={activeTheme.styles.footer.qrFgColor}
                       bgColor="transparent"
+                      className="rounded-[5px] overflow-hidden"
                     />
                   </div>
                 )}

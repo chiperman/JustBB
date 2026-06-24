@@ -19,6 +19,14 @@ export function mergeMemos(existing: Memo[], incoming: Memo[]): Memo[] {
     if (a.is_pinned !== b.is_pinned) {
       return (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0)
     }
+    // 如果都是置顶的，且都有 pinned_at，则先按置顶时间 pinned_at 降序排列
+    if (a.is_pinned) {
+      const aTime = a.pinned_at ? new Date(a.pinned_at).getTime() : 0
+      const bTime = b.pinned_at ? new Date(b.pinned_at).getTime() : 0
+      if (aTime !== bTime) {
+        return bTime - aTime
+      }
+    }
     // 置顶状态相同时，按创建时间降序
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   })

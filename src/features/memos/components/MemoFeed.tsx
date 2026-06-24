@@ -37,6 +37,16 @@ const itemVariants: Variants = {
   exit: { opacity: 0, transition: { duration: 0.2 } },
 }
 
+const instantVariants: Variants = {
+  initial: { opacity: 1, y: 0 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0 },
+  },
+  exit: { opacity: 1, transition: { duration: 0 } },
+}
+
 export function MemoFeed({ initialMemos = [], searchParams, scrollContainerRef }: MemoFeedProps) {
   const observerTargetBottom = useRef<HTMLDivElement>(null)
 
@@ -50,7 +60,8 @@ export function MemoFeed({ initialMemos = [], searchParams, scrollContainerRef }
     updateMemoInList,
     lastCreatedId,
     clearLastCreatedId,
-  } = useMemoFeed({ initialMemos, searchParams })
+    isPinReordering,
+  } = useMemoFeed({ initialMemos, searchParams, scrollContainerRef })
 
   // 1. 无限滚动监听
   useEffect(() => {
@@ -90,9 +101,9 @@ export function MemoFeed({ initialMemos = [], searchParams, scrollContainerRef }
               memo={memo}
               index={index}
               prevMemo={index > 0 ? memos[index - 1] : undefined}
-              variants={itemVariants}
+              variants={isPinReordering ? instantVariants : itemVariants}
             >
-              <div id={`memo-${memo.id}`}>
+              <div>
                 <MemoCard
                   memo={memo}
                   isEditing={editingId === memo.id}

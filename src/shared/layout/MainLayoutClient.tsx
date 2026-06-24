@@ -3,6 +3,8 @@
 import React, { useEffect, useLayoutEffect, useState, useRef, useMemo } from "react"
 import { generateCacheKey, cn } from "@/shared/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowUp01Icon } from "@hugeicons/core-free-icons"
 import { MemoEditor, MemoFeed } from "@/features/memos"
 import { FeedHeader } from "@/shared/ui/FeedHeader"
 import { MemoCardSkeleton } from "@/shared/ui/MemoCardSkeleton"
@@ -26,6 +28,7 @@ export function MainLayoutClient() {
   // 滚动与吸顶状态管理
   const containerRef = useRef<HTMLDivElement>(null)
   const [editorForceCollapsed, setEditorForceCollapsed] = useState(false)
+  const [showScrollTop, setShowScrollTop] = useState(false)
   const lastScrollTop = useRef(0)
 
   // 监听滚动，实现迟滞触发逻辑 (Hysteresis Logic)
@@ -42,6 +45,7 @@ export function MainLayoutClient() {
       // 只有内容足够丰富时 (设计稿阈值: 300px) 才触发收缩
       if (scrollableHeight < 300) {
         setEditorForceCollapsed(false)
+        setShowScrollTop(false)
         return
       }
 
@@ -53,6 +57,9 @@ export function MainLayoutClient() {
       } else if (scrollTop < 50) {
         setEditorForceCollapsed(false)
       }
+
+      // 超过 300px 显示“回到顶部”按钮
+      setShowScrollTop(scrollTop > 300)
 
       lastScrollTop.current = scrollTop
     }
@@ -145,7 +152,7 @@ export function MainLayoutClient() {
   }, [cacheKey, flattenedParams, getCache, setCache])
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background">
+    <div className="relative flex flex-col h-full overflow-hidden bg-background">
       {/* 1. 顶部固定区域 (Fixed Top Area) */}
       <div
         className={cn(
@@ -233,6 +240,25 @@ export function MainLayoutClient() {
           </div>
         </div>
       </div>
+
+      {/* 回到顶部按钮 */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            key="back-to-top"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={() => {
+              containerRef.current?.scrollTo({ top: 0, behavior: "smooth" })
+            }}
+            className="absolute bottom-6 right-6 z-40 flex h-10 w-10 items-center justify-center rounded-md border border-border bg-card/90 text-muted-foreground shadow-sm backdrop-blur-sm transition-all hover:text-foreground active:scale-95"
+            aria-label="回到顶部"
+          >
+            <HugeiconsIcon icon={ArrowUp01Icon} size={18} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { deleteMemo, restoreMemo, permanentDeleteMemo } from "@/server/actions/memos/trash"
 import { updateMemoState } from "@/server/actions/memos/mutate"
 import { dispatchMemoEvent } from "@/lib/memos/events"
@@ -31,6 +31,7 @@ import { MemoShare } from "@/features/memos/components/MemoShare"
 import { Memo } from "@/types/memo"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { useConfirm } from "@/state/ConfirmContext"
+import { cn } from "@/shared/lib/utils"
 
 interface MemoActionsProps {
   id: string
@@ -61,9 +62,16 @@ export function MemoActions({
   const [showPrompt, setShowPrompt] = useState(false)
   const [accessCode, setAccessCode] = useState("")
   const [accessHint, setAccessHint] = useState("")
+  const [isOpen, setIsOpen] = useState(false)
+  const preventCloseFocusRef = useRef(false)
   const { toast } = useToast()
   const { confirm } = useConfirm()
   const hasMounted = useHasMounted()
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    onOpenChange?.(open)
+  }
 
   if (!hasMounted) {
     return <div className="w-8 h-8" />
@@ -127,7 +135,14 @@ export function MemoActions({
     formData.append("is_pinned", String(!isPinned))
     await updateMemoState(formData)
     setIsPending(false)
-    dispatchMemoEvent({ type: "update", id, updates: { is_pinned: !isPinned } })
+    dispatchMemoEvent({
+      type: "update",
+      id,
+      updates: {
+        is_pinned: !isPinned,
+        pinned_at: !isPinned ? new Date().toISOString() : null,
+      },
+    })
     toast({
       title: !isPinned ? "已置顶" : "已取消置顶",
     })
@@ -248,17 +263,29 @@ export function MemoActions({
 
   return (
     <div className="flex items-center gap-1">
-      <DropdownMenu onOpenChange={onOpenChange}>
+      <DropdownMenu onOpenChange={handleOpenChange}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 p-0 hover:bg-accent rounded-md opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 transition-all active:scale-95"
+            className={cn(
+              "h-8 w-8 p-0 hover:bg-accent rounded-md opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 active:scale-95 transition-[background-color,transform,opacity]",
+              isOpen && "opacity-100"
+            )}
           >
             <HugeiconsIcon icon={MoreHorizontalIcon} size={16} className="text-muted-foreground" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent
+          align="end"
+          className="w-48"
+          onCloseAutoFocus={(e) => {
+            if (preventCloseFocusRef.current) {
+              e.preventDefault()
+              preventCloseFocusRef.current = false
+            }
+          }}
+        >
           {!isDeleted && (
             <>
               {isOwner && (
@@ -293,7 +320,13 @@ export function MemoActions({
           )}
           {isOwner && (
             <>
-              <DropdownMenuItem onClick={handleTogglePin} disabled={isPending}>
+              <DropdownMenuItem
+                onClick={handleTogglePin}
+                disabled={isPending}
+                onSelect={() => {
+                  preventCloseFocusRef.current = true
+                }}
+              >
                 <HugeiconsIcon icon={PinIcon} size={16} className="mr-2" />
                 {isPinned ? "取消置顶" : "置顶"}
               </DropdownMenuItem>

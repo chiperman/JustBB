@@ -76,34 +76,31 @@ export const POSTER_THEMES: Record<string, PosterTheme> = {
     name: "暗夜时光",
     styles: {
       container: {
-        backgroundColor: "#1c1917", // 从 #0c0a09 改为更柔和的 Stone-900
-        color: "#e7e5e4", // 柔白文字
-        padding: "40px",
-        borderRadius: "24px",
-        borderColor: "#292524",
+        backgroundColor: "#18181b", // 使用温和不刺眼的深灰底色 (Zinc-900)
+        color: "#f4f4f5", // 标题保持柔白高亮 (Zinc-100)
+        padding: "44px", // 完全对齐“极简禅意”的布局 padding
+        borderRadius: "16px", // 完全对齐圆角
+        borderColor: "#27272a", // 精致的深灰边框 (Zinc-800)
       },
       header: {
-        brandColor: "#b45309", // 从 #f59e0b 改为低饱和度的琥珀棕/金
-        dateColor: "#57534e",
-        fontSize: "13px",
-        letterSpacing: "0.15em",
-        borderBottom: "1px solid #292524",
+        brandColor: "#f4f4f5",
+        dateColor: "#71717a", // 次要文字灰
+        fontSize: "11px", // 完全对齐“极简禅意”的字号
+        letterSpacing: "0.1em", // 完全对齐字间距
       },
       content: {
-        fontSize: "16px",
-        lineHeight: "1.8",
-        fontFamily: "serif",
-        color: "#d6d3d1", // 再次降低文字亮度
+        fontSize: "15px", // 完全对齐“极简禅意”的字号
+        lineHeight: "1.7", // 完全对齐行高
+        fontFamily: "sans", // 对齐无衬线字体
+        color: "#d4d4d8", // 柔和易读的灰白正文 (Zinc-300)
       },
       footer: {
-        textColor: "#57534e",
-        borderTop: "1px solid #292524",
-        qrBgColor: "#292524",
-        qrFgColor: "#b45309", // 二维码同样使用低饱和度色
+        textColor: "#71717a",
+        qrBgColor: "#0a0a0a", // 二维码使用稍深的深灰底座，营造内凹质感
+        qrFgColor: "#d4d4d8", // 柔白色二维码
       },
       decorations: {
-        paperEffect: "noise",
-        cornerColor: "rgba(180, 83, 9, 0.08)",
+        paperEffect: "noise", // 保持和禅意一致的微噪点纸张效果，仅做纯颜色切换
       },
     },
   },

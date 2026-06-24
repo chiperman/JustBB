@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { getClient } from "@/lib/supabase"
+import { deleteImagesFromR2 } from "@/server/services/r2"
 import { ActionResponse } from "../shared/types"
 import { getCurrentUserId } from "@/features/auth/actions"
 import { Memo } from "@/types/memo"
@@ -62,11 +63,21 @@ export async function permanentDeleteMemo(id: string): Promise<ActionResponse> {
   if (!viewerId) return { success: false, error: "请先登录" }
 
   const supabase = await getClient()
-  const { error } = await supabase
+
+  // 1. 查询该笔记关联的图片
+  const { data: memo } = await supabase
     .from("memos")
-    .delete()
+    .select("images")
     .eq("id", id)
     .eq("owner_id", viewerId)
+    .single()
+
+  if (memo?.images && memo.images.length > 0) {
+    await deleteImagesFromR2(memo.images, viewerId)
+  }
+
+  // 2. 执行物理删除
+  const { error } = await supabase.from("memos").delete().eq("id", id).eq("owner_id", viewerId)
 
   if (error) {
     console.error("Error permanently deleting memo:", error)
@@ -85,6 +96,24 @@ export async function emptyTrash(): Promise<ActionResponse> {
   if (!viewerId) return { success: false, error: "请先登录" }
 
   const supabase = await getClient()
+
+  // 1. 查询回收站中所有笔记的图片
+  const { data: memos, error: fetchError } = await supabase
+    .from("memos")
+    .select("images")
+    .eq("owner_id", viewerId)
+    .not("deleted_at", "is", null)
+
+  if (fetchError) {
+    console.error("Error fetching trashed memos before emptying:", fetchError)
+  } else if (memos) {
+    const allImages = memos.flatMap((m) => m.images || [])
+    if (allImages.length > 0) {
+      await deleteImagesFromR2(allImages, viewerId)
+    }
+  }
+
+  // 2. 执行物理删除
   const { error } = await MemoFilters.trashedOnly(
     supabase.from("memos").delete().eq("owner_id", viewerId)
   )
@@ -153,11 +182,24 @@ export async function batchTrashAction(
       .eq("owner_id", viewerId)
       .in("id", ids)
   } else {
-    query = supabase
+    // 1. 查询这些笔记关联的图片
+    const { data: memos, error: fetchError } = await supabase
       .from("memos")
-      .delete()
+      .select("images")
       .eq("owner_id", viewerId)
       .in("id", ids)
+
+    if (fetchError) {
+      console.error("Error fetching memos before batch permanent delete:", fetchError)
+    } else if (memos) {
+      const allImages = memos.flatMap((m) => m.images || [])
+      if (allImages.length > 0) {
+        await deleteImagesFromR2(allImages, viewerId)
+      }
+    }
+
+    // 2. 执行物理删除
+    query = supabase.from("memos").delete().eq("owner_id", viewerId).in("id", ids)
   }
 
   const { error } = await query
@@ -181,17 +223,13 @@ export async function batchDeleteMemos(ids: string[]): Promise<ActionResponse> {
 /**
  * 批量恢复笔记
  */
-export async function batchRestoreMemos(
-  ids: string[]
-): Promise<ActionResponse> {
+export async function batchRestoreMemos(ids: string[]): Promise<ActionResponse> {
   return batchTrashAction(ids, "restore")
 }
 
 /**
  * 批量永久删除笔记
  */
-export async function batchPermanentDeleteMemos(
-  ids: string[]
-): Promise<ActionResponse> {
+export async function batchPermanentDeleteMemos(ids: string[]): Promise<ActionResponse> {
   return batchTrashAction(ids, "permanent")
 }

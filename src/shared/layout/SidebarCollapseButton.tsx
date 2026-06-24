@@ -36,9 +36,6 @@ export function SidebarCollapseButton({
       <motion.button
         onClick={onClick}
         aria-label={label}
-        whileHover={{
-          scale: 1.02,
-        }}
         whileTap={{ scale: 0.95 }}
         transition={{
           type: "spring",

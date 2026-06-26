@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { ThemeProvider } from "@/shared/providers/ThemeProvider"
 import { AgentationWrapper } from "@/shared/providers/AgentationWrapper"
 import { env } from "@/lib/env"
+import "sileo/styles.css"
 import "./globals.css"
 
 // 强制执行环境校验

@@ -336,3 +336,17 @@ body {
 .scrollbar-stable-both {
   scrollbar-gutter: stable both-edges;
 }
+
+/* Sileo Toast：保持在所有弹窗之上，并跟随 JustMemo 主题变量 */
+[data-sileo-viewport] {
+  z-index: 2147483647 !important;
+  --sileo-width: min(350px, calc(100vw - 1.5rem));
+}
+
+[data-sileo-toast] {
+  color: var(--foreground);
+}
+
+[data-sileo-description] {
+  color: var(--muted-foreground) !important;
+}

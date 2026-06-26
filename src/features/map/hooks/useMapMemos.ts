@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect, ComponentType } from "react"
+import { useState, useEffect, ComponentType, useCallback } from "react"
 import { getMemosWithLocations } from "@/server/actions/memos/query"
 import { locationCache, type MapMarker } from "@/shared/lib/location-cache"
 import { groupMemosByLocation } from "@/shared/lib/map-markers"
 import { getMapCacheKey } from "@/shared/lib/page-cache-keys"
 import { usePageDataCache } from "@/state/PageDataCache"
 import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
+import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
 
 // 模块级预加载
 const mapViewPromise = import("@/shared/ui/MapView")
@@ -29,6 +30,30 @@ export function useMapMemos() {
   const [isLoading, setIsLoading] = useState(true)
   const [MapView, setMapView] = useState<ComponentType<MapViewProps> | null>(null)
 
+  const refreshMapMemos = useCallback(
+    async (isMounted: () => boolean = () => true) => {
+      const [result, mapModule] = await Promise.all([
+        getMemosWithLocations(unlockedMemoIds),
+        mapViewPromise,
+      ])
+
+      if (!isMounted()) return
+
+      setMapView(() => mapModule.MapView)
+
+      if (result.success) {
+        const data = result.data || []
+        const allMarkers = groupMemosByLocation(data)
+        locationCache.setMarkers(allMarkers)
+        setCache(cacheKey, { markers: allMarkers, memos: data })
+        setMarkers(allMarkers)
+      }
+
+      setIsLoading(false)
+    },
+    [cacheKey, setCache, unlockedMemoIds]
+  )
+
   useEffect(() => {
     let isMounted = true
 
@@ -50,26 +75,7 @@ export function useMapMemos() {
         setMarkers(locationCache.getMarkers())
       }
 
-      const [result, mapModule] = await Promise.all([
-        getMemosWithLocations(unlockedMemoIds),
-        mapViewPromise,
-      ])
-
-      if (!isMounted) return
-
-      setMapView(() => mapModule.MapView)
-
-      if (result.success && isMounted) {
-        const data = result.data || []
-        const allMarkers = groupMemosByLocation(data)
-        locationCache.setMarkers(allMarkers)
-        setCache(cacheKey, { markers: allMarkers, memos: data })
-        setMarkers(allMarkers)
-      }
-
-      if (isMounted && mapModule) {
-        setIsLoading(false)
-      }
+      await refreshMapMemos(() => isMounted)
     }
 
     load()
@@ -78,7 +84,18 @@ export function useMapMemos() {
       isMounted = false
       setIsLoading(true)
     }
-  }, [cacheKey, getCache, setCache, unlockedMemoIds])
+  }, [cacheKey, getCache, refreshMapMemos, unlockedMemoIds])
+
+  useMemoSync(
+    useCallback(
+      (payload) => {
+        if (shouldRefreshMemoDerivedData(payload)) {
+          void refreshMapMemos()
+        }
+      },
+      [refreshMapMemos]
+    )
+  )
 
   return { markers, isLoading, MapView }
 }

@@ -28,6 +28,7 @@ export async function deleteMemo(id: string): Promise<ActionResponse> {
   }
 
   revalidatePath("/")
+  revalidatePath("/trash")
   return { success: true, error: null }
 }
 

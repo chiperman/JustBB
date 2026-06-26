@@ -1,14 +1,8 @@
 "use client"
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useEffect,
-  useMemo,
-} from "react"
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react"
 import { getAllTags as fetchAllTagsAction } from "@/server/actions/memos/analytics"
+import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
 
 export interface TagData {
   tag_name: string
@@ -49,6 +43,17 @@ export function TagsProvider({
     }
   }, [])
 
+  useMemoSync(
+    useCallback(
+      (payload) => {
+        if (shouldRefreshMemoDerivedData(payload)) {
+          void refreshTags()
+        }
+      },
+      [refreshTags]
+    )
+  )
+
   useEffect(() => {
     setIsMounted(true)
     // 如果没有提供初始数据（长度为0），挂载后立即刷新一次
@@ -67,9 +72,7 @@ export function TagsProvider({
     [tags, refreshTags, isLoading, isMounted]
   )
 
-  return (
-    <TagsContext.Provider value={contextValue}>{children}</TagsContext.Provider>
-  )
+  return <TagsContext.Provider value={contextValue}>{children}</TagsContext.Provider>
 }
 
 export function useTags() {

@@ -72,7 +72,7 @@ export function PageDataCacheProvider({ children }: { children: ReactNode }) {
   useMemoSync((payload) => {
     if (!shouldRefreshMemoDerivedData(payload)) return
 
-    invalidateCache((path) => path.startsWith("/gallery"))
+    invalidateCache((path) => path.startsWith("/"))
   })
 
   return (

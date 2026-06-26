@@ -5,6 +5,11 @@ import { getTrashMemos, emptyTrash } from "@/server/actions/memos/trash"
 import { Memo } from "@/types/memo"
 import { usePageDataCache } from "@/state/PageDataCache"
 import { useToast } from "@/shared/hooks/use-toast"
+import { useMemoSync } from "@/lib/memos/events"
+
+export function removeMemoFromTrash(memos: Memo[], id: string) {
+  return memos.filter((memo) => memo.id !== id)
+}
 
 export function useTrashMemos() {
   const { getCache, setCache } = usePageDataCache()
@@ -41,6 +46,23 @@ export function useTrashMemos() {
       isMounted = false
     }
   }, [setCache])
+
+  useMemoSync(
+    useCallback(
+      (payload) => {
+        if (payload.type !== "delete") return
+
+        setMemos((prev) => {
+          const next = removeMemoFromTrash(prev, payload.id)
+          if (next.length !== prev.length) {
+            setCache("/trash", { memos: next })
+          }
+          return next
+        })
+      },
+      [setCache]
+    )
+  )
 
   const handleEmptyTrash = useCallback(() => {
     startTransition(async () => {

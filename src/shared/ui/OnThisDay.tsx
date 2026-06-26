@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, memo } from "react"
+import { useCallback, useEffect, useState, memo } from "react"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { getOnThisDayMemos } from "@/server/actions/memos/query"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -8,12 +8,9 @@ import { Clock01Icon as History } from "@hugeicons/core-free-icons"
 import { Memo } from "@/types/memo"
 import { cn } from "@/shared/lib/utils"
 import { useReducedMotion } from "framer-motion"
+import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
 
-export const OnThisDay = memo(function OnThisDay({
-  initialMemos,
-}: {
-  initialMemos?: Memo[]
-}) {
+export const OnThisDay = memo(function OnThisDay({ initialMemos }: { initialMemos?: Memo[] }) {
   const [memos, setMemos] = useState<Memo[]>(initialMemos || [])
   const [loading, setLoading] = useState(!initialMemos?.length) // If we have intial data, not loading (unless length 0, but layout sends empty array if none)
   // Layout fetches data, so if it's passed, we trust it.
@@ -25,6 +22,12 @@ export const OnThisDay = memo(function OnThisDay({
 
   const hasMounted = useHasMounted()
 
+  const refreshMemos = useCallback(async () => {
+    const res = await getOnThisDayMemos()
+    setMemos(res.success ? res.data || [] : [])
+    setLoading(false)
+  }, [])
+
   useEffect(() => {
     if (!isInitialLoaded) {
       getOnThisDayMemos().then((res) => {
@@ -33,6 +36,17 @@ export const OnThisDay = memo(function OnThisDay({
       })
     }
   }, [isInitialLoaded])
+
+  useMemoSync(
+    useCallback(
+      (payload) => {
+        if (shouldRefreshMemoDerivedData(payload)) {
+          void refreshMemos()
+        }
+      },
+      [refreshMemos]
+    )
+  )
 
   if (!hasMounted) return null
   if ((!isInitialLoaded && loading) || memos.length === 0) return null

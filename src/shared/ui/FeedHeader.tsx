@@ -34,9 +34,10 @@ import { ShortcutHint } from "@/shared/shortcuts/ShortcutHint"
 
 interface FeedHeaderProps {
   isRefreshing?: boolean
+  isCollapsed?: boolean
 }
 
-export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
+export function FeedHeader({ isRefreshing = false, isCollapsed = false }: FeedHeaderProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -63,8 +64,10 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
   return (
     <div
       className={cn(
-        "flex h-10 items-center justify-between gap-4 pl-14 transition-all duration-300 lg:pl-0",
-        hasContext && "mb-9"
+        "flex items-stretch sm:items-center justify-between sm:gap-4 transition-all duration-300 min-h-10 sm:h-10",
+        isCollapsed ? "flex-row items-center gap-3" : "flex-col gap-3 sm:flex-row",
+        hasContext && !isCollapsed && "mb-9",
+        hasContext && isCollapsed && "mb-4"
       )}
     >
       {isSelectionMode ? (
@@ -162,7 +165,12 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
       )}
 
       {!isSelectionMode && (
-        <div className="flex-1 max-w-sm">
+        <div
+          className={cn(
+            "sm:max-w-sm transition-all duration-300",
+            isCollapsed ? "w-36 min-w-0 flex-1 xs:w-48 sm:w-full" : "w-full"
+          )}
+        >
           <SearchInput />
         </div>
       )}

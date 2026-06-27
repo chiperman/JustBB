@@ -166,7 +166,7 @@ export function MainLayoutClient() {
           {/* Level 3: Visual Padding Area */}
           <div className="px-6 py-5 flex flex-col">
             {/* Feed 标题与过滤显示 (包含 Logo 和 SearchInput) */}
-            <FeedHeader isRefreshing={isRefreshing} />
+            <FeedHeader isRefreshing={isRefreshing} isCollapsed={editorForceCollapsed} />
 
             {/* 编辑器区域 */}
             <AnimatePresence initial={false}>

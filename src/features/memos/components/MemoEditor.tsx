@@ -45,6 +45,14 @@ type LocalImageAttachment = {
   isUploading?: boolean
   publishStatus?: "queued" | "uploading" | "saving"
   uploaded?: UploadedImage
+  hash?: string
+}
+
+async function calculateFileHash(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer()
+  const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
 }
 
 function revokePreviewUrl(url: string) {
@@ -125,6 +133,9 @@ export function MemoEditor({
   const { uploadFile, isUploading } = useImageUpload()
   const [queuedImages, setQueuedImages] = useState<LocalImageAttachment[]>([])
   const queuedImagesRef = useRef<LocalImageAttachment[]>([])
+  const uploadedImageHashesRef = useRef<Map<string, string>>(new Map())
+  const [shakingQueuedId, setShakingQueuedId] = useState<string | null>(null)
+  const [shakingUploadedUrl, setShakingUploadedUrl] = useState<string | null>(null)
   const [uploadingImages, setUploadingImages] = useState<
     {
       id: string
@@ -223,6 +234,18 @@ export function MemoEditor({
       }
 
       if (result.url) {
+        let fileHash = queuedImagesRef.current.find((img) => img.id === id)?.hash
+        if (!fileHash && file) {
+          try {
+            fileHash = await calculateFileHash(file)
+          } catch {
+            // ignore
+          }
+        }
+        if (fileHash) {
+          uploadedImageHashesRef.current.set(result.url, fileHash)
+        }
+
         if (result.warning) {
           toast({
             title: "图片已上传",
@@ -288,19 +311,90 @@ export function MemoEditor({
     return image.uploaded ?? { url: image.previewUrl }
   }, [])
 
-  const handleImageFiles = useCallback((files: File[] | FileList) => {
+  const handleImageFiles = useCallback(async (files: File[] | FileList) => {
     const imageFiles = Array.from(files).filter((file) => file.type.startsWith("image/"))
     if (imageFiles.length === 0) return
 
-    setQueuedImages((prev) =>
-      prev.concat(
-        imageFiles.map((file) => ({
+    const filesWithHash = await Promise.all(
+      imageFiles.map(async (file) => {
+        try {
+          const hash = await calculateFileHash(file)
+          return { file, hash }
+        } catch {
+          return { file, hash: undefined }
+        }
+      })
+    )
+
+    const newImagesToAdd: LocalImageAttachment[] = []
+    let duplicateCount = 0
+    let matchedQueuedId: string | null = null
+    let matchedUploadedUrl: string | null = null
+
+    for (const item of filesWithHash) {
+      const { file, hash } = item
+      if (!hash) {
+        newImagesToAdd.push({
           id: Math.random().toString(36).substring(2, 9),
           file,
           previewUrl: URL.createObjectURL(file),
-        }))
-      )
-    )
+        })
+        continue
+      }
+
+      // 1. 检查当前本次选择中是否重复
+      if (newImagesToAdd.some((img) => img.hash === hash)) {
+        duplicateCount++
+        continue
+      }
+
+      // 2. 检查待上传队列 queuedImages 中的哈希
+      const existingQueued = queuedImagesRef.current.find((img) => img.hash === hash)
+      if (existingQueued) {
+        duplicateCount++
+        matchedQueuedId = existingQueued.id
+        continue
+      }
+
+      // 3. 检查已上传到当前会话的图片的哈希
+      let isUploadedDuplicate = false
+      for (const [url, uploadedHash] of uploadedImageHashesRef.current.entries()) {
+        if (uploadedHash === hash) {
+          duplicateCount++
+          matchedUploadedUrl = url
+          isUploadedDuplicate = true
+          break
+        }
+      }
+      if (isUploadedDuplicate) continue
+
+      newImagesToAdd.push({
+        id: Math.random().toString(36).substring(2, 9),
+        file,
+        previewUrl: URL.createObjectURL(file),
+        hash,
+      })
+    }
+
+    if (duplicateCount > 0) {
+      toast({
+        title: "已过滤重复图片",
+        description: `自动过滤了 ${duplicateCount} 张重复的图片。`,
+      })
+
+      if (matchedQueuedId) {
+        setShakingQueuedId(matchedQueuedId)
+        setTimeout(() => setShakingQueuedId(null), 800)
+      }
+      if (matchedUploadedUrl) {
+        setShakingUploadedUrl(matchedUploadedUrl)
+        setTimeout(() => setShakingUploadedUrl(null), 800)
+      }
+    }
+
+    if (newImagesToAdd.length > 0) {
+      setQueuedImages((prev) => prev.concat(newImagesToAdd))
+    }
   }, [])
 
   const handleRemoveUploadedImage = useCallback(
@@ -311,6 +405,7 @@ export function MemoEditor({
         delete next[urlToRemove]
         return next
       })
+      uploadedImageHashesRef.current.delete(urlToRemove)
     },
     [setImageMetadata, setImages]
   )
@@ -417,6 +512,13 @@ export function MemoEditor({
       return []
     })
   }, [])
+
+  const clearImageSessionState = useCallback(() => {
+    clearQueuedImages()
+    uploadedImageHashesRef.current.clear()
+    setShakingQueuedId(null)
+    setShakingUploadedUrl(null)
+  }, [clearQueuedImages])
 
   const uploadQueuedImages = useCallback(async () => {
     if (queuedImages.length === 0) return { urls: images, metadata: imageMetadata }
@@ -586,7 +688,7 @@ export function MemoEditor({
 
     const didPublish = await performPublish(currentEditor, uploaded.urls, uploaded.metadata)
     if (didPublish) {
-      clearQueuedImages()
+      clearImageSessionState()
     } else {
       setQueuedImages((prev) =>
         prev.map((image) => ({
@@ -596,7 +698,7 @@ export function MemoEditor({
         }))
       )
     }
-  }, [clearQueuedImages, performPublish, resolvePendingLink, uploadQueuedImages])
+  }, [clearImageSessionState, performPublish, resolvePendingLink, uploadQueuedImages])
 
   const extensions = useMemo(
     () =>
@@ -1122,7 +1224,7 @@ export function MemoEditor({
       editor?.commands.blur()
       setShowPlaceholder(true)
     }
-    clearQueuedImages()
+    clearImageSessionState()
     handleCancel()
   }
 
@@ -1140,6 +1242,8 @@ export function MemoEditor({
       queuedImages={queuedImages}
       uploadingImages={uploadingImages}
       isDraggingImages={isDraggingImages}
+      shakingQueuedId={shakingQueuedId}
+      shakingUploadedUrl={shakingUploadedUrl}
       onRemoveImage={handleRemoveUploadedImage}
       onRemoveQueuedImage={handleRemoveQueuedImage}
       onAttachmentInteract={handleAttachmentInteract}

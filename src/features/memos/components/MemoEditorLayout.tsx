@@ -101,6 +101,8 @@ export interface MemoEditorLayoutProps {
     publishStatus?: "queued" | "uploading" | "saving"
   }[]
   uploadingImages?: { id: string; previewUrl: string; progress: number }[]
+  shakingQueuedId?: string | null
+  shakingUploadedUrl?: string | null
   onRemoveImage?: (url: string) => void
   onRemoveQueuedImage?: (id: string) => void
 }
@@ -165,6 +167,8 @@ export function MemoEditorLayout({
   uploadedImages,
   queuedImages,
   uploadingImages,
+  shakingQueuedId,
+  shakingUploadedUrl,
   onRemoveImage,
   onRemoveQueuedImage,
 }: MemoEditorLayoutProps) {
@@ -366,7 +370,9 @@ export function MemoEditorLayout({
                   uploadedImages.map((url, idx) => (
                     <div
                       key={idx}
-                      className="relative w-16 h-16 shrink-0 rounded-md overflow-hidden ring-1 ring-border group/img"
+                      className={`relative w-16 h-16 shrink-0 rounded-md overflow-hidden ring-1 ring-border group/img transition-all ${
+                        shakingUploadedUrl === url ? "animate-shake-highlight" : ""
+                      }`}
                     >
                       <ImageZoom
                         src={url}
@@ -421,7 +427,9 @@ export function MemoEditorLayout({
                   queuedImages.map((img, idx) => (
                     <div
                       key={img.id}
-                      className="relative w-16 h-16 shrink-0 rounded-md overflow-hidden ring-1 ring-border group/img"
+                      className={`relative w-16 h-16 shrink-0 rounded-md overflow-hidden ring-1 ring-border group/img transition-all ${
+                        shakingQueuedId === img.id ? "animate-shake-highlight" : ""
+                      }`}
                     >
                       <ImageZoom
                         src={img.previewUrl}

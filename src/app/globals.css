@@ -337,6 +337,36 @@ body {
   scrollbar-gutter: stable both-edges;
 }
 
+/* 图片去重重复提示动画：抖动并高亮 */
+@keyframes shake-highlight {
+  0%,
+  100% {
+    transform: translateX(0) scale(1);
+    box-shadow: none;
+  }
+  15%,
+  45%,
+  75% {
+    transform: translateX(-4px) scale(1.02);
+  }
+  30%,
+  60% {
+    transform: translateX(4px) scale(1.02);
+  }
+  20%,
+  50%,
+  80% {
+    box-shadow: 0 0 12px rgba(217, 119, 87, 0.5);
+    border-color: var(--primary);
+  }
+}
+
+.animate-shake-highlight {
+  animation: shake-highlight 0.6s ease-in-out;
+  border-color: var(--primary) !important;
+  z-index: 30;
+}
+
 /* Sileo Toast：保持在所有弹窗之上，并跟随 JustMemo 主题变量 */
 [data-sileo-viewport] {
   z-index: 2147483647 !important;

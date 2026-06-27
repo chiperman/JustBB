@@ -69,4 +69,12 @@ describe("MemoEditor image upload", () => {
     expect(layoutSource).toContain('img.publishStatus === "saving"')
     expect(layoutSource).toContain("transition-[width]")
   })
+
+  it("在上传照片时，支持通过哈希进行防重和去重校验", () => {
+    expect(source).toContain("calculateFileHash")
+    expect(source).toContain("uploadedImageHashesRef")
+    expect(source).toContain("shakingQueuedId")
+    expect(source).toContain("shakingUploadedUrl")
+    expect(layoutSource).toContain("animate-shake-highlight")
+  })
 })

@@ -2,7 +2,6 @@
 
 import {
   type ReactNode,
-  type TouchEvent as ReactTouchEvent,
   useCallback,
   useEffect,
   useRef,
@@ -562,6 +561,7 @@ export function ImageStackPreview({
     }
   )
   const containerRef = useRef<HTMLDivElement>(null)
+  const touchContainerRef = useRef<HTMLDivElement>(null)
   const x = useMotionValue(0)
   const y = useMotionValue(0)
   const swipeX = useMotionValue(0)
@@ -761,51 +761,74 @@ export function ImageStackPreview({
     setSwipeDragRotation(0)
   }
 
-  const handleTouchStart = (event: ReactTouchEvent<HTMLDivElement>) => {
-    if (event.touches.length !== 2) return
+  const handleTouchStart = useCallback(
+    (event: TouchEvent) => {
+      if (event.touches.length !== 2) return
 
-    event.stopPropagation()
-    x.stop()
-    y.stop()
-    swipeX.stop()
-    swipeX.set(0)
-    setIsPinching(true)
-    setSwipeOffset(0)
-    setSwipeDragRotation(0)
-    pinchGestureRef.current = {
-      startDistance: getTouchDistance(event.touches),
-      startAngle: getTouchAngle(event.touches),
-      startScale: rawScale.get(),
-      startRotation: rotation,
-      hasRotated: false,
-    }
-  }
+      event.stopPropagation()
+      x.stop()
+      y.stop()
+      swipeX.stop()
+      swipeX.set(0)
+      setIsPinching(true)
+      setSwipeOffset(0)
+      setSwipeDragRotation(0)
+      pinchGestureRef.current = {
+        startDistance: getTouchDistance(event.touches),
+        startAngle: getTouchAngle(event.touches),
+        startScale: rawScale.get(),
+        startRotation: rotation,
+        hasRotated: false,
+      }
+    },
+    [x, y, swipeX, rawScale, rotation]
+  )
 
-  const handleTouchMove = (event: ReactTouchEvent<HTMLDivElement>) => {
-    const gesture = pinchGestureRef.current
-    if (!gesture || event.touches.length !== 2 || gesture.startDistance <= 0) return
+  const handleTouchMove = useCallback(
+    (event: TouchEvent) => {
+      const gesture = pinchGestureRef.current
+      if (!gesture || event.touches.length !== 2 || gesture.startDistance <= 0) return
 
-    event.preventDefault()
-    event.stopPropagation()
+      event.preventDefault()
+      event.stopPropagation()
 
-    const distanceRatio = getTouchDistance(event.touches) / gesture.startDistance
-    rawScale.set(clampInteractiveScale(gesture.startScale * distanceRatio))
+      const distanceRatio = getTouchDistance(event.touches) / gesture.startDistance
+      rawScale.set(clampInteractiveScale(gesture.startScale * distanceRatio))
 
-    const angleDelta = getShortestAngleDelta(getTouchAngle(event.touches), gesture.startAngle)
-    const shouldRotate = gesture.hasRotated || Math.abs(angleDelta) >= PINCH_ROTATION_THRESHOLD
-    if (!shouldRotate) return
+      const angleDelta = getShortestAngleDelta(getTouchAngle(event.touches), gesture.startAngle)
+      const shouldRotate = gesture.hasRotated || Math.abs(angleDelta) >= PINCH_ROTATION_THRESHOLD
+      if (!shouldRotate) return
 
-    gesture.hasRotated = true
-    setRotation(gesture.startRotation + angleDelta)
-  }
+      gesture.hasRotated = true
+      setRotation(gesture.startRotation + angleDelta)
+    },
+    [clampInteractiveScale, rawScale]
+  )
 
-  const handleTouchEnd = (event: ReactTouchEvent<HTMLDivElement>) => {
+  const handleTouchEnd = useCallback((event: TouchEvent) => {
     if (!pinchGestureRef.current || event.touches.length >= 2) return
 
     pinchGestureRef.current = null
     setIsPinching(false)
     setTimeout(() => setIsDragging(false), 100)
-  }
+  }, [])
+
+  useEffect(() => {
+    const container = touchContainerRef.current
+    if (!container) return
+
+    container.addEventListener("touchstart", handleTouchStart, { passive: true })
+    container.addEventListener("touchmove", handleTouchMove, { passive: false })
+    container.addEventListener("touchend", handleTouchEnd, { passive: true })
+    container.addEventListener("touchcancel", handleTouchEnd, { passive: true })
+
+    return () => {
+      container.removeEventListener("touchstart", handleTouchStart)
+      container.removeEventListener("touchmove", handleTouchMove)
+      container.removeEventListener("touchend", handleTouchEnd)
+      container.removeEventListener("touchcancel", handleTouchEnd)
+    }
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd])
 
   const handleClose = useCallback(() => {
     if (isClosing) return
@@ -1094,11 +1117,8 @@ export function ImageStackPreview({
           }}
         >
           <motion.div
+            ref={touchContainerRef}
             className="relative flex h-full w-full transform-gpu items-center justify-center"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            onTouchCancel={handleTouchEnd}
             style={{
               touchAction: "none",
               transformOrigin: "50% 50%",
@@ -1419,7 +1439,7 @@ export function ImageStackPreview({
           duration: 0.26,
           ease: [0.16, 1, 0.3, 1],
         }}
-        className="pointer-events-auto absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-inner border border-border/40 bg-popover px-3 py-1.5 backdrop-blur-xl"
+        className="pointer-events-auto absolute bottom-[calc(2rem+env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-inner border border-border/40 bg-popover px-3 py-1.5 backdrop-blur-xl"
       >
         <Tooltip>
           <TooltipTrigger asChild>
@@ -1574,7 +1594,7 @@ export function ImageStackPreview({
           event.stopPropagation()
           handleClose()
         }}
-        className="group/close absolute top-8 right-8 z-20 rounded-2xl border border-border/50 bg-background/70 p-3 text-foreground shadow-[0_12px_34px_rgba(29,29,27,0.12)] backdrop-blur-md transition-all hover:bg-accent [@media(pointer:coarse)]:active:scale-95 dark:bg-card/72 dark:shadow-none"
+        className="group/close absolute top-[calc(2rem+env(safe-area-inset-top))] right-8 z-20 rounded-2xl border border-border/50 bg-background/70 p-3 text-foreground shadow-[0_12px_34px_rgba(29,29,27,0.12)] backdrop-blur-md transition-all hover:bg-accent [@media(pointer:coarse)]:active:scale-95 dark:bg-card/72 dark:shadow-none"
         aria-label="关闭预览"
       >
         <HugeiconsIcon

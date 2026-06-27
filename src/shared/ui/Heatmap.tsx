@@ -27,6 +27,7 @@ const HeatmapCell = memo(
     onClick,
     shouldReduceMotion,
     cellSize,
+    readOnly = false,
   }: {
     dateStr: string
     count: number
@@ -36,6 +37,7 @@ const HeatmapCell = memo(
     onClick: (e: React.MouseEvent | React.KeyboardEvent, date: string) => void
     shouldReduceMotion: boolean
     cellSize: number
+    readOnly?: boolean
   }) => {
     const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const longPressedRef = useRef(false)
@@ -53,23 +55,24 @@ const HeatmapCell = memo(
     return (
       <div
         data-heatmap-cell="true"
-        tabIndex={hasData ? 0 : -1}
+        tabIndex={hasData && !readOnly ? 0 : -1}
         role="gridcell"
         aria-label={`${dateStr}: ${count} 记录`}
         className={cn(
           "rounded transition-all outline-none",
           hasData &&
+            !readOnly &&
             "cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
-          hasData && !shouldReduceMotion && "hover:scale-110",
-          isActive && "ring-2 ring-primary ring-offset-1 z-10",
+          hasData && !readOnly && !shouldReduceMotion && "hover:scale-110",
+          isActive && !readOnly && "ring-2 ring-primary ring-offset-1 z-10",
           getColorClass(count)
         )}
         style={{ width: cellSize, height: cellSize }}
-        onMouseEnter={(e) => onHover(e, dateStr, count)}
+        onMouseEnter={(e) => !readOnly && onHover(e, dateStr, count)}
         onFocus={(e) => hasData && onHover(e, dateStr, count)}
         onBlur={() => hasData && onBlur()}
         onPointerDown={(e) => {
-          if (!hasData || e.pointerType !== "touch") return
+          if (!hasData || readOnly || e.pointerType !== "touch") return
 
           longPressedRef.current = false
           longPressTimerRef.current = setTimeout(() => {
@@ -90,7 +93,7 @@ const HeatmapCell = memo(
           }
         }}
         onClick={(e) => {
-          if (!hasData) return
+          if (!hasData || readOnly) return
           if (longPressedRef.current) {
             e.preventDefault()
             e.stopPropagation()
@@ -100,7 +103,7 @@ const HeatmapCell = memo(
           onClick(e, dateStr)
         }}
         onKeyDown={(e) => {
-          if (hasData && (e.key === "Enter" || e.key === " ")) {
+          if (hasData && !readOnly && (e.key === "Enter" || e.key === " ")) {
             e.preventDefault()
             onClick(e, dateStr)
           }
@@ -123,18 +126,34 @@ type HoveredDate = {
 interface HeatmapProps {
   variant?: "default" | "mobile-menu"
   onNavigate?: () => void
+  readOnly?: boolean
 }
 
-export const Heatmap = memo(function Heatmap({ variant = "default", onNavigate }: HeatmapProps) {
+export const Heatmap = memo(function Heatmap({
+  variant = "default",
+  onNavigate,
+  readOnly = false,
+}: HeatmapProps) {
   const { stats, isLoading: contextLoading } = useStats()
   const [hoveredDate, setHoveredDate] = useState<HoveredDate | null>(null)
+  const [windowWidth, setWindowWidth] = useState(() =>
+    typeof window === "undefined" ? 375 : window.innerWidth
+  )
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth)
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
   const shouldReduceMotion = useReducedMotion()
   const router = useRouter()
   const searchParams = useSearchParams()
   const activeDate = searchParams.get("date")
   const isMobileMenu = variant === "mobile-menu"
-  const cellSize = isMobileMenu ? 20 : 14
-  const cellGap = isMobileMenu ? 5 : 4
+  const isNarrowScreen = windowWidth < 360
+  const cellSize = isMobileMenu ? (isNarrowScreen ? 16 : 20) : 14
+  const cellGap = isMobileMenu ? (isNarrowScreen ? 4 : 5) : 4
 
   const loading = contextLoading
 
@@ -330,6 +349,7 @@ export const Heatmap = memo(function Heatmap({ variant = "default", onNavigate }
                   onClick={handleCellClick}
                   shouldReduceMotion={!!shouldReduceMotion}
                   cellSize={cellSize}
+                  readOnly={readOnly}
                 />
               ))}
             </div>

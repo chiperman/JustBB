@@ -117,13 +117,14 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
       subtitle="从备份文件或第三方平台迁移你的记录"
       icon={Upload}
       maxWidth="max-w-[550px]"
+      contentClassName="px-4 py-5 sm:px-8 sm:py-8"
       footer={
-        <div className="w-full flex justify-end gap-3">
+        <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
           {(status === "idle" || status === "error") && (
             <Button
               variant="ghost"
               onClick={handleClose}
-              className="h-10 px-6 font-medium text-muted-foreground"
+              className="h-10 w-full px-6 font-medium text-muted-foreground sm:w-auto"
             >
               取消
             </Button>
@@ -132,21 +133,21 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
             <Button
               onClick={handleStartImport}
               disabled={!user || !file}
-              className="h-10 px-8 font-bold"
+              className="h-10 w-full px-8 font-bold sm:w-auto"
             >
               开始导入
             </Button>
           )}
           {(status === "completed" || status === "error") && (
-            <Button onClick={handleClose} className="h-10 px-8 font-bold">
+            <Button onClick={handleClose} className="h-10 w-full px-8 font-bold sm:w-auto">
               完成
             </Button>
           )}
         </div>
       }
     >
-      <div className="space-y-6">
-        <div className="flex items-center justify-between pl-1">
+      <div className="space-y-5 sm:space-y-6">
+        <div className="flex flex-col gap-2 pl-1 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 badge-text uppercase">
             <HugeiconsIcon icon={FileImportIcon} size={14} />
             <span>选择导入文件</span>
@@ -155,15 +156,15 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
             variant="ghost"
             size="sm"
             onClick={() => setShowExamples(!showExamples)}
-            className="h-7 text-[11px] opacity-60 hover:opacity-100"
+            className="h-7 justify-start px-0 text-[11px] opacity-60 hover:opacity-100 sm:justify-center sm:px-3"
           >
             {showExamples ? "隐藏示例" : "查看支持的格式示例"}
           </Button>
         </div>
 
         {showExamples && status === "idle" && (
-          <div className="bg-secondary/50 rounded-xl p-4 border border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="flex gap-2 mb-3">
+          <div className="rounded-xl border border-border/50 bg-secondary/50 p-3 animate-in fade-in slide-in-from-top-2 duration-300 sm:p-4">
+            <div className="mb-3 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {["markdown", "json", "jsonl"].map((f) => (
                 <Button
                   key={f}
@@ -171,7 +172,7 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
                   size="sm"
                   onClick={() => setExampleFormat(f)}
                   className={cn(
-                    "h-7 text-[11px] font-bold uppercase tracking-tight",
+                    "h-7 shrink-0 text-[11px] font-bold uppercase tracking-tight",
                     exampleFormat === f && "bg-background border border-border/50"
                   )}
                 >
@@ -180,7 +181,7 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
               ))}
             </div>
 
-            <div className="bg-background/80 rounded-xl p-4 border border-border/40 font-mono text-[11px] leading-relaxed overflow-x-auto">
+            <div className="max-h-[32dvh] overflow-auto rounded-xl border border-border/40 bg-background/80 p-3 font-mono text-[11px] leading-relaxed sm:max-h-none sm:p-4">
               {exampleFormat === "markdown" && (
                 <pre className="text-muted-foreground whitespace-pre-wrap">
                   <span className="text-primary font-bold">### [2020/9/28 20:14:05]</span>
@@ -275,7 +276,7 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
             <label
               htmlFor={fileInputId}
               className={cn(
-                "group relative border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center transition-all duration-300 outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40",
+                "group relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 outline-none transition-all duration-300 peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40 sm:p-10",
                 file
                   ? "border-primary/40 bg-primary/5"
                   : "border-border hover:border-primary/30 hover:bg-secondary"
@@ -303,8 +304,8 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
         )}
 
         {(status === "parsing" || status === "importing") && (
-          <div className="bg-background rounded-2xl border border-border p-8 space-y-6 animate-in fade-in zoom-in duration-300">
-            <div className="flex items-center justify-between">
+          <div className="space-y-5 rounded-2xl border border-border bg-background p-5 animate-in fade-in zoom-in duration-300 sm:space-y-6 sm:p-8">
+            <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <HugeiconsIcon
@@ -324,7 +325,7 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
             <Progress value={progress} className="h-2" />
 
             {result && (
-              <div className="grid grid-cols-3 gap-4 pt-2">
+              <div className="grid grid-cols-3 gap-2 pt-2 sm:gap-4">
                 <div className="text-center p-3 bg-secondary rounded-xl">
                   <p className="micro-label uppercase opacity-50 mb-1">成功</p>
                   <p className="body-large font-bold text-green-600">{result.success}</p>
@@ -353,7 +354,7 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
                 </Button>
 
                 {showErrors && (
-                  <div className="mt-3 max-h-40 overflow-y-auto rounded-xl border border-red-200 bg-red-50/30 p-2 space-y-1 custom-scrollbar">
+                  <div className="mt-3 max-h-[24dvh] overflow-y-auto rounded-xl border border-red-200 bg-red-50/30 p-2 space-y-1 custom-scrollbar sm:max-h-40">
                     {result.errors.map((err, idx) => (
                       <div
                         key={idx}
@@ -371,8 +372,8 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
         )}
 
         {status === "completed" && result && (
-          <div className="bg-background rounded-2xl border border-border p-8 space-y-6 animate-in fade-in zoom-in duration-300">
-            <div className="flex items-center gap-4">
+          <div className="space-y-5 rounded-2xl border border-border bg-background p-5 animate-in fade-in zoom-in duration-300 sm:space-y-6 sm:p-8">
+            <div className="flex items-center gap-3 sm:gap-4">
               <div className="p-3 bg-green-100 text-green-600 rounded-full">
                 <HugeiconsIcon icon={CheckIcon} size={32} />
               </div>
@@ -382,7 +383,7 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
               {[
                 {
                   label: "总数",
@@ -403,7 +404,7 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="text-center p-3 bg-secondary rounded-xl border border-border/50"
+                  className="rounded-xl border border-border/50 bg-secondary p-3 text-center"
                 >
                   <p className="micro-label uppercase opacity-50 mb-1">{item.label}</p>
                   <p className={cn("body-large font-bold", item.color)}>{item.value}</p>
@@ -424,7 +425,7 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
                 </Button>
 
                 {showErrors && (
-                  <div className="mt-3 max-h-48 overflow-y-auto rounded-xl border border-red-200 bg-red-50/30 p-3 space-y-1 custom-scrollbar">
+                  <div className="mt-3 max-h-[26dvh] overflow-y-auto rounded-xl border border-red-200 bg-red-50/30 p-3 space-y-1 custom-scrollbar sm:max-h-48">
                     {result.errors.map((err, idx) => (
                       <div
                         key={idx}
@@ -444,8 +445,8 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
         )}
 
         {status === "error" && (
-          <div className="bg-destructive/5 rounded-2xl border border-destructive/20 p-8 space-y-4 animate-in fade-in zoom-in duration-300">
-            <div className="flex items-center gap-4">
+          <div className="space-y-4 rounded-2xl border border-destructive/20 bg-destructive/5 p-5 animate-in fade-in zoom-in duration-300 sm:p-8">
+            <div className="flex items-center gap-3 sm:gap-4">
               <div className="p-3 bg-destructive/10 text-destructive rounded-full">
                 <HugeiconsIcon icon={CancelIcon} size={32} />
               </div>

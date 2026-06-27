@@ -135,7 +135,7 @@ export function LinkPickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <HugeiconsIcon icon={Link01Icon} size={20} className="text-primary" />
@@ -194,7 +194,7 @@ export function LinkPickerDialog({
             />
           </div>
         </div>
-        <DialogFooter className="mt-2">
+        <DialogFooter className="mt-2 gap-2 sm:gap-0 [&>button]:w-full sm:[&>button]:w-auto">
           <Button
             variant="ghost"
             className="[@media(pointer:coarse)]:active:scale-95 transition-all"

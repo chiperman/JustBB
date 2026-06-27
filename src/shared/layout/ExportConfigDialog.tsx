@@ -40,32 +40,33 @@ export function ExportConfigDialog({ open, onOpenChange }: ExportConfigDialogPro
       subtitle="将你的所有记录打包导出到本地"
       icon={Download}
       maxWidth="max-w-[600px]"
+      contentClassName="px-4 py-5 sm:px-8 sm:py-8"
       footer={
-        <div className="w-full flex justify-end gap-3">
+        <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="h-10 px-6 font-medium text-muted-foreground"
+            className="h-10 w-full px-6 font-medium text-muted-foreground sm:w-auto"
           >
             取消
           </Button>
           <Button
             onClick={handleStart}
             disabled={!user || (status !== "idle" && status !== "completed" && status !== "error")}
-            className="h-10 px-8 font-bold"
+            className="h-10 w-full px-8 font-bold sm:w-auto"
           >
             开始导出数据
           </Button>
         </div>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-5 sm:space-y-6">
         <div className="flex items-center gap-2 badge-text uppercase pl-1">
           <HugeiconsIcon icon={FileExportIcon} size={14} />
           <span>导出配置</span>
         </div>
 
-        <div className="bg-background rounded-xl p-5 border border-border">
+        <div className="rounded-xl border border-border bg-background p-4 sm:p-5">
           <p className="body-text text-foreground opacity-80">
             选择你偏好的导出格式。系统将导出所有公开与私密记录，图片将以链接形式保留。
           </p>
@@ -74,7 +75,7 @@ export function ExportConfigDialog({ open, onOpenChange }: ExportConfigDialogPro
         <RadioGroup
           value={format}
           onValueChange={(v) => setFormat(v as ExportFormat)}
-          className="grid grid-cols-2 gap-6"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-6"
         >
           {[
             {
@@ -95,13 +96,13 @@ export function ExportConfigDialog({ open, onOpenChange }: ExportConfigDialogPro
               <Label
                 htmlFor={item.id}
                 className={cn(
-                  "flex flex-col items-center justify-center rounded-xl border p-8 transition-all duration-300 [@media(pointer:coarse)]:active:scale-95",
+                  "flex flex-col items-center justify-center rounded-xl border p-5 transition-all duration-300 [@media(pointer:coarse)]:active:scale-95 sm:p-8",
                   // 基础态
                   "border-border bg-background text-muted-foreground",
                   // 待选态
                   "group-hover:border-primary/20 hover:bg-secondary",
                   // 选中态
-                  "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-[#fdf5f2] peer-data-[state=checked]:text-foreground"
+                  "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-(--badge-clay-bg) peer-data-[state=checked]:text-primary"
                 )}
               >
                 <div

@@ -70,7 +70,7 @@ export function UnlockDialog({ memoId, isOpen, onClose, hint }: UnlockDialogProp
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-md gap-5 rounded-inner border-border/40 bg-card/95 p-6 backdrop-blur-xl">
+      <DialogContent className="max-w-md gap-4 rounded-inner border-border/40 bg-card/95 p-4 backdrop-blur-xl sm:gap-5 sm:p-6">
         <DialogHeader className="gap-3 pr-8">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -137,7 +137,7 @@ export function UnlockDialog({ memoId, isOpen, onClose, hint }: UnlockDialogProp
           </div>
         </div>
 
-        <DialogFooter className="gap-2 pt-1 sm:justify-end sm:space-x-0">
+        <DialogFooter className="gap-2 pt-1 sm:justify-end sm:space-x-0 [&>button]:w-full sm:[&>button]:w-auto">
           <Button
             variant="ghost"
             className="rounded-md transition-all [@media(pointer:coarse)]:active:scale-95"

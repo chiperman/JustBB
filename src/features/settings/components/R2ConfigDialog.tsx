@@ -140,9 +140,10 @@ export function R2ConfigDialog({ open, onOpenChange }: R2ConfigDialogProps) {
       subtitle="配置图片上传的 R2 存储服务"
       icon={CloudIcon}
       maxWidth="max-w-[520px]"
+      contentClassName="px-4 py-5 sm:px-8 sm:py-8"
       footer={
-        <div className="w-full flex justify-between items-center">
-          <div className="flex gap-2">
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="grid grid-cols-2 gap-2 sm:flex">
             <Button
               variant="ghost"
               onClick={handleTest}
@@ -168,11 +169,19 @@ export function R2ConfigDialog({ open, onOpenChange }: R2ConfigDialogProps) {
               </Button>
             )}
           </div>
-          <div className="flex gap-3">
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-3">
+            <Button
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+              className="w-full sm:w-auto"
+            >
               取消
             </Button>
-            <Button onClick={handleSave} disabled={saving || !isComplete}>
+            <Button
+              onClick={handleSave}
+              disabled={saving || !isComplete}
+              className="w-full sm:w-auto"
+            >
               {saving ? "保存中..." : "保存"}
             </Button>
           </div>

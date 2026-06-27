@@ -9,7 +9,6 @@ import {
 } from "@hugeicons/core-free-icons"
 
 import { Button } from "@/shared/ui/button"
-import { DialogFooter } from "@/shared/ui/dialog"
 import { Input } from "@/shared/ui/input"
 import { AdminDialogShell } from "@/shared/ui/AdminDialogShell"
 
@@ -54,19 +53,20 @@ export function AccessCodeDialog({
       title={title}
       subtitle={description}
       icon={Lock}
+      contentClassName="px-4 py-5 sm:px-8 sm:py-8"
       footer={
-        <div className="w-full flex justify-end gap-2">
+        <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
             variant="ghost"
             onClick={() => handleOpenChange(false)}
-            className="rounded-md transition-all [@media(pointer:coarse)]:active:scale-95"
+            className="w-full rounded-md transition-all [@media(pointer:coarse)]:active:scale-95 sm:w-auto"
           >
             取消
           </Button>
           <Button
             onClick={onConfirm}
             disabled={!accessCode}
-            className="rounded-md px-5 transition-all [@media(pointer:coarse)]:active:scale-95"
+            className="w-full rounded-md px-5 transition-all [@media(pointer:coarse)]:active:scale-95 sm:w-auto"
           >
             {confirmLabel}
           </Button>

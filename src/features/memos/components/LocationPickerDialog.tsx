@@ -208,7 +208,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg gap-4 p-4 sm:gap-6 sm:p-6">
         <DialogHeader>
           <DialogTitle>添加定位</DialogTitle>
         </DialogHeader>
@@ -294,7 +294,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <label htmlFor="loc-lat" className="text-sm font-medium">
                 纬度 (Latitude)
@@ -334,7 +334,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                 markers={markers}
                 mode="mini"
                 interactive={true}
-                className="w-full h-[220px]"
+                className="h-[min(32dvh,220px)] min-h-[180px] w-full sm:h-[220px]"
                 onMapClick={(flat: number, flng: number) => {
                   setLat(flat.toFixed(6).toString())
                   setLng(flng.toFixed(6).toString())
@@ -345,7 +345,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
                 }}
               />
             ) : (
-              <div className="w-full h-[220px] bg-muted/20 relative flex items-center justify-center overflow-hidden">
+              <div className="relative flex h-[min(32dvh,220px)] min-h-[180px] w-full items-center justify-center overflow-hidden bg-muted/20 sm:h-[220px]">
                 {/* 底层网格与径向渐变，制造空间纵深感 */}
                 <div
                   className="absolute inset-0 z-0
@@ -380,7 +380,7 @@ export function LocationPickerDialog({ open, onOpenChange, onConfirm }: Location
             )}
           </div>
         </div>
-        <DialogFooter className="mt-2">
+        <DialogFooter className="mt-2 gap-2 sm:gap-0 [&>button]:w-full sm:[&>button]:w-auto">
           <Button
             variant="ghost"
             className="[@media(pointer:coarse)]:active:scale-95 transition-all"

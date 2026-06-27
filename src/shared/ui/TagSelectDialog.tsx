@@ -155,7 +155,7 @@ export function TagSelectDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-md border-border/40 rounded-md">
+      <DialogContent className="rounded-md border-border/40 bg-card/95 p-4 backdrop-blur-md sm:max-w-md sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold flex items-center gap-2">
             <HugeiconsIcon icon={Tag} size={20} className="text-primary" />
@@ -163,7 +163,7 @@ export function TagSelectDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-2 sm:py-4">
           {/* 搜索与输入 */}
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -192,7 +192,7 @@ export function TagSelectDialog({
           </div>
 
           {/* 标签选择列表 */}
-          <div className="max-h-[240px] overflow-y-auto scrollbar-hide border border-border/20 rounded-md divide-y divide-border/10 bg-background/50">
+          <div className="max-h-[min(42dvh,240px)] overflow-y-auto scrollbar-hide border border-border/20 rounded-md divide-y divide-border/10 bg-background/50 sm:max-h-[240px]">
             {isLoading ? (
               <div className="flex justify-center py-8">
                 <HugeiconsIcon
@@ -227,7 +227,7 @@ export function TagSelectDialog({
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-2 sm:gap-0 [&>button]:w-full sm:[&>button]:w-auto">
           <Button
             variant="ghost"
             onClick={onClose}

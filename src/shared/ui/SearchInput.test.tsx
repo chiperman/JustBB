@@ -5,12 +5,14 @@ import { render, fireEvent, screen } from "@testing-library/react"
 
 import { SearchInput } from "./SearchInput"
 import { TooltipProvider } from "./tooltip"
+import type { ShortcutRegistration } from "@/shared/shortcuts/types"
 
 const mockReplace = vi.fn()
 let currentParams = new URLSearchParams("tag=tag1&num=123")
 
 let lastParamsStr = ""
 let cachedParams: { get: (key: string) => string | null; toString: () => string } | null = null
+const shortcutRegistrations = vi.hoisted(() => [] as ShortcutRegistration[])
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -30,6 +32,12 @@ vi.mock("next/navigation", () => ({
       }
     }
     return cachedParams
+  },
+}))
+
+vi.mock("@/shared/shortcuts/useShortcut", () => ({
+  useShortcut: (shortcut: ShortcutRegistration) => {
+    shortcutRegistrations.push(shortcut)
   },
 }))
 
@@ -75,6 +83,27 @@ describe("SearchInput Chip Interaction", () => {
     currentParams = new URLSearchParams("tag=tag1&num=123")
     lastParamsStr = ""
     cachedParams = null
+    shortcutRegistrations.length = 0
+  })
+
+  it("registers Command/Ctrl+K shortcut to focus the search input", () => {
+    render(
+      <TooltipProvider>
+        <SearchInput />
+      </TooltipProvider>
+    )
+
+    const input = screen.getByLabelText("搜索 Memo")
+    const shortcut = shortcutRegistrations.find((item) => item.id === "search.focus")
+
+    expect(shortcut).toMatchObject({
+      binding: "mod+k",
+      preventDefault: true,
+    })
+
+    shortcut?.handler(new KeyboardEvent("keydown", { key: "k", metaKey: true }))
+
+    expect(document.activeElement).toBe(input)
   })
 
   it("focuses input when a chip is clicked to delete via the close button", () => {

@@ -1069,6 +1069,24 @@ export function MemoEditor({
     },
   })
 
+  const focusEditorAtEnd = useCallback(() => {
+    setIsFocused(true)
+    window.requestAnimationFrame(() => {
+      editor?.commands.focus("end")
+    })
+  }, [editor, setIsFocused])
+
+  useEffect(() => {
+    if (mode !== "create") {
+      return
+    }
+
+    window.addEventListener("justmemo:focus-create-editor", focusEditorAtEnd)
+    return () => {
+      window.removeEventListener("justmemo:focus-create-editor", focusEditorAtEnd)
+    }
+  }, [focusEditorAtEnd, mode])
+
   useEffect(() => {
     editorRef.current = editor
   }, [editor])
@@ -1310,12 +1328,7 @@ export function MemoEditor({
       relativeGroupRef={relativeGroupRef}
       fileInputRef={fileInputRef}
       editor={editor}
-      onEditorClick={() => {
-        setIsFocused(true)
-        window.requestAnimationFrame(() => {
-          editor?.commands.focus("end")
-        })
-      }}
+      onEditorClick={focusEditorAtEnd}
       onImageFilesSelect={handleImageFiles}
       onShowLocationPicker={() => setShowLocationPicker(true)}
       onShowLinkPicker={() => setShowLinkPicker(true)}

@@ -22,8 +22,18 @@ describe("MemoEditor collapse animation", () => {
   it("解除 inert 折叠状态后再聚焦编辑器", () => {
     expect(layoutSource).toMatch(/aria-label="展开 Memo 编辑器"[\s\S]*?onClick=\{onEditorClick\}/)
     expect(source).toMatch(
-      /onEditorClick=\{\(\) => \{\s*setIsFocused\(true\)\s*window\.requestAnimationFrame\(\(\) => \{\s*editor\?\.commands\.focus\("end"\)/
+      /const focusEditorAtEnd = useCallback\(\(\) => \{\s*setIsFocused\(true\)\s*window\.requestAnimationFrame\(\(\) => \{\s*editor\?\.commands\.focus\("end"\)/
     )
+    expect(source).toContain("onEditorClick={focusEditorAtEnd}")
+  })
+})
+
+describe("MemoEditor focus bridge", () => {
+  it("仅在新建模式响应全局聚焦事件", () => {
+    expect(source).toContain('"justmemo:focus-create-editor"')
+    expect(source).toMatch(/if \(mode !== "create"\) \{\s*return\s*\}/)
+    expect(source).toContain("window.addEventListener")
+    expect(source).toContain("window.removeEventListener")
   })
 })
 

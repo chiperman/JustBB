@@ -45,6 +45,8 @@ import { UsageModal } from "@/features/admin/components/UsageModal"
 import { ExportConfigDialog } from "./ExportConfigDialog"
 import { ImportConfigDialog } from "./ImportConfigDialog"
 import { R2ConfigDialog } from "@/features/settings/components/R2ConfigDialog"
+import { OPEN_KEYBOARD_SHORTCUTS_EVENT } from "@/shared/shortcuts/events"
+import { ShortcutHint } from "@/shared/shortcuts/ShortcutHint"
 
 interface SidebarSettingsProps {
   isCollapsed?: boolean
@@ -77,6 +79,10 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
       localStorage.removeItem(DRAFT_IS_PRIVATE_KEY)
     }
     setLoggingOut(false)
+  }
+
+  const openKeyboardShortcuts = () => {
+    window.dispatchEvent(new Event(OPEN_KEYBOARD_SHORTCUTS_EVENT))
   }
 
   const renderIdentity = () => {
@@ -219,6 +225,12 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
             </DropdownMenuSub>
+
+            <DropdownMenuItem className="h-10" onClick={openKeyboardShortcuts}>
+              <HugeiconsIcon icon={Monitor} size={16} className="mr-2 text-primary" />
+              <span className="nav-button-text">快捷键指南</span>
+              <ShortcutHint shortcut="mod+/" className="ml-auto" />
+            </DropdownMenuItem>
           </div>
 
           <DropdownMenuSeparator />

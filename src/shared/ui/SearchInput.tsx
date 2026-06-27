@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useCallback, useEffect, useMemo, useState, useRef } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Search01Icon,
@@ -13,6 +13,8 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { cn } from "@/shared/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
+import { ShortcutHint } from "@/shared/shortcuts/ShortcutHint"
+import { useShortcut } from "@/shared/shortcuts/useShortcut"
 
 interface ActiveChip {
   type: "tag" | "num" | "date" | "year-month"
@@ -35,6 +37,24 @@ export function SearchInput() {
   const [activeChips, setActiveChips] = useState<ActiveChip[]>([])
 
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const focusSearchInput = useCallback(() => {
+    inputRef.current?.focus()
+  }, [])
+
+  const focusSearchShortcut = useMemo(
+    () => ({
+      id: "search.focus",
+      binding: "mod+k",
+      description: "聚焦搜索框",
+      group: "搜索",
+      handler: focusSearchInput,
+      preventDefault: true,
+    }),
+    [focusSearchInput]
+  )
+
+  useShortcut(focusSearchShortcut)
 
   useEffect(() => {
     setValue(q)
@@ -204,6 +224,8 @@ export function SearchInput() {
         <input
           ref={inputRef}
           type="text"
+          aria-label="搜索 Memo"
+          data-search-input="memo"
           placeholder="键入关键词搜索..."
           className="flex-1 min-w-0 bg-transparent border-none outline-none ring-0 p-0 pl-2 h-full text-sm text-foreground placeholder:text-muted-foreground/40"
           value={value}
@@ -214,6 +236,8 @@ export function SearchInput() {
             }
           }}
         />
+
+        {!value && <ShortcutHint shortcut="mod+k" className="mr-1 hidden sm:inline-flex" />}
 
         {/* 框内集成切换按钮 (当有 2 个及以上 tag 时显示) */}
         {activeChips.filter((c) => c.type === "tag").length >= 2 && (

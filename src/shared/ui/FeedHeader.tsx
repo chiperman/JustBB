@@ -30,6 +30,7 @@ import {
   Loading03Icon as Loader2,
 } from "@hugeicons/core-free-icons"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
+import { ShortcutHint } from "@/shared/shortcuts/ShortcutHint"
 
 interface FeedHeaderProps {
   isRefreshing?: boolean
@@ -122,6 +123,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
                     <DropdownMenuItem className="gap-2" onClick={() => toggleSelectionMode(true)}>
                       <HugeiconsIcon icon={CheckmarkSquare02Icon} size={16} />
                       <span>选择笔记</span>
+                      <ShortcutHint shortcut="mod+x" className="ml-auto" />
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </>

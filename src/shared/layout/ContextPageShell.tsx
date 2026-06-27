@@ -42,6 +42,7 @@ export function ContextPageShell({
       </div>
 
       <div
+        data-shortcut-scroll-root={scrollable ? "true" : undefined}
         className={cn(
           "flex-1 min-h-0",
           scrollable ? "overflow-y-auto scrollbar-stable" : "overflow-hidden flex flex-col"

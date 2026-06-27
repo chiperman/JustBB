@@ -14,6 +14,8 @@ import { UnlockedMemosProvider } from "@/state/UnlockedMemosContext"
 import { ExportProvider } from "@/state/ExportContext"
 import { ExportProgressPanel } from "@/shared/layout/ExportProgressPanel"
 import { ConfirmProvider } from "@/state/ConfirmContext"
+import { ShortcutProvider } from "@/shared/shortcuts/ShortcutProvider"
+import { AppShortcuts } from "@/shared/shortcuts/AppShortcuts"
 
 interface ClientLayoutProvidersProps {
   children: React.ReactNode
@@ -36,14 +38,17 @@ export function ClientLayoutProviders({
               <StatsProvider initialData={initialStats}>
                 <LayoutProvider>
                   <UIProvider>
-                    <TagsProvider initialData={initialTags}>
-                      <LoginTransitionWrapper>
-                        <MobileLayoutWrapper>
-                          {children}
-                          <ExportProgressPanel />
-                        </MobileLayoutWrapper>
-                      </LoginTransitionWrapper>
-                    </TagsProvider>
+                    <ShortcutProvider>
+                      <AppShortcuts />
+                      <TagsProvider initialData={initialTags}>
+                        <LoginTransitionWrapper>
+                          <MobileLayoutWrapper>
+                            {children}
+                            <ExportProgressPanel />
+                          </MobileLayoutWrapper>
+                        </LoginTransitionWrapper>
+                      </TagsProvider>
+                    </ShortcutProvider>
                   </UIProvider>
                 </LayoutProvider>
               </StatsProvider>

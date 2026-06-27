@@ -12,6 +12,7 @@ interface SelectionContextType {
   clearSelection: () => void
   selectAll: (ids: string[]) => void
   registerMemos: (memos: Memo[]) => void
+  getRegisteredMemoIds: () => string[]
   getSelectedMemos: () => Memo[]
 }
 
@@ -65,6 +66,10 @@ function UIProviderBase({
     setRegisteredMemos(memos)
   }, [])
 
+  const getRegisteredMemoIds = useCallback(() => {
+    return registeredMemos.map((memo) => memo.id)
+  }, [registeredMemos])
+
   const getSelectedMemos = useCallback(() => {
     return registeredMemos.filter((memo) => selectedIds.has(memo.id))
   }, [registeredMemos, selectedIds])
@@ -78,6 +83,7 @@ function UIProviderBase({
       clearSelection,
       selectAll,
       registerMemos,
+      getRegisteredMemoIds,
       getSelectedMemos,
     }),
     [
@@ -88,6 +94,7 @@ function UIProviderBase({
       clearSelection,
       selectAll,
       registerMemos,
+      getRegisteredMemoIds,
       getSelectedMemos,
     ]
   )

@@ -30,6 +30,7 @@ import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { BaseFloatingCapsule } from "./BaseFloatingCapsule"
 import { useConfirm } from "@/state/ConfirmContext"
 import { dispatchMemoEvent } from "@/lib/memos/events"
+import { ShortcutHint } from "@/shared/shortcuts/ShortcutHint"
 
 export function SelectionToolbar() {
   const pathname = usePathname()
@@ -299,17 +300,28 @@ export function SelectionToolbar() {
                     <HugeiconsIcon icon={RotateCcw} size={14} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="top">重置选择</TooltipContent>
+                <TooltipContent side="top" className="flex items-center gap-2">
+                  <span>重置选择</span>
+                  <ShortcutHint shortcut="mod+d" />
+                </TooltipContent>
               </Tooltip>
               {!isTrashPage && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => toggleSelectionMode(false)}
-                  className="h-8 w-8 p-0 flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted rounded-md active:scale-95 transition-all"
-                >
-                  <HugeiconsIcon icon={X} size={15} />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleSelectionMode(false)}
+                      className="h-8 w-8 p-0 flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted rounded-md active:scale-95 transition-all"
+                    >
+                      <HugeiconsIcon icon={X} size={15} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="flex items-center gap-2">
+                    <span>退出选择</span>
+                    <ShortcutHint shortcut="mod+x" />
+                  </TooltipContent>
+                </Tooltip>
               )}
             </div>
           </BaseFloatingCapsule>

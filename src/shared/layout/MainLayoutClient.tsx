@@ -202,7 +202,11 @@ export function MainLayoutClient() {
       </div>
 
       {/* 2. 底部滚动区域 (Scrollable Feed Area) */}
-      <div ref={containerRef} className="flex-1 overflow-y-auto scrollbar-stable-both">
+      <div
+        ref={containerRef}
+        data-shortcut-scroll-root="true"
+        className="flex-1 overflow-y-auto scrollbar-stable-both"
+      >
         <div className="max-w-screen-md mx-auto flex min-h-full flex-col">
           {/* Level 3: Visual Padding Area */}
           <div className="flex flex-1 flex-col px-6 pt-4 pb-20">

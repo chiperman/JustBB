@@ -89,7 +89,7 @@ export function SidebarNavItem({
         }
         transition={labelTransition}
         className={cn(
-          "min-w-0 overflow-hidden whitespace-nowrap nav-button-text tracking-tight",
+          "min-w-0 flex-1 overflow-hidden whitespace-nowrap nav-button-text tracking-tight",
           isMobile && "text-lg sm:text-inherit"
         )}
         aria-hidden={isCollapsed}

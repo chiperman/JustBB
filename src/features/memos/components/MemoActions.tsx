@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useCallback, useEffect, useState, useRef } from "react"
 import { deleteMemo, restoreMemo, permanentDeleteMemo } from "@/server/actions/memos/trash"
 import { updateMemoState } from "@/server/actions/memos/mutate"
 import { dispatchMemoEvent } from "@/lib/memos/events"
@@ -15,6 +15,7 @@ import {
   PinIcon,
   ChatLock01Icon,
   ChatUnlock01Icon,
+  Link02Icon,
 } from "@hugeicons/core-free-icons"
 import {
   DropdownMenu,
@@ -23,6 +24,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/shared/ui/dropdown-menu"
+import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog"
 import { Button } from "@/shared/ui/button"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 import { AccessCodeDialog } from "@/features/memos/components/AccessCodeDialog"
@@ -44,6 +46,8 @@ interface MemoActionsProps {
   onEdit?: () => void
   onOpenChange?: (open: boolean) => void
   isOwner?: boolean
+  showBacklinks?: boolean
+  onToggleBacklinks?: () => void
 }
 
 export function MemoActions({
@@ -57,32 +61,47 @@ export function MemoActions({
   onEdit,
   onOpenChange,
   isOwner = false,
+  showBacklinks = false,
+  onToggleBacklinks,
 }: MemoActionsProps) {
   const [isPending, setIsPending] = useState(false)
   const [showPrompt, setShowPrompt] = useState(false)
   const [accessCode, setAccessCode] = useState("")
   const [accessHint, setAccessHint] = useState("")
-  const [isOpen, setIsOpen] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
   const preventCloseFocusRef = useRef(false)
   const { toast } = useToast()
   const { confirm } = useConfirm()
   const hasMounted = useHasMounted()
 
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open)
-    onOpenChange?.(open)
-  }
+  const handleDropdownOpenChange = useCallback(
+    (open: boolean) => {
+      setIsDropdownOpen(open)
+      onOpenChange?.(open)
+    },
+    [onOpenChange]
+  )
+
+  const handleDialogOpenChange = useCallback(
+    (open: boolean) => {
+      setIsDialogOpen(open)
+      onOpenChange?.(open)
+    },
+    [onOpenChange]
+  )
 
   useEffect(() => {
-    if (!isOpen) return
+    if (!isDropdownOpen) return
 
     const closeOnScroll = () => {
-      handleOpenChange(false)
+      handleDropdownOpenChange(false)
     }
 
     window.addEventListener("scroll", closeOnScroll, true)
     return () => window.removeEventListener("scroll", closeOnScroll, true)
-  }, [isOpen])
+  }, [isDropdownOpen, handleDropdownOpenChange])
 
   if (!hasMounted) {
     return <div className="w-8 h-8" />
@@ -243,7 +262,7 @@ export function MemoActions({
                   size="icon"
                   onClick={handleRestore}
                   disabled={isPending}
-                  className="rounded-md text-green hover:bg-green/10 [@media(pointer:coarse)]:active:scale-95 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                  className="rounded-md text-green hover:bg-green/10 [@media(pointer:coarse)]:active:scale-95 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100"
                   aria-label="恢复"
                 >
                   <HugeiconsIcon icon={ArchiveRestore} size={16} />
@@ -258,7 +277,7 @@ export function MemoActions({
                   size="icon"
                   onClick={handlePermanentDelete}
                   disabled={isPending}
-                  className="rounded-md text-destructive hover:bg-destructive/10 [@media(pointer:coarse)]:active:scale-95 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                  className="rounded-md text-destructive hover:bg-destructive/10 [@media(pointer:coarse)]:active:scale-95 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100"
                   aria-label="彻底删除"
                 >
                   <HugeiconsIcon icon={Delete02Icon} size={16} />
@@ -272,16 +291,20 @@ export function MemoActions({
     )
   }
 
+  const mobileActionButtonClass =
+    "flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-[15px] font-medium transition-colors hover:bg-accent focus-visible:ring-1 focus-visible:ring-ring"
+  const mobileIconClass = "text-muted-foreground"
+
   return (
     <div className="flex items-center gap-1">
-      <DropdownMenu open={isOpen} onOpenChange={handleOpenChange} modal={false}>
+      <DropdownMenu open={isDropdownOpen} onOpenChange={handleDropdownOpenChange} modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
             className={cn(
-              "h-8 w-8 p-0 hover:bg-accent rounded-md opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 hover:scale-100 active:scale-100 transition-[background-color,opacity]",
-              isOpen && "opacity-100"
+              "h-8 w-8 p-0 hover:bg-accent rounded-md opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 hover:scale-100 active:scale-100 transition-[background-color,opacity] max-sm:hidden",
+              isDropdownOpen && "opacity-100"
             )}
           >
             <span className="flex items-center justify-center w-full h-full [@media(pointer:coarse)]:active:scale-95 transition-transform duration-200">
@@ -295,7 +318,7 @@ export function MemoActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="z-20 w-48"
+          className="z-20 w-48 max-sm:hidden"
           onCloseAutoFocus={(e) => {
             if (preventCloseFocusRef.current) {
               e.preventDefault()
@@ -309,6 +332,12 @@ export function MemoActions({
                 <DropdownMenuItem onClick={onEdit}>
                   <HugeiconsIcon icon={PencilEdit01Icon} size={16} className="mr-2" />
                   编辑
+                </DropdownMenuItem>
+              )}
+              {onToggleBacklinks && (
+                <DropdownMenuItem onClick={onToggleBacklinks}>
+                  <HugeiconsIcon icon={Link02Icon} size={16} className="mr-2" />
+                  {showBacklinks ? "隐藏引用" : "查看引用"}
                 </DropdownMenuItem>
               )}
               {!isPrivate && (
@@ -370,6 +399,143 @@ export function MemoActions({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "h-8 w-8 p-0 rounded-md hover:bg-accent sm:hidden",
+            isDialogOpen && "bg-accent"
+          )}
+          onClick={() => handleDialogOpenChange(true)}
+          aria-label="更多操作"
+        >
+          <span className="flex items-center justify-center w-full h-full [@media(pointer:coarse)]:active:scale-95 transition-transform duration-200">
+            <HugeiconsIcon icon={MoreHorizontalIcon} size={16} className="text-muted-foreground" />
+          </span>
+        </Button>
+        <DialogContent className="gap-3 px-4 pt-4 [&>button]:top-4">
+          <div className="space-y-1 pr-10">
+            <DialogTitle className="text-base font-semibold tracking-normal">记录操作</DialogTitle>
+            <p className="text-xs leading-5 text-muted-foreground">选择要对这条记录执行的操作</p>
+          </div>
+
+          <div className="grid gap-1 pt-1">
+            {!isDeleted && (
+              <>
+                {isOwner && (
+                  <button
+                    type="button"
+                    className={mobileActionButtonClass}
+                    onClick={() => {
+                      handleDialogOpenChange(false)
+                      onEdit?.()
+                    }}
+                  >
+                    <HugeiconsIcon icon={PencilEdit01Icon} size={18} className={mobileIconClass} />
+                    编辑
+                  </button>
+                )}
+                {onToggleBacklinks && (
+                  <button
+                    type="button"
+                    className={mobileActionButtonClass}
+                    onClick={() => {
+                      handleDialogOpenChange(false)
+                      onToggleBacklinks()
+                    }}
+                  >
+                    <HugeiconsIcon icon={Link02Icon} size={18} className={mobileIconClass} />
+                    {showBacklinks ? "隐藏引用" : "查看引用"}
+                  </button>
+                )}
+                {!isPrivate && (
+                  <button
+                    type="button"
+                    className={mobileActionButtonClass}
+                    onClick={() => {
+                      handleDialogOpenChange(false)
+                      setShareOpen(true)
+                    }}
+                  >
+                    <HugeiconsIcon icon={Share01Icon} size={18} className={mobileIconClass} />
+                    分享
+                  </button>
+                )}
+              </>
+            )}
+
+            {isOwner && (
+              <>
+                <button
+                  type="button"
+                  className={mobileActionButtonClass}
+                  onClick={() => {
+                    handleDialogOpenChange(false)
+                    void handleTogglePin()
+                  }}
+                  disabled={isPending}
+                >
+                  <HugeiconsIcon icon={PinIcon} size={18} className={mobileIconClass} />
+                  {isPinned ? "取消置顶" : "置顶"}
+                </button>
+
+                <button
+                  type="button"
+                  className={mobileActionButtonClass}
+                  onClick={() => {
+                    handleDialogOpenChange(false)
+                    void handleTogglePrivate()
+                  }}
+                  disabled={isPending}
+                >
+                  <HugeiconsIcon
+                    icon={isPrivate ? ChatUnlock01Icon : ChatLock01Icon}
+                    size={18}
+                    className={mobileIconClass}
+                  />
+                  {isPrivate ? "取消私密" : "设为私密"}
+                </button>
+
+                <div className="my-1 h-px bg-border/70" />
+
+                <button
+                  type="button"
+                  className={cn(mobileActionButtonClass, "text-destructive hover:bg-destructive/5")}
+                  onClick={() => {
+                    handleDialogOpenChange(false)
+                    void handleDelete()
+                  }}
+                >
+                  <HugeiconsIcon icon={Delete02Icon} size={18} />
+                  删除
+                </button>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {!isPrivate && (
+        <MemoShare
+          memo={
+            {
+              id,
+              content,
+              created_at: createdAt,
+              tags,
+              is_pinned: isPinned,
+              is_private: isPrivate,
+              memo_number: 0,
+              owner_id: "",
+            } as Memo
+          }
+          open={shareOpen}
+          onOpenChange={setShareOpen}
+          hideTrigger
+        />
+      )}
 
       <AccessCodeDialog
         open={showPrompt}

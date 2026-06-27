@@ -111,7 +111,7 @@ export const LinkNodeView = (props: NodeViewProps) => {
               />
             </HoverCardContent>
           </HoverCard>
-          <div className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="ml-1 opacity-0 group-hover:opacity-100 [@media(pointer:coarse)]:opacity-100 transition-opacity">
             {renderMenu()}
           </div>
         </div>
@@ -123,7 +123,7 @@ export const LinkNodeView = (props: NodeViewProps) => {
           <span className="text-xs text-foreground/80 font-medium truncate max-w-[200px]">
             {title}
           </span>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 [@media(pointer:coarse)]:opacity-100 transition-opacity">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -157,7 +157,7 @@ export const LinkNodeView = (props: NodeViewProps) => {
       {mode === "card" && (
         <div className="relative group max-w-2xl my-2">
           <LinkPreview url={url} customTitle={title} className="m-0" />
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-md border border-border/50 p-0.5 z-10">
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 [@media(pointer:coarse)]:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-md border border-border/50 p-0.5 z-10">
             {renderMenu()}
           </div>
         </div>
@@ -171,7 +171,7 @@ export const LinkNodeView = (props: NodeViewProps) => {
             className="max-h-[420px] w-full object-contain"
             draggable={false}
           />
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-md border border-border/50 p-0.5 z-10">
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 [@media(pointer:coarse)]:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-md border border-border/50 p-0.5 z-10">
             {renderMenu()}
           </div>
         </div>

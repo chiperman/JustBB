@@ -26,10 +26,19 @@ import { cn } from "@/shared/lib/utils"
 interface MemoShareProps {
   memo: Memo
   trigger?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  hideTrigger?: boolean
 }
 
-export function MemoShare({ memo, trigger }: MemoShareProps) {
-  const [open, setOpen] = useState(false)
+export function MemoShare({
+  memo,
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
+}: MemoShareProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
   const posterRef = useRef<HTMLDivElement>(null)
   const [activeAction, setActiveAction] = useState<"copy" | "download" | null>(null)
   const [activeThemeId, setActiveThemeId] = useState("classic")
@@ -40,6 +49,8 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
   const { toast } = useToast()
   const hasMounted = useHasMounted()
   const shareUrl = getMemoShareUrl(memo.id)
+  const open = controlledOpen ?? internalOpen
+  const setOpen = onOpenChange ?? setInternalOpen
 
   const activeTheme = POSTER_THEMES[activeThemeId] || POSTER_THEMES.classic
 
@@ -120,13 +131,15 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
 
   return (
     <>
-      <div onClick={() => setOpen(true)} className="contents">
-        {trigger || (
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <HugeiconsIcon icon={Share2} size={16} className="text-muted-foreground" />
-          </Button>
-        )}
-      </div>
+      {!hideTrigger && (
+        <div onClick={() => setOpen(true)} className="contents">
+          {trigger || (
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <HugeiconsIcon icon={Share2} size={16} className="text-muted-foreground" />
+            </Button>
+          )}
+        </div>
+      )}
 
       <AdminDialogShell
         open={open}
@@ -135,13 +148,14 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
         subtitle="生成并下载精美海报"
         icon={Share2}
         maxWidth="max-w-md"
+        contentClassName="px-4 py-5 sm:px-8 sm:py-8"
       >
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-3 sm:gap-4">
           {/* 预览区域 */}
-          <div className="w-full h-[50vh] min-h-[360px] overflow-y-auto py-6 custom-scrollbar bg-accent/5 rounded-xl border border-border/40">
+          <div className="h-[min(44dvh,360px)] min-h-[280px] w-full overflow-y-auto rounded-xl border border-border/40 bg-accent/5 py-4 custom-scrollbar sm:h-[50vh] sm:min-h-[360px] sm:py-6">
             <div
               ref={posterRef}
-              className="w-[340px] mx-auto relative flex flex-col origin-top h-fit"
+              className="relative mx-auto flex h-fit w-[min(340px,calc(100%_-_24px))] origin-top flex-col sm:w-[340px]"
               style={{
                 backgroundColor: activeTheme.styles.container.backgroundColor,
                 color: activeTheme.styles.container.color,
@@ -302,18 +316,18 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
           </div>
 
           {/* 控制面板 */}
-          <div className="w-full space-y-4 px-1">
+          <div className="w-full space-y-3 px-1 sm:space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                 风格
               </span>
-              <div className="flex gap-1 p-1 bg-muted/50 rounded-full border border-border/50">
+              <div className="flex gap-1 overflow-x-auto rounded-full border border-border/50 bg-muted/50 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {Object.values(POSTER_THEMES).map((t) => (
                   <button
                     key={t.id}
                     onClick={() => setActiveThemeId(t.id)}
                     className={cn(
-                      "px-3 py-0.5 text-[11px] rounded-full",
+                      "shrink-0 px-3 py-0.5 text-[11px] rounded-full",
                       activeThemeId === t.id ? "bg-background font-medium" : "text-muted-foreground"
                     )}
                   >
@@ -323,7 +337,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
               </div>
             </div>
 
-            <div className="flex items-center justify-around py-2 border-t border-border/40">
+            <div className="grid grid-cols-3 items-center gap-2 border-t border-border/40 py-2">
               {[
                 { label: "品牌", state: showBrand, setter: setShowBrand },
                 { label: "日期", state: showDate, setter: setShowDate },
@@ -332,7 +346,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
                 <button
                   key={item.label}
                   onClick={() => item.setter(!item.state)}
-                  className="flex items-center gap-2 group"
+                  className="flex min-h-8 items-center justify-center gap-2 group"
                 >
                   <div
                     className={cn(
@@ -355,10 +369,10 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
             </div>
           </div>
 
-          <div className="flex gap-3 w-full mt-2">
+          <div className="flex w-full flex-col gap-2 sm:mt-2 sm:flex-row sm:gap-3">
             <Button
               variant="outline"
-              className="flex-1 h-11 text-sm border-border/60 relative overflow-hidden group/btn"
+              className="relative h-11 flex-1 overflow-hidden border-border/60 text-sm group/btn"
               onClick={handleCopyToClipboard}
               disabled={activeAction !== null}
             >
@@ -381,7 +395,7 @@ export function MemoShare({ memo, trigger }: MemoShareProps) {
             </Button>
 
             <Button
-              className="flex-1 h-11 text-sm font-medium relative overflow-hidden group/btn"
+              className="relative h-11 flex-1 overflow-hidden text-sm font-medium group/btn"
               onClick={handleDownload}
               disabled={activeAction !== null}
             >

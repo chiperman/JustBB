@@ -83,7 +83,7 @@ export function ContextPageHeader({
 
   return (
     <header className={cn("space-y-3", className)}>
-      <div className="flex items-center justify-between gap-4 h-10 pl-14 lg:pl-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 min-h-10 sm:h-10">
         <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
           <Link
             href="/"
@@ -107,7 +107,9 @@ export function ContextPageHeader({
           </div>
         </div>
 
-        {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+        {actions ? (
+          <div className="flex shrink-0 items-center gap-2 w-full sm:w-auto">{actions}</div>
+        ) : null}
       </div>
 
       {showTitle || description ? (

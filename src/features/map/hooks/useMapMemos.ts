@@ -67,6 +67,7 @@ export function useMapMemos() {
 
         setMapView(() => mapModule.MapView)
         setIsLoading(false)
+        return
       }
 
       const hasCache =

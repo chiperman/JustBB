@@ -92,14 +92,16 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       style={{ willChange: "width" }}
       className={cn(
         "relative flex h-full shrink-0 flex-col overflow-hidden border-r border-border bg-muted p-2",
-        isMobile && "border-r-0 px-5 pt-5 pb-4 sm:border-r sm:p-2"
+        isMobile &&
+          "min-h-full border-r-0 bg-background px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] sm:border-r sm:bg-muted sm:p-2"
       )}
     >
       {/* Top Area: 包含折叠按钮与品牌Logo */}
       <div
         className={cn(
           "flex h-16 shrink-0 items-center pl-1 gap-2.5",
-          isMobile && "mx-auto h-12 w-full max-w-[430px] pl-0 sm:mx-0 sm:h-16 sm:max-w-none sm:pl-1"
+          isMobile &&
+            "order-0 h-14 w-full border-b border-border/60 px-0 pb-4 pl-0 sm:h-16 sm:border-b-0 sm:pb-0 sm:pl-1"
         )}
       >
         <SidebarCollapseButton
@@ -145,20 +147,18 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
         initial={false}
         className={cn(
           "shrink-0 overflow-hidden px-1",
-          isMobile && "px-0 !h-[300px] sm:!h-[248px] sm:px-1"
+          isMobile &&
+            "order-2 mt-5 rounded-2xl border border-border/60 bg-muted/45 px-3 py-3 !h-[220px] sm:order-none sm:mt-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-1 sm:py-0 sm:!h-[248px]"
         )}
         animate={{
-          height: effectiveIsCollapsed ? 0 : HEATMAP_SLOT_HEIGHT,
-          marginBottom: effectiveIsCollapsed ? 0 : 20,
+          height: isMobile ? 220 : effectiveIsCollapsed ? 0 : HEATMAP_SLOT_HEIGHT,
+          marginBottom: isMobile || effectiveIsCollapsed ? 0 : 20,
         }}
         transition={SIDEBAR_TRANSITION}
       >
         <motion.div
           initial={false}
-          className={cn(
-            "h-full w-[264px] shrink-0",
-            isMobile && "mx-auto w-full max-w-[430px] sm:mx-0 sm:w-[264px] sm:max-w-none"
-          )}
+          className={cn("h-full w-[264px] shrink-0", isMobile && "w-full max-w-none sm:w-[264px]")}
           animate={{ opacity: effectiveIsCollapsed ? 0 : 1 }}
           transition={SIDEBAR_TRANSITION}
         >
@@ -166,8 +166,8 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
             {isMobile ? (
               <>
                 <div className="sm:hidden">
-                  <div className="min-h-[280px]">
-                    <Heatmap variant="mobile-menu" onNavigate={onClose} />
+                  <div className="h-[194px] overflow-hidden">
+                    <Heatmap variant="mobile-menu" onNavigate={onClose} readOnly />
                   </div>
                 </div>
                 <div className="hidden sm:block">
@@ -186,14 +186,25 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
         transition={SIDEBAR_TRANSITION}
         className={cn(
           "relative min-h-0 flex-1 overflow-x-hidden px-1 pb-4 custom-scrollbar",
-          isMobile && "mx-auto w-full max-w-[430px] px-0 sm:mx-0 sm:max-w-none sm:px-1",
+          isMobile &&
+            "order-1 mt-6 w-full flex-none overflow-visible px-0 pb-0 sm:order-none sm:mt-0 sm:max-w-none sm:px-1 sm:pb-4",
           effectiveIsCollapsed ? "overflow-y-hidden" : "overflow-y-auto"
         )}
       >
         <motion.div
           transition={SIDEBAR_TRANSITION}
-          className={cn("mb-3 border-t border-border", effectiveIsCollapsed ? "mx-1" : "mx-2")}
+          className={cn(
+            "mb-3 border-t border-border",
+            isMobile && "hidden sm:block",
+            effectiveIsCollapsed ? "mx-1" : "mx-2"
+          )}
         />
+
+        {isMobile && (
+          <p className="mb-2 px-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:hidden">
+            Navigation / 导航
+          </p>
+        )}
 
         {navItems.map((item) => (
           <SidebarNavItem
@@ -254,7 +265,8 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
       <div
         className={cn(
           "shrink-0 border-t border-border mt-auto pt-2 flex items-center pl-1 w-full",
-          isMobile && "mx-auto max-w-[430px] pl-0 sm:mx-0 sm:max-w-none sm:pl-1"
+          isMobile &&
+            "order-3 mt-5 rounded-2xl border border-border/60 bg-muted/45 p-2 pl-2 sm:order-none sm:mx-0 sm:max-w-none sm:rounded-none sm:border-t sm:border-x-0 sm:border-b-0 sm:bg-transparent sm:pt-2 sm:pl-1"
         )}
       >
         <SidebarSettings isCollapsed={effectiveIsCollapsed} />

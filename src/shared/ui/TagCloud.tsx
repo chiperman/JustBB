@@ -10,7 +10,11 @@ import { useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Skeleton } from "@/shared/ui/skeleton"
 
-export const TagCloud = memo(function TagCloud() {
+interface TagCloudProps {
+  onTagClick?: () => void
+}
+
+export const TagCloud = memo(function TagCloud({ onTagClick }: TagCloudProps = {}) {
   const { tags, isLoading, isMounted } = useTags()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -49,6 +53,7 @@ export const TagCloud = memo(function TagCloud() {
       params.set("tag", merged.join(","))
     }
     router.push(`/?${params.toString()}`)
+    onTagClick?.()
   }
 
   const handleTagKeyDown = (event: React.KeyboardEvent<HTMLSpanElement>, tag: string) => {

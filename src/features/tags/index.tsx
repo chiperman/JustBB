@@ -55,7 +55,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
           icon={TagIcon}
           title="标签"
           actions={
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
               {/* 排序切换 Tabs */}
               <div className="flex items-center rounded-md bg-secondary/80 p-0.5 whisper-border relative">
                 <button
@@ -99,7 +99,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
               </div>
 
               {/* 搜索过滤框 */}
-              <div className="relative w-36 sm:w-48">
+              <div className="relative flex-1 sm:flex-initial w-auto sm:w-48 min-w-[120px]">
                 <div className="relative flex items-center min-h-[36px] bg-background border border-border rounded-md px-2 focus-within:border-primary/30 transition-all hover:bg-secondary/50 group">
                   <div className="flex items-center gap-1.5 flex-1 min-w-0 py-1.5">
                     <HugeiconsIcon

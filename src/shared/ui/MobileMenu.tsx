@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Menu01Icon as Menu, Cancel01Icon as X } from "@hugeicons/core-free-icons"
+import { Menu01Icon as Menu } from "@hugeicons/core-free-icons"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 
 interface MobileMenuButtonProps {
@@ -13,30 +13,27 @@ interface MobileMenuButtonProps {
 import { Button } from "@/shared/ui/button"
 
 export function MobileMenuButton({ isOpen, onClick }: MobileMenuButtonProps) {
+  if (isOpen) return null
+
   return (
     <Button
       variant="outline"
       size="icon"
       onClick={onClick}
-      className="lg:hidden fixed top-4 left-4 z-[80] rounded-xl h-10 w-10 p-0 active:scale-95 transition-all"
-      aria-label={isOpen ? "关闭菜单" : "打开菜单"}
+      className="lg:hidden fixed top-4 left-4 z-[80] rounded-2xl h-11 w-11 p-0 bg-background/92 shadow-sm backdrop-blur-md active:scale-95 transition-all"
+      aria-label="打开菜单"
     >
-      {isOpen ? (
-        <HugeiconsIcon icon={X} size={20} aria-hidden="true" />
-      ) : (
-        <HugeiconsIcon icon={Menu} size={20} aria-hidden="true" />
-      )}
+      <HugeiconsIcon icon={Menu} size={20} aria-hidden="true" />
     </Button>
   )
 }
 
 interface MobileMenuOverlayProps {
   isOpen: boolean
-  onClose: () => void
   children: React.ReactNode
 }
 
-export function MobileMenuOverlay({ isOpen, onClose, children }: MobileMenuOverlayProps) {
+export function MobileMenuOverlay({ isOpen, children }: MobileMenuOverlayProps) {
   const shouldReduceMotion = useReducedMotion()
 
   return (
@@ -47,9 +44,8 @@ export function MobileMenuOverlay({ isOpen, onClose, children }: MobileMenuOverl
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
-            className="lg:hidden fixed inset-0 bg-black/50 z-[60]"
-            onClick={onClose}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.16 }}
+            className="lg:hidden fixed inset-0 bg-background z-[60]"
             aria-hidden="true"
           />
         )}
@@ -63,9 +59,11 @@ export function MobileMenuOverlay({ isOpen, onClose, children }: MobileMenuOverl
           visibility: (isOpen ? "visible" : "hidden") as "visible" | "hidden",
         }}
         transition={
-          shouldReduceMotion ? { duration: 0 } : { type: "spring", damping: 25, stiffness: 300 }
+          shouldReduceMotion
+            ? { duration: 0 }
+            : { type: "spring", damping: 32, stiffness: 250, mass: 0.9 }
         }
-        className="lg:hidden fixed left-0 top-0 h-full w-72 z-[70] bg-background pointer-events-auto"
+        className="lg:hidden fixed inset-0 z-[70] w-full overflow-hidden bg-background pointer-events-auto"
         style={{
           pointerEvents: isOpen ? "auto" : "none",
         }}

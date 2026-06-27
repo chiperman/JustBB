@@ -229,7 +229,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
             <DropdownMenuItem className="h-10" onClick={openKeyboardShortcuts}>
               <HugeiconsIcon icon={Monitor} size={16} className="mr-2 text-primary" />
               <span className="nav-button-text">快捷键指南</span>
-              <ShortcutHint shortcut="mod+/" className="ml-auto" />
+              <ShortcutHint shortcut="mod+/" displayShortcut="mod+?" className="ml-auto" />
             </DropdownMenuItem>
           </div>
 

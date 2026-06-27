@@ -151,7 +151,8 @@ export function MemoCardHeader({
             }}
             className={cn(
               "h-7 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-all z-10 pointer-events-auto",
-              !showViewOriginal && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+              !showViewOriginal &&
+                "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100"
             )}
           >
             查看原文
@@ -165,7 +166,7 @@ export function MemoCardHeader({
                   size="icon"
                   onClick={onToggleBacklinks}
                   className={cn(
-                    "h-8 w-8 rounded-md transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(pointer:coarse)]:active:scale-95",
+                    "h-8 w-8 rounded-md transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100 [@media(pointer:coarse)]:active:scale-95 max-[350px]:hidden",
                     showBacklinks
                       ? "bg-primary/10 text-primary opacity-100"
                       : "text-muted-foreground",
@@ -190,6 +191,8 @@ export function MemoCardHeader({
               onEdit={onEdit}
               onOpenChange={onMenuOpenChange}
               isOwner={memo.is_owner}
+              showBacklinks={showBacklinks}
+              onToggleBacklinks={onToggleBacklinks}
             />
           </>
         )}

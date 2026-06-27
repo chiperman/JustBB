@@ -1,13 +1,7 @@
 "use client"
 
 import * as React from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/shared/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/shared/ui/dialog"
 import { Button } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
 import {
@@ -31,19 +25,10 @@ interface LocationPickerDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   /** 用户确认选点后回调，返回 📍[name](lat,lng) 格式文本 */
-  onConfirm: (
-    locationText: string,
-    name: string,
-    lat: number,
-    lng: number
-  ) => void
+  onConfirm: (locationText: string, name: string, lat: number, lng: number) => void
 }
 
-export function LocationPickerDialog({
-  open,
-  onOpenChange,
-  onConfirm,
-}: LocationPickerDialogProps) {
+export function LocationPickerDialog({ open, onOpenChange, onConfirm }: LocationPickerDialogProps) {
   const { toast } = useToast()
   const hasMounted = useHasMounted()
   const [name, setName] = React.useState("")
@@ -53,9 +38,7 @@ export function LocationPickerDialog({
   const [showSuggestions, setShowSuggestions] = React.useState(false)
   const [isGettingLocation, setIsGettingLocation] = React.useState(false)
   const [isSearching, setIsSearching] = React.useState(false)
-  const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  )
+  const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const isSelectingRef = React.useRef<boolean>(false)
   const [MapView, setMapView] = React.useState<typeof MapViewType | null>(null)
 
@@ -84,11 +67,7 @@ export function LocationPickerDialog({
   }, [open, MapView])
 
   const isValid =
-    name.trim() &&
-    lat.trim() &&
-    lng.trim() &&
-    !isNaN(parseFloat(lat)) &&
-    !isNaN(parseFloat(lng))
+    name.trim() && lat.trim() && lng.trim() && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))
 
   const handleSearch = React.useCallback(async () => {
     if (!name.trim()) {
@@ -216,10 +195,7 @@ export function LocationPickerDialog({
   }
 
   const markers =
-    lat.trim() &&
-    lng.trim() &&
-    !isNaN(parseFloat(lat)) &&
-    !isNaN(parseFloat(lng))
+    lat.trim() && lng.trim() && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))
       ? [
           {
             name: name || "选中位置",
@@ -248,20 +224,12 @@ export function LocationPickerDialog({
                 size="sm"
                 onClick={handleGetCurrentLocation}
                 disabled={isGettingLocation}
-                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground active:scale-95 transition-all"
+                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground [@media(pointer:coarse)]:active:scale-95 transition-all"
               >
                 {isGettingLocation ? (
-                  <HugeiconsIcon
-                    icon={LoadingIcon}
-                    size={12}
-                    className="animate-spin mr-1"
-                  />
+                  <HugeiconsIcon icon={LoadingIcon} size={12} className="animate-spin mr-1" />
                 ) : (
-                  <HugeiconsIcon
-                    icon={Navigation03Icon}
-                    size={12}
-                    className="mr-1"
-                  />
+                  <HugeiconsIcon icon={Navigation03Icon} size={12} className="mr-1" />
                 )}
                 使用当前位置
               </Button>
@@ -279,8 +247,7 @@ export function LocationPickerDialog({
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault()
-                    if (searchTimeoutRef.current)
-                      clearTimeout(searchTimeoutRef.current)
+                    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
                     handleSearch()
                   }
                 }}
@@ -292,19 +259,14 @@ export function LocationPickerDialog({
                 variant="ghost"
                 size="icon"
                 onClick={() => {
-                  if (searchTimeoutRef.current)
-                    clearTimeout(searchTimeoutRef.current)
+                  if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
                   handleSearch()
                 }}
                 disabled={isSearching || !name.trim()}
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:bg-transparent hover:text-foreground active:scale-95 transition-all"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:bg-transparent hover:text-foreground [@media(pointer:coarse)]:active:scale-95 transition-all"
               >
                 {isSearching ? (
-                  <HugeiconsIcon
-                    icon={LoadingIcon}
-                    size={14}
-                    className="animate-spin"
-                  />
+                  <HugeiconsIcon icon={LoadingIcon} size={14} className="animate-spin" />
                 ) : (
                   <HugeiconsIcon icon={SearchIcon} size={14} />
                 )}
@@ -398,11 +360,7 @@ export function LocationPickerDialog({
                     <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping duration-[3000ms]" />
                     <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl" />
                     <div className="relative bg-background/50 border border-primary/20 backdrop-blur-sm p-3 rounded-full text-primary flex items-center justify-center">
-                      <HugeiconsIcon
-                        icon={Location04Icon}
-                        size={24}
-                        className="animate-pulse"
-                      />
+                      <HugeiconsIcon icon={Location04Icon} size={24} className="animate-pulse" />
                     </div>
                   </div>
 
@@ -425,13 +383,13 @@ export function LocationPickerDialog({
         <DialogFooter className="mt-2">
           <Button
             variant="ghost"
-            className="active:scale-95 transition-all"
+            className="[@media(pointer:coarse)]:active:scale-95 transition-all"
             onClick={() => onOpenChange(false)}
           >
             取消
           </Button>
           <Button
-            className="active:scale-95 transition-all"
+            className="[@media(pointer:coarse)]:active:scale-95 transition-all"
             onClick={handleConfirm}
             disabled={!isValid}
           >

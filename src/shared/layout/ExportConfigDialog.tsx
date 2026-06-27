@@ -95,7 +95,7 @@ export function ExportConfigDialog({ open, onOpenChange }: ExportConfigDialogPro
               <Label
                 htmlFor={item.id}
                 className={cn(
-                  "flex flex-col items-center justify-center rounded-xl border p-8 transition-all duration-300 active:scale-95 hover:scale-102",
+                  "flex flex-col items-center justify-center rounded-xl border p-8 transition-all duration-300 [@media(pointer:coarse)]:active:scale-95",
                   // 基础态
                   "border-border bg-background text-muted-foreground",
                   // 待选态

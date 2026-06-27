@@ -163,7 +163,7 @@ export function UsageModal({ open: controlledOpen, onOpenChange }: UsageModalPro
           variant="ghost"
           size="icon"
           onClick={fetchData}
-          className="h-8 w-8 rounded-lg transition-all hover:bg-accent active:scale-90"
+          className="h-8 w-8 rounded-lg transition-all hover:bg-accent [@media(pointer:coarse)]:active:scale-90"
           disabled={loading}
         >
           <HugeiconsIcon icon={ReloadIcon} size={15} className={cn(loading && "animate-spin")} />

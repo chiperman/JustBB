@@ -13,9 +13,7 @@ import { useToast } from "@/shared/hooks/use-toast"
 import { cn } from "@/shared/lib/utils"
 
 export function DataExporter() {
-  const [activeFormat, setActiveFormat] = useState<"markdown" | "json" | null>(
-    null
-  )
+  const [activeFormat, setActiveFormat] = useState<"markdown" | "json" | null>(null)
   const { toast } = useToast()
 
   const handleExport = async (format: "markdown" | "json") => {
@@ -88,7 +86,7 @@ export function DataExporter() {
         <Button
           onClick={() => handleExport("json")}
           disabled={activeFormat !== null}
-          className="flex-1 items-center gap-2 active:scale-95 transition-all relative overflow-hidden"
+          className="flex-1 items-center gap-2 [@media(pointer:coarse)]:active:scale-95 transition-all relative overflow-hidden"
           aria-label="导出完整数据为 JSON 格式"
         >
           <span
@@ -110,7 +108,7 @@ export function DataExporter() {
           variant="outline"
           onClick={() => handleExport("markdown")}
           disabled={activeFormat !== null}
-          className="flex-1 items-center gap-2 active:scale-95 transition-all relative overflow-hidden"
+          className="flex-1 items-center gap-2 [@media(pointer:coarse)]:active:scale-95 transition-all relative overflow-hidden"
           aria-label="导出数据为 Markdown 格式"
         >
           <span

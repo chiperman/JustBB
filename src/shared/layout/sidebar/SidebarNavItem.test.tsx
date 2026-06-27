@@ -20,6 +20,6 @@ describe("SidebarNavItem", () => {
 
     expect(html).toContain("transition-[background-color,color,box-shadow]")
     expect(html).toContain("hover:shadow-[inset_0_0_0_1px_hsl(var(--border)/0.4)]")
-    expect(html).toContain("active:scale-95")
+    expect(html).toContain("[@media(pointer:coarse)]:active:scale-95")
   })
 })

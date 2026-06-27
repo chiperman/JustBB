@@ -1,20 +1,10 @@
 "use client"
 
 import * as React from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/shared/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/shared/ui/dialog"
 import { Button } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
-import {
-  Link01Icon,
-  Loading03Icon as LoadingIcon,
-  Globe02Icon,
-} from "@hugeicons/core-free-icons"
+import { Link01Icon, Loading03Icon as LoadingIcon, Globe02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { fetchLinkMetadata } from "@/shared/lib/link-preview"
@@ -62,11 +52,7 @@ export function LinkPickerDialog({
     const normalizedUrl = targetUrl.trim()
     if (!normalizedUrl || !/^https?:\/\/.+/.test(normalizedUrl)) return
     if (titleDirtyRef.current) return
-    if (
-      lastFetchedUrlRef.current === normalizedUrl &&
-      latestTitleRef.current.trim()
-    )
-      return
+    if (lastFetchedUrlRef.current === normalizedUrl && latestTitleRef.current.trim()) return
 
     const requestId = latestRequestIdRef.current + 1
     latestRequestIdRef.current = requestId
@@ -152,20 +138,13 @@ export function LinkPickerDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <HugeiconsIcon
-              icon={Link01Icon}
-              size={20}
-              className="text-primary"
-            />
+            <HugeiconsIcon icon={Link01Icon} size={20} className="text-primary" />
             {mode === "edit" ? "编辑链接" : "添加链接"}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <label
-              htmlFor="link-url"
-              className="text-sm font-medium text-foreground/70"
-            >
+            <label htmlFor="link-url" className="text-sm font-medium text-foreground/70">
               网址 (URL)
             </label>
             <div className="relative">
@@ -194,19 +173,12 @@ export function LinkPickerDialog({
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label
-                htmlFor="link-title"
-                className="text-sm font-medium text-foreground/70"
-              >
+              <label htmlFor="link-title" className="text-sm font-medium text-foreground/70">
                 标题 (可选)
               </label>
               {isFetching && (
                 <span className="flex items-center gap-1.5 text-[11px] text-primary animate-pulse font-medium">
-                  <HugeiconsIcon
-                    icon={LoadingIcon}
-                    size={12}
-                    className="animate-spin"
-                  />
+                  <HugeiconsIcon icon={LoadingIcon} size={12} className="animate-spin" />
                   正在获取标题...
                 </span>
               )}
@@ -225,13 +197,13 @@ export function LinkPickerDialog({
         <DialogFooter className="mt-2">
           <Button
             variant="ghost"
-            className="active:scale-95 transition-all"
+            className="[@media(pointer:coarse)]:active:scale-95 transition-all"
             onClick={() => onOpenChange(false)}
           >
             取消
           </Button>
           <Button
-            className="active:scale-95 transition-all px-6"
+            className="[@media(pointer:coarse)]:active:scale-95 transition-all px-6"
             onClick={handleConfirm}
             disabled={!isValid || isFetching}
           >

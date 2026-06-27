@@ -21,8 +21,8 @@ export function TagCard({ tag, maxCount, isFeatured = false }: TagCardProps) {
       className={cn(
         "group relative z-10 flex items-center justify-between rounded-md border transition-all overflow-hidden",
         isFeatured
-          ? "border-primary/20 bg-(--badge-clay-bg) px-5 py-4 hover:border-primary hover:scale-[1.01] active:scale-[0.98]"
-          : "border-border bg-card px-4 py-3 hover:border-primary/30 hover:bg-accent/20 hover:scale-[1.01] active:scale-[0.98]"
+          ? "border-primary/20 bg-(--badge-clay-bg) px-5 py-4 hover:border-primary [@media(pointer:coarse)]:active:scale-[0.98]"
+          : "border-border bg-card px-4 py-3 hover:border-primary/30 hover:bg-accent/20 [@media(pointer:coarse)]:active:scale-[0.98]"
       )}
     >
       {/* 占比背景指示条（仅非热门卡片显示，热门卡片本身已有主题色背景） */}

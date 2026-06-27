@@ -16,7 +16,7 @@ export function MemoCardLockOverlay({ onUnlock, shouldReduceMotion }: MemoCardLo
         onClick={onUnlock}
         className={cn(
           "bg-background/80 backdrop-blur-md border border-primary/20 px-5 py-2.5 rounded-md text-xs font-medium pointer-events-auto hover:bg-primary/5 hover:border-primary/40 transition-all flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ring-offset-2",
-          !shouldReduceMotion && "active:scale-95"
+          !shouldReduceMotion && "[@media(pointer:coarse)]:active:scale-95"
         )}
         aria-label="解密内容"
       >

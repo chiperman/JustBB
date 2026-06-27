@@ -42,7 +42,7 @@ export function SidebarNavItem({
       onMouseEnter={() => onMouseEnter?.(item.href)}
       onMouseLeave={onMouseLeave}
       className={cn(
-        "group relative flex h-9 items-center rounded-md text-left transition-[background-color,color,box-shadow] duration-200 active:scale-95",
+        "group relative flex h-9 items-center rounded-md text-left transition-[background-color,color,box-shadow] duration-200 [@media(pointer:coarse)]:active:scale-95",
         isMobile && "h-14 rounded-2xl px-4 sm:h-9 sm:rounded-md sm:px-0",
         isCollapsed ? "w-9" : "w-full",
         isActive

@@ -59,14 +59,14 @@ export function AccessCodeDialog({
           <Button
             variant="ghost"
             onClick={() => handleOpenChange(false)}
-            className="rounded-md transition-all active:scale-95"
+            className="rounded-md transition-all [@media(pointer:coarse)]:active:scale-95"
           >
             取消
           </Button>
           <Button
             onClick={onConfirm}
             disabled={!accessCode}
-            className="rounded-md px-5 transition-all active:scale-95"
+            className="rounded-md px-5 transition-all [@media(pointer:coarse)]:active:scale-95"
           >
             {confirmLabel}
           </Button>
@@ -128,9 +128,7 @@ export function AccessCodeDialog({
               className="text-sm font-medium leading-none text-foreground"
             >
               口令提示
-              <span className="ml-1 text-xs font-normal text-muted-foreground">
-                (选填)
-              </span>
+              <span className="ml-1 text-xs font-normal text-muted-foreground">(选填)</span>
             </label>
             <p className="text-xs leading-5 text-muted-foreground">
               提示会展示给需要解锁的人，但不会泄露真实口令。

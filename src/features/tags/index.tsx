@@ -122,7 +122,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
                     <button
                       type="button"
                       onClick={() => setQuery("")}
-                      className="shrink-0 p-1 text-muted-foreground/30 hover:text-muted-foreground transition-colors active:scale-90 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      className="shrink-0 p-1 text-muted-foreground/30 hover:text-muted-foreground transition-colors [@media(pointer:coarse)]:active:scale-90 outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       title="清空筛选"
                     >
                       <HugeiconsIcon icon={Cancel01Icon} size={14} />

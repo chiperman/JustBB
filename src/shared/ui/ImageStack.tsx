@@ -1427,7 +1427,7 @@ export function ImageStackPreview({
               type="button"
               onClick={() => moveTo(activeIndex - 1)}
               disabled={!canNavigatePrevious}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-foreground/20 disabled:hover:bg-transparent disabled:hover:text-foreground/20"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground [@media(pointer:coarse)]:active:scale-95 disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-foreground/20 disabled:hover:bg-transparent disabled:hover:text-foreground/20"
               aria-label="上一张 (←)"
             >
               <HugeiconsIcon icon={ArrowLeft01Icon} size={15} strokeWidth={2} />
@@ -1444,7 +1444,7 @@ export function ImageStackPreview({
               type="button"
               onClick={() => moveTo(activeIndex + 1)}
               disabled={!canNavigateNext}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-foreground/20 disabled:hover:bg-transparent disabled:hover:text-foreground/20"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground [@media(pointer:coarse)]:active:scale-95 disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-foreground/20 disabled:hover:bg-transparent disabled:hover:text-foreground/20"
               aria-label="下一张 (→)"
             >
               <HugeiconsIcon icon={ArrowRight01Icon} size={15} strokeWidth={2} />
@@ -1460,7 +1460,7 @@ export function ImageStackPreview({
             <button
               type="button"
               onClick={() => rawScale.set(clampInteractiveScale(rawScale.get() - 0.25))}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground [@media(pointer:coarse)]:active:scale-95"
               aria-label="缩小"
             >
               <HugeiconsIcon icon={SearchMinusIcon} size={15} strokeWidth={2} />
@@ -1476,7 +1476,7 @@ export function ImageStackPreview({
             <button
               type="button"
               onClick={() => rawScale.set(clampInteractiveScale(rawScale.get() + 0.25))}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground [@media(pointer:coarse)]:active:scale-95"
               aria-label="放大"
             >
               <HugeiconsIcon icon={SearchAddIcon} size={15} strokeWidth={2} />
@@ -1498,8 +1498,8 @@ export function ImageStackPreview({
                 isMemoPanelOpen
                   ? "flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-md text-foreground/25"
                   : fitMode === "original"
-                    ? "flex h-8 w-8 items-center justify-center rounded-md text-primary transition-all hover:bg-muted hover:text-primary active:scale-95"
-                    : "flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
+                    ? "flex h-8 w-8 items-center justify-center rounded-md text-primary transition-all hover:bg-muted hover:text-primary [@media(pointer:coarse)]:active:scale-95"
+                    : "flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground [@media(pointer:coarse)]:active:scale-95"
               }
               aria-label={
                 isMemoPanelOpen
@@ -1528,7 +1528,7 @@ export function ImageStackPreview({
             <button
               type="button"
               onClick={() => setRotation((value) => value + 90)}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground [@media(pointer:coarse)]:active:scale-95"
               aria-label="顺时针旋转 90°"
             >
               <HugeiconsIcon icon={RotateTopRightIcon} size={15} strokeWidth={2} />
@@ -1546,8 +1546,8 @@ export function ImageStackPreview({
                   onClick={handleToggleMemoPanel}
                   className={
                     isMemoPanelOpen
-                      ? "flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary transition-all hover:bg-primary/14 active:scale-95"
-                      : "flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground active:scale-95"
+                      ? "flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary transition-all hover:bg-primary/14 [@media(pointer:coarse)]:active:scale-95"
+                      : "flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 transition-all hover:bg-muted hover:text-foreground [@media(pointer:coarse)]:active:scale-95"
                   }
                   aria-label={isMemoPanelOpen ? "隐藏正文" : "查看正文"}
                 >
@@ -1574,7 +1574,7 @@ export function ImageStackPreview({
           event.stopPropagation()
           handleClose()
         }}
-        className="group/close absolute top-8 right-8 z-20 rounded-2xl border border-border/50 bg-background/70 p-3 text-foreground shadow-[0_12px_34px_rgba(29,29,27,0.12)] backdrop-blur-md transition-all hover:bg-accent active:scale-95 dark:bg-card/72 dark:shadow-none"
+        className="group/close absolute top-8 right-8 z-20 rounded-2xl border border-border/50 bg-background/70 p-3 text-foreground shadow-[0_12px_34px_rgba(29,29,27,0.12)] backdrop-blur-md transition-all hover:bg-accent [@media(pointer:coarse)]:active:scale-95 dark:bg-card/72 dark:shadow-none"
         aria-label="关闭预览"
       >
         <HugeiconsIcon

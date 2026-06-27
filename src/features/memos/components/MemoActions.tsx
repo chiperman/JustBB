@@ -243,7 +243,7 @@ export function MemoActions({
                   size="icon"
                   onClick={handleRestore}
                   disabled={isPending}
-                  className="rounded-md text-green hover:bg-green/10 active:scale-95 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                  className="rounded-md text-green hover:bg-green/10 [@media(pointer:coarse)]:active:scale-95 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                   aria-label="恢复"
                 >
                   <HugeiconsIcon icon={ArchiveRestore} size={16} />
@@ -258,7 +258,7 @@ export function MemoActions({
                   size="icon"
                   onClick={handlePermanentDelete}
                   disabled={isPending}
-                  className="rounded-md text-destructive hover:bg-destructive/10 active:scale-95 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                  className="rounded-md text-destructive hover:bg-destructive/10 [@media(pointer:coarse)]:active:scale-95 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                   aria-label="彻底删除"
                 >
                   <HugeiconsIcon icon={Delete02Icon} size={16} />
@@ -280,11 +280,17 @@ export function MemoActions({
             variant="ghost"
             size="icon"
             className={cn(
-              "h-8 w-8 p-0 hover:bg-accent rounded-md opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 active:scale-95 transition-[background-color,transform,opacity]",
+              "h-8 w-8 p-0 hover:bg-accent rounded-md opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 hover:scale-100 active:scale-100 transition-[background-color,opacity]",
               isOpen && "opacity-100"
             )}
           >
-            <HugeiconsIcon icon={MoreHorizontalIcon} size={16} className="text-muted-foreground" />
+            <span className="flex items-center justify-center w-full h-full [@media(pointer:coarse)]:active:scale-95 transition-transform duration-200">
+              <HugeiconsIcon
+                icon={MoreHorizontalIcon}
+                size={16}
+                className="text-muted-foreground"
+              />
+            </span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent

@@ -1258,7 +1258,7 @@ export function MemoEditor({
   const handleToolbarCancel = () => {
     if (mode === "create") {
       editor?.commands.clearContent()
-      editor?.commands.blur()
+      editor?.commands.focus("end")
       setShowPlaceholder(true)
     }
     clearImageSessionState()

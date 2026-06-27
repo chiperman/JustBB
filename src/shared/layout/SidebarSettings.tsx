@@ -88,7 +88,7 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
 
   const identityLabel = user ? user.email : "未登录"
   const triggerClassName = cn(
-    "h-9 rounded-md bg-transparent hover:bg-secondary hover:text-accent-foreground hover:ring-1 hover:ring-border/40 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none transition-all duration-200 px-0 justify-start hover:scale-100",
+    "h-9 rounded-md bg-transparent hover:bg-secondary hover:text-accent-foreground hover:ring-1 hover:ring-border/40 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none transition-all duration-200 px-0 justify-start hover:scale-100 active:scale-100",
     isCollapsed ? "w-9" : "w-full"
   )
 
@@ -107,45 +107,47 @@ export function SidebarSettings({ isCollapsed = false }: SidebarSettingsProps) {
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className={triggerClassName} aria-label="账号与设置">
-            {/* 固定宽高的图标包裹层，提供绝对静止的定位基准 */}
-            <div className="shrink-0 flex h-9 w-9 items-center justify-center relative">
-              <HugeiconsIcon icon={Settings} size={16} className="text-muted-foreground" />
-              {user && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-2 border-background bg-primary" />
-              )}
+            <div className="w-full h-full flex items-center justify-start [@media(pointer:coarse)]:active:scale-95 transition-transform duration-200">
+              {/* 固定宽高的图标包裹层，提供绝对静止的定位基准 */}
+              <div className="shrink-0 flex h-9 w-9 items-center justify-center relative">
+                <HugeiconsIcon icon={Settings} size={16} className="text-muted-foreground" />
+                {user && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-2 border-background bg-primary" />
+                )}
+              </div>
+              <motion.span
+                initial={false}
+                animate={
+                  isCollapsed
+                    ? {
+                        opacity: 0,
+                        x: -6,
+                        maxWidth: 0,
+                        marginLeft: 0,
+                        transitionEnd: { display: "none" },
+                      }
+                    : {
+                        opacity: 1,
+                        x: 0,
+                        maxWidth: 160,
+                        marginLeft: 12,
+                        display: "block",
+                      }
+                }
+                transition={{
+                  duration: 0.18,
+                  ease: [0.4, 0, 0.2, 1] as const,
+                  delay: isCollapsed ? 0 : 0.05,
+                }}
+                className="min-w-0 overflow-hidden whitespace-nowrap nav-button-text tracking-tight block text-left"
+                aria-hidden={isCollapsed}
+              >
+                <span className="block truncate opacity-80">{identityLabel}</span>
+              </motion.span>
             </div>
-            <motion.span
-              initial={false}
-              animate={
-                isCollapsed
-                  ? {
-                      opacity: 0,
-                      x: -6,
-                      maxWidth: 0,
-                      marginLeft: 0,
-                      transitionEnd: { display: "none" },
-                    }
-                  : {
-                      opacity: 1,
-                      x: 0,
-                      maxWidth: 160,
-                      marginLeft: 12,
-                      display: "block",
-                    }
-              }
-              transition={{
-                duration: 0.18,
-                ease: [0.4, 0, 0.2, 1] as const,
-                delay: isCollapsed ? 0 : 0.05,
-              }}
-              className="min-w-0 overflow-hidden whitespace-nowrap nav-button-text tracking-tight block text-left"
-              aria-hidden={isCollapsed}
-            >
-              <span className="block truncate opacity-80">{identityLabel}</span>
-            </motion.span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent side="top" align="start" className="w-64">

@@ -29,12 +29,7 @@ interface UnlockDialogProps {
   hint?: string | null
 }
 
-export function UnlockDialog({
-  memoId,
-  isOpen,
-  onClose,
-  hint,
-}: UnlockDialogProps) {
+export function UnlockDialog({ memoId, isOpen, onClose, hint }: UnlockDialogProps) {
   const [code, setCode] = useState("")
   const [isPending, setIsPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -145,13 +140,13 @@ export function UnlockDialog({
         <DialogFooter className="gap-2 pt-1 sm:justify-end sm:space-x-0">
           <Button
             variant="ghost"
-            className="rounded-md transition-all active:scale-95"
+            className="rounded-md transition-all [@media(pointer:coarse)]:active:scale-95"
             onClick={handleClose}
           >
             取消
           </Button>
           <Button
-            className="rounded-md px-5 transition-all active:scale-95"
+            className="rounded-md px-5 transition-all [@media(pointer:coarse)]:active:scale-95"
             onClick={handleConfirm}
             disabled={isPending || !code}
           >

@@ -297,7 +297,13 @@ body {
 
 /* UI Interactions */
 .hover-scale {
-  @apply transition-transform duration-200 hover:scale-102 active:scale-95;
+  @apply transition-transform duration-200;
+}
+
+@media (pointer: coarse) {
+  .hover-scale:active {
+    @apply scale-95;
+  }
 }
 
 .whisper-border {

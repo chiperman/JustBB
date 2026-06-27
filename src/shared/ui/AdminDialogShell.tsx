@@ -70,7 +70,7 @@ export function AdminDialogShell({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-md text-foreground transition-all hover:bg-accent active:scale-95"
+                  className="h-8 w-8 rounded-md text-foreground transition-all hover:bg-accent [@media(pointer:coarse)]:active:scale-95"
                 >
                   <HugeiconsIcon icon={CloseIcon} size={16} />
                 </Button>

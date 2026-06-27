@@ -69,7 +69,7 @@ export function NewMemosIndicator({ lastCreatedId, clearLastCreatedId }: NewMemo
         <BaseFloatingCapsule
           role="button"
           tabIndex={0}
-          className="hover:scale-105 active:scale-95 transition-transform"
+          className="[@media(pointer:coarse)]:active:scale-95 transition-transform"
           onClick={scrollToMemo}
           onKeyDown={(e) => {
             if (!e.repeat && (e.key === "Enter" || e.key === " ")) {

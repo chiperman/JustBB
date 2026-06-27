@@ -50,11 +50,7 @@ export default function ForgotPasswordPage() {
         <div className="max-w-md w-full space-y-8 text-center bg-card border border-border rounded-xl p-10">
           <div className="flex justify-center">
             <div className="p-4 bg-primary/10 rounded-full">
-              <HugeiconsIcon
-                icon={CheckCircle2}
-                size={48}
-                className="text-primary"
-              />
+              <HugeiconsIcon icon={CheckCircle2} size={48} className="text-primary" />
             </div>
           </div>
           <div className="space-y-3">
@@ -65,11 +61,7 @@ export default function ForgotPasswordPage() {
             </p>
           </div>
           <div className="pt-6">
-            <Button
-              asChild
-              variant="outline"
-              className="w-full rounded-xl h-12"
-            >
+            <Button asChild variant="outline" className="w-full rounded-xl h-12">
               <Link href="/">返回首页</Link>
             </Button>
           </div>
@@ -86,9 +78,7 @@ export default function ForgotPasswordPage() {
             <HugeiconsIcon icon={KeyRound} size={32} className="text-primary" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight">找回密码</h1>
-          <p className="text-muted-foreground">
-            输入您的注册邮箱，我们将为您发送重置链接。
-          </p>
+          <p className="text-muted-foreground">输入您的注册邮箱，我们将为您发送重置链接。</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -116,15 +106,11 @@ export default function ForgotPasswordPage() {
 
           <Button
             type="submit"
-            className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold-primary/20 transition-all active:scale-[0.98]"
+            className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold-primary/20 transition-all [@media(pointer:coarse)]:active:scale-[0.98]"
             disabled={isLoading}
           >
             {isLoading ? (
-              <HugeiconsIcon
-                icon={Loader2}
-                size={20}
-                className="animate-spin"
-              />
+              <HugeiconsIcon icon={Loader2} size={20} className="animate-spin" />
             ) : (
               "发送重置链接"
             )}

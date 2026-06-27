@@ -80,7 +80,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
               onClick={() => {
                 router.push("/")
               }}
-              className="group mr-1 flex items-center gap-1.5 rounded-md px-2 py-1 text-sm transition-all hover:bg-secondary active:scale-95 outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
+              className="group mr-1 flex items-center gap-1.5 rounded-md px-2 py-1 text-sm transition-all hover:bg-secondary [@media(pointer:coarse)]:active:scale-95 outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
               aria-label="回到首页"
             >
               {isRefreshing ? (
@@ -99,19 +99,21 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
           </div>
 
           {hasMounted ? (
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:bg-secondary rounded-md transition-all active:scale-95 focus-visible:ring-inset"
+                  className="h-8 w-8 text-muted-foreground hover:bg-secondary rounded-md transition-all hover:scale-100 active:scale-100 focus-visible:ring-inset"
                   aria-label="更多选项"
                 >
-                  <HugeiconsIcon
-                    icon={ArrowDown01Icon}
-                    size={14}
-                    className="transition-transform group-data-[state=open]:rotate-180"
-                  />
+                  <span className="flex items-center justify-center w-full h-full [@media(pointer:coarse)]:active:scale-95 transition-transform duration-200">
+                    <HugeiconsIcon
+                      icon={ArrowDown01Icon}
+                      size={14}
+                      className="transition-transform group-data-[state=open]:rotate-180"
+                    />
+                  </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" side="bottom" className="w-48">
@@ -148,7 +150,7 @@ export function FeedHeader({ isRefreshing = false }: FeedHeaderProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-md transition-all active:scale-95 focus-visible:ring-inset invisible"
+              className="h-8 w-8 text-muted-foreground hover:bg-accent rounded-md transition-all [@media(pointer:coarse)]:active:scale-95 focus-visible:ring-inset invisible"
               aria-label="更多选项"
             >
               <HugeiconsIcon icon={ArrowDown01Icon} size={14} />

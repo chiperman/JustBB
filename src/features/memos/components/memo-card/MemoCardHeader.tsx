@@ -165,7 +165,7 @@ export function MemoCardHeader({
                   size="icon"
                   onClick={onToggleBacklinks}
                   className={cn(
-                    "h-8 w-8 rounded-md transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 active:scale-95",
+                    "h-8 w-8 rounded-md transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(pointer:coarse)]:active:scale-95",
                     showBacklinks
                       ? "bg-primary/10 text-primary opacity-100"
                       : "text-muted-foreground",

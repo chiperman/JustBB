@@ -244,7 +244,7 @@ function PreviewContent({
                   onClick={handlePrev}
                   disabled={activeIndex === 0}
                   className={cn(
-                    "w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all",
+                    "w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted [@media(pointer:coarse)]:active:scale-95 transition-all",
                     activeIndex === 0 &&
                       "text-foreground/20 hover:text-foreground/20 hover:bg-transparent pointer-events-none cursor-not-allowed"
                   )}
@@ -266,7 +266,7 @@ function PreviewContent({
                   onClick={handleNext}
                   disabled={activeIndex === groupImages.length - 1}
                   className={cn(
-                    "w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all",
+                    "w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted [@media(pointer:coarse)]:active:scale-95 transition-all",
                     activeIndex === groupImages.length - 1 &&
                       "text-foreground/20 hover:text-foreground/20 hover:bg-transparent pointer-events-none cursor-not-allowed"
                   )}
@@ -290,7 +290,7 @@ function PreviewContent({
                 const next = Math.max(rawScale.get() - 0.25, 0.25)
                 rawScale.set(next)
               }}
-              className="w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all"
+              className="w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted [@media(pointer:coarse)]:active:scale-95 transition-all"
               aria-label="缩小"
             >
               <HugeiconsIcon icon={SearchMinusIcon} size={15} strokeWidth={2} />
@@ -310,7 +310,7 @@ function PreviewContent({
                 const next = Math.min(rawScale.get() + 0.25, 3)
                 rawScale.set(next)
               }}
-              className="w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all"
+              className="w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted [@media(pointer:coarse)]:active:scale-95 transition-all"
               aria-label="放大"
             >
               <HugeiconsIcon icon={SearchAddIcon} size={15} strokeWidth={2} />
@@ -331,7 +331,7 @@ function PreviewContent({
                 resetTransform()
               }}
               className={cn(
-                "w-8 h-8 rounded-md flex items-center justify-center hover:bg-muted active:scale-95 transition-all",
+                "w-8 h-8 rounded-md flex items-center justify-center hover:bg-muted [@media(pointer:coarse)]:active:scale-95 transition-all",
                 fitMode === "original"
                   ? "text-primary hover:text-primary"
                   : "text-foreground/70 hover:text-foreground"
@@ -351,7 +351,7 @@ function PreviewContent({
           <TooltipTrigger asChild>
             <button
               onClick={() => setRotation((r) => r + 90)}
-              className="w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted active:scale-95 transition-all"
+              className="w-8 h-8 rounded-md flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted [@media(pointer:coarse)]:active:scale-95 transition-all"
               aria-label="顺时针旋转 90°"
             >
               <HugeiconsIcon icon={RotateTopRightIcon} size={15} strokeWidth={2} />
@@ -375,7 +375,7 @@ function PreviewContent({
           e.stopPropagation()
           onClose()
         }}
-        className="absolute top-8 right-8 p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 text-white transition-all active:scale-95 backdrop-blur-md group/close z-20"
+        className="absolute top-8 right-8 p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 text-white transition-all [@media(pointer:coarse)]:active:scale-95 backdrop-blur-md group/close z-20"
         aria-label="关闭预览"
       >
         <HugeiconsIcon

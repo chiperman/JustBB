@@ -252,7 +252,7 @@ export function MainLayoutClient() {
             onClick={() => {
               containerRef.current?.scrollTo({ top: 0, behavior: "smooth" })
             }}
-            className="absolute bottom-6 right-6 z-40 flex h-10 w-10 items-center justify-center rounded-md border border-border bg-card/90 text-muted-foreground shadow-sm backdrop-blur-sm transition-all hover:text-foreground active:scale-95"
+            className="absolute bottom-6 right-6 z-40 flex h-10 w-10 items-center justify-center rounded-md border border-border bg-card/90 text-muted-foreground shadow-sm backdrop-blur-sm transition-all hover:text-foreground [@media(pointer:coarse)]:active:scale-95"
             aria-label="回到顶部"
           >
             <HugeiconsIcon icon={ArrowUp01Icon} size={18} />

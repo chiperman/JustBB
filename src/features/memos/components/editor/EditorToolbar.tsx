@@ -78,7 +78,7 @@ export function EditorToolbar({
             size="sm"
             onClick={onTogglePrivate}
             className={cn(
-              "h-8 px-2 gap-1.5 transition-all text-muted-foreground",
+              "h-8 w-8 px-0 flex items-center justify-center sm:w-auto sm:px-2 sm:gap-1.5 transition-all text-muted-foreground",
               isPrivate
                 ? "text-primary bg-[#fdf5f2] hover:text-primary/80"
                 : "hover:text-foreground"
@@ -89,7 +89,9 @@ export function EditorToolbar({
             ) : (
               <HugeiconsIcon icon={LockOpen} size={16} />
             )}
-            <span className="text-xs font-medium">{isPrivate ? "私密" : "公开"}</span>
+            <span className="text-xs font-medium hidden sm:inline">
+              {isPrivate ? "私密" : "公开"}
+            </span>
           </Button>
 
           <Button
@@ -97,34 +99,34 @@ export function EditorToolbar({
             size="sm"
             onClick={onTogglePinned}
             className={cn(
-              "h-8 px-2 gap-1.5 transition-all text-muted-foreground",
+              "h-8 w-8 px-0 flex items-center justify-center sm:w-auto sm:px-2 sm:gap-1.5 transition-all text-muted-foreground",
               isPinned ? "text-primary bg-[#fdf5f2] hover:text-primary/80" : "hover:text-foreground"
             )}
           >
             <HugeiconsIcon icon={Pin} size={16} className={cn(isPinned && "fill-current")} />
-            <span className="text-xs font-medium">置顶</span>
+            <span className="text-xs font-medium hidden sm:inline">置顶</span>
           </Button>
 
           <Button
             variant="ghost"
             size="sm"
             onClick={onShowLocationPicker}
-            className="h-8 px-2 gap-1.5 text-muted-foreground transition-all hover:text-foreground"
+            className="h-8 w-8 px-0 flex items-center justify-center sm:w-auto sm:px-2 sm:gap-1.5 text-muted-foreground transition-all hover:text-foreground"
             aria-label="添加定位"
           >
             <HugeiconsIcon icon={Location04Icon} size={16} />
-            <span className="text-xs font-medium">定位</span>
+            <span className="text-xs font-medium hidden sm:inline">定位</span>
           </Button>
 
           <Button
             variant="ghost"
             size="sm"
             onClick={onShowLinkPicker}
-            className="h-8 px-2 gap-1.5 text-muted-foreground transition-all hover:text-foreground"
+            className="h-8 w-8 px-0 flex items-center justify-center sm:w-auto sm:px-2 sm:gap-1.5 text-muted-foreground transition-all hover:text-foreground"
             aria-label="添加链接"
           >
             <HugeiconsIcon icon={Link01Icon} size={16} />
-            <span className="text-xs font-medium">链接</span>
+            <span className="text-xs font-medium hidden sm:inline">链接</span>
           </Button>
 
           <Button
@@ -132,7 +134,7 @@ export function EditorToolbar({
             size="sm"
             onClick={onImageUpload}
             disabled={isUploadingImage}
-            className="h-8 px-2 gap-1.5 text-muted-foreground transition-all hover:text-foreground"
+            className="h-8 w-8 px-0 flex items-center justify-center sm:w-auto sm:px-2 sm:gap-1.5 text-muted-foreground transition-all hover:text-foreground"
             aria-label="上传图片"
           >
             <HugeiconsIcon
@@ -140,7 +142,9 @@ export function EditorToolbar({
               size={16}
               className={isUploadingImage ? "animate-spin" : ""}
             />
-            <span className="text-xs font-medium">{isUploadingImage ? "上传中" : "图片"}</span>
+            <span className="text-xs font-medium hidden sm:inline">
+              {isUploadingImage ? "上传中" : "图片"}
+            </span>
           </Button>
         </div>
 

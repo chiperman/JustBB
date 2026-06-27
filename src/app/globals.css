@@ -100,6 +100,12 @@
   --heatmap-2: #40c463;
   --heatmap-3: #30a14e;
   --heatmap-4: #216e39;
+
+  /* Sileo Toast Colors Customization */
+  --toast-destructive-bg: #fdf2f2;
+  --toast-destructive-text: #dd5b00;
+  --toast-success-bg: #f0fdf4;
+  --toast-success-text: #1aae39;
 }
 
 .dark {
@@ -138,6 +144,12 @@
   --heatmap-2: #8a5542;
   --heatmap-3: #b86f51;
   --heatmap-4: #e48b63;
+
+  /* Sileo Toast Colors Customization (Dark) */
+  --toast-destructive-bg: #24120e;
+  --toast-destructive-text: #ff7849;
+  --toast-success-bg: #0d2214;
+  --toast-success-text: #4ade80;
 }
 
 body {

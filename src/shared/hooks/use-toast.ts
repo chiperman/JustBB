@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { sileo } from "sileo"
+import type { SileoOptions } from "sileo"
 
 import type { ToastActionElement, ToastProps } from "@/shared/ui/toast"
 
@@ -88,10 +89,24 @@ function toToastText(value: React.ReactNode) {
 }
 
 function toast({ title, description, variant, duration }: Toast) {
-  const options = {
+  const options: SileoOptions = {
     title: toToastText(title),
     description,
     duration,
+  }
+
+  if (variant === "destructive") {
+    options.fill = "var(--toast-destructive-bg)"
+    options.styles = {
+      title: "text-(--toast-destructive-text)!",
+      description: "text-(--toast-destructive-text)/80!",
+    }
+  } else if (variant === "success") {
+    options.fill = "var(--toast-success-bg)"
+    options.styles = {
+      title: "text-(--toast-success-text)!",
+      description: "text-(--toast-success-text)/80!",
+    }
   }
 
   const id = variant === "destructive" ? sileo.error(options) : sileo.success(options)

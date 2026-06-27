@@ -1,6 +1,6 @@
 "use client"
 
-import { CSSProperties, useState, useSyncExternalStore } from "react"
+import { useState } from "react"
 import { useSelection } from "@/state/UIContext"
 import { usePathname, useRouter } from "next/navigation"
 import { AnimatePresence } from "framer-motion"
@@ -30,15 +30,6 @@ import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { BaseFloatingCapsule } from "./BaseFloatingCapsule"
 import { useConfirm } from "@/state/ConfirmContext"
 import { dispatchMemoEvent } from "@/lib/memos/events"
-import {
-  LEFT_SIDEBAR_STORAGE_EVENT,
-  LEFT_SIDEBAR_STORAGE_KEY,
-  getStoredLayoutPreference,
-  subscribeToLayoutPreference,
-} from "@/shared/lib/layout-preferences"
-
-const DESKTOP_SIDEBAR_EXPANDED_WIDTH = 280
-const DESKTOP_SIDEBAR_COLLAPSED_WIDTH = 60
 
 export function SelectionToolbar() {
   const pathname = usePathname()
@@ -52,25 +43,9 @@ export function SelectionToolbar() {
   const [isTagDialogOpen, setIsTagDialogOpen] = useState(false)
   const [isPending, setIsPending] = useState(false)
   const hasMounted = useHasMounted()
-  const isLeftSidebarCollapsed = useSyncExternalStore(
-    (onStoreChange) =>
-      subscribeToLayoutPreference(
-        LEFT_SIDEBAR_STORAGE_KEY,
-        LEFT_SIDEBAR_STORAGE_EVENT,
-        onStoreChange
-      ),
-    () => getStoredLayoutPreference(LEFT_SIDEBAR_STORAGE_KEY),
-    () => false
-  )
 
   const isTrashPage = pathname === "/trash"
   const hasSelection = selectedIds.size > 0
-  const sidebarWidth = isLeftSidebarCollapsed
-    ? DESKTOP_SIDEBAR_COLLAPSED_WIDTH
-    : DESKTOP_SIDEBAR_EXPANDED_WIDTH
-  const toolbarStyle = {
-    "--selection-toolbar-left": `calc(${sidebarWidth}px + (100vw - ${sidebarWidth}px) / 2)`,
-  } as CSSProperties
 
   if (!hasMounted || !isSelectionMode) return null
 
@@ -253,10 +228,7 @@ export function SelectionToolbar() {
     <>
       <AnimatePresence>
         {isSelectionMode && (
-          <BaseFloatingCapsule
-            className="w-auto lg:left-[var(--selection-toolbar-left)]"
-            style={toolbarStyle}
-          >
+          <BaseFloatingCapsule className="absolute w-auto">
             <div className="flex items-center gap-1.5 flex-1 px-1">
               {isTrashPage ? (
                 <>

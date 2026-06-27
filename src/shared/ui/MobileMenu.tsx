@@ -18,7 +18,7 @@ export function MobileMenuButton({ isOpen, onClick }: MobileMenuButtonProps) {
       variant="outline"
       size="icon"
       onClick={onClick}
-      className="lg:hidden fixed top-4 left-4 z-50 rounded-xl h-10 w-10 p-0 active:scale-95 transition-all"
+      className="lg:hidden fixed top-4 left-4 z-[80] rounded-xl h-10 w-10 p-0 active:scale-95 transition-all"
       aria-label={isOpen ? "关闭菜单" : "打开菜单"}
     >
       {isOpen ? (
@@ -48,7 +48,7 @@ export function MobileMenuOverlay({ isOpen, onClose, children }: MobileMenuOverl
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
-            className="lg:hidden fixed inset-0 bg-black/50 z-40"
+            className="lg:hidden fixed inset-0 bg-black/50 z-[60]"
             onClick={onClose}
             aria-hidden="true"
           />
@@ -65,7 +65,7 @@ export function MobileMenuOverlay({ isOpen, onClose, children }: MobileMenuOverl
         transition={
           shouldReduceMotion ? { duration: 0 } : { type: "spring", damping: 25, stiffness: 300 }
         }
-        className="lg:hidden fixed left-0 top-0 h-full w-72 z-50 bg-background pointer-events-auto"
+        className="lg:hidden fixed left-0 top-0 h-full w-72 z-[70] bg-background pointer-events-auto"
         style={{
           pointerEvents: isOpen ? "auto" : "none",
         }}

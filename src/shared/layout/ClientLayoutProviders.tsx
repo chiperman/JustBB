@@ -9,7 +9,6 @@ import { MobileLayoutWrapper } from "@/shared/layout/MobileLayoutWrapper"
 import { TagsProvider } from "@/state/TagsContext"
 import { StatsProvider } from "@/state/StatsContext"
 import { HeatmapStats } from "@/types/stats"
-import { SelectionToolbar } from "@/shared/ui/SelectionToolbar"
 import { PageDataCacheProvider } from "@/state/PageDataCache"
 import { UnlockedMemosProvider } from "@/state/UnlockedMemosContext"
 import { ExportProvider } from "@/state/ExportContext"
@@ -41,7 +40,6 @@ export function ClientLayoutProviders({
                       <LoginTransitionWrapper>
                         <MobileLayoutWrapper>
                           {children}
-                          <SelectionToolbar />
                           <ExportProgressPanel />
                         </MobileLayoutWrapper>
                       </LoginTransitionWrapper>

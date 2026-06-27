@@ -69,7 +69,7 @@ export function R2ConfigDialog({ open, onOpenChange }: R2ConfigDialogProps) {
     setSaving(false)
 
     if (res.success) {
-      toast({ title: "R2 配置已保存" })
+      toast({ title: "R2 配置已保存", variant: "success" })
       onOpenChange(false)
     } else {
       toast({
@@ -88,7 +88,7 @@ export function R2ConfigDialog({ open, onOpenChange }: R2ConfigDialogProps) {
     setTestResult(res.success ? "success" : "error")
 
     if (res.success) {
-      toast({ title: "连接成功" })
+      toast({ title: "连接成功", variant: "success" })
     } else {
       toast({
         title: "连接失败",
@@ -101,7 +101,7 @@ export function R2ConfigDialog({ open, onOpenChange }: R2ConfigDialogProps) {
   const handleDelete = async () => {
     const res = await deleteR2Config()
     if (res.success) {
-      toast({ title: "配置已清除" })
+      toast({ title: "配置已清除", variant: "success" })
       setHasExistingConfig(false)
       setConfig({
         account_id: "",

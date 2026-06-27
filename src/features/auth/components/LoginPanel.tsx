@@ -90,7 +90,7 @@ export function LoginPanel() {
       formData.append("password", password)
       login(formData).then((res) => {
         if (res.success && res.data) {
-          toast({ title: "欢迎回来", description: "登录成功" })
+          toast({ title: "欢迎回来", description: "登录成功", variant: "success" })
           resetForm()
           setUser(res.data.user)
           setViewMode("HOME_FOCUS")
@@ -131,7 +131,7 @@ export function LoginPanel() {
     startTransition(() => {
       verifyOtp(email, otpCode).then((res) => {
         if (res.success && res.data) {
-          toast({ title: "账号已激活", description: "欢迎加入 JustMemo" })
+          toast({ title: "账号已激活", description: "欢迎加入 JustMemo", variant: "success" })
           resetForm()
           setUser(res.data.user)
           setViewMode("HOME_FOCUS")
@@ -170,6 +170,7 @@ export function LoginPanel() {
           toast({
             title: "重置邮件已发送",
             description: "请前往您的邮箱查收重置链接",
+            variant: "success",
           })
         } else {
           toast({

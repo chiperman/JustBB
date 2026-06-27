@@ -42,6 +42,13 @@ export function MainLayoutClient() {
       const clientHeight = container.clientHeight
       const scrollableHeight = scrollHeight - clientHeight
 
+      if (typeof window !== "undefined" && window.innerWidth < 768) {
+        setEditorForceCollapsed(false)
+        setShowScrollTop(scrollTop > 300)
+        lastScrollTop.current = scrollTop
+        return
+      }
+
       // 只有内容足够丰富时 (设计稿阈值: 300px) 才触发收缩
       if (scrollableHeight < 300) {
         setEditorForceCollapsed(false)

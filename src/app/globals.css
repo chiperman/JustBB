@@ -105,9 +105,9 @@
 .dark {
   color-scheme: dark;
 
-  --background: #141412;
+  --background: #0d0d0b;
   --foreground: #f3f1ee;
-  --card: #1f1e1c; /* Warm Dark */
+  --card: #1c1b18; /* Warm Dark */
   --card-foreground: #f3f1ee;
   --popover: rgba(31, 30, 28, 0.94);
   --popover-foreground: #f3f1ee;
@@ -121,7 +121,7 @@
   --accent-foreground: #f3f1ee;
   --destructive: #dd5b00;
   --destructive-foreground: #ffffff;
-  --border: rgba(246, 245, 244, 0.12);
+  --border: rgba(246, 245, 244, 0.18);
   --input: rgba(246, 245, 244, 0.16);
   --ring: #d89a82;
 

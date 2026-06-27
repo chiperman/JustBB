@@ -124,6 +124,7 @@ export function MemoActions({
     toast({
       title: "已删除",
       description: "记录已移至回收站",
+      variant: "success",
     })
   }
 
@@ -135,6 +136,7 @@ export function MemoActions({
     toast({
       title: "已恢复",
       description: "记录已恢复至首页",
+      variant: "success",
     })
   }
 
@@ -175,6 +177,7 @@ export function MemoActions({
     })
     toast({
       title: !isPinned ? "已置顶" : "已取消置顶",
+      variant: "success",
     })
   }
 
@@ -204,7 +207,7 @@ export function MemoActions({
           id,
           updates: { is_private: false },
         })
-        toast({ title: "已公开", description: "该记录现在所有人可见" })
+        toast({ title: "已公开", description: "该记录现在所有人可见", variant: "success" })
       }
       setIsPending(false)
     } else {
@@ -245,6 +248,7 @@ export function MemoActions({
       toast({
         title: "已设为私密",
         description: code ? "这条记录现在需要口令才能查看" : "这条记录现在仅自己可见",
+        variant: "success",
       })
     }
     setIsPending(false)

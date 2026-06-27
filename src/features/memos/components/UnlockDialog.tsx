@@ -21,6 +21,7 @@ import {
 
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
+import { toast } from "@/shared/hooks/use-toast"
 
 interface UnlockDialogProps {
   memoId: string
@@ -34,13 +35,15 @@ export function UnlockDialog({ memoId, isOpen, onClose, hint }: UnlockDialogProp
   const [isPending, setIsPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showCode, setShowCode] = useState(false)
+  const [isTryingSaved, setIsTryingSaved] = useState(false)
   const hasMounted = useHasMounted()
-  const { storeUnlockedMemo } = useUnlockedMemos()
+  const { storeUnlockedMemo, verifiedPasswords, addVerifiedPassword } = useUnlockedMemos()
 
   const resetState = () => {
     setCode("")
     setError(null)
     setShowCode(false)
+    setIsTryingSaved(false)
   }
 
   const handleClose = () => {
@@ -57,12 +60,44 @@ export function UnlockDialog({ memoId, isOpen, onClose, hint }: UnlockDialogProp
       const res = await unlockWithCode(memoId, code)
       if (res.success && res.data) {
         storeUnlockedMemo(res.data)
+        addVerifiedPassword(code)
         handleClose()
       } else {
         setError(res.error || "验证失败")
       }
     } finally {
       setIsPending(false)
+    }
+  }
+
+  const handleTrySaved = async () => {
+    setIsTryingSaved(true)
+    try {
+      let success = false
+      for (const pwd of verifiedPasswords) {
+        const res = await unlockWithCode(memoId, pwd)
+        if (res.success && res.data) {
+          storeUnlockedMemo(res.data)
+          handleClose()
+          success = true
+          break
+        }
+      }
+      if (!success) {
+        toast({
+          title: "解锁失败",
+          description: "当前会话的已存口令均验证失败，请手动输入",
+          variant: "destructive",
+        })
+      }
+    } catch (e) {
+      toast({
+        title: "解锁失败",
+        description: "当前会话的已存口令均验证失败，请手动输入",
+        variant: "destructive",
+      })
+    } finally {
+      setIsTryingSaved(false)
     }
   }
 
@@ -93,6 +128,22 @@ export function UnlockDialog({ memoId, isOpen, onClose, hint }: UnlockDialogProp
               提示：
               <span className="ml-1 text-foreground/80">{hint}</span>
             </p>
+          )}
+
+          {verifiedPasswords.length > 0 && (
+            <div className="rounded-md border border-primary/20 bg-primary/[0.02] p-3.5 text-xs flex flex-col gap-2">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>检测到当前会话存在已验证口令，是否直接尝试？</span>
+                <button
+                  type="button"
+                  onClick={handleTrySaved}
+                  disabled={isPending || isTryingSaved}
+                  className="text-primary hover:underline font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                >
+                  {isTryingSaved ? "尝试中..." : "一键尝试解锁"}
+                </button>
+              </div>
+            </div>
           )}
 
           <div className="space-y-2.5">

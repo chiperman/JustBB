@@ -56,6 +56,17 @@ export function MobileNavbar() {
   const [r2ConfigOpen, setR2ConfigOpen] = React.useState(false)
   const [loggingOut, setLoggingOut] = React.useState(false)
 
+  React.useEffect(() => {
+    if (isDrawerOpen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [isDrawerOpen])
+
   const canUseImportExport = Boolean(user)
   const canUseUsageMonitor = user?.role === "admin"
   const currentView = pathname || "/"
@@ -104,7 +115,7 @@ export function MobileNavbar() {
   return (
     <>
       {/* 底部悬浮导航胶囊 */}
-      <div className="lg:hidden fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 w-[92%] max-w-[390px] h-[58px] bg-background/88 backdrop-blur-lg border border-border/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] rounded-full flex items-center justify-around px-2.5 py-1 z-[70] transition-all duration-300">
+      <div className="md:hidden fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 w-[92%] max-w-[390px] h-[58px] bg-background/88 backdrop-blur-lg border border-border/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] rounded-full flex items-center justify-around px-2.5 py-1 z-[70] transition-all duration-300">
         {mainNavItems.map((item) => {
           const isActive = activeTabId === item.id
           return (
@@ -173,7 +184,7 @@ export function MobileNavbar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsDrawerOpen(false)}
-              className="lg:hidden fixed inset-0 z-[80] bg-black/30 dark:bg-black/50 backdrop-blur-xs"
+              className="md:hidden fixed inset-0 z-[80] bg-black/30 dark:bg-black/50 backdrop-blur-xs"
             />
 
             {/* Bottom Sheet Drawer */}
@@ -192,7 +203,7 @@ export function MobileNavbar() {
                   setIsDrawerOpen(false)
                 }
               }}
-              className="lg:hidden fixed bottom-0 left-0 right-0 z-[90] max-h-[82vh] bg-background border-t border-border rounded-t-[28px] shadow-[0_-10px_40px_rgba(0,0,0,0.08)] flex flex-col overflow-hidden pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
+              className="md:hidden fixed bottom-0 left-0 right-0 z-[90] max-h-[82vh] bg-background border-t border-border rounded-t-[28px] shadow-[0_-10px_40px_rgba(0,0,0,0.08)] flex flex-col overflow-hidden pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
             >
               {/* Drag Handle Indicator */}
               <div
@@ -225,7 +236,11 @@ export function MobileNavbar() {
                   <h3 className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest pl-1">
                     数据统计
                   </h3>
-                  <div className="bg-muted/40 dark:bg-muted/15 border border-border/50 rounded-2xl p-4">
+                  <div
+                    className="bg-muted/40 dark:bg-muted/15 border border-border/50 rounded-2xl p-4"
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                  >
                     <Heatmap
                       variant="mobile-menu"
                       onNavigate={() => setIsDrawerOpen(false)}

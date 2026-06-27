@@ -171,12 +171,12 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
           if (newMemo) {
             dispatchMemoEvent({ type: "create", memo: newMemo })
           }
-          toast({ title: "已发布" })
+          toast({ title: "已发布", variant: "success" })
         } else {
           if (newMemo) {
             dispatchMemoEvent({ type: "update", id: newMemo.id, updates: newMemo })
           }
-          toast({ title: "已保存" })
+          toast({ title: "已保存", variant: "success" })
           onSuccess?.(newMemo)
         }
         return true

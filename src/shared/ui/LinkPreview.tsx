@@ -123,7 +123,7 @@ export function LinkPreview({
         )}
       >
         {showCopyButton && (
-          <div className="absolute top-2 right-2 opacity-0 group-hover/link-preview:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-md border border-border/50 p-0.5 z-10">
+          <div className="absolute top-2 right-2 opacity-0 group-hover/link-preview:opacity-100 [@media(pointer:coarse)]:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-md border border-border/50 p-0.5 z-10">
             <CopyButton onCopy={handleCopy} />
           </div>
         )}
@@ -161,7 +161,7 @@ export function LinkPreview({
     return (
       <span className="group/link-preview inline-flex max-w-full items-center gap-1">
         {showCopyButton && (
-          <div className="opacity-0 group-hover/link-preview:opacity-100 transition-opacity">
+          <div className="opacity-0 group-hover/link-preview:opacity-100 [@media(pointer:coarse)]:opacity-100 transition-opacity">
             <CopyButton onCopy={handleCopy} />
           </div>
         )}
@@ -189,7 +189,7 @@ export function LinkPreview({
       )}
     >
       {showCopyButton && (
-        <div className="absolute top-2 right-2 opacity-0 group-hover/link-preview:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-md border border-border/50 p-0.5 z-10">
+        <div className="absolute top-2 right-2 opacity-0 group-hover/link-preview:opacity-100 [@media(pointer:coarse)]:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-md border border-border/50 p-0.5 z-10">
           <CopyButton onCopy={handleCopy} />
         </div>
       )}

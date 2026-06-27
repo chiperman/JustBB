@@ -155,7 +155,7 @@ export function MemoContent({
                         />
                       </HoverCardContent>
                     </HoverCard>
-                    <div className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="ml-1 opacity-0 transition-opacity group-hover:opacity-100 [@media(pointer:coarse)]:opacity-100">
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
@@ -200,7 +200,7 @@ export function MemoContent({
                         <button
                           type="button"
                           onClick={(e) => handleCopyLink(e, token.url)}
-                          className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 [@media(pointer:coarse)]:opacity-100"
                           aria-label="拷贝链接"
                         >
                           <HugeiconsIcon icon={Copy} size={12} />
@@ -283,10 +283,10 @@ function EmailComponent({ email }: { email: string }) {
 
   return (
     <span className="group/email inline">
-      <span className="inline-flex w-0 group-hover/email:w-6 overflow-hidden transition-all duration-300 items-center align-middle shrink-0">
+      <span className="inline-flex w-0 group-hover/email:w-6 overflow-hidden transition-all duration-300 items-center align-middle shrink-0 [@media(pointer:coarse)]:w-6">
         <button
           onClick={handleCopy}
-          className="p-1 rounded-md bg-primary/5 hover:bg-primary/10 text-primary opacity-0 group-hover/email:opacity-100 border border-primary/10"
+          className="p-1 rounded-md bg-primary/5 hover:bg-primary/10 text-primary opacity-0 group-hover/email:opacity-100 [@media(pointer:coarse)]:opacity-100 border border-primary/10"
         >
           {copied ? (
             <HugeiconsIcon icon={Check} size={14} />

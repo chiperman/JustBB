@@ -24,7 +24,7 @@ export function CodeBlock({ language, value }: CodeBlockProps) {
 
   return (
     <div className="relative my-4 rounded-lg overflow-hidden border border-border/60 bg-muted/30">
-      <div className="absolute right-2 top-2 z-10 group opacity-0 hover:opacity-100 transition-opacity">
+      <div className="absolute right-2 top-2 z-10 group opacity-0 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 transition-opacity">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

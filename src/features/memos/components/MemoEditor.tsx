@@ -37,6 +37,16 @@ interface MemoEditorProps {
 
 const IMAGE_URL_RE = /\.(?:jpe?g|png|gif|webp|avif|svg|bmp|ico|tiff?)(?:\?|#|$)/i
 
+const isInteractiveElement = (node: Node | null): boolean => {
+  if (!node || !(node instanceof Element)) return false
+
+  return Boolean(
+    node.closest(
+      'button, a, [role="button"], [role="menu"], [role="menuitem"], [role="dialog"], [role="alertdialog"], [role="combobox"], [role="listbox"], [role="option"], [role="tab"], [role="link"], input, textarea, select'
+    )
+  )
+}
+
 type LocalImageAttachment = {
   id: string
   file?: File
@@ -601,6 +611,7 @@ export function MemoEditor({
   } | null>(null)
   const [showPlaceholder, setShowPlaceholder] = useState(mode === "create")
   const [enableCollapseAnimation, setEnableCollapseAnimation] = useState(false)
+  const [isCollapseProtected, setIsCollapseProtected] = useState(false)
   const [editingLinkInfo, setEditingLinkInfo] = useState<{
     title: string
     url: string
@@ -626,14 +637,15 @@ export function MemoEditor({
     handleSuggestionScroll,
   } = useEditorSuggestions({ setShowSuggestions })
 
+  const hasDraftIntent =
+    content.trim().length > 0 ||
+    images.length > 0 ||
+    queuedImages.length > 0 ||
+    uploadingImages.length > 0
+  const isBaseCollapsed = isPropCollapsed && !hasDraftIntent && !isCollapseProtected
+  const isScrollCollapsed = scrollCollapsed && !isCollapseProtected
   const isActuallyCollapsed =
-    (isPropCollapsed || scrollCollapsed) &&
-    !isFocused &&
-    !isAnyDialogOpen &&
-    !content.trim() &&
-    images.length === 0 &&
-    queuedImages.length === 0 &&
-    mode === "create"
+    (isBaseCollapsed || isScrollCollapsed) && !isFocused && !isAnyDialogOpen && mode === "create"
   const shouldAnimateCollapse = enableCollapseAnimation
   const needsPrivateDialog = isPrivate && (mode === "create" || !memo?.is_private)
 
@@ -689,6 +701,10 @@ export function MemoEditor({
     const didPublish = await performPublish(currentEditor, uploaded.urls, uploaded.metadata)
     if (didPublish) {
       clearImageSessionState()
+      if (mode === "create") {
+        currentEditor?.commands.blur()
+        setIsFocused(false)
+      }
     } else {
       setQueuedImages((prev) =>
         prev.map((image) => ({
@@ -698,7 +714,26 @@ export function MemoEditor({
         }))
       )
     }
-  }, [clearImageSessionState, performPublish, resolvePendingLink, uploadQueuedImages])
+  }, [
+    clearImageSessionState,
+    performPublish,
+    resolvePendingLink,
+    uploadQueuedImages,
+    mode,
+    setIsFocused,
+  ])
+
+  useEffect(() => {
+    if (!isCollapseProtected) return
+
+    const timerId = window.setTimeout(() => {
+      setIsCollapseProtected(false)
+    }, 1500)
+
+    return () => {
+      window.clearTimeout(timerId)
+    }
+  }, [isCollapseProtected, content, images.length, queuedImages.length, uploadingImages.length])
 
   const extensions = useMemo(
     () =>
@@ -843,6 +878,7 @@ export function MemoEditor({
       const text = editor.getText({ blockSeparator: "\n" })
       if (transaction.docChanged) {
         setShowPlaceholder(false)
+        setIsCollapseProtected(true)
       }
       setContent(text)
       setError(null)
@@ -1070,26 +1106,27 @@ export function MemoEditor({
     }
   }, [editor, setIsMenuOpen, setShowLinkPicker])
 
-  const prevScrollCollapsed = useRef(scrollCollapsed)
-
-  // 监听滚动收缩信号，如果在聚焦状态下发生深滚，主动失焦以触发收缩
   useEffect(() => {
-    // 只有当 scrollCollapsed 从 false 变为 true 的"入场瞬间"且正在聚焦时才触发 blur
-    if (
-      scrollCollapsed &&
-      !prevScrollCollapsed.current &&
-      isFocused &&
-      mode === "create" &&
-      editor
-    ) {
-      // 滚动时强制关闭所有弹窗并允许收缩
-      collapseAfterPopupCloseRef.current = false
-      closePasteMenu()
-      setShowSuggestions(false)
-      editor.commands.blur()
+    if (!isFocused || mode !== "create") {
+      return
     }
-    prevScrollCollapsed.current = scrollCollapsed
-  }, [scrollCollapsed, isFocused, editor, mode])
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const layoutContainer = editorContainerRef.current?.closest("section")
+      const target = event.target as Node | null
+      const isInsideEditor = Boolean(layoutContainer && target && layoutContainer.contains(target))
+
+      if (!isInsideEditor && isInteractiveElement(target)) {
+        setIsCollapseProtected(true)
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown, true)
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true)
+    }
+  }, [isFocused, mode])
 
   useEffect(() => {
     if (editor) {

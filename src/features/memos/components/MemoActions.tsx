@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useEffect, useState, useRef } from "react"
 import { deleteMemo, restoreMemo, permanentDeleteMemo } from "@/server/actions/memos/trash"
 import { updateMemoState } from "@/server/actions/memos/mutate"
 import { dispatchMemoEvent } from "@/lib/memos/events"
@@ -72,6 +72,17 @@ export function MemoActions({
     setIsOpen(open)
     onOpenChange?.(open)
   }
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const closeOnScroll = () => {
+      handleOpenChange(false)
+    }
+
+    window.addEventListener("scroll", closeOnScroll, true)
+    return () => window.removeEventListener("scroll", closeOnScroll, true)
+  }, [isOpen])
 
   if (!hasMounted) {
     return <div className="w-8 h-8" />
@@ -263,7 +274,7 @@ export function MemoActions({
 
   return (
     <div className="flex items-center gap-1">
-      <DropdownMenu onOpenChange={handleOpenChange}>
+      <DropdownMenu open={isOpen} onOpenChange={handleOpenChange} modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
@@ -278,7 +289,7 @@ export function MemoActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="w-48"
+          className="z-20 w-48"
           onCloseAutoFocus={(e) => {
             if (preventCloseFocusRef.current) {
               e.preventDefault()

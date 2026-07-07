@@ -394,7 +394,3 @@ body {
 [data-sileo-toast] {
   color: var(--foreground);
 }
-
-[data-sileo-description] {
-  color: var(--muted-foreground) !important;
-}

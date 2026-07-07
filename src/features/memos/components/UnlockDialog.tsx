@@ -33,7 +33,6 @@ interface UnlockDialogProps {
 export function UnlockDialog({ memoId, isOpen, onClose, hint }: UnlockDialogProps) {
   const [code, setCode] = useState("")
   const [isPending, setIsPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [showCode, setShowCode] = useState(false)
   const [isTryingSaved, setIsTryingSaved] = useState(false)
   const hasMounted = useHasMounted()
@@ -41,7 +40,6 @@ export function UnlockDialog({ memoId, isOpen, onClose, hint }: UnlockDialogProp
 
   const resetState = () => {
     setCode("")
-    setError(null)
     setShowCode(false)
     setIsTryingSaved(false)
   }
@@ -54,7 +52,6 @@ export function UnlockDialog({ memoId, isOpen, onClose, hint }: UnlockDialogProp
   const handleConfirm = async () => {
     if (!code) return
     setIsPending(true)
-    setError(null)
 
     try {
       const res = await unlockWithCode(memoId, code)
@@ -63,7 +60,11 @@ export function UnlockDialog({ memoId, isOpen, onClose, hint }: UnlockDialogProp
         addVerifiedPassword(code)
         handleClose()
       } else {
-        setError(res.error || "验证失败")
+        toast({
+          title: "口令错误",
+          description: res.error || "请检查访问口令后重试",
+          variant: "destructive",
+        })
       }
     } finally {
       setIsPending(false)
@@ -105,8 +106,11 @@ export function UnlockDialog({ memoId, isOpen, onClose, hint }: UnlockDialogProp
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-md gap-4 rounded-inner border-border/40 bg-card/95 p-4 backdrop-blur-xl sm:gap-5 sm:p-6">
-        <DialogHeader className="gap-3 pr-8">
+      <DialogContent
+        mobileDensity="compact"
+        className="gap-3 rounded-inner border-border/40 bg-card/95 p-4 backdrop-blur-xl sm:max-w-md sm:gap-5 sm:p-6"
+      >
+        <DialogHeader className="gap-2 pr-8 sm:gap-3">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
               <HugeiconsIcon icon={Lock} size={20} />
@@ -122,7 +126,7 @@ export function UnlockDialog({ memoId, isOpen, onClose, hint }: UnlockDialogProp
           </div>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {hint && (
             <p className="text-sm leading-6 text-muted-foreground">
               提示：
@@ -184,11 +188,10 @@ export function UnlockDialog({ memoId, isOpen, onClose, hint }: UnlockDialogProp
                 )}
               </Button>
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
         </div>
 
-        <DialogFooter className="gap-2 pt-1 sm:justify-end sm:space-x-0 [&>button]:w-full sm:[&>button]:w-auto">
+        <DialogFooter className="gap-1.5 pt-0 sm:gap-2 sm:pt-1 sm:justify-end sm:space-x-0 [&>button]:w-full sm:[&>button]:w-auto">
           <Button
             variant="ghost"
             className="rounded-md transition-all [@media(pointer:coarse)]:active:scale-95"

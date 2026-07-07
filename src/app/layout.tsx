@@ -66,7 +66,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <TooltipProvider delayDuration={300} skipDelayDuration={0}>
+          <TooltipProvider delayDuration={600} skipDelayDuration={0}>
             {children}
             <Toaster />
             <EnvErrorBanner />

@@ -88,6 +88,14 @@ function toToastText(value: React.ReactNode) {
   return undefined
 }
 
+function shouldExpandToastByDefault() {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(pointer: coarse), (max-width: 767px)").matches
+  )
+}
+
 function toast({ title, description, variant, duration }: Toast) {
   const options: SileoOptions = {
     title: toToastText(title),
@@ -98,15 +106,21 @@ function toast({ title, description, variant, duration }: Toast) {
   if (variant === "destructive") {
     options.fill = "var(--toast-destructive-bg)"
     options.styles = {
+      badge: "bg-(--toast-destructive-text)/15! text-(--toast-destructive-text)!",
       title: "text-(--toast-destructive-text)!",
       description: "text-(--toast-destructive-text)/80!",
     }
   } else if (variant === "success") {
     options.fill = "var(--toast-success-bg)"
     options.styles = {
+      badge: "bg-(--toast-success-text)/15! text-(--toast-success-text)!",
       title: "text-(--toast-success-text)!",
       description: "text-(--toast-success-text)/80!",
     }
+  }
+
+  if (description && shouldExpandToastByDefault()) {
+    options.autopilot = { expand: 0, collapse: 0 }
   }
 
   const id = variant === "destructive" ? sileo.error(options) : sileo.success(options)

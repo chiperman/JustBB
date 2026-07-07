@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { ThemeProvider } from "@/shared/providers/ThemeProvider"
-import { AgentationWrapper } from "@/shared/providers/AgentationWrapper"
 import { env } from "@/lib/env"
 import "sileo/styles.css"
 import "./globals.css"
@@ -46,7 +45,6 @@ import { PWARegistration } from "@/shared/providers/PWARegistration"
 import { Toaster } from "@/shared/ui/toaster"
 import { TooltipProvider } from "@/shared/ui/tooltip"
 import { EnvErrorBanner } from "@/shared/ui/EnvErrorBanner"
-import { Suspense } from "react"
 
 export default function RootLayout({
   children,
@@ -73,9 +71,6 @@ export default function RootLayout({
             <Toaster />
             <EnvErrorBanner />
             <PWARegistration />
-            <Suspense fallback={null}>
-              <AgentationWrapper />
-            </Suspense>
           </TooltipProvider>
         </ThemeProvider>
       </body>

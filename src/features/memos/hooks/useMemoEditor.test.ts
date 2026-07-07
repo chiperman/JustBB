@@ -23,13 +23,6 @@ vi.mock("@/lib/memos/events", () => ({
   dispatchMemoEvent: vi.fn(),
 }))
 
-// Mock cache
-vi.mock("@/shared/lib/memo-cache", () => ({
-  memoCache: {
-    addItem: vi.fn(),
-  },
-}))
-
 // Mock context
 vi.mock("@/state/TagsContext", () => ({
   useTags: () => ({ refreshTags: vi.fn() }),
@@ -140,9 +133,7 @@ describe("useMemoEditor", () => {
         is_pinned: false,
       } as any
 
-      const { result } = renderHook(() =>
-        useMemoEditor({ mode: "edit", initialMemo: memo })
-      )
+      const { result } = renderHook(() => useMemoEditor({ mode: "edit", initialMemo: memo }))
 
       expect(result.current.content).toBe("existing content")
       expect(result.current.isPrivate).toBe(true)
@@ -151,9 +142,7 @@ describe("useMemoEditor", () => {
 
     it("should call onCancel when canceling in edit mode", () => {
       const onCancel = vi.fn()
-      const { result } = renderHook(() =>
-        useMemoEditor({ mode: "edit", onCancel })
-      )
+      const { result } = renderHook(() => useMemoEditor({ mode: "edit", onCancel }))
 
       act(() => {
         result.current.handleCancel()
@@ -170,9 +159,7 @@ describe("useMemoEditor", () => {
         is_pinned: false,
       } as any
 
-      const { result } = renderHook(() =>
-        useMemoEditor({ mode: "edit", initialMemo: memo })
-      )
+      const { result } = renderHook(() => useMemoEditor({ mode: "edit", initialMemo: memo }))
 
       act(() => {
         result.current.handleCancel()

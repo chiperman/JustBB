@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect } from "vitest"
 import React from "react"
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"
 import { ConfirmProvider, useConfirm } from "./ConfirmContext"
@@ -21,9 +21,7 @@ function TestConsumer() {
       </button>
       <button
         data-testid="btn-alert"
-        onClick={() =>
-          alert({ title: "Alert title", description: "Alert description" })
-        }
+        onClick={() => alert({ title: "Alert title", description: "Alert description" })}
       >
         Alert
       </button>
@@ -68,10 +66,12 @@ describe("ConfirmProvider", () => {
       </ConfirmProvider>
     )
 
-    await waitFor(() => resolved)
+    expect(await screen.findByText("Are you sure?")).toBeDefined()
+    expect(screen.getByText("请确认当前操作。")).toBeDefined()
     fireEvent.click(getByText("确定"))
 
     await waitFor(() => expect(promiseResult).toBe(true))
+    expect(resolved).toBe(true)
   })
 
   it("confirm 点击取消应返回 false", async () => {
@@ -97,10 +97,11 @@ describe("ConfirmProvider", () => {
       </ConfirmProvider>
     )
 
-    await waitFor(() => resolved)
+    expect(await screen.findByText("Are you sure?")).toBeDefined()
     fireEvent.click(getByText("取消"))
 
     await waitFor(() => expect(promiseResult).toBe(false))
+    expect(resolved).toBe(true)
   })
 
   it("alert 应显示无取消按钮的对话框", async () => {

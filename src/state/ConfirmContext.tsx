@@ -1,12 +1,6 @@
 "use client"
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useRef,
-} from "react"
+import React, { createContext, useContext, useState, useCallback, useRef } from "react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,37 +48,31 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
   const [inputValue, setInputValue] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const showDialog = useCallback(
-    (type: DialogType, options: ConfirmOptions) => {
-      return new Promise<DialogValue>((resolve) => {
-        setDialog({
-          ...options,
-          type,
-          resolve,
-        })
-        if (type === "prompt") {
-          setInputValue(options.defaultValue || "")
-        }
+  const showDialog = useCallback((type: DialogType, options: ConfirmOptions) => {
+    return new Promise<DialogValue>((resolve) => {
+      setDialog({
+        ...options,
+        type,
+        resolve,
       })
-    },
-    []
-  )
+      if (type === "prompt") {
+        setInputValue(options.defaultValue || "")
+      }
+    })
+  }, [])
 
   const confirm = useCallback(
-    (options: ConfirmOptions) =>
-      showDialog("confirm", options) as Promise<boolean>,
+    (options: ConfirmOptions) => showDialog("confirm", options) as Promise<boolean>,
     [showDialog]
   )
 
   const alert = useCallback(
-    (options: Omit<ConfirmOptions, "cancelLabel">) =>
-      showDialog("alert", options) as Promise<void>,
+    (options: Omit<ConfirmOptions, "cancelLabel">) => showDialog("alert", options) as Promise<void>,
     [showDialog]
   )
 
   const prompt = useCallback(
-    (options: ConfirmOptions) =>
-      showDialog("prompt", options) as Promise<string | null>,
+    (options: ConfirmOptions) => showDialog("prompt", options) as Promise<string | null>,
     [showDialog]
   )
 
@@ -106,26 +94,19 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
   return (
     <ConfirmContext.Provider value={{ confirm, alert, prompt }}>
       {children}
-      <AlertDialog
-        open={!!dialog}
-        onOpenChange={(open) => !open && handleCancel()}
-      >
+      <AlertDialog open={!!dialog} onOpenChange={(open) => !open && handleCancel()}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{dialog?.title}</AlertDialogTitle>
-            {dialog?.description && (
-              <AlertDialogDescription>
-                {dialog.description}
-              </AlertDialogDescription>
-            )}
+            <AlertDialogDescription className={dialog?.description ? undefined : "sr-only"}>
+              {dialog?.description ?? "请确认当前操作。"}
+            </AlertDialogDescription>
           </AlertDialogHeader>
 
           {dialog?.type === "prompt" && (
             <div className="py-2">
               {dialog.label && (
-                <label className="text-sm font-medium mb-2 block">
-                  {dialog.label}
-                </label>
+                <label className="text-sm font-medium mb-2 block">{dialog.label}</label>
               )}
               <Input
                 ref={inputRef}

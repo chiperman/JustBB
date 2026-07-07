@@ -15,23 +15,49 @@ interface UnlockedMemosContextType {
 
 const UnlockedMemosContext = createContext<UnlockedMemosContextType | undefined>(undefined)
 
-export function UnlockedMemosProvider({ children }: { children: React.ReactNode }) {
-  const [unlockedMemos, setUnlockedMemos] = useState<Record<string, Memo>>({})
-  const [verifiedPasswords, setVerifiedPasswords] = useState<string[]>([])
+interface UnlockedMemosProviderProps {
+  children: React.ReactNode
+  initialUnlockedMemos?: Record<string, Memo>
+  initialVerifiedPasswords?: string[]
+  onStoreUnlockedMemo?: (memo: Memo) => void
+  onAddVerifiedPassword?: (password: string) => void
+}
 
-  const storeUnlockedMemo = useCallback((memo: Memo) => {
-    setUnlockedMemos((prev) => ({
-      ...prev,
-      [memo.id]: memo,
-    }))
-  }, [])
+export function UnlockedMemosProvider({
+  children,
+  initialUnlockedMemos,
+  initialVerifiedPasswords,
+  onStoreUnlockedMemo,
+  onAddVerifiedPassword,
+}: UnlockedMemosProviderProps) {
+  const [unlockedMemos, setUnlockedMemos] = useState<Record<string, Memo>>(
+    () => initialUnlockedMemos ?? {}
+  )
+  const [verifiedPasswords, setVerifiedPasswords] = useState<string[]>(
+    () => initialVerifiedPasswords ?? []
+  )
 
-  const addVerifiedPassword = useCallback((password: string) => {
-    setVerifiedPasswords((prev) => {
-      if (prev.includes(password)) return prev
-      return [...prev, password]
-    })
-  }, [])
+  const storeUnlockedMemo = useCallback(
+    (memo: Memo) => {
+      setUnlockedMemos((prev) => ({
+        ...prev,
+        [memo.id]: memo,
+      }))
+      onStoreUnlockedMemo?.(memo)
+    },
+    [onStoreUnlockedMemo]
+  )
+
+  const addVerifiedPassword = useCallback(
+    (password: string) => {
+      setVerifiedPasswords((prev) => {
+        if (prev.includes(password)) return prev
+        return [...prev, password]
+      })
+      onAddVerifiedPassword?.(password)
+    },
+    [onAddVerifiedPassword]
+  )
 
   const getUnlockedMemo = useCallback((memoId: string) => unlockedMemos[memoId], [unlockedMemos])
 
@@ -74,4 +100,8 @@ export function useUnlockedMemos() {
   }
 
   return context
+}
+
+export function useOptionalUnlockedMemos() {
+  return useContext(UnlockedMemosContext)
 }

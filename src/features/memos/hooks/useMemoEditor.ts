@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react"
 import { ImageMetadata, Memo } from "@/types/memo"
 import { createMemo, updateMemoContent } from "@/server/actions/memos/mutate"
 import { dispatchMemoEvent } from "@/lib/memos/events"
-import { memoCache } from "@/shared/lib/memo-cache"
 import { useTags } from "@/state/TagsContext"
 import { useStats } from "@/state/StatsContext"
 import { Editor } from "@tiptap/react"
@@ -143,13 +142,6 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
       if (result.success) {
         const newMemo = result.data as Memo | undefined
         if (newMemo) {
-          memoCache.addItem({
-            id: newMemo.id,
-            memo_number: newMemo.memo_number || 0,
-            content: newMemo.content,
-            created_at: newMemo.created_at,
-          })
-
           Promise.all([refreshTags?.(), refreshStats?.()]).catch((err) =>
             console.error("[Sync] Stats refresh failed:", err)
           )

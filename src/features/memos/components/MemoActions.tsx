@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState, useRef } from "react"
 import { deleteMemo, restoreMemo, permanentDeleteMemo } from "@/server/actions/memos/trash"
 import { updateMemoState } from "@/server/actions/memos/mutate"
 import { dispatchMemoEvent } from "@/lib/memos/events"
-import { memoCache } from "@/shared/lib/memo-cache"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Delete02Icon,
@@ -118,7 +117,6 @@ export function MemoActions({
 
     setIsPending(true)
     await deleteMemo(id)
-    memoCache.removeItem(id)
     setIsPending(false)
     dispatchMemoEvent({ type: "delete", id })
     toast({

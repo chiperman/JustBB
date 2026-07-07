@@ -6,6 +6,10 @@ import { describe, expect, it } from "vitest"
 
 const sourcePath = join(dirname(fileURLToPath(import.meta.url)), "MemoEditor.tsx")
 const source = readFileSync(sourcePath, "utf8")
+const imageAttachmentsHookSource = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), "../hooks/useEditorImageAttachments.ts"),
+  "utf8"
+)
 const layoutSource = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), "MemoEditorLayout.tsx"),
   "utf8"
@@ -39,15 +43,17 @@ describe("MemoEditor focus bridge", () => {
 
 describe("MemoEditor image upload", () => {
   it("支持从文件选择器、粘贴和拖拽一次添加多张待发布图片", () => {
+    expect(source).toContain("useEditorImageAttachments")
+    expect(source).toContain("onImageFilesSelect={handleImageFiles}")
     expect(layoutSource).toMatch(/type="file"[\s\S]*?multiple[\s\S]*?onImageFilesSelect\(files\)/)
-    expect(source).toMatch(/const imageFiles = Array\.from\(files\)\.filter/)
-    expect(source).toMatch(/setQueuedImages/)
-    expect(source).toMatch(/Promise\.all\([\s\S]*queuedImages\.map/)
-    expect(source).not.toMatch(/Array\.from\(files\)\.find/)
+    expect(imageAttachmentsHookSource).toMatch(/const imageFiles = Array\.from\(files\)\.filter/)
+    expect(imageAttachmentsHookSource).toMatch(/setQueuedImages/)
+    expect(imageAttachmentsHookSource).toMatch(/Promise\.all\([\s\S]*queuedImages\.map/)
+    expect(imageAttachmentsHookSource).not.toMatch(/Array\.from\(files\)\.find/)
   })
 
   it("拖拽图片时显示编辑器上传区域", () => {
-    expect(source).toMatch(/setIsDraggingImages\(true\)/)
+    expect(imageAttachmentsHookSource).toMatch(/setIsDraggingImages\(true\)/)
     expect(layoutSource).toContain("松开即可添加图片")
   })
 
@@ -72,19 +78,23 @@ describe("MemoEditor image upload", () => {
   })
 
   it("发布时直接在待发布图片上显示上传进度", () => {
-    expect(source).toMatch(/setQueuedImages\([\s\S]*progress: 0[\s\S]*isUploading: true/)
-    expect(source).toMatch(/handleImageFileUpload\(image\.file, \{ id: image\.id/)
-    expect(source).toContain("handleLinkedImageUpload")
+    expect(imageAttachmentsHookSource).toMatch(
+      /setQueuedImages\([\s\S]*progress: 0[\s\S]*isUploading: true/
+    )
+    expect(imageAttachmentsHookSource).toMatch(
+      /handleImageFileUpload\(image\.file, \{ id: image\.id/
+    )
+    expect(imageAttachmentsHookSource).toContain("handleLinkedImageUpload")
     expect(layoutSource).toContain('img.publishStatus === "uploading"')
     expect(layoutSource).toContain('img.publishStatus === "saving"')
     expect(layoutSource).toContain("transition-[width]")
   })
 
   it("在上传照片时，支持通过哈希进行防重和去重校验", () => {
-    expect(source).toContain("calculateFileHash")
-    expect(source).toContain("uploadedImageHashesRef")
-    expect(source).toContain("shakingQueuedId")
-    expect(source).toContain("shakingUploadedUrl")
+    expect(imageAttachmentsHookSource).toContain("calculateFileHash")
+    expect(imageAttachmentsHookSource).toContain("uploadedImageHashesRef")
+    expect(imageAttachmentsHookSource).toContain("shakingQueuedId")
+    expect(imageAttachmentsHookSource).toContain("shakingUploadedUrl")
     expect(layoutSource).toContain("animate-shake-highlight")
   })
 })

@@ -15,7 +15,7 @@ import { UIProvider } from "@/state/UIContext"
 import { Memo } from "@/types/memo"
 import { Add01Icon, MinusSignIcon } from "@hugeicons/core-free-icons"
 import { MapMemoPopupContent } from "./map/MapMemoPopupContent"
-import { UnlockedMemosProvider } from "@/state/UnlockedMemosContext"
+import { UnlockedMemosProvider, useOptionalUnlockedMemos } from "@/state/UnlockedMemosContext"
 
 export interface MapViewProps {
   markers: MapMarker[]
@@ -48,6 +48,12 @@ export function MapView({
   // 聚合弹窗 Toggle 状态：记录上次打开弹窗的坐标 key，用于可靠的 toggle 关闭判断
   const lastClusterPopupKeyRef = useRef<string | null>(null)
   const popupRootRef = useRef<Root | null>(null)
+  const unlockedMemosContext = useOptionalUnlockedMemos()
+  const unlockedMemosContextRef = useRef(unlockedMemosContext)
+
+  useEffect(() => {
+    unlockedMemosContextRef.current = unlockedMemosContext
+  }, [unlockedMemosContext])
 
   const invalidateMapSize = React.useCallback(() => {
     if (!mapInstance.current) return
@@ -63,6 +69,26 @@ export function MapView({
 
     return Math.max(0, Math.ceil(Math.log2(longestEdge / 256)))
   }, [])
+
+  const renderPopupContent = React.useCallback(
+    (title: string, memos: Memo[], onClose: () => void) => {
+      const parentContext = unlockedMemosContextRef.current
+
+      return (
+        <UnlockedMemosProvider
+          initialUnlockedMemos={parentContext?.unlockedMemos}
+          initialVerifiedPasswords={parentContext?.verifiedPasswords}
+          onStoreUnlockedMemo={parentContext?.storeUnlockedMemo}
+          onAddVerifiedPassword={parentContext?.addVerifiedPassword}
+        >
+          <UIProvider currentPathname={pathname}>
+            <MapMemoPopupContent title={title} memos={memos} onClose={onClose} />
+          </UIProvider>
+        </UnlockedMemosProvider>
+      )
+    },
+    [pathname]
+  )
 
   // 计算分段 Tile URL
   const getTileUrl = (theme: string | undefined) => {
@@ -275,17 +301,7 @@ export function MapView({
 
           const root = createRoot(popupEl)
           popupRootRef.current = root
-          root.render(
-            <UnlockedMemosProvider>
-              <UIProvider currentPathname={pathname}>
-                <MapMemoPopupContent
-                  title={locationName}
-                  memos={allMemos}
-                  onClose={() => map.closePopup()}
-                />
-              </UIProvider>
-            </UnlockedMemosProvider>
-          )
+          root.render(renderPopupContent(locationName, allMemos, () => map.closePopup()))
 
           const openPopup = () => {
             L.popup({
@@ -334,7 +350,7 @@ export function MapView({
       map.remove()
       mapInstance.current = null
     }
-  }, [L, mode, interactive, onMapClick, pathname, resolvedTheme, getMinZoomForContainer]) // 监听主题变化
+  }, [L, mode, interactive, onMapClick, resolvedTheme, getMinZoomForContainer, renderPopupContent]) // 监听主题变化
 
   useEffect(() => {
     if (!mapInstance.current || !clusterLayer.current || !L) return
@@ -413,15 +429,7 @@ export function MapView({
 
         const root = createRoot(popupEl)
         root.render(
-          <UnlockedMemosProvider>
-            <UIProvider currentPathname={pathname}>
-              <MapMemoPopupContent
-                title={marker.name}
-                memos={marker.items}
-                onClose={() => mapInstance.current?.closePopup()}
-              />
-            </UIProvider>
-          </UnlockedMemosProvider>
+          renderPopupContent(marker.name, marker.items, () => mapInstance.current?.closePopup())
         )
 
         leafMarker.bindPopup(popupEl, {
@@ -458,7 +466,7 @@ export function MapView({
     }
 
     invalidateMapSize()
-  }, [L, markers, mode, interactive, onMarkerDragEnd, pathname, invalidateMapSize])
+  }, [L, markers, mode, interactive, onMarkerDragEnd, invalidateMapSize, renderPopupContent])
 
   return (
     <div

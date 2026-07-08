@@ -97,6 +97,18 @@ describe("focus visibility regressions", () => {
     expect(html).toContain("focus-visible:ring-inset")
   })
 
+  it("keeps the search shell width stable when the home header collapses", () => {
+    const html = renderToStaticMarkup(
+      <TooltipProvider>
+        <FeedHeader isCollapsed />
+      </TooltipProvider>
+    )
+
+    expect(html).toContain('data-search-shell="true"')
+    expect(html).toContain("w-full sm:max-w-sm")
+    expect(html).not.toContain("w-36 min-w-0 flex-1")
+  })
+
   it("keeps visible focus styles on search input action buttons", () => {
     const html = renderToStaticMarkup(
       <TooltipProvider>

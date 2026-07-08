@@ -162,32 +162,21 @@ describe("AppShortcuts", () => {
   it("登录用户可以切换选择模式", () => {
     renderAppShortcuts()
 
+    expect(shortcut("app.selection.toggle").binding).toBe("mod+shift+x")
+
     shortcut("app.selection.toggle").handler(
-      new KeyboardEvent("keydown", { key: "x", metaKey: true })
+      new KeyboardEvent("keydown", { key: "X", metaKey: true, shiftKey: true })
     )
 
     expect(mockPush).not.toHaveBeenCalled()
     expect(mockState.toggleSelectionMode).toHaveBeenCalledWith()
   })
 
-  it("选择模式下全选当前已注册 Memo，清空选择", () => {
+  it("不再注册容易冲突的选择模式快捷键", () => {
     mockState.isSelectionMode = true
-    mockState.registeredMemoIds = ["m1", "m2"]
     renderAppShortcuts()
 
-    expect(shortcut("app.selection.selectAll").binding).toBe("mod+a")
-    expect(shortcut("app.selection.clear").binding).toBe("mod+d")
-    expect(shortcut("app.selection.selectAll").allowBrowserReservedShortcut).toBe(true)
-    expect(shortcut("app.selection.clear").allowBrowserReservedShortcut).toBe(true)
-
-    shortcut("app.selection.selectAll").handler(
-      new KeyboardEvent("keydown", { key: "a", metaKey: true })
-    )
-    shortcut("app.selection.clear").handler(
-      new KeyboardEvent("keydown", { key: "d", metaKey: true })
-    )
-
-    expect(mockState.selectAll).toHaveBeenCalledWith(["m1", "m2"])
-    expect(mockState.clearSelection).toHaveBeenCalledWith()
+    expect(shortcutRegistrations.some((item) => item.id === "app.selection.selectAll")).toBe(false)
+    expect(shortcutRegistrations.some((item) => item.id === "app.selection.clear")).toBe(false)
   })
 })

@@ -25,8 +25,7 @@ export function AppShortcuts() {
   const pathname = usePathname() || "/"
   const { user } = useUser()
   const [isHelpOpen, setIsHelpOpen] = useState(false)
-  const { isSelectionMode, toggleSelectionMode, clearSelection, selectAll, getRegisteredMemoIds } =
-    useUI()
+  const { toggleSelectionMode } = useUI()
 
   const isLoggedIn = Boolean(user)
   const isHomePath = pathname === NAVIGATION_HREFS.home
@@ -69,22 +68,6 @@ export function AppShortcuts() {
 
     toggleSelectionMode()
   }, [isLoggedIn, toggleSelectionMode])
-
-  const selectRegisteredMemos = useCallback(() => {
-    if (!isSelectionMode) {
-      return
-    }
-
-    selectAll(getRegisteredMemoIds())
-  }, [getRegisteredMemoIds, isSelectionMode, selectAll])
-
-  const clearSelectedMemos = useCallback(() => {
-    if (!isSelectionMode) {
-      return
-    }
-
-    clearSelection()
-  }, [clearSelection, isSelectionMode])
 
   useEffect(() => {
     const openShortcuts = () => setIsHelpOpen(true)
@@ -142,43 +125,13 @@ export function AppShortcuts() {
     useMemo(
       () => ({
         id: "app.selection.toggle",
-        binding: "mod+x",
+        binding: "mod+shift+x",
         description: "切换选择模式",
         group: "选择",
         enabled: isLoggedIn,
         handler: toggleSelection,
       }),
       [isLoggedIn, toggleSelection]
-    )
-  )
-
-  useAppShortcut(
-    useMemo(
-      () => ({
-        id: "app.selection.selectAll",
-        binding: "mod+a",
-        description: "全选当前 Memo",
-        group: "选择",
-        enabled: isSelectionMode,
-        allowBrowserReservedShortcut: true,
-        handler: selectRegisteredMemos,
-      }),
-      [isSelectionMode, selectRegisteredMemos]
-    )
-  )
-
-  useAppShortcut(
-    useMemo(
-      () => ({
-        id: "app.selection.clear",
-        binding: "mod+d",
-        description: "清空选择",
-        group: "选择",
-        enabled: isSelectionMode,
-        allowBrowserReservedShortcut: true,
-        handler: clearSelectedMemos,
-      }),
-      [clearSelectedMemos, isSelectionMode]
     )
   )
 

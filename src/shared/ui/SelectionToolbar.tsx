@@ -302,7 +302,6 @@ export function SelectionToolbar() {
                 </TooltipTrigger>
                 <TooltipContent side="top" className="flex items-center gap-2">
                   <span>重置选择</span>
-                  <ShortcutHint shortcut="mod+d" />
                 </TooltipContent>
               </Tooltip>
               {!isTrashPage && (
@@ -319,7 +318,7 @@ export function SelectionToolbar() {
                   </TooltipTrigger>
                   <TooltipContent side="top" className="flex items-center gap-2">
                     <span>退出选择</span>
-                    <ShortcutHint shortcut="mod+x" />
+                    <ShortcutHint shortcut="mod+shift+x" />
                   </TooltipContent>
                 </Tooltip>
               )}

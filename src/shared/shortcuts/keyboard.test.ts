@@ -62,7 +62,9 @@ describe("keyboard shortcut helpers", () => {
       shortcutMatchesEvent("mod+?", keyboardEvent("?", { ctrlKey: true, shiftKey: true }))
     ).toBe(true)
     expect(shortcutMatchesEvent("mod+enter", keyboardEvent("Enter", { metaKey: true }))).toBe(true)
-    expect(shortcutMatchesEvent("mod+x", keyboardEvent("x", { ctrlKey: true }))).toBe(true)
+    expect(
+      shortcutMatchesEvent("mod+shift+x", keyboardEvent("X", { ctrlKey: true, shiftKey: true }))
+    ).toBe(true)
   })
 
   it("匹配第一阶段需要的 Command/Ctrl 单主键快捷键", () => {
@@ -72,7 +74,9 @@ describe("keyboard shortcut helpers", () => {
     expect(shortcutMatchesEvent("mod+arrowup", keyboardEvent("ArrowUp", { metaKey: true }))).toBe(
       true
     )
-    expect(shortcutMatchesEvent("mod+x", keyboardEvent("x", { ctrlKey: true }))).toBe(true)
+    expect(
+      shortcutMatchesEvent("mod+shift+x", keyboardEvent("X", { ctrlKey: true, shiftKey: true }))
+    ).toBe(true)
     expect(shortcutMatchesEvent("mod+k", keyboardEvent("k"))).toBe(false)
   })
 

@@ -26,11 +26,7 @@ const SHORTCUT_GROUPS = [
   },
   {
     title: "选择",
-    items: [
-      { shortcut: "mod+x", label: "切换选择模式" },
-      { shortcut: "mod+a", label: "全选当前列表" },
-      { shortcut: "mod+d", label: "清空选择" },
-    ],
+    items: [{ shortcut: "mod+shift+x", label: "切换选择模式" }],
   },
 ]
 

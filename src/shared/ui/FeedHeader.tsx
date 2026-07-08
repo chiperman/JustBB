@@ -126,7 +126,7 @@ export function FeedHeader({ isRefreshing = false, isCollapsed = false }: FeedHe
                     <DropdownMenuItem className="gap-2" onClick={() => toggleSelectionMode(true)}>
                       <HugeiconsIcon icon={CheckmarkSquare02Icon} size={16} />
                       <span>选择笔记</span>
-                      <ShortcutHint shortcut="mod+x" className="ml-auto" />
+                      <ShortcutHint shortcut="mod+shift+x" className="ml-auto" />
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </>
@@ -165,12 +165,7 @@ export function FeedHeader({ isRefreshing = false, isCollapsed = false }: FeedHe
       )}
 
       {!isSelectionMode && (
-        <div
-          className={cn(
-            "sm:max-w-sm transition-all duration-300",
-            isCollapsed ? "w-36 min-w-0 flex-1 xs:w-48 sm:w-full" : "w-full"
-          )}
-        >
+        <div className="w-full sm:max-w-sm" data-search-shell="true">
           <SearchInput />
         </div>
       )}

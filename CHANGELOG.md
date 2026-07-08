@@ -8,18 +8,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 - 将 README 重做为品牌化项目入口，加入 Logo、首页截图和更清晰的项目定位。
 - 升级 Next.js、Supabase、Tiptap、Vitest 与 Supabase CLI，清理 Dependabot 依赖告警。
-- 新增 Supabase Advisor 加固迁移，收紧 RLS、函数权限和公开 schema 权限。
-- 对生产 Supabase 项目应用安全迁移，并保留有意开放的只读 RPC 入口。
-
-### 验证
-
-- `npm audit --json`
-- `npm audit --omit=dev --json`
-- `npm run test`
-- `npm run test:integration`
-- `npm run build`
-- `npx supabase db reset`
-- `npx supabase db advisors --local --output json`
+- 新增 Supabase 加固迁移，收紧 RLS、函数权限和公开 schema 权限。
 
 ## 0.1.0 (2026-02-04)
 

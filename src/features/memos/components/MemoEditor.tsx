@@ -551,6 +551,16 @@ export function MemoEditor({
             return true
           }
 
+          if (event.key === "Escape") {
+            event.preventDefault()
+            resolvePendingLink(_view)
+            closePasteMenu()
+            setShowSuggestions(false)
+            editor?.commands.blur()
+            setIsFocused(false)
+            return true
+          }
+
           return false
         },
       },

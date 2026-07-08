@@ -39,6 +39,12 @@ describe("MemoEditor focus bridge", () => {
     expect(source).toContain("window.addEventListener")
     expect(source).toContain("window.removeEventListener")
   })
+
+  it("普通编辑状态按 Escape 会退出编辑焦点", () => {
+    expect(source).toMatch(
+      /if \(event\.key === "Escape"\) \{\s*event\.preventDefault\(\)\s*resolvePendingLink\(_view\)\s*closePasteMenu\(\)\s*setShowSuggestions\(false\)\s*editor\?\.commands\.blur\(\)\s*setIsFocused\(false\)\s*return true\s*\}/
+    )
+  })
 })
 
 describe("MemoEditor image upload", () => {

@@ -14,6 +14,7 @@ import { getMemos } from "@/server/actions/memos/query"
 import { useSearchParams } from "next/navigation"
 import { useUser } from "@/state/UserContext"
 import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
+import { resolveMainLayoutScrollState } from "@/shared/layout/main-layout-scroll"
 
 export function MainLayoutClient() {
   const searchParams = useSearchParams()
@@ -29,6 +30,7 @@ export function MainLayoutClient() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [editorForceCollapsed, setEditorForceCollapsed] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const editorForceCollapsedRef = useRef(false)
   const lastScrollTop = useRef(0)
 
   // 监听滚动，实现迟滞触发逻辑 (Hysteresis Logic)
@@ -42,31 +44,16 @@ export function MainLayoutClient() {
       const clientHeight = container.clientHeight
       const scrollableHeight = scrollHeight - clientHeight
 
-      if (typeof window !== "undefined" && window.innerWidth < 768) {
-        setEditorForceCollapsed(false)
-        setShowScrollTop(scrollTop > 300)
-        lastScrollTop.current = scrollTop
-        return
-      }
+      const nextState = resolveMainLayoutScrollState({
+        currentCollapsed: editorForceCollapsedRef.current,
+        scrollTop,
+        scrollableHeight,
+        isMobile: typeof window !== "undefined" && window.innerWidth < 768,
+      })
 
-      // 只有内容足够丰富时 (设计稿阈值: 300px) 才触发收缩
-      if (scrollableHeight < 300) {
-        setEditorForceCollapsed(false)
-        setShowScrollTop(false)
-        return
-      }
-
-      // 迟滞触发逻辑:
-      // 1. 下滑超过 100px 强行收缩
-      // 2. 回滚到 50px 以下尝试展开
-      if (scrollTop > 100) {
-        setEditorForceCollapsed(true)
-      } else if (scrollTop < 50) {
-        setEditorForceCollapsed(false)
-      }
-
-      // 超过 300px 显示“回到顶部”按钮
-      setShowScrollTop(scrollTop > 300)
+      editorForceCollapsedRef.current = nextState.editorForceCollapsed
+      setEditorForceCollapsed(nextState.editorForceCollapsed)
+      setShowScrollTop(nextState.showScrollTop)
 
       lastScrollTop.current = scrollTop
     }

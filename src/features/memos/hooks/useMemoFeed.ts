@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, useRef, useLayoutEffect } from "react"
+import { startTransition, useState, useCallback, useEffect, useRef, useLayoutEffect } from "react"
 import { Memo } from "@/types/memo"
 import { getMemos } from "@/server/actions/memos/query"
 import { mergeMemos } from "@/shared/lib/streamUtils"
@@ -45,6 +45,13 @@ export function reconcileHasMoreOlder(currentHasMoreOlder: boolean, nextInitialM
   return currentHasMoreOlder && nextInitialMemos.length >= INITIAL_MEMO_PAGE_SIZE
 }
 
+export function appendOlderMemoPage(currentMemos: Memo[], olderMemos: Memo[]) {
+  const existingIds = new Set(currentMemos.map((memo) => memo.id))
+  const uniqueOlderMemos = olderMemos.filter((memo) => !existingIds.has(memo.id))
+
+  return uniqueOlderMemos.length > 0 ? [...currentMemos, ...uniqueOlderMemos] : currentMemos
+}
+
 export function reconcileUpdatedMemo(existingMemo: Memo, updatedMemo: Memo): Memo {
   return {
     ...existingMemo,
@@ -64,6 +71,7 @@ export function useMemoFeed({ initialMemos, searchParams, scrollContainerRef }: 
   const [lastCreatedId, setLastCreatedId] = useState<string | null>(null)
   const previousInitialIdsRef = useRef(new Set(initialMemos.map((memo) => memo.id)))
   const lastSearchParamsRef = useRef(searchParams)
+  const isLoadingOlderRef = useRef(false)
 
   // 置顶/取消置顶时的滚动位置恢复
   const pendingScrollRestoreRef = useRef<number | null>(null)
@@ -121,8 +129,9 @@ export function useMemoFeed({ initialMemos, searchParams, scrollContainerRef }: 
   }, [initialMemos, searchParams])
 
   const fetchOlderMemos = useCallback(async () => {
-    if (isLoadingOlder || !hasMoreOlder) return
+    if (isLoadingOlderRef.current || isLoadingOlder || !hasMoreOlder) return
 
+    isLoadingOlderRef.current = true
     setIsLoadingOlder(true)
     try {
       const limit = INITIAL_MEMO_PAGE_SIZE
@@ -147,12 +156,15 @@ export function useMemoFeed({ initialMemos, searchParams, scrollContainerRef }: 
       }
 
       if (validNewMemos.length > 0) {
-        setMemos((prev) => mergeMemos(prev, validNewMemos))
+        startTransition(() => {
+          setMemos((prev) => appendOlderMemoPage(prev, nextMemos))
+        })
       }
     } catch (err) {
       console.error("[Feed Hook] Failed to load older memos:", err)
       setHasMoreOlder(false)
     } finally {
+      isLoadingOlderRef.current = false
       setIsLoadingOlder(false)
     }
   }, [isLoadingOlder, hasMoreOlder, memos, searchParams, unlockedMemoIds])

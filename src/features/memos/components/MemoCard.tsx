@@ -10,7 +10,7 @@ import { MemoCardView } from "./memo-card/MemoCardView"
 interface MemoCardProps {
   memo: Memo
   isEditing?: boolean
-  onEditChange?: (editing: boolean, updatedMemo?: Memo) => void
+  onEditChange?: (memoId: string, editing: boolean, updatedMemo?: Memo) => void
   showOriginalOnly?: boolean
   showViewOriginal?: boolean
 }
@@ -32,8 +32,8 @@ export const MemoCard = memo(function MemoCard({
         <MemoEditor
           mode="edit"
           memo={memo}
-          onCancel={() => onEditChange?.(false)}
-          onSuccess={(updatedMemo) => onEditChange?.(false, updatedMemo)}
+          onCancel={() => onEditChange?.(memo.id, false)}
+          onSuccess={(updatedMemo) => onEditChange?.(memo.id, false, updatedMemo)}
         />
       </article>
     )
@@ -44,7 +44,7 @@ export const MemoCard = memo(function MemoCard({
       memo={memo}
       showOriginalOnly={showOriginalOnly}
       showViewOriginal={showViewOriginal}
-      onEdit={() => onEditChange?.(true)}
+      onEdit={() => onEditChange?.(memo.id, true)}
       shouldReduceMotion={!!shouldReduceMotion}
       hasMounted={hasMounted}
       isLastCreated={isLastCreated}

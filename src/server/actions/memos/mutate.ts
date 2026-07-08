@@ -257,7 +257,10 @@ export async function updateMemoState(formData: FormData): Promise<ActionRespons
   const supabase = await getClient()
 
   const updatePayload: Partial<MemoInsert> = {}
-  if (is_pinned !== undefined) updatePayload.is_pinned = is_pinned
+  if (is_pinned !== undefined) {
+    updatePayload.is_pinned = is_pinned
+    updatePayload.pinned_at = is_pinned ? new Date().toISOString() : null
+  }
 
   if (is_private !== undefined) {
     updatePayload.is_private = is_private

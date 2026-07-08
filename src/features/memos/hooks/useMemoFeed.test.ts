@@ -1,16 +1,13 @@
 import { describe, expect, it } from "vitest"
 import { Memo } from "@/types/memo"
 import {
+  appendOlderMemoPage,
   reconcileHasMoreOlder,
   reconcileInitialMemoWindow,
   reconcileUpdatedMemo,
 } from "./useMemoFeed"
 
-function createMemo(
-  id: string,
-  createdAt: string,
-  overrides: Partial<Memo> = {}
-): Memo {
+function createMemo(id: string, createdAt: string, overrides: Partial<Memo> = {}): Memo {
   return {
     id,
     content: `memo-${id}`,
@@ -51,11 +48,7 @@ describe("reconcileInitialMemoWindow", () => {
       nextInitialMemos
     )
 
-    expect(reconciled.map((memo) => memo.id)).toEqual([
-      "memo-1",
-      "memo-4",
-      "memo-3",
-    ])
+    expect(reconciled.map((memo) => memo.id)).toEqual(["memo-1", "memo-4", "memo-3"])
     expect(reconciled[0].content).toBe("fresh top")
   })
 
@@ -109,6 +102,25 @@ describe("reconcileHasMoreOlder", () => {
     )
 
     expect(reconcileHasMoreOlder(true, nextInitialMemos)).toBe(false)
+  })
+})
+
+describe("appendOlderMemoPage", () => {
+  it("追加旧页 Memo 时保留现有顺序，只做去重", () => {
+    const pinnedMemo = createMemo("memo-1", "2026-04-03T00:00:00.000Z", {
+      is_pinned: true,
+      pinned_at: "2026-04-04T00:00:00.000Z",
+    })
+    const topMemo = createMemo("memo-2", "2026-04-02T00:00:00.000Z")
+    const duplicateMemo = createMemo("memo-2", "2026-04-02T00:00:00.000Z", {
+      content: "duplicate should be ignored",
+    })
+    const olderMemo = createMemo("memo-3", "2026-03-25T00:00:00.000Z")
+
+    const merged = appendOlderMemoPage([pinnedMemo, topMemo], [duplicateMemo, olderMemo])
+
+    expect(merged.map((memo) => memo.id)).toEqual(["memo-1", "memo-2", "memo-3"])
+    expect(merged[1].content).toBe("memo-memo-2")
   })
 })
 

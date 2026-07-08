@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef } from "react"
 import { motion, Variants, AnimatePresence } from "framer-motion"
 import { MemoCard } from "./MemoCard"
 import { Memo } from "@/types/memo"
@@ -47,6 +47,9 @@ const instantVariants: Variants = {
   exit: { opacity: 1, transition: { duration: 0 } },
 }
 
+const ANIMATED_INITIAL_MEMO_COUNT = 30
+const OLDER_MEMO_PREFETCH_DISTANCE_PX = 2400
+
 export function MemoFeed({ initialMemos = [], searchParams, scrollContainerRef }: MemoFeedProps) {
   const observerTargetBottom = useRef<HTMLDivElement>(null)
 
@@ -63,6 +66,14 @@ export function MemoFeed({ initialMemos = [], searchParams, scrollContainerRef }
     isPinReordering,
   } = useMemoFeed({ initialMemos, searchParams, scrollContainerRef })
 
+  const handleMemoEditChange = useCallback(
+    (memoId: string, editing: boolean, updatedMemo?: Memo) => {
+      if (!editing && updatedMemo) updateMemoInList(updatedMemo)
+      setEditingId(editing ? memoId : null)
+    },
+    [setEditingId, updateMemoInList]
+  )
+
   // 1. 无限滚动监听
   useEffect(() => {
     const bottom = observerTargetBottom.current
@@ -76,7 +87,7 @@ export function MemoFeed({ initialMemos = [], searchParams, scrollContainerRef }
       },
       {
         root: scrollContainerRef?.current || null,
-        rootMargin: "0px 0px 1200px 0px",
+        rootMargin: `0px 0px ${OLDER_MEMO_PREFETCH_DISTANCE_PX}px 0px`,
         threshold: 0,
       }
     )
@@ -101,17 +112,18 @@ export function MemoFeed({ initialMemos = [], searchParams, scrollContainerRef }
               memo={memo}
               index={index}
               prevMemo={index > 0 ? memos[index - 1] : undefined}
-              variants={isPinReordering ? instantVariants : itemVariants}
+              variants={
+                isPinReordering || index >= ANIMATED_INITIAL_MEMO_COUNT
+                  ? instantVariants
+                  : itemVariants
+              }
             >
               <div>
                 <MemoCard
                   memo={memo}
                   isEditing={editingId === memo.id}
                   isLastCreated={lastCreatedId === memo.id}
-                  onEditChange={(editing, updatedMemo) => {
-                    if (!editing && updatedMemo) updateMemoInList(updatedMemo)
-                    setEditingId(editing ? memo.id : null)
-                  }}
+                  onEditChange={handleMemoEditChange}
                 />
               </div>
             </FeedItemWrapper>

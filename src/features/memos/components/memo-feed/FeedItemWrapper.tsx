@@ -48,7 +48,11 @@ export function FeedItemWrapper({
       exit="exit"
       custom={index % 20}
       className="break-inside-avoid relative"
-      style={{ overflowAnchor: "none" }}
+      style={{
+        containIntrinsicSize: "0 260px",
+        contentVisibility: "auto",
+        overflowAnchor: "none",
+      }}
     >
       {isFirstOfYear && (
         <div id={`year-${currentYear}`} className="absolute top-0 invisible" aria-hidden="true" />

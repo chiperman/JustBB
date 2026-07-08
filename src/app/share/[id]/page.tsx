@@ -6,6 +6,8 @@ import { zhCN } from "date-fns/locale"
 import { getMemoById } from "@/server/actions/memos/query"
 import { MemoContent } from "@/features/memos/components/MemoContent"
 import { getPublicAppUrl } from "@/shared/lib/share"
+import { isUuid } from "@/shared/lib/ids"
+import { noIndexRobots, publicIndexRobots } from "@/shared/lib/page-metadata"
 
 type SharePageProps = {
   params: Promise<{
@@ -22,17 +24,35 @@ const getSnippet = (content: string, length: number) => {
   return `${normalized.slice(0, length).trim()}...`
 }
 
-export async function generateMetadata({
-  params,
-}: SharePageProps): Promise<Metadata> {
+const unavailableShareDescription = "这条 Memo 不存在，或当前状态不允许公开分享。"
+
+const unavailableShareMetadata: Metadata = {
+  title: "分享内容不可用",
+  description: unavailableShareDescription,
+  robots: noIndexRobots,
+  openGraph: {
+    title: "分享内容不可用",
+    description: unavailableShareDescription,
+  },
+  twitter: {
+    card: "summary",
+    title: "分享内容不可用",
+    description: unavailableShareDescription,
+  },
+}
+
+export async function generateMetadata({ params }: SharePageProps): Promise<Metadata> {
   const { id } = await params
+
+  if (!isUuid(id)) {
+    return unavailableShareMetadata
+  }
+
   const result = await getMemoById(id)
   const memo = result.success ? result.data : null
 
-  if (!memo) {
-    return {
-      title: "分享内容不存在",
-    }
+  if (!memo || memo.is_private || memo.is_locked) {
+    return unavailableShareMetadata
   }
 
   const title = `JustMemo 分享 #${memo.memo_number || id.slice(0, 8)}`
@@ -43,6 +63,7 @@ export async function generateMetadata({
   return {
     title,
     description,
+    robots: publicIndexRobots,
     alternates: canonical ? { canonical } : undefined,
     openGraph: {
       title,
@@ -60,6 +81,11 @@ export async function generateMetadata({
 
 export default async function MemoSharePage({ params }: SharePageProps) {
   const { id } = await params
+
+  if (!isUuid(id)) {
+    notFound()
+  }
+
   const result = await getMemoById(id)
 
   if (!result.success) {
@@ -72,6 +98,10 @@ export default async function MemoSharePage({ params }: SharePageProps) {
     notFound()
   }
 
+  if (memo.is_private || memo.is_locked) {
+    notFound()
+  }
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.16),_transparent_32%),linear-gradient(180deg,_#f8fafc_0%,_#fffaf5_100%)] px-4 py-10 text-foreground sm:px-6">
       <div className="mx-auto flex max-w-2xl flex-col gap-6">
@@ -79,9 +109,7 @@ export default async function MemoSharePage({ params }: SharePageProps) {
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-stone-500">
             JustMemo Share
           </p>
-          <h1 className="text-3xl font-semibold tracking-tight text-stone-900">
-            分享的 Memo
-          </h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-stone-900">分享的 Memo</h1>
           <p className="text-sm text-stone-500">
             {format(new Date(memo.created_at), "PPP", { locale: zhCN })}
           </p>

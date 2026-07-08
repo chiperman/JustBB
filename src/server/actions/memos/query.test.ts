@@ -6,8 +6,9 @@ import {
   getArchivedMemos,
   getOnThisDayMemos,
   getBacklinks,
+  getMemoById,
 } from "./query"
-import { getClient } from "@/lib/supabase"
+import { getAdminClient, getClient } from "@/lib/supabase"
 import { getCurrentUserId } from "@/features/auth/actions"
 
 // Mock Supabase client
@@ -303,5 +304,22 @@ describe("Derivative Memo Queries TDD", () => {
       expect(result.data).toHaveLength(1)
       expect(result.data[0].id).toBe("1")
     })
+  })
+})
+
+describe("getMemoById", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("非法 UUID 不进入 admin 查询，避免数据库类型错误", async () => {
+    const result = await getMemoById("not-a-real-id")
+
+    expect(result).toEqual({
+      success: false,
+      error: "缺少 Memo ID",
+      data: null,
+    })
+    expect(getAdminClient).not.toHaveBeenCalled()
   })
 })

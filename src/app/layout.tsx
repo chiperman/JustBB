@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { ThemeProvider } from "@/shared/providers/ThemeProvider"
 import { env } from "@/lib/env"
+import { noIndexRobots } from "@/shared/lib/page-metadata"
 import "sileo/styles.css"
 import "./globals.css"
 
@@ -12,8 +13,10 @@ if (typeof window === "undefined") {
 export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: "JustMemo - 碎片化人文记录",
+  applicationName: "JustMemo",
   description: "一款追求人文质感与极致隐私的碎片化记录工具。",
   manifest: "/manifest.json",
+  robots: noIndexRobots,
   icons: {
     icon: [
       { url: "/brand-assets/favicon.svg", type: "image/svg+xml" },

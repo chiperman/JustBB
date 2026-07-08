@@ -8,6 +8,7 @@ import { fetchMemosSchema, FetchMemosInput } from "@/lib/memos/schemas"
 import { BASE_MEMO_SELECT, getMemosQuery, MemoFilters } from "@/lib/memos/query-builder"
 import { getCurrentUserId } from "@/features/auth/actions"
 import { withViewerAccess } from "@/lib/memos/visibility"
+import { isUuid } from "@/shared/lib/ids"
 
 /**
  * 核心安全查询方法 (RPC 驱动)
@@ -238,7 +239,7 @@ export async function getMemoById(
   memoId: string,
   unlockedMemoIds: string[] = []
 ): Promise<ActionResponse<Memo | null>> {
-  if (!memoId) {
+  if (!memoId || !isUuid(memoId)) {
     return { success: false, error: "缺少 Memo ID", data: null }
   }
 

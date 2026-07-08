@@ -1,155 +1,99 @@
-# JustMemo
+<p align="center">
+  <img src="./public/brand-assets/logo.svg" alt="JustMemo" width="88" />
+</p>
 
-> 最后更新：2026-06-10
-> 状态：主入口文档
+<h1 align="center">JustMemo</h1>
 
-JustMemo 是一个基于 Next.js 16、React 19 和 Supabase 构建的私密 Memo 系统。
+<p align="center">
+  一个安静的私人记忆容器，用来保存想法、情绪、照片、足迹和时间。
+</p>
 
-它的核心目标不是做公开社交，而是提供一个更轻、更私密、更适合长期记录的个人表达空间。
+<p align="center">
+  <a href="./docs/reference/privacy-and-data.md">隐私模型</a>
+  ·
+  <a href="./docs/reference/product.md">产品能力</a>
+  ·
+  <a href="./docs/reference/architecture.md">架构参考</a>
+  ·
+  <a href="./docs/reference/development.md">开发文档</a>
+</p>
 
-## 1. 你可以在这里找到什么
+<p align="center">
+  <img src="./docs/interface/screenshots/home-desktop.png" alt="JustMemo 首页界面" width="920" />
+</p>
 
-这份 `README` 只负责回答三个问题：
+## 这是什么
 
-- 这个项目是什么
-- 如何在本地启动
-- 应该从哪份文档继续往下读
+JustMemo 是一个基于 Next.js、React、TypeScript 和 Supabase 构建的私密 Memo 系统。它不是公开社交产品，也不是团队知识库，而是一个长期个人记录空间：公开内容可以自然展示，私密内容按条加锁，访客只有输入该条 Memo 的口令后，才能在当前页面会话中临时解锁。
 
-更详细的系统说明统一收口到：
+这个项目的核心判断很简单：存在感可以被看见，正文不能被越权读取。列表、地图、时间轴和画廊可以展示锁定占位；搜索、标签聚合、导出、分享和统计不能消费未解锁正文。
 
-- [文档中心](./docs/README.md)
+## 亮点
 
-## 2. 项目概览
+- **单条私密解锁**，解锁状态只存在于当前页面内存，不写入 Cookie、`localStorage` 或 URL。
+- **时间轴与热力图**，用日期、年份和月份回到某一段记录。
+- **地图记忆**，带坐标的 Memo 会落到地图上，私密内容只显示锁定标记。
+- **图片画廊**，聚合包含图片的 Memo，未解锁私密图片使用安全占位。
+- **作者导出**，只导出当前作者自己的 Memo。
+- **数据库兜底**，RLS、RPC 和数据库约束才是权限真相。
 
-### 技术栈
+## 技术栈
 
-| 分类       | 技术                                   |
-| ---------- | -------------------------------------- |
-| 前端框架   | Next.js 16.1.6 + React 19 + TypeScript |
-| 样式与动效 | Tailwind CSS 4 + Framer Motion         |
-| 编辑器     | Tiptap 3                               |
-| 地图       | Leaflet                                |
-| 后端       | Supabase                               |
-| 部署       | Vercel                                 |
+| 层级   | 技术                                         |
+| ------ | -------------------------------------------- |
+| 应用   | Next.js 16、React 19、TypeScript             |
+| UI     | Tailwind CSS 4、Framer Motion、Hugeicons     |
+| 编辑器 | Tiptap 3                                     |
+| 地图   | Leaflet、react-leaflet                       |
+| 后端   | Supabase Auth、Postgres、RLS、RPC、Storage   |
+| 测试   | Vitest、React Testing Library、本地 Supabase |
 
-完整说明请看：
-
-- [开发参考](./docs/reference/development.md)
-
-### 核心能力
-
-- 公开与私密 Memo
-- 单条私密解锁
-- 标签、搜索、地图与时间轴浏览
-- 画廊视图
-- 多选与批量操作
-- 作者维度备份导出
-
-私密 Memo 的规则说明请看：
-
-- [数据与隐私参考](./docs/reference/privacy-and-data.md)
-
-## 3. 快速开始
-
-### 环境准备
-
-- Node.js 20+
-- Docker Desktop
-- **配置环境变量**：复制 `.env.example` 为 `.env.local` 并根据需要修改（项目内置了 Zod 驱动的严格环境变量校验，缺失核心变量将无法启动）。
-
-### 安装依赖
+## 本地启动
 
 ```bash
+cp .env.example .env.local
 npm install
-```
-
-### 启动开发环境
-
-```bash
 npm run dev
 ```
 
-日常开发只需要记这个命令。它会：
-
-- 检查并启动本地 Supabase
-- 启动 Next.js 开发服务器
-
-如果要连接远程数据库进行开发，请使用：
+`npm run dev` 会检查并启动本地 Supabase，然后启动 Next.js 开发服务器。需要连接远程数据库时使用：
 
 ```bash
 npm run dev:remote
 ```
 
-本地 Supabase 由项目依赖里的 CLI 提供，不要求全局安装 `supabase` 命令。`scripts/dev-setup.sh` 内置了 Supabase 本地环境的自愈逻辑，用于修复 Docker 异常关停后 CLI 与容器状态不同步的问题。
-
-### 命令怎么记
-
-你日常只需要记一个命令：
+常用校验命令：
 
 ```bash
-npm run dev
-```
-
-提交、push、发版、数据库迁移和完整校验默认交给 AI 按需执行。需要你自己判断问题时，可以按下面的分层看：
-
-| 场景           | 命令                    | 谁常用        |
-| -------------- | ----------------------- | ------------- |
-| 日常启动       | `npm run dev`           | 你            |
-| 远程库调试     | `npm run dev:remote`    | 你偶尔用      |
-| 本次改动格式化 | `npm run format:staged` | AI 或你偶尔用 |
-| 提交前检查     | `npm run check`         | AI            |
-| 单元测试       | `npm run test`          | AI            |
-| 构建验证       | `npm run build`         | AI            |
-| 生产构建       | `npm run build:prod`    | 发布时用      |
-
-全仓格式化只在刻意整理格式时使用：`npm run format:all`。
-
-本地 Supabase 排障时再看这些：
-
-```bash
-npx supabase status
-npx supabase stop
-npx supabase stop --no-backup && npx supabase start
-npm run db:reset
-```
-
-数据库与本地 Supabase 工作流请看：
-
-- [Supabase 本地开发说明](./supabase/README.md)
-
-## 4. 文档地图
-
-### 仓库级文档
-
-- [文档中心](./docs/README.md)
-- [脚本目录说明](./scripts/README.md)
-- [Supabase 目录说明](./supabase/README.md)
-
-### 核心系统文档
-
-- [架构参考](./docs/reference/architecture.md)
-- [数据与隐私参考](./docs/reference/privacy-and-data.md)
-
-### 产品与开发文档
-
-- [产品能力参考](./docs/reference/product.md)
-- [开发参考](./docs/reference/development.md)
-- [测试参考](./docs/reference/testing.md)
-- [设计系统](./docs/interface/design.md)
-
-## 5. 开发与提交流程
-
-项目的工程规范、测试策略和文档维护规则统一写在：
-
-- [开发参考](./docs/reference/development.md)
-- [测试参考](./docs/reference/testing.md)
-
-提交前建议至少执行：
-
-```bash
+npm run test
+npm run test:integration
+npm run build
 npm run check
 ```
 
-## 6. 参考与致谢
+## 项目结构
 
-本仓库最早基于 [daibor/nonsense.fun](https://github.com/daibor/nonsense.fun) 的思路演化而来，后续围绕私密记录、作者权限模型、地图和时间轴体验做了持续重构。
+```text
+src/app       App Router 页面、布局和 API route
+src/server    Server Actions 与服务端集成
+src/features  按业务域组织的 UI、hooks 和局部逻辑
+src/shared    共享 UI、layout、hooks 和基础工具
+src/state     应用级 Context
+src/lib       Supabase client、环境变量校验、业务工具
+supabase      本地 Supabase 配置、迁移和 seed
+docs          架构、产品、数据隐私、开发和测试文档
+```
+
+## 文档
+
+- [数据与隐私参考](./docs/reference/privacy-and-data.md)
+- [产品能力参考](./docs/reference/product.md)
+- [架构参考](./docs/reference/architecture.md)
+- [开发参考](./docs/reference/development.md)
+- [测试参考](./docs/reference/testing.md)
+- [设计系统](./docs/interface/design.md)
+- [Supabase 目录说明](./supabase/README.md)
+
+## 致谢
+
+本仓库最早基于 [daibor/nonsense.fun](https://github.com/daibor/nonsense.fun) 的思路演化而来，后续围绕私密记录、作者权限模型、地图、时间轴和内容体验做了持续重构。

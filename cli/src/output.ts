@@ -25,10 +25,6 @@ function snippet(content: string) {
   return compact.length > 80 ? `${compact.slice(0, 80)}…` : compact
 }
 
-function tags(memo: MemoSummary) {
-  return memo.tags && memo.tags.length > 0 ? `[${memo.tags.join(", ")}] ` : ""
-}
-
 export function formatSearch(memos: MemoSummary[]) {
   if (memos.length === 0) return "没有找到 Memo"
 
@@ -37,7 +33,7 @@ export function formatSearch(memos: MemoSummary[]) {
       const date = memo.created_at.slice(0, 10)
       const locked = memo.is_locked ? "[私密] " : ""
       const pinned = memo.is_pinned ? "📌 " : ""
-      return `#${memo.memo_number}  ${date}  ${pinned}${locked}${tags(memo)}${snippet(memo.content)}`
+      return `#${memo.memo_number}  ${date}  ${pinned}${locked}${snippet(memo.content)}`
     })
     .join("\n")
 }

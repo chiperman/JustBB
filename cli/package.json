@@ -1,12 +1,12 @@
 {
   "name": "justmemo-cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
   "description": "JustMemo 的终端客户端。",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/chiperman/JustBB.git",
+    "url": "git+https://github.com/chiperman/JustBB.git",
     "directory": "cli"
   },
   "homepage": "https://github.com/chiperman/JustBB/tree/main/cli",

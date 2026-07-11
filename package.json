@@ -1,6 +1,6 @@
 {
   "name": "just-memo",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "dev": "./scripts/dev-setup.sh && next dev -p 3000",
@@ -10,6 +10,10 @@
     "format:all": "prettier . --write",
     "format:staged": "lint-staged",
     "check": "npm run build && npm run test",
+    "cli:build": "npm --prefix cli run build",
+    "cli:test": "vitest run cli",
+    "cli:pack": "cd cli && npm pack --dry-run",
+    "check:cli": "npm run cli:build && npm run cli:test && npm run cli:pack",
     "test": "dotenv -e .env.local -- vitest run --exclude src/server/actions/memos/query.integrated.test.ts --exclude src/server/actions/memos/security.test.ts",
     "test:integration": "dotenv -e .env.local -- vitest run src/server/actions/memos/query.integrated.test.ts src/server/actions/memos/security.test.ts",
     "db:reset": "supabase db reset",

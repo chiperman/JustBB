@@ -160,6 +160,82 @@ body {
   color: var(--foreground);
 }
 
+@keyframes cli-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes cli-demo-enter {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cli-caret {
+  0%,
+  48% {
+    opacity: 1;
+  }
+  49%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes cli-demo-line-enter {
+  from {
+    opacity: 0.25;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cli-breathe {
+  animation: cli-breathe 2.4s ease-in-out infinite;
+}
+
+.cli-demo-enter {
+  animation: cli-demo-enter 280ms ease-out both;
+}
+
+.cli-demo-line-enter {
+  animation: cli-demo-line-enter 180ms ease-out both;
+}
+
+.cli-typing-cursor {
+  display: inline-block;
+  width: 1px;
+  height: 1em;
+  margin-left: 0.28rem;
+  vertical-align: -0.08em;
+  background: #e08767;
+  animation: cli-caret 1.1s steps(1, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cli-breathe,
+  .cli-demo-enter,
+  .cli-demo-line-enter,
+  .cli-typing-cursor {
+    animation: none;
+  }
+}
+
 /* Typography Utilities per Design Doc */
 @utility display-hero {
   font-size: 4rem;

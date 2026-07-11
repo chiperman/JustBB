@@ -4,14 +4,24 @@ import { revalidatePath } from "next/cache"
 import { getClient } from "@/lib/supabase"
 import { deleteImagesFromR2 } from "@/server/services/r2"
 import { ActionResponse } from "../shared/types"
-import { getCurrentUserId } from "@/features/auth/actions"
+import { getCurrentUserId, isAdmin } from "@/features/auth/actions"
 import { Memo } from "@/types/memo"
 import { getMemosQuery, MemoFilters } from "@/lib/memos/query-builder"
+
+const TRASH_PERMISSION_ERROR = "权限不足，仅操作者可操作回收站"
+
+async function requireTrashOperator(): Promise<ActionResponse | null> {
+  if (await isAdmin()) return null
+  return { success: false, error: TRASH_PERMISSION_ERROR }
+}
 
 /**
  * 软删除笔记
  */
 export async function deleteMemo(id: string): Promise<ActionResponse> {
+  const permissionError = await requireTrashOperator()
+  if (permissionError) return permissionError
+
   const viewerId = await getCurrentUserId()
   if (!viewerId) return { success: false, error: "请先登录" }
 
@@ -36,6 +46,9 @@ export async function deleteMemo(id: string): Promise<ActionResponse> {
  * 恢复笔记
  */
 export async function restoreMemo(id: string): Promise<ActionResponse> {
+  const permissionError = await requireTrashOperator()
+  if (permissionError) return permissionError
+
   const viewerId = await getCurrentUserId()
   if (!viewerId) return { success: false, error: "请先登录" }
 
@@ -60,6 +73,9 @@ export async function restoreMemo(id: string): Promise<ActionResponse> {
  * 硬删除笔记
  */
 export async function permanentDeleteMemo(id: string): Promise<ActionResponse> {
+  const permissionError = await requireTrashOperator()
+  if (permissionError) return permissionError
+
   const viewerId = await getCurrentUserId()
   if (!viewerId) return { success: false, error: "请先登录" }
 
@@ -93,6 +109,9 @@ export async function permanentDeleteMemo(id: string): Promise<ActionResponse> {
  * 清空回收站
  */
 export async function emptyTrash(): Promise<ActionResponse> {
+  const permissionError = await requireTrashOperator()
+  if (permissionError) return permissionError
+
   const viewerId = await getCurrentUserId()
   if (!viewerId) return { success: false, error: "请先登录" }
 
@@ -132,6 +151,9 @@ export async function emptyTrash(): Promise<ActionResponse> {
  * 获取回收站内容
  */
 export async function getTrashMemos(): Promise<ActionResponse<Memo[]>> {
+  const permissionError = await requireTrashOperator()
+  if (permissionError) return { ...permissionError, data: [] }
+
   const viewerId = await getCurrentUserId()
   if (!viewerId) return { success: false, error: "请先登录", data: [] }
 
@@ -163,6 +185,9 @@ export async function batchTrashAction(
   ids: string[],
   action: "delete" | "restore" | "permanent"
 ): Promise<ActionResponse> {
+  const permissionError = await requireTrashOperator()
+  if (permissionError) return permissionError
+
   const viewerId = await getCurrentUserId()
   if (!viewerId) return { success: false, error: "请先登录" }
   if (ids.length === 0) return { success: true, error: null }

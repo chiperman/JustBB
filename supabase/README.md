@@ -1,6 +1,6 @@
 # Supabase 本地开发与迁移说明
 
-> 最后更新：2026-06-11
+> 最后更新：2026-07-11
 > 状态：与当前仓库结构同步
 
 `supabase/` 目录是 JustMemo 的数据库与本地基础设施描述目录。
@@ -145,10 +145,29 @@ npm run types:generate
 - owner-based RLS
 - 私密 Memo 的单条解锁模型
 - `search_memos_secure` 的 `unlocked_ids` 语义
+- CLI 设备授权会话与短期授权码
 
 对应说明请看：
 
 - [数据与隐私参考](../docs/reference/privacy-and-data.md)
+
+## 生产发布迁移
+
+CLI 授权接口依赖 `20260711143948_add_cli_device_sessions.sql`。正式部署前先确认远端 migration 状态：
+
+```bash
+npx supabase migration list
+```
+
+确认只包含预期迁移后，再推送到已连接的生产项目：
+
+```bash
+npx supabase db push --linked
+```
+
+数据库迁移应先于 Vercel Production 部署完成，避免新 API 在表尚未创建时收到真实请求。
+
+如果远端存在仓库没有的历史 migration，Supabase CLI 会拒绝继续推送。此时不要直接执行 migration repair；应先补齐历史文件，或通过已审查的数据库迁移通道只执行当前版本的 SQL，并在发布记录中保留远端版本号。
 
 ## 7. 开发守则
 

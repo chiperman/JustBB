@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { isAuthenticated } from "@/features/auth/actions"
+import { isAdmin } from "@/features/auth/actions"
 import { redirect } from "next/navigation"
 import { TrashClient } from "@/features/trash"
 
@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 }
 
 export default async function TrashPage() {
-  if (!(await isAuthenticated())) {
-    redirect("/")
+  if (!(await isAdmin())) {
+    redirect("/unauthorized")
   }
 
   return <TrashClient />

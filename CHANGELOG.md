@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 1.1.0 (2026-07-11)
+
+### 发布重点
+
+- 现在可以直接在终端使用 JustMemo，浏览器只需确认一次身份，不需要在终端输入密码。
+- 新增 `justmemo login`、`logout` 和 `whoami`，登录状态会保存在当前设备。
+- 新增 Memo 的发布、搜索和查看操作，终端可以完成日常记录管理。
+- 查看私密 Memo 时可以临时输入口令解锁，口令不会被保存。
+- CLI 授权页面新增真实终端操作演示，帮助第一次使用的用户快速了解操作流程。
+- 优化回收站入口、移动端布局和授权页面在窄屏下的排版表现。
+
 ## 1.0.0 (2026-07-08)
 
 ### 发布重点

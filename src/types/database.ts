@@ -121,6 +121,45 @@ export type Database = {
         }
         Relationships: []
       }
+      cli_device_sessions: {
+        Row: {
+          access_token: string | null
+          approved_at: string | null
+          approved_by: string | null
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          refresh_token: string | null
+          status: string
+        }
+        Insert: {
+          access_token?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          refresh_token?: string | null
+          status?: string
+        }
+        Update: {
+          access_token?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

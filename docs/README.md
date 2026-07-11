@@ -1,6 +1,6 @@
 # JustMemo 文档中心
 
-> 最后更新：2026-06-10
+> 最后更新：2026-07-11
 > 状态：总入口
 
 这份文档是 `/docs` 的统一导航页。
@@ -26,6 +26,12 @@
 
 - [设计系统](./interface/design.md)
 - [Vercel Geist 深色参考](./interface/vercel-design-dark.md)
+
+如果你要使用 CLI，再阅读：
+
+- [CLI 命令说明](../cli/README.md)
+- [架构参考](./reference/architecture.md)
+- [数据与隐私参考](./reference/privacy-and-data.md)
 
 ## 2. 文档分区
 

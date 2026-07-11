@@ -33,5 +33,6 @@ export const NAVIGATION_CONFIG: NavigationItem[] = [
     label: "回收站",
     href: "/trash",
     requiresAuth: true,
+    isAdminOnly: true,
   },
 ]

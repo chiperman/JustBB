@@ -10,7 +10,7 @@ if (existsSync(".env.local")) {
 export default defineConfig({
   test: {
     exclude: ["**/node_modules/**"],
-    include: ["src/**/*.test.{ts,tsx}"],
+    include: ["src/**/*.test.{ts,tsx}", "cli/**/*.test.ts"],
     env: process.env,
     globals: true,
   },

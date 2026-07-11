@@ -45,26 +45,16 @@ export function MemoCardHeader({
 }: MemoCardHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-4 min-h-[32px]">
-      <div className={cn("flex items-center gap-3", isSelectionMode && "pl-8 lg:pl-0")}>
-        <div
-          className={cn(
-            "absolute top-[26px] -translate-y-1/2 flex items-center justify-center z-20 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
-            isSelectionMode
-              ? "left-6 opacity-100 scale-100 pointer-events-auto lg:-left-8"
-              : "left-3 opacity-0 scale-75 pointer-events-none lg:-left-11"
-          )}
-          onClick={(e: React.MouseEvent) => {
-            e.stopPropagation()
-            onToggleSelection()
-          }}
-        >
+      <div className="flex items-center gap-3">
+        {isSelectionMode && (
           <Checkbox
             checked={isSelected}
             onCheckedChange={onToggleSelection}
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            aria-label={`选择 Memo #${memo.memo_number}`}
             className="h-4 w-4 rounded-[4px] border-border bg-background transition-all data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
           />
-        </div>
+        )}
         <span className="badge-text bg-(--badge-clay-bg) px-2 py-0.5 rounded-sm">
           #{memo.memo_number}
         </span>

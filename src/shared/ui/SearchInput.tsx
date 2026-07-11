@@ -233,6 +233,11 @@ export function SearchInput() {
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               performSearch(value)
+              return
+            }
+
+            if (e.key === "Escape") {
+              e.currentTarget.blur()
             }
           }}
         />

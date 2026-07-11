@@ -159,12 +159,15 @@ describe("AppShortcuts", () => {
     expect(mockState.toggleSelectionMode).not.toHaveBeenCalled()
   })
 
-  it("登录用户可以切换选择模式", () => {
+  it("登录用户可以从交互控件焦点切换选择模式", () => {
     renderAppShortcuts()
 
-    expect(shortcut("app.selection.toggle").binding).toBe("mod+shift+x")
+    const toggleSelection = shortcut("app.selection.toggle")
 
-    shortcut("app.selection.toggle").handler(
+    expect(toggleSelection.binding).toBe("mod+shift+x")
+    expect(toggleSelection.allowInInteractiveTarget).toBe(true)
+
+    toggleSelection.handler(
       new KeyboardEvent("keydown", { key: "X", metaKey: true, shiftKey: true })
     )
 

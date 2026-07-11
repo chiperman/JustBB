@@ -2,6 +2,12 @@
 
 All notable changes to `justmemo-cli` will be documented in this file.
 
+## 0.1.3 (2026-07-12)
+
+### Changed
+
+- 搜索列表不再重复显示正文已包含的 Tag 摘要。
+
 ## 0.1.2 (2026-07-12)
 
 ### Added

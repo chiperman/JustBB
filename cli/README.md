@@ -10,12 +10,12 @@ justmemo whoami
 justmemo logout
 justmemo publish 今天的记录 #日记
 justmemo search
-justmemo search 工作 旅行 --tag 旅行
+justmemo search 工作 旅行 --tag 旅行 --page 2
 justmemo show 123
 justmemo show 123 --unlock
 ```
 
-未登录也可以搜索和查看公开 Memo。私密 Memo 只会显示锁定状态和口令提示；使用 `--unlock` 时，口令只在当前命令中使用，不会保存。
+未登录也可以搜索和查看公开 Memo；登录后可查看身份，管理员可发布 Memo。`search` 默认显示第 1 页的 20 条结果，可通过 `--limit`（1-100）和 `--page`（1-10000）调整。私密 Memo 只会显示锁定状态和口令提示；使用 `--unlock` 时，口令只在当前命令中使用，不会保存。
 
 `publish` 不加正文时会打开 `$VISUAL` 或 `$EDITOR`；独立一行的 `.jpg/.jpeg/.png/.gif/.webp` 链接会进入图片字段，其他链接保留在正文中。
 
@@ -45,7 +45,7 @@ npm run cli:pack
 
 ## 当前版本
 
-当前版本为 `0.1.0`。
+当前版本为 `0.1.1`。
 
 ## 发布状态
 

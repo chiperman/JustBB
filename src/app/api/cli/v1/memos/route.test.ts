@@ -33,14 +33,16 @@ describe("GET /api/cli/v1/memos", () => {
     rpc.mockResolvedValueOnce({ data: [], error: null })
 
     await GET(
-      new Request("http://localhost/api/cli/v1/memos?q=旅行%20上海&tag=工作&num=123&limit=50")
+      new Request(
+        "http://localhost/api/cli/v1/memos?q=旅行%20上海&tag=工作&num=123&limit=50&page=3"
+      )
     )
 
     expect(rpc).toHaveBeenCalledWith("search_memos_secure", {
       query_text: "旅行 上海",
       unlocked_ids: [],
       limit_val: 50,
-      offset_val: 0,
+      offset_val: 100,
       filters: { tag: "工作", num: "123" },
       sort_order: "newest",
     })

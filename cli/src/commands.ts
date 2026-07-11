@@ -54,6 +54,7 @@ export function parseCommand(args: string[]): ParsedCommand {
     let tag: string | undefined
     let num: string | undefined
     let limit = 20
+    let page = 1
     let json = false
 
     for (let index = 0; index < rest.length; index += 1) {
@@ -73,6 +74,13 @@ export function parseCommand(args: string[]): ParsedCommand {
           throw new Error("--limit 必须是 1-100 之间的整数")
         }
         index += 1
+      } else if (value === "--page") {
+        const rawPage = readOption(rest, index, "--page")
+        page = Number(rawPage)
+        if (!Number.isInteger(page) || page < 1 || page > 10000) {
+          throw new Error("--page 必须是 1-10000 之间的整数")
+        }
+        index += 1
       } else if (value.startsWith("--")) {
         throw new Error(`不支持的参数：${value}`)
       } else {
@@ -82,7 +90,7 @@ export function parseCommand(args: string[]): ParsedCommand {
 
     return {
       name: "search",
-      options: { query: query.join(" "), tag, num, limit, json },
+      options: { query: query.join(" "), tag, num, limit, page, json },
     }
   }
 
@@ -103,16 +111,31 @@ export function parseCommand(args: string[]): ParsedCommand {
   throw new Error(`暂不支持的命令：${command}`)
 }
 
-export const HELP_TEXT = `JustMemo CLI
+const BROWSE_COMMANDS = `  justmemo search [关键词...] [--tag 标签] [--num 编号] [--limit 数量] [--page 页码] [--json]
+  justmemo show <编号> [--unlock] [--json]`
 
-用法：
-  justmemo login
-  justmemo logout
+export function formatHelp(isLoggedIn: boolean) {
+  if (isLoggedIn) {
+    return `JustMemo CLI
+
+已登录，可浏览 Memo；管理员可发布：
   justmemo whoami
+  justmemo logout
   justmemo publish [正文...] [--private] [--pin] [--json]
-  justmemo search [关键词...] [--tag 标签] [--num 编号] [--limit 数量] [--json]
-  justmemo show <编号> [--unlock] [--json]
+${BROWSE_COMMANDS}
 
-当前无需登录即可搜索和查看公开 Memo。
 私密 Memo 使用 justmemo show <编号> --unlock 临时输入该 Memo 的口令解锁。
 `
+  }
+
+  return `JustMemo CLI
+
+无需登录即可浏览公开 Memo：
+${BROWSE_COMMANDS}
+
+管理员登录后可发布 Memo：
+  justmemo login
+
+私密 Memo 使用 justmemo show <编号> --unlock 临时输入该 Memo 的口令解锁。
+`
+}

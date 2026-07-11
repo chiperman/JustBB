@@ -2,7 +2,7 @@
 
 import { realpathSync } from "node:fs"
 import { fileURLToPath } from "node:url"
-import { parseCommand, HELP_TEXT } from "./commands.js"
+import { formatHelp, parseCommand } from "./commands.js"
 import {
   getCliCurrentUser,
   pollDeviceAuth,
@@ -15,7 +15,7 @@ import {
 import { formatLogin, formatPublish, formatSearch, formatShow, formatWhoami } from "./output.js"
 import { promptSecret } from "./prompt.js"
 import { promptText } from "./prompt.js"
-import { clearSession, writeSession } from "./auth-store.js"
+import { clearSession, readSession, writeSession } from "./auth-store.js"
 import { editText } from "./editor.js"
 import { preparePublishContent } from "./content.js"
 import { openBrowser } from "./browser.js"
@@ -29,7 +29,7 @@ export async function run(args: string[]) {
     const command = parseCommand(args)
 
     if (command.name === "help") {
-      process.stdout.write(HELP_TEXT)
+      process.stdout.write(formatHelp((await readSession()) !== null))
       return 0
     }
 

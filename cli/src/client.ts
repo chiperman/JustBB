@@ -45,7 +45,7 @@ async function refreshSession(session: CliSession) {
     },
     { retry: false }
   )
-  if (!refreshed.data) throw new Error("登录已失效，请重新登录")
+  if (!refreshed.data) throw new Error("Your session has expired. Run justmemo login again.")
 
   await writeSession(refreshed.data)
   return refreshed.data
@@ -75,14 +75,18 @@ async function request<T>(
       await refreshSession(session)
       return request<T>(path, init, { retry: false, refreshOnUnauthorized, refreshExpiredSession })
     } catch {
-      // 由下面的统一错误处理返回登录失效提示。
+      // Fall through to the unified error handling below.
     }
   }
 
   const payload = (await response.json()) as CliResponse<T>
 
   if (!response.ok || !payload.success) {
-    throw new Error(payload.error || `请求失败：${response.status}`)
+    throw new Error(
+      payload.error && !/[\u3400-\u9fff]/u.test(payload.error)
+        ? payload.error
+        : `Request failed (${response.status}).`
+    )
   }
 
   return payload
@@ -167,6 +171,83 @@ export function publishMemo(input: {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
     },
+    { refreshOnUnauthorized: true, refreshExpiredSession: true }
+  )
+}
+
+export function updateMemo(
+  memoNumber: string,
+  input: {
+    content?: string
+    images?: string[]
+    is_private?: boolean
+    access_code?: string
+    access_code_hint?: string
+    is_pinned?: boolean
+  }
+) {
+  return request<MemoSummary>(
+    `/api/cli/v1/memos/${encode(memoNumber)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    },
+    { refreshOnUnauthorized: true, refreshExpiredSession: true }
+  )
+}
+
+export function deleteMemo(memoNumber: string) {
+  return request<{ memo_number: number }>(
+    `/api/cli/v1/memos/${encode(memoNumber)}`,
+    { method: "DELETE" },
+    { refreshOnUnauthorized: true, refreshExpiredSession: true }
+  )
+}
+
+export function listTrash(limit: number, page: number) {
+  const params = new URLSearchParams({ limit: String(limit), page: String(page) })
+  return request<MemoSummary[]>(
+    `/api/cli/v1/trash?${params.toString()}`,
+    {},
+    {
+      refreshOnUnauthorized: true,
+      refreshExpiredSession: true,
+    }
+  )
+}
+
+export function showTrashMemo(memoNumber: string) {
+  return request<MemoSummary>(
+    `/api/cli/v1/trash/${encode(memoNumber)}`,
+    {},
+    {
+      refreshOnUnauthorized: true,
+      refreshExpiredSession: true,
+    }
+  )
+}
+
+export function restoreTrashMemo(memoNumber: string) {
+  return request<MemoSummary>(
+    `/api/cli/v1/trash/${encode(memoNumber)}/restore`,
+    { method: "POST" },
+    { refreshOnUnauthorized: true, refreshExpiredSession: true }
+  )
+}
+
+export function purgeTrashMemo(memoNumber: string) {
+  return request<{ memo_number: number }>(
+    `/api/cli/v1/trash/${encode(memoNumber)}`,
+    { method: "DELETE" },
+    { refreshOnUnauthorized: true, refreshExpiredSession: true }
+  )
+}
+
+export function emptyTrash() {
+  return request<{ deleted_count: number }>(
+    "/api/cli/v1/trash",
+    { method: "DELETE" },
     { refreshOnUnauthorized: true, refreshExpiredSession: true }
   )
 }

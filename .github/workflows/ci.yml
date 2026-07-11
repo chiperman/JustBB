@@ -2,9 +2,9 @@ name: JustBB CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -43,3 +43,6 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: "mock_key"
           SUPABASE_SERVICE_ROLE_KEY: "mock_key"
           ADMIN_PASSWORD: "mock_password"
+
+      - name: Check CLI package
+        run: npm run check:cli

@@ -17,36 +17,37 @@ describe("CLI output", () => {
       formatLogin({
         authorizeUrl: "https://example.com/cli/authorize?request=abc",
         code: "A7K2P9",
-        browserOpened: true,
       })
     ).toBe(
-      "正在打开浏览器授权页面…\nhttps://example.com/cli/authorize?request=abc\n\n授权码：A7K2P9\n等待浏览器授权…"
+      "Open this URL in your browser:\nhttps://example.com/cli/authorize?request=abc\n\nAuthorization code: A7K2P9"
     )
   })
 
   it("发布和身份输出保持 CLI 文案", () => {
-    expect(formatPublish(42)).toBe("已发布 Memo #42")
+    expect(formatPublish(42)).toBe("Published Memo #42")
     expect(formatWhoami("cli@example.com", "member")).toBe("cli@example.com (member)")
   })
 
   it("搜索输出简洁摘要", () => {
-    expect(formatSearch([memo])).toBe("#123  2026-07-11  今天去了上海")
+    expect(formatSearch([memo])).toBe("#123  2026-07-11 [旅行]  今天去了上海")
   })
 
   it("搜索结果标记置顶 Memo", () => {
-    expect(formatSearch([{ ...memo, is_pinned: true }])).toBe("#123  2026-07-11  📌 今天去了上海")
+    expect(formatSearch([{ ...memo, is_pinned: true }])).toBe(
+      "#123  2026-07-11 [旅行]  📌 今天去了上海"
+    )
   })
 
   it("完整查看输出图片原始 URL", () => {
     expect(formatShow(memo)).toContain("https://example.com/photo.jpg")
-    expect(formatShow(memo)).toContain("图片链接：")
+    expect(formatShow(memo)).toContain("Image URLs:")
   })
 
   it("锁定 Memo 输出提示而不输出正文", () => {
     const locked = { ...memo, content: "SECRET", is_locked: true, access_code_hint: "生日" }
     const output = formatShow(locked)
 
-    expect(output).toContain("口令提示：生日")
+    expect(output).toContain("Access code hint: 生日")
     expect(output).not.toContain("SECRET")
   })
 })

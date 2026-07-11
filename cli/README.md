@@ -13,11 +13,23 @@ justmemo search
 justmemo search 工作 旅行 --tag 旅行 --page 2
 justmemo show 123
 justmemo show 123 --unlock
+justmemo edit 123
+justmemo show 123 --pin
+justmemo show 123 --unpin
+justmemo show 123 --private
+justmemo show 123 --public
+justmemo show 123 --delete
+justmemo trash
+justmemo trash 123 --restore
+justmemo trash 123 --purge
+justmemo trash --empty
 ```
 
-未登录也可以搜索和查看公开 Memo；登录后可查看身份，管理员可发布 Memo。`search` 默认显示第 1 页的 20 条结果，可通过 `--limit`（1-100）和 `--page`（1-10000）调整。私密 Memo 只会显示锁定状态和口令提示；使用 `--unlock` 时，口令只在当前命令中使用，不会保存。
+未登录也可以搜索和查看公开 Memo；登录后可查看身份，管理员可发布和管理自己的 Memo。`search` 与 `trash` 默认显示第 1 页的 20 条结果，可通过 `--limit`（1-100）和 `--page`（1-10000）调整。私密 Memo 只会显示锁定状态和口令提示；使用 `--unlock` 时，口令只在当前命令中使用，不会保存。
 
-`publish` 不加正文时会打开 `$VISUAL` 或 `$EDITOR`；独立一行的 `.jpg/.jpeg/.png/.gif/.webp` 链接会进入图片字段，其他链接保留在正文中。
+`publish` 不加正文时会优先读取 stdin，否则打开 `$VISUAL` 或 `$EDITOR`。正文中任意位置的 `.jpg/.jpeg/.png/.gif/.webp` 链接都会进入图片字段，其他链接保留在正文中。`edit` 会在系统编辑器中同时展示正文与图片 URL。
+
+私密发布或把已有 Memo 改为私密时，CLI 会隐藏输入访问口令两次，并可填写口令提示。`--purge` 和 `--empty` 不可恢复，默认要求确认；自动化时使用 `--yes`。
 
 开发环境可以通过 `JUSTMEMO_API_URL` 覆盖 API 地址，普通安装不需要配置地址。
 
@@ -45,7 +57,7 @@ npm run cli:pack
 
 ## 当前版本
 
-当前版本为 `0.1.3`。
+当前版本为 `0.2.0`。
 
 ## 发布状态
 

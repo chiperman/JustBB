@@ -1,11 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { GET } from "./route"
+import { GET, PATCH } from "./route"
 
-const rpc = vi.fn()
+const { rpc, getUser, from, maybeSingle, single } = vi.hoisted(() => ({
+  rpc: vi.fn(),
+  getUser: vi.fn(),
+  from: vi.fn(),
+  maybeSingle: vi.fn(),
+  single: vi.fn(),
+}))
 
 vi.mock("@/server/services/cli/client", () => ({
-  getCliClient: vi.fn(() => ({ rpc })),
+  getCliClient: vi.fn(() => ({ rpc, auth: { getUser }, from })),
 }))
+
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 
 describe("GET /api/cli/v1/memos/:memoNumber", () => {
   beforeEach(() => {
@@ -50,5 +58,51 @@ describe("GET /api/cli/v1/memos/:memoNumber", () => {
       error: "无效的 Memo 编号",
     })
     expect(rpc).not.toHaveBeenCalled()
+  })
+
+  it("管理员可以按展示编号更新置顶状态", async () => {
+    getUser.mockResolvedValueOnce({
+      data: { user: { id: "admin-id", app_metadata: { role: "admin" } } },
+      error: null,
+    })
+    from
+      .mockReturnValueOnce({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              is: vi.fn(() => ({ maybeSingle })),
+            })),
+          })),
+        })),
+      })
+      .mockReturnValueOnce({
+        update: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              select: vi.fn(() => ({ single })),
+            })),
+          })),
+        })),
+      })
+    maybeSingle.mockResolvedValueOnce({
+      data: { id: "memo-id", images: [], image_metadata: {} },
+      error: null,
+    })
+    single.mockResolvedValueOnce({ data: { memo_number: 123, is_pinned: true }, error: null })
+
+    const response = await PATCH(
+      new Request("http://localhost/api/cli/v1/memos/123", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ is_pinned: true }),
+      }),
+      { params: Promise.resolve({ memoNumber: "123" }) }
+    )
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({
+      success: true,
+      data: { memo_number: 123, is_pinned: true },
+    })
   })
 })

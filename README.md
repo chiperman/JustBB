@@ -47,9 +47,11 @@ justmemo login
 justmemo search 旅行
 justmemo show 123
 justmemo publish 今天的记录
+justmemo edit 123
+justmemo trash
 ```
 
-CLI 支持登录、退出登录、查看当前用户、发布、搜索、查看和临时解锁私密 Memo。授权页面位于 `/cli/authorize`，授权码不会写入 URL，也不会要求在终端输入密码。
+CLI 支持登录、退出登录、查看当前用户、发布、搜索、查看、编辑、置顶、公开/私密切换和回收站管理；访客可临时解锁单条私密 Memo。授权页面位于 `/cli/authorize`，授权码不会写入 URL，也不会要求在终端输入密码。
 
 详细命令说明见 [`cli/README.md`](./cli/README.md)，系统架构和隐私边界见 [`docs/reference/`](./docs/reference/)。
 

@@ -2,6 +2,18 @@
 
 All notable changes to `justmemo-cli` will be documented in this file.
 
+## 0.2.0 (2026-07-12)
+
+### Added
+
+- 管理员可通过 CLI 编辑 Memo、置顶或取消置顶、切换公开/私密状态，以及管理回收站。
+- 私密发布和设为私密时，访问口令需要隐藏输入两次确认，并支持可选提示。
+- `justmemo login` 会先显示授权信息，按 Enter 后才打开浏览器。
+
+### Fixed
+
+- `--json` 在需要口令或危险操作确认时，交互提示写入 stderr，stdout 保持为单个 JSON 响应。
+
 ## 0.1.3 (2026-07-12)
 
 ### Changed

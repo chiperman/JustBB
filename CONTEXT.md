@@ -310,6 +310,7 @@ npx supabase db push --linked
 - 检查 CLI 包必须进入子目录执行 `cd cli && npm pack --dry-run`；不要使用容易误打包根项目的 `npm pack --prefix cli`。
 - `.github/workflows/ci.yml` 运行 Web build、主测试和 `npm run check:cli`；它会验证 CLI build、测试与打包预览，但不会自动发布 npm。
 - CI 当前监听 `main` 的 push 与 pull request。
+- 生产部署通过 GitHub 主分支触发；不要使用 Vercel CLI 直接部署生产环境。
 
 ## 18. 设计与交互约定
 

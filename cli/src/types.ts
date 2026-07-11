@@ -34,6 +34,7 @@ export type MemoSummary = {
   tags?: string[] | null
   created_at: string
   is_private?: boolean
+  is_pinned?: boolean
   is_locked?: boolean
   access_code_hint?: string | null
   images?: string[] | null
@@ -44,6 +45,7 @@ export type SearchOptions = {
   tag?: string
   num?: string
   limit: number
+  page: number
   json: boolean
 }
 

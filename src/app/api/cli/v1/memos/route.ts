@@ -4,6 +4,8 @@ import { getCliClient } from "@/server/services/cli/client"
 
 const DEFAULT_LIMIT = 20
 const MAX_LIMIT = 100
+const DEFAULT_PAGE = 1
+const MAX_PAGE = 10000
 
 function jsonResponse<T>(success: boolean, data: T, error: string | null, status = 200) {
   return NextResponse.json({ success, data, error }, { status })
@@ -17,12 +19,24 @@ function parseLimit(value: string | null) {
   return parsed
 }
 
+function parsePage(value: string | null) {
+  if (value === null || value === "") return DEFAULT_PAGE
+
+  const parsed = Number(value)
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > MAX_PAGE) return null
+  return parsed
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const limit = parseLimit(url.searchParams.get("limit"))
+  const page = parsePage(url.searchParams.get("page"))
 
   if (limit === null) {
     return jsonResponse(false, null, `limit 必须是 1-${MAX_LIMIT} 之间的整数`, 400)
+  }
+  if (page === null) {
+    return jsonResponse(false, null, `page 必须是 1-${MAX_PAGE} 之间的整数`, 400)
   }
 
   const queryText = url.searchParams.get("q") || ""
@@ -37,7 +51,7 @@ export async function GET(request: Request) {
     query_text: queryText,
     unlocked_ids: [],
     limit_val: limit,
-    offset_val: 0,
+    offset_val: (page - 1) * limit,
     filters: filters as unknown as Json,
     sort_order: "newest",
   })

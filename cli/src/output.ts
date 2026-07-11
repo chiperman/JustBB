@@ -36,7 +36,8 @@ export function formatSearch(memos: MemoSummary[]) {
     .map((memo) => {
       const date = memo.created_at.slice(0, 10)
       const locked = memo.is_locked ? "[私密] " : ""
-      return `#${memo.memo_number}  ${date}  ${locked}${tags(memo)}${snippet(memo.content)}`
+      const pinned = memo.is_pinned ? "📌 " : ""
+      return `#${memo.memo_number}  ${date}  ${pinned}${locked}${tags(memo)}${snippet(memo.content)}`
     })
     .join("\n")
 }

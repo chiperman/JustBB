@@ -2,6 +2,17 @@
 
 All notable changes to `justmemo-cli` will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- `search` 支持 `--page` 分页，可与关键词、标签、编号和 `--limit` 组合使用。
+- 搜索结果会显示置顶标识，帮助信息会根据本地登录状态显示对应命令。
+
+### Fixed
+
+- 已登录用户的访问令牌过期后，需识别身份的命令会自动刷新会话并重试。
+
 ## 0.1.1 (2026-07-11)
 
 ### Fixed

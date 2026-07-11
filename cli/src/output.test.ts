@@ -33,6 +33,12 @@ describe("CLI output", () => {
     expect(formatSearch([memo])).toBe("#123  2026-07-11  [旅行] 今天去了上海")
   })
 
+  it("搜索结果标记置顶 Memo", () => {
+    expect(formatSearch([{ ...memo, is_pinned: true }])).toBe(
+      "#123  2026-07-11  📌 [旅行] 今天去了上海"
+    )
+  })
+
   it("完整查看输出图片原始 URL", () => {
     expect(formatShow(memo)).toContain("https://example.com/photo.jpg")
     expect(formatShow(memo)).toContain("图片链接：")

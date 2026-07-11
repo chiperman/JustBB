@@ -2,7 +2,7 @@
 
 All notable changes to `justmemo-cli` will be documented in this file.
 
-## Unreleased
+## 0.1.2 (2026-07-12)
 
 ### Added
 

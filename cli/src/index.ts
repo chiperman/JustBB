@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { realpathSync } from "node:fs"
+import { fileURLToPath } from "node:url"
 import { parseCommand, HELP_TEXT } from "./commands.js"
 import {
   getCliCurrentUser,
@@ -136,7 +138,10 @@ export async function run(args: string[]) {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isCliEntrypoint =
+  process.argv[1] && fileURLToPath(import.meta.url) === realpathSync(process.argv[1])
+
+if (isCliEntrypoint) {
   run(process.argv.slice(2)).then((code) => {
     process.exitCode = code
   })

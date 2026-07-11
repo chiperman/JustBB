@@ -2,6 +2,12 @@
 
 All notable changes to `justmemo-cli` will be documented in this file.
 
+## 0.1.1 (2026-07-11)
+
+### Fixed
+
+- 修复全局安装后 `justmemo` 命令入口未执行的问题。
+
 ## 0.1.0 (2026-07-11)
 
 ### Added

@@ -1,6 +1,6 @@
 {
   "name": "justmemo-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "description": "JustMemo 的终端客户端。",
   "license": "MIT",

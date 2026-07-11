@@ -129,6 +129,7 @@ export function AppShortcuts() {
         description: "切换选择模式",
         group: "选择",
         enabled: isLoggedIn,
+        allowInInteractiveTarget: true,
         handler: toggleSelection,
       }),
       [isLoggedIn, toggleSelection]

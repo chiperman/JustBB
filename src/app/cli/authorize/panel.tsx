@@ -142,7 +142,7 @@ export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) 
       >
         终端授权码
       </label>
-      <div className="group relative mb-3 rounded-xl focus-within:ring-2 focus-within:ring-[#e08767]/30">
+      <div className="group relative mb-3 rounded-xl">
         <div className="grid grid-cols-6 gap-2" aria-hidden="true">
           {Array.from({ length: 6 }, (_, index) => {
             const digit = code[index]

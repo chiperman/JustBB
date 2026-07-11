@@ -106,6 +106,20 @@ describe("SearchInput Chip Interaction", () => {
     expect(document.activeElement).toBe(input)
   })
 
+  it("按 Escape 会取消搜索框焦点", () => {
+    render(
+      <TooltipProvider>
+        <SearchInput />
+      </TooltipProvider>
+    )
+
+    const input = screen.getByLabelText("搜索 Memo")
+    input.focus()
+    fireEvent.keyDown(input, { key: "Escape" })
+
+    expect(document.activeElement).not.toBe(input)
+  })
+
   it("focuses input when a chip is clicked to delete via the close button", () => {
     const { container, rerender } = render(
       <TooltipProvider>

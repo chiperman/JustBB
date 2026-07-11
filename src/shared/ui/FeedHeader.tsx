@@ -120,21 +120,27 @@ export function FeedHeader({ isRefreshing = false, isCollapsed = false }: FeedHe
                   </span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" side="bottom" className="w-48">
+              <DropdownMenuContent align="start" side="bottom" className="w-56 p-1.5">
                 {user && (
                   <>
-                    <DropdownMenuItem className="gap-2" onClick={() => toggleSelectionMode(true)}>
+                    <DropdownMenuItem
+                      className="min-h-11 gap-2 whitespace-nowrap"
+                      onClick={() => toggleSelectionMode(true)}
+                    >
                       <HugeiconsIcon icon={CheckmarkSquare02Icon} size={16} />
-                      <span>选择笔记</span>
-                      <ShortcutHint shortcut="mod+shift+x" className="ml-auto" />
+                      <span className="min-w-0 flex-1">选择笔记</span>
+                      <ShortcutHint
+                        shortcut="mod+shift+x"
+                        className="ml-auto [&_kbd]:h-5 [&_kbd]:min-w-5 [&_kbd]:rounded [&_kbd]:px-1 [&_kbd]:text-[10px] [&_kbd]:font-medium [&_kbd]:shadow-none"
+                      />
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </>
                 )}
                 <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="gap-2">
+                  <DropdownMenuSubTrigger className="min-h-11 gap-2 whitespace-nowrap">
                     <HugeiconsIcon icon={Sorting05Icon} size={16} />
-                    <span>排序方式</span>
+                    <span className="min-w-0 flex-1">排序方式</span>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
                     <DropdownMenuSubContent>

@@ -1,6 +1,7 @@
 "use client"
 
 import { type FormEvent, type ReactNode, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { login } from "@/features/auth/actions"
 import { Button } from "@/shared/ui/button"
@@ -11,6 +12,8 @@ type Props = {
   initialCode: string
   userEmail: string | null
 }
+
+const DEVICE_CODE_PATTERN = /[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/g
 
 export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) {
   const router = useRouter()
@@ -30,7 +33,11 @@ export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) 
       setIsPending(false)
       router.refresh()
     } else {
-      setError(result.error || "登录失败")
+      setError(
+        result.error && /[\u3400-\u9fff]/u.test(result.error)
+          ? result.error
+          : "登录失败，请稍后重试。"
+      )
       setIsPending(false)
     }
   }
@@ -45,7 +52,11 @@ export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) 
     })
     const result = (await response.json()) as { success: boolean; error: string | null }
     if (!response.ok || !result.success) {
-      setError(result.error || "授权失败")
+      setError(
+        result.error && /[\u3400-\u9fff]/u.test(result.error)
+          ? result.error
+          : "授权失败，请重新确认授权码。"
+      )
       setIsPending(false)
       return
     }
@@ -57,10 +68,9 @@ export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) 
 
   if (!userEmail) {
     return (
-      <Card eyebrow="Step 01 / Sign in" title="先让浏览器识别你">
+      <Card eyebrow="步骤 01 / 登录" title="先在浏览器确认你的身份">
         <p className="mb-7 text-sm leading-7 text-[#b3aea7]">
-          登录后，CLI 才能使用你的 JustMemo
-          权限。普通账号可以搜索和查看，管理员账号才可以发布和管理。
+          登录后，CLI 会沿用你的 JustMemo 权限。普通用户只能浏览；管理员可以发布和管理自己的 Memo。
         </p>
         <form onSubmit={handleLogin} className="space-y-5">
           <label className="block space-y-2 text-sm font-medium" htmlFor="cli-email">
@@ -83,7 +93,7 @@ export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) 
               id="cli-password"
               name="password"
               type="password"
-              placeholder="输入你的登录密码"
+              placeholder="输入你的密码"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
@@ -100,7 +110,7 @@ export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) 
             className="h-11 w-full bg-[#e08767] text-[#10100f] hover:bg-[#ef9b7d] active:scale-95"
             disabled={isPending}
           >
-            {isPending ? "正在确认身份…" : "登录并继续"}
+            {isPending ? "正在确认身份..." : "登录并继续"}
           </Button>
         </form>
       </Card>
@@ -109,19 +119,19 @@ export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) 
 
   if (approved) {
     return (
-      <Card eyebrow="Device connected" title="终端可以继续了">
+      <Card eyebrow="设备已确认" title="回到终端继续即可">
         <div className="flex items-start gap-3 border-t border-white/10 pt-5">
           <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#e08767] text-[11px] font-bold text-[#10100f]">
             ✓
           </span>
-          <p className="text-sm leading-7 text-[#b3aea7]">回到 terminal，CLI 会自动完成登录。</p>
+          <p className="text-sm leading-7 text-[#b3aea7]">回到终端即可，CLI 会自动完成登录。</p>
         </div>
       </Card>
     )
   }
 
   return (
-    <Card eyebrow="Step 02 / Confirm device" title="输入短码，回到终端">
+    <Card eyebrow="步骤 02 / 确认设备" title="输入授权码，然后回到终端">
       <p className="mb-6 text-sm leading-7 text-[#b3aea7]">
         你正在授权 <span className="font-medium text-[#f3f1ee]">{userEmail}</span> 使用 JustMemo
         CLI。
@@ -130,7 +140,7 @@ export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) 
         className="mb-2 block text-xs font-mono uppercase tracking-[0.16em] text-[#b3aea7]"
         htmlFor="device-code"
       >
-        Terminal authorization code
+        终端授权码
       </label>
       <div className="group relative mb-3 rounded-xl focus-within:ring-2 focus-within:ring-[#e08767]/30">
         <div className="grid grid-cols-6 gap-2" aria-hidden="true">
@@ -160,24 +170,19 @@ export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) 
           maxLength={6}
           value={code}
           onChange={(event) =>
-            setCode(
-              event.target.value
-                .toUpperCase()
-                .replace(/[^A-Z0-9]/g, "")
-                .slice(0, 6)
-            )
+            setCode(event.target.value.toUpperCase().replace(DEVICE_CODE_PATTERN, "").slice(0, 6))
           }
           autoCapitalize="characters"
           autoCorrect="off"
           spellCheck={false}
           aria-describedby="device-code-help"
-          aria-label="六位字母数字授权码"
+          aria-label="六位授权码"
           aria-invalid={Boolean(error)}
           className="absolute inset-0 h-full w-full cursor-text border-0 bg-transparent text-transparent opacity-0 shadow-none caret-transparent focus-visible:ring-0"
         />
       </div>
       <p id="device-code-help" className="mb-6 text-xs leading-6 text-[#b3aea7]">
-        授权码只使用一次，有效期十分钟。
+        授权码只能使用一次，十分钟后失效。
       </p>
       {error && (
         <p className="mb-3 text-sm leading-6 text-[#ff9478]" role="alert">
@@ -189,7 +194,7 @@ export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) 
         disabled={isPending || code.length !== 6}
         onClick={handleApprove}
       >
-        {isPending ? "授权中…" : "确认授权"}
+        {isPending ? "正在授权..." : "确认授权"}
       </Button>
     </Card>
   )
@@ -197,21 +202,29 @@ export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) 
 
 function CliGuide() {
   return (
-    <Card eyebrow="CLI / Ready to run" title="从命令行开始">
+    <Card eyebrow="CLI / READY TO RUN" title="从命令行开始">
       <p className="mb-6 text-sm leading-7 text-[#b3aea7]">
-        浏览器只负责确认，日常操作都在 terminal。
+        浏览器只负责确认身份，日常操作都在终端完成。
       </p>
       <div className="mt-7 border-t border-white/10 pt-5">
         <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.18em] text-[#b3aea7]">
           常用命令
         </p>
         <div className="grid gap-3">
-          <GuideCommand command="justmemo login" detail="登陆" />
+          <GuideCommand command="justmemo login" detail="登录授权" />
+          <GuideCommand command="justmemo publish ..." detail="发布记录" />
           <GuideCommand command="justmemo search" detail="搜索记录" />
-          <GuideCommand command="justmemo show 123" detail="查看内容" />
-          <GuideCommand command="justmemo publish ..." detail="发布 Memo" />
+          <GuideCommand command="justmemo edit 123" detail="编辑记录" />
+          <GuideCommand command="justmemo trash" detail="管理回收站" />
         </div>
       </div>
+      <Link
+        href="/cli/commands"
+        className="mt-6 flex items-center justify-between border-t border-white/10 pt-4 font-mono text-[11px] uppercase tracking-[0.16em] text-[#f3f1ee] transition-colors hover:text-[#e08767]"
+      >
+        查看完整命令
+        <span aria-hidden="true">→</span>
+      </Link>
     </Card>
   )
 }
@@ -235,7 +248,7 @@ function Card({
   children: ReactNode
 }) {
   return (
-    <section className="mx-auto w-full max-w-[460px] rounded-[16px] border border-white/10 bg-[#1c1b18] p-5 text-[#f3f1ee] shadow-[0_24px_80px_rgba(0,0,0,0.32)] sm:p-7">
+    <section className="mx-auto w-full max-w-[600px] rounded-[16px] border border-white/10 bg-[#191918] p-5 text-[#f3f1ee] sm:p-7">
       <div className="mb-8 flex items-center justify-between gap-4 border-b border-white/10 pb-5">
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#e08767]">JustMemo</p>
         <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#b3aea7]">

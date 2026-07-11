@@ -1,19 +1,11 @@
 import type { MemoSummary } from "./types.js"
 
-export function formatLogin({
-  authorizeUrl,
-  code,
-  browserOpened,
-}: {
-  authorizeUrl: string
-  code: string
-  browserOpened: boolean
-}) {
-  return `${browserOpened ? "正在打开浏览器授权页面…" : "未能自动打开浏览器，请手动访问："}\n${authorizeUrl}\n\n授权码：${code}\n等待浏览器授权…`
+export function formatLogin({ authorizeUrl, code }: { authorizeUrl: string; code: string }) {
+  return `Open this URL in your browser:\n${authorizeUrl}\n\nAuthorization code: ${code}`
 }
 
 export function formatPublish(memoNumber: number | undefined) {
-  return `已发布 Memo #${memoNumber}`
+  return `Published Memo #${memoNumber}`
 }
 
 export function formatWhoami(email: string | undefined, role: string) {
@@ -26,14 +18,15 @@ function snippet(content: string) {
 }
 
 export function formatSearch(memos: MemoSummary[]) {
-  if (memos.length === 0) return "没有找到 Memo"
+  if (memos.length === 0) return "No memos found."
 
   return memos
     .map((memo) => {
       const date = memo.created_at.slice(0, 10)
-      const locked = memo.is_locked ? "[私密] " : ""
+      const locked = memo.is_locked ? "[Private] " : ""
       const pinned = memo.is_pinned ? "📌 " : ""
-      return `#${memo.memo_number}  ${date}  ${pinned}${locked}${snippet(memo.content)}`
+      const tags = memo.is_locked || !memo.tags?.length ? "" : ` [${memo.tags.join(" · ")}]`
+      return `#${memo.memo_number}  ${date}${tags}  ${pinned}${locked}${snippet(memo.content)}`
     })
     .join("\n")
 }
@@ -42,15 +35,15 @@ export function formatShow(memo: MemoSummary) {
   const lines = [`#${memo.memo_number}  ${memo.created_at.slice(0, 10)}`]
 
   if (memo.is_locked) {
-    lines.push("", "这是一条私密 Memo，正文已锁定。")
-    if (memo.access_code_hint) lines.push(`口令提示：${memo.access_code_hint}`)
-    lines.push("使用 justmemo show <编号> --unlock 查看完整内容。")
+    lines.push("", "This Memo is private and its content is locked.")
+    if (memo.access_code_hint) lines.push(`Access code hint: ${memo.access_code_hint}`)
+    lines.push("Run justmemo show <number> --unlock to view the full content.")
     return lines.join("\n")
   }
 
-  lines.push("", memo.content || "（无正文）")
+  lines.push("", memo.content || "(No content)")
   if (memo.images && memo.images.length > 0) {
-    lines.push("", "图片链接：", ...memo.images)
+    lines.push("", "Image URLs:", ...memo.images)
   }
   return lines.join("\n")
 }

@@ -12,28 +12,39 @@ describe("TerminalUsageDemo", () => {
       "$ justmemo help",
       "$ justmemo login",
       "$ justmemo whoami",
-      "$ justmemo publish 今天的记录 #日记",
-      "$ justmemo publish --private --pin 周末的秘密",
-      "$ justmemo search 旅行 --tag 生活",
-      "$ justmemo search --tag 生活 --limit 5",
+      "$ justmemo publish Today's note #journal",
+      "$ justmemo publish --private --pin A quiet weekend",
+      "$ justmemo search Shanghai --tag travel",
       "$ justmemo show 42",
+      "$ justmemo edit 42",
+      "$ justmemo show 42 --pin",
+      "$ justmemo show 42 --delete",
+      "$ justmemo trash 42 --restore",
       "$ justmemo show 17 --unlock",
       "$ justmemo logout",
     ])
 
-    const steps = buildDemoSteps("https://just-memo.vercel.app/cli/authorize")
+    const steps = buildDemoSteps(
+      "https://just-memo.vercel.app/cli/authorize?request=5e6f1e1f-d8c0-4521-a85a-31e7f842d218"
+    )
+    expect(steps[0].lines).toHaveLength(7)
+    expect(steps[0].lines.at(-1)).toBe("  …")
     expect(steps[0].outputMode).toBe("instant")
     expect(steps[5].outputMode).toBe("instant")
-    expect(steps[6].outputMode).toBe("instant")
-    expect(steps[1].lines).toContain("https://just-memo.vercel.app/cli/authorize")
-    expect(steps[1].lines.join("\n")).not.toContain("?request=")
-    expect(steps[4].lines[0]).toBe("口令提示（可留空）：旅行记录")
-    expect(steps[4].lines[1]).toBe("访问口令：********")
-    expect(steps[4].lines[2]).toBe("再次输入访问口令：********")
-    expect(steps[4].lines[3]).toBe("口令已确认。")
-    expect(steps[8].lines[0]).toBe("口令提示：旅行记录")
-    expect(steps[8].lines[1]).toBe("请输入解锁口令：********")
-    expect(steps[9].lines[0]).toBe("justmemo logout success")
+    expect(steps[1].lines.join("\n")).toContain("request=***")
+    expect(steps[1].lines.join("\n")).not.toContain("5e6f1e1f")
+    expect(steps[1].lines).toContain("Press ENTER to open in your browser...")
+    expect(steps[1].lines).toContain("Waiting for browser authorization...")
+    expect(steps[2].lines).toEqual(["cli-manual@example.com (admin)"])
+    expect(steps[4].lines[0]).toBe("Access code: ********")
+    expect(steps[4].lines[1]).toBe("Confirm access code: ********")
+    expect(steps[4].lines[2]).toBe("Access code hint (optional): travel notes")
+    expect(steps[8].lines).toEqual(["Pinned Memo #42"])
+    expect(steps[9].lines).toEqual(["Moved Memo #42 to Trash"])
+    expect(steps[10].lines).toEqual(["Restored Memo #42"])
+    expect(steps[11].lines[0]).toBe("Access code hint: travel notes")
+    expect(steps[11].lines[1]).toBe("Access code: ********")
+    expect(steps[12].lines[0]).toBe("justmemo logout success")
   })
 
   beforeEach(() => {
@@ -65,7 +76,7 @@ describe("TerminalUsageDemo", () => {
         await vi.advanceTimersByTimeAsync(250)
       })
 
-      if (screen.getByRole("region").textContent?.includes("授权码：A7K2P9")) {
+      if (screen.getByRole("region").textContent?.includes("Authorization code: A7K2P9")) {
         sawAuthorizationCode = true
         break
       }

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## Unreleased
+
+### CLI
+
+- 补齐管理员的编辑、置顶、公开/私密切换、软删除、回收站恢复、永久删除和清空回收站命令。
+- 私密发布和设为私密时，访问口令改为隐藏输入两次确认，并支持可选口令提示。
+- 授权页左侧终端演示改为完整的真实命令旅程，覆盖登录、发布、搜索、编辑、删除、恢复和解锁。
+
 ## 1.1.0 (2026-07-11)
 
 ### 发布重点

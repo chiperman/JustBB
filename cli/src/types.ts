@@ -60,4 +60,19 @@ export type ShowOptions = {
   memoNumber: string
   json: boolean
   unlock: boolean
+  action?: "edit" | "pin" | "unpin" | "private" | "public" | "delete"
+}
+
+export type EditOptions = {
+  memoNumber: string
+  json: boolean
+}
+
+export type TrashOptions = {
+  memoNumber?: string
+  action: "list" | "show" | "restore" | "purge" | "empty"
+  limit: number
+  page: number
+  json: boolean
+  yes: boolean
 }

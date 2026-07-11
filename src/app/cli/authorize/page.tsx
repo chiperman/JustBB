@@ -4,7 +4,7 @@ import { TerminalUsageDemo } from "./demo"
 import { CliAuthorizePanel } from "./panel"
 
 export const metadata: Metadata = {
-  title: "授权 JustMemo CLI",
+  title: "JustMemo CLI 授权",
   robots: { index: false, follow: false },
 }
 
@@ -32,18 +32,18 @@ export default async function CliAuthorizePage({
           </span>
         </header>
 
-        <div className="grid min-w-0 flex-1 grid-cols-1 items-start gap-8 py-6 lg:items-center lg:grid-cols-[minmax(0,1fr)_minmax(360px,460px)] lg:gap-10 lg:py-8 xl:gap-16">
+        <div className="grid min-w-0 flex-1 grid-cols-1 items-start gap-8 py-6 lg:items-center lg:grid-cols-[minmax(0,1fr)_minmax(360px,600px)] lg:gap-10 lg:py-8 xl:gap-16">
           <section className="mx-auto w-full min-w-0 max-w-[600px] lg:mx-0">
             <h1
               id="authorize-page-title"
               className="max-w-none whitespace-nowrap font-mono text-[clamp(1.5rem,4vw,4.7rem)] font-medium leading-[1.03] tracking-[-0.065em]"
             >
-              {hasRequest ? "先确认，再让终端继续。" : "命令行可以做更多。"}
+              {hasRequest ? "确认一次，让终端继续。" : "从命令行开始记录。"}
             </h1>
             <p className="mt-5 max-w-[500px] text-pretty text-[15px] leading-7 text-[#a8a49d]">
               {hasRequest
-                ? "确认授权后，终端会自动继续。下面是它接下来可以完成的事情。"
-                : "从登录开始，然后搜索、查看和管理你的记录。下面是一个简短的使用预览。"}
+                ? "确认这台设备后，终端会自动继续完成登录。下面是它接下来可以完成的操作。"
+                : "登录后，你可以在终端中搜索、查看和管理记录。先看看实际使用方式。"}
             </p>
             <TerminalUsageDemo />
           </section>

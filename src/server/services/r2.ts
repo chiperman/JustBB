@@ -3,6 +3,13 @@ import { getClient } from "@/lib/supabase"
 
 const r2ClientMap = new Map<string, S3Client>()
 
+export type R2DeleteConfig = {
+  account_id: string
+  access_key_id: string
+  secret_access_key: string
+  bucket_name: string
+}
+
 /**
  * 获取或缓存 R2 S3 客户端实例
  */
@@ -33,6 +40,32 @@ export async function deleteImagesFromR2(
     return { success: true, error: null }
   }
 
+  const supabase = await getClient()
+  const { data: config, error: configError } = await supabase
+    .from("r2_configs")
+    .select("account_id, access_key_id, secret_access_key, bucket_name")
+    .eq("user_id", userId)
+    .single()
+
+  if (configError || !config) {
+    console.warn(
+      "Unable to delete images from R2: User R2 config not found or error occurred.",
+      configError
+    )
+    return { success: false, error: "未找到 R2 配置，无法删除存储桶中的文件" }
+  }
+
+  return deleteImagesFromR2WithConfig(imageUrls, config)
+}
+
+export async function deleteImagesFromR2WithConfig(
+  imageUrls: string[],
+  config: R2DeleteConfig
+): Promise<{ success: boolean; error: string | null }> {
+  if (!imageUrls || imageUrls.length === 0) {
+    return { success: true, error: null }
+  }
+
   // 1. 提取所有有效的 key
   const keys: string[] = []
   for (const url of imageUrls) {
@@ -55,22 +88,6 @@ export async function deleteImagesFromR2(
   }
 
   try {
-    const supabase = await getClient()
-    // 获取用户的 R2 配置
-    const { data: config, error: configError } = await supabase
-      .from("r2_configs")
-      .select("account_id, access_key_id, secret_access_key, bucket_name")
-      .eq("user_id", userId)
-      .single()
-
-    if (configError || !config) {
-      console.warn(
-        "Unable to delete images from R2: User R2 config not found or error occurred.",
-        configError
-      )
-      return { success: false, error: "未找到 R2 配置，无法删除存储桶中的文件" }
-    }
-
     const client = getR2Client(config.account_id, config.access_key_id, config.secret_access_key)
 
     // S3 DeleteObjectsCommand 限制每次最多删除 1000 个 Key，执行分批删除

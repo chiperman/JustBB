@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   formatLogin,
   formatPublish,
@@ -8,6 +8,7 @@ import {
   formatShow,
   formatWhoami,
 } from "../../../../cli/src/output"
+import { formatHelp } from "../../../../cli/src/commands"
 import type { MemoSummary } from "../../../../cli/src/types"
 
 type DemoStep = {
@@ -21,8 +22,8 @@ type DemoStep = {
 const demoMemo: MemoSummary = {
   id: "demo-memo-042",
   memo_number: 42,
-  content: "今天去了上海",
-  tags: ["旅行"],
+  content: "A day in Shanghai",
+  tags: ["travel"],
   created_at: "2026-07-11T00:00:00.000Z",
   is_locked: false,
   images: [],
@@ -32,105 +33,130 @@ const lifeMemo: MemoSummary = {
   ...demoMemo,
   id: "demo-memo-037",
   memo_number: 37,
-  content: "在陌生城市醒来",
+  content: "Waking up in a new city",
   created_at: "2026-07-10T00:00:00.000Z",
-  tags: ["生活"],
+  tags: ["life"],
 }
 
 const unlockedPrivateMemo: MemoSummary = {
   ...demoMemo,
   id: "demo-memo-017",
   memo_number: 17,
-  content: "把今天留给自己，慢慢走回熟悉的街道。",
-  tags: ["私密"],
+  content: "Keeping today to myself, one familiar street at a time.",
+  tags: ["private"],
   is_locked: false,
 }
 
 const DEMO_AUTHORIZE_URL =
-  "https://just-memo.vercel.app/cli/authorize？equest=5e6f1***-d***-4***-a***-31e7f842s***"
-const PASSWORD_PROMPTS = ["请输入解锁口令：", "访问口令：", "再次输入访问口令："] as const
-const DEMO_HELP_LINES = [
-  "JustMemo CLI",
-  "用法：",
-  "  justmemo login",
-  "  justmemo logout",
-  "  justmemo whoami",
-  "  justmemo publish [正文...] …",
-  "  justmemo search [关键词...] …",
-  "更多参数：justmemo help",
-]
+  "https://just-memo.vercel.app/cli/authorize?request=5e6f1e1f-d8c0-4521-a85a-31e7f842d218"
+const TYPED_INPUT_PROMPTS = [
+  "Access code: ",
+  "Confirm access code: ",
+  "Access code hint (optional): ",
+] as const
+
+function maskAuthorizeRequest(url: string) {
+  return url.replace(/([?&]request=)[^&]+/, "$1***")
+}
+
+function helpPreview() {
+  return [...formatHelp("admin").trimEnd().split("\n").slice(0, 6), "  …"]
+}
 
 export function buildDemoSteps(authorizeUrl: string): DemoStep[] {
   return [
     {
       label: "01 / help",
       command: "$ justmemo help",
-      lines: DEMO_HELP_LINES,
+      lines: helpPreview(),
       typingSpeed: 58,
       outputMode: "instant",
     },
     {
       label: "02 / login",
       command: "$ justmemo login",
-      lines: formatLogin({ authorizeUrl, code: "A7K2P9", browserOpened: true }).split("\n"),
+      lines: [
+        ...formatLogin({ authorizeUrl: maskAuthorizeRequest(authorizeUrl), code: "A7K2P9" }).split(
+          "\n"
+        ),
+        "",
+        "Press ENTER to open in your browser...",
+        "Waiting for browser authorization...",
+      ],
       typingSpeed: 126,
     },
     {
       label: "03 / whoami",
       command: "$ justmemo whoami",
-      lines: formatWhoami("cli-manual@example.com", "member").split("\n"),
+      lines: formatWhoami("cli-manual@example.com", "admin").split("\n"),
       typingSpeed: 84,
     },
     {
       label: "04 / publish",
-      command: "$ justmemo publish 今天的记录 #日记",
+      command: "$ justmemo publish Today\'s note #journal",
       lines: formatPublish(42).split("\n"),
       typingSpeed: 78,
     },
     {
       label: "05 / private publish",
-      command: "$ justmemo publish --private --pin 周末的秘密",
+      command: "$ justmemo publish --private --pin A quiet weekend",
       lines: [
-        "口令提示（可留空）：旅行记录",
-        "访问口令：********",
-        "再次输入访问口令：********",
-        "口令已确认。",
+        "Access code: ********",
+        "Confirm access code: ********",
+        "Access code hint (optional): travel notes",
         ...formatPublish(43).split("\n"),
       ],
       typingSpeed: 68,
     },
     {
       label: "06 / search",
-      command: "$ justmemo search 旅行 --tag 生活",
+      command: "$ justmemo search Shanghai --tag travel",
       lines: formatSearch([demoMemo, lifeMemo]).split("\n"),
       typingSpeed: 72,
       outputMode: "instant",
     },
     {
-      label: "07 / filtered search",
-      command: "$ justmemo search --tag 生活 --limit 5",
-      lines: formatSearch([lifeMemo]).split("\n"),
-      typingSpeed: 64,
-      outputMode: "instant",
-    },
-    {
-      label: "08 / show",
+      label: "07 / show",
       command: "$ justmemo show 42",
       lines: formatShow(demoMemo).split("\n"),
       typingSpeed: 76,
     },
     {
-      label: "09 / unlock",
+      label: "08 / edit",
+      command: "$ justmemo edit 42",
+      lines: ["Opening system editor...", "Updated Memo #42"],
+      typingSpeed: 72,
+    },
+    {
+      label: "09 / pin",
+      command: "$ justmemo show 42 --pin",
+      lines: ["Pinned Memo #42"],
+      typingSpeed: 72,
+    },
+    {
+      label: "10 / delete",
+      command: "$ justmemo show 42 --delete",
+      lines: ["Moved Memo #42 to Trash"],
+      typingSpeed: 72,
+    },
+    {
+      label: "11 / restore",
+      command: "$ justmemo trash 42 --restore",
+      lines: ["Restored Memo #42"],
+      typingSpeed: 72,
+    },
+    {
+      label: "12 / unlock",
       command: "$ justmemo show 17 --unlock",
       lines: [
-        "口令提示：旅行记录",
-        "请输入解锁口令：********",
+        "Access code hint: travel notes",
+        "Access code: ********",
         ...formatShow(unlockedPrivateMemo).split("\n"),
       ],
       typingSpeed: 72,
     },
     {
-      label: "10 / logout",
+      label: "13 / logout",
       command: "$ justmemo logout",
       lines: ["justmemo logout success"],
       typingSpeed: 82,
@@ -145,12 +171,17 @@ export function TerminalUsageDemo() {
   const [lineText, setLineText] = useState("")
   const [phase, setPhase] = useState<"command" | "lines">("command")
   const [isPaused, setIsPaused] = useState(false)
+  const terminalBodyRef = useRef<HTMLDivElement>(null)
   const [reducedMotion] = useState(
     () =>
       typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   )
   const demoSteps = useMemo(() => buildDemoSteps(DEMO_AUTHORIZE_URL), [])
   const step = demoSteps[stepIndex]
+
+  useEffect(() => {
+    terminalBodyRef.current?.scrollTo?.({ top: terminalBodyRef.current.scrollHeight })
+  }, [commandText, lineIndex, lineText, phase, stepIndex])
 
   useEffect(() => {
     if (isPaused) return
@@ -181,7 +212,7 @@ export function TerminalUsageDemo() {
       }
 
       const line = step.lines[lineIndex]
-      const passwordPrompt = PASSWORD_PROMPTS.find((prompt) => line.startsWith(prompt))
+      const inputPrompt = TYPED_INPUT_PROMPTS.find((prompt) => line.startsWith(prompt))
 
       if (line.length === 0 && lineText.length === 0) {
         const timer = window.setTimeout(
@@ -192,15 +223,15 @@ export function TerminalUsageDemo() {
       }
 
       if (lineText.length === 0) {
-        const initialText = passwordPrompt ?? line
+        const initialText = inputPrompt ?? line
         const timer = window.setTimeout(() => setLineText(initialText), reducedMotion ? 0 : 180)
         return () => window.clearTimeout(timer)
       }
 
-      if (passwordPrompt && lineText.length < line.length) {
+      if (inputPrompt && lineText.length < line.length) {
         const timer = window.setTimeout(
           () => setLineText(line.slice(0, lineText.length + 1)),
-          reducedMotion ? 0 : 95
+          reducedMotion ? 0 : 170
         )
         return () => window.clearTimeout(timer)
       }
@@ -211,7 +242,7 @@ export function TerminalUsageDemo() {
             setLineIndex((current) => current + 1)
             setLineText("")
           },
-          reducedMotion ? 0 : line.length === 0 ? 220 : 650
+          reducedMotion ? 0 : inputPrompt ? 900 : line.length === 0 ? 220 : 650
         )
         return () => window.clearTimeout(timer)
       }
@@ -241,8 +272,8 @@ export function TerminalUsageDemo() {
 
   const completedLines = step.lines.slice(0, lineIndex)
   const activeLine = step.lines[lineIndex]
-  const activePasswordPrompt = activeLine
-    ? PASSWORD_PROMPTS.find((prompt) => activeLine.startsWith(prompt))
+  const activeInputPrompt = activeLine
+    ? TYPED_INPUT_PROMPTS.find((prompt) => activeLine.startsWith(prompt))
     : undefined
   const showCommandCursor = phase === "command" && commandText.length > 0
 
@@ -257,7 +288,7 @@ export function TerminalUsageDemo() {
         <span>Real CLI output</span>
         <span className="text-[#e08767]">{isPaused ? "paused" : "live demo"}</span>
       </div>
-      <div className="overflow-hidden rounded-[10px] border border-white/10 bg-[#191918] shadow-[0_18px_55px_rgba(0,0,0,0.2)]">
+      <div className="overflow-hidden rounded-[10px] border border-white/10 bg-[#191918]">
         <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-3">
           <i className="size-1.5 rounded-full bg-[#e08767]" />
           <i className="size-1.5 rounded-full bg-[#77736c]" />
@@ -267,6 +298,7 @@ export function TerminalUsageDemo() {
           </span>
         </div>
         <div
+          ref={terminalBodyRef}
           data-terminal-body
           className="h-[250px] overflow-hidden px-4 py-5 font-mono text-xs leading-6 sm:px-5"
         >
@@ -278,9 +310,9 @@ export function TerminalUsageDemo() {
                 aria-hidden="true"
                 style={showCommandCursor ? undefined : { opacity: 0, animation: "none" }}
               />
-              <span className="ml-3 text-[10px] uppercase tracking-[0.15em] text-[#77736c]">
-                {step.label}
-              </span>
+            </span>
+            <span className="shrink-0 text-[10px] uppercase tracking-[0.15em] text-[#77736c]">
+              {step.label}
             </span>
           </div>
           <div className="mt-3 break-words text-[#a8a49d]">
@@ -292,7 +324,7 @@ export function TerminalUsageDemo() {
                 active
                 text={lineText}
                 showCursor={
-                  Boolean(activePasswordPrompt) &&
+                  Boolean(activeInputPrompt) &&
                   lineText.length > 0 &&
                   lineText.length < activeLine.length
                 }

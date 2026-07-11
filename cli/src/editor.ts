@@ -20,7 +20,9 @@ export async function editText(initialValue: string) {
     await new Promise<void>((resolve, reject) => {
       const child = spawn(command, [...args, file], { stdio: "inherit" })
       child.once("error", reject)
-      child.once("exit", (code) => (code === 0 ? resolve() : reject(new Error("编辑器退出失败"))))
+      child.once("exit", (code) =>
+        code === 0 ? resolve() : reject(new Error("Editor exited with an error."))
+      )
     })
     return readFile(file, "utf8")
   } finally {

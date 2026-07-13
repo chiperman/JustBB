@@ -91,13 +91,17 @@ async function resolveHelpRole() {
   }
 }
 
-async function editMemo(memoNumber: string, json: boolean, showFirst = false) {
-  const current = await showMemo(memoNumber)
-  if (!current.data || current.data.is_locked) throw new Error("Cannot edit a locked private Memo.")
-  if (showFirst && !json) process.stdout.write(`${formatShow(current.data)}\n`)
+async function editMemo(
+  memoNumber: string,
+  json: boolean,
+  prefetched?: Awaited<ReturnType<typeof showMemo>>
+) {
+  const current = prefetched ? prefetched.data : (await showMemo(memoNumber)).data
+  if (!current || current.is_locked) throw new Error("Cannot edit a locked private Memo.")
+  if (!json && prefetched) process.stdout.write(`${formatShow(current)}\n`)
 
   const edited = parseEditedMemo(
-    await editText(editableMemoContent(current.data.content, current.data.images))
+    await editText(editableMemoContent(current.content, current.images))
   )
   const prepared = preparePublishContent(edited.content)
   const images = Array.from(new Set([...edited.images, ...prepared.images]))
@@ -149,16 +153,27 @@ export async function run(args: string[]) {
       process.stdout.write("Waiting for browser authorization...\n")
 
       const expiresAt = new Date(result.data.expires_at).getTime()
+      const delays = [1000, 2000, 3000, 5000]
+      let pollCount = 0
+      let consecutiveErrors = 0
       while (Date.now() < expiresAt) {
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        const poll = await pollDeviceAuth(result.data.request_id, result.data.code)
-        if (poll.data?.status === "approved") {
-          await writeSession({
-            access_token: poll.data.access_token,
-            refresh_token: poll.data.refresh_token,
-          })
-          process.stdout.write("justmemo login success\n")
-          return 0
+        const delay = delays[Math.min(pollCount, delays.length - 1)]
+        await new Promise((resolve) => setTimeout(resolve, delay))
+        pollCount += 1
+        try {
+          const poll = await pollDeviceAuth(result.data.request_id, result.data.code)
+          consecutiveErrors = 0
+          if (poll.data?.status === "approved") {
+            await writeSession({
+              access_token: poll.data.access_token,
+              refresh_token: poll.data.refresh_token,
+            })
+            process.stdout.write("justmemo login success\n")
+            return 0
+          }
+        } catch (pollError) {
+          consecutiveErrors += 1
+          if (consecutiveErrors >= 3) throw pollError
         }
       }
 
@@ -258,13 +273,13 @@ export async function run(args: string[]) {
       return 0
     }
 
-    let result = await showMemo(command.options.memoNumber)
     if (command.options.action === "edit") {
-      await editMemo(command.options.memoNumber, command.options.json, true)
+      const fetched = await showMemo(command.options.memoNumber)
+      await editMemo(command.options.memoNumber, command.options.json, fetched)
       return 0
     }
     if (command.options.action === "pin" || command.options.action === "unpin") {
-      result = await updateMemo(command.options.memoNumber, {
+      const result = await updateMemo(command.options.memoNumber, {
         is_pinned: command.options.action === "pin",
       })
       if (command.options.json) writeJson(result)
@@ -276,7 +291,7 @@ export async function run(args: string[]) {
     }
     if (command.options.action === "private") {
       const privateInput = await privateMemoInput(command.options.json)
-      result = await updateMemo(command.options.memoNumber, {
+      const result = await updateMemo(command.options.memoNumber, {
         is_private: true,
         access_code: privateInput.accessCode,
         access_code_hint: privateInput.accessCodeHint,
@@ -286,7 +301,7 @@ export async function run(args: string[]) {
       return 0
     }
     if (command.options.action === "public") {
-      result = await updateMemo(command.options.memoNumber, { is_private: false })
+      const result = await updateMemo(command.options.memoNumber, { is_private: false })
       if (command.options.json) writeJson(result)
       else process.stdout.write(`Made Memo #${result.data?.memo_number} public\n`)
       return 0
@@ -297,6 +312,7 @@ export async function run(args: string[]) {
       else process.stdout.write(`Moved Memo #${deleted.data?.memo_number} to Trash\n`)
       return 0
     }
+    let result = await showMemo(command.options.memoNumber)
     if (command.options.unlock && result.data?.is_locked) {
       if (result.data.access_code_hint) {
         const output = command.options.json ? process.stderr : process.stdout

@@ -1,4 +1,5 @@
-const IMAGE_URL = /https?:\/\/[^\s<>"']+?\.(?:jpg|jpeg|png|gif|webp)(?:[?#][^\s<>"']*)?/gi
+const IMAGE_URL =
+  /https?:\/\/[^\s<>"']+?\.(?:jpg|jpeg|png|gif|webp|avif|svg|bmp|ico|tiff?)(?:[?#][^\s<>"']*)?/gi
 
 export function preparePublishContent(input: string) {
   const images: string[] = []

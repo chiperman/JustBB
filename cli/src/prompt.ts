@@ -15,6 +15,7 @@ export async function promptSecret(label: string, writeToError = false) {
 
   return new Promise<string>((resolve, reject) => {
     let value = ""
+    const decoder = new TextDecoder()
 
     const cleanup = () => {
       process.stdin.setRawMode?.(false)
@@ -40,7 +41,7 @@ export async function promptSecret(label: string, writeToError = false) {
           value = value.slice(0, -1)
           continue
         }
-        value += String.fromCharCode(byte)
+        value += decoder.decode(new Uint8Array([byte]), { stream: true })
       }
     }
 

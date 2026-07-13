@@ -81,4 +81,31 @@ describe("CLI API client", () => {
       "Bearer fresh-token"
     )
   })
+
+  it("直接显示服务端中文错误消息", async () => {
+    readSession.mockResolvedValue(null)
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(response({ success: false, data: null, error: "授权码已过期" }, 410))
+    vi.stubGlobal("fetch", fetchMock)
+
+    await expect(searchMemos({ query: "", limit: 20, page: 1, json: false })).rejects.toThrow(
+      "授权码已过期"
+    )
+  })
+
+  it("非 JSON 响应返回带状态码的统一错误", async () => {
+    readSession.mockResolvedValue(null)
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response("<html>Bad Gateway</html>", {
+        status: 502,
+        headers: { "Content-Type": "text/html" },
+      })
+    )
+    vi.stubGlobal("fetch", fetchMock)
+
+    await expect(searchMemos({ query: "", limit: 20, page: 1, json: false })).rejects.toThrow(
+      "Request failed (502)."
+    )
+  })
 })

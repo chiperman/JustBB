@@ -79,14 +79,15 @@ async function request<T>(
     }
   }
 
-  const payload = (await response.json()) as CliResponse<T>
+  let payload: CliResponse<T>
+  try {
+    payload = JSON.parse(await response.text()) as CliResponse<T>
+  } catch {
+    throw new Error(`Request failed (${response.status}).`)
+  }
 
   if (!response.ok || !payload.success) {
-    throw new Error(
-      payload.error && !/[\u3400-\u9fff]/u.test(payload.error)
-        ? payload.error
-        : `Request failed (${response.status}).`
-    )
+    throw new Error(payload.error || `Request failed (${response.status}).`)
   }
 
   return payload

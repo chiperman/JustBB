@@ -24,14 +24,17 @@ function isSileoTarget(target: EventTarget | null) {
 
 const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay> & {
+    onRequestClose?: () => void
+  }
+>(({ className, onRequestClose, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-[95] bg-black/40 backdrop-blur-sm duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
+    onPointerDown={() => onRequestClose?.()}
     {...props}
   />
 ))
@@ -42,6 +45,7 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     closeIcon?: React.ReactNode
     mobileDensity?: "default" | "compact"
+    onRequestClose?: () => void
   }
 >(
   (
@@ -52,6 +56,7 @@ const DialogContent = React.forwardRef<
       mobileDensity = "default",
       onInteractOutside,
       onPointerDownOutside,
+      onRequestClose,
       ...props
     },
     ref
@@ -67,14 +72,22 @@ const DialogContent = React.forwardRef<
       return () => window.removeEventListener("resize", checkMobile)
     }, [])
 
+    const requestClose = () => {
+      if (onRequestClose) {
+        onRequestClose()
+        return
+      }
+      closeButtonRef.current?.click()
+    }
+
     return (
       <DialogPortal>
-        <DialogOverlay />
+        <DialogOverlay onRequestClose={onRequestClose} />
         <DialogPrimitive.Content
           ref={ref}
           asChild
           className={cn(
-            "fixed inset-x-0 bottom-0 top-auto z-50 grid max-h-[calc(100dvh-16px)] w-full gap-6 overflow-y-auto overscroll-contain rounded-t-xl border border-border bg-background px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-6 duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=closed]:ease-in data-[state=closed]:slide-out-to-bottom-full data-[state=open]:slide-in-from-bottom-full sm:left-[50%] sm:right-auto sm:top-[50%] sm:bottom-auto sm:max-h-none sm:max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] sm:overflow-visible sm:rounded-xl sm:p-6 sm:data-[state=closed]:fade-out-0 sm:data-[state=open]:fade-in-0 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0",
+            "fixed inset-x-0 bottom-0 top-auto z-[96] grid max-h-[min(88dvh,calc(100dvh-16px))] w-full gap-6 overflow-y-auto overscroll-contain rounded-t-xl border border-border bg-background px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-6 duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=closed]:ease-in data-[state=closed]:slide-out-to-bottom-full data-[state=open]:slide-in-from-bottom-full sm:left-[50%] sm:right-auto sm:top-[50%] sm:bottom-auto sm:max-h-[88vh] sm:max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] sm:overflow-visible sm:rounded-xl sm:p-6 sm:data-[state=closed]:fade-out-0 sm:data-[state=open]:fade-in-0 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0",
             className,
             mobileDensity === "compact"
               ? "max-sm:!gap-3 max-sm:!rounded-b-none max-sm:!rounded-t-xl max-sm:!pb-[calc(0.875rem+env(safe-area-inset-bottom))] max-sm:!pt-7"
@@ -84,12 +97,22 @@ const DialogContent = React.forwardRef<
             onInteractOutside?.(event)
             if (!event.defaultPrevented && isSileoTarget(event.target)) {
               event.preventDefault()
+              return
+            }
+
+            if (!event.defaultPrevented) {
+              requestClose()
             }
           }}
           onPointerDownOutside={(event) => {
             onPointerDownOutside?.(event)
             if (!event.defaultPrevented && isSileoTarget(event.target)) {
               event.preventDefault()
+              return
+            }
+
+            if (!event.defaultPrevented) {
+              requestClose()
             }
           }}
           {...props}
@@ -102,7 +125,7 @@ const DialogContent = React.forwardRef<
             dragElastic={{ top: 0.05, bottom: 0.95 }}
             onDragEnd={(event, info) => {
               if (isMobile && (info.offset.y > 80 || info.velocity.y > 350)) {
-                closeButtonRef.current?.click()
+                requestClose()
               }
             }}
           >

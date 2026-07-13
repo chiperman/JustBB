@@ -188,10 +188,13 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
         open={open}
         onOpenChange={setOpen}
         title="记录统计"
-        subtitle="按月份与年份查看记录节奏"
+        subtitle="按月/年查看记录节奏"
         icon={CalendarIcon}
-        maxWidth="max-w-[1100px]"
-        contentClassName="px-8 py-7 max-h-[78vh]"
+        headerGap="gap-2 sm:gap-3"
+        headerIconClassName="bg-[#d97757]/10 p-2 rounded-xl text-[#d97757] max-sm:p-1.5"
+        headerClassName="max-sm:text-left"
+        maxWidth="sm:max-w-[1100px]"
+        contentClassName="max-sm:px-4 max-sm:py-5 px-8 py-7 max-h-[78vh]"
         animateLayout
         layoutTransition={dialogLayoutTransition}
         headerActions={
@@ -340,7 +343,7 @@ export function HeatmapModal({ stats, trigger }: HeatmapModalProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
                 transition={viewTransition}
-                className="rounded-2xl border border-border/70 bg-muted/45 p-5"
+                className="min-w-0"
               >
                 <YearlyStats stats={stats.days} firstMemoDate={stats.firstMemoDate} />
               </motion.div>

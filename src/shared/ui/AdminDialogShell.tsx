@@ -20,6 +20,9 @@ interface AdminDialogShellProps {
   headerActions?: React.ReactNode
   maxWidth?: string
   contentClassName?: string
+  headerGap?: string
+  headerIconClassName?: string
+  headerClassName?: string
   animateLayout?: boolean
   layoutTransition?: Transition
 }
@@ -35,6 +38,9 @@ export function AdminDialogShell({
   headerActions,
   maxWidth = "max-w-[640px]",
   contentClassName,
+  headerGap = "gap-3 sm:gap-4",
+  headerIconClassName = "bg-[#d97757]/10 p-2.5 rounded-xl text-[#d97757]",
+  headerClassName,
   animateLayout = false,
   layoutTransition,
 }: AdminDialogShellProps) {
@@ -42,10 +48,8 @@ export function AdminDialogShell({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         onOpenAutoFocus={(e) => e.preventDefault()}
-        className={cn(
-          "h-auto max-h-[calc(100dvh-16px)] p-0 overflow-hidden sm:h-auto [&>button]:hidden",
-          maxWidth
-        )}
+        onRequestClose={() => onOpenChange(false)}
+        className={cn("h-auto p-0 overflow-hidden sm:h-auto [&>button]:hidden", maxWidth)}
       >
         <motion.div
           layout={animateLayout ? "size" : false}
@@ -53,9 +57,14 @@ export function AdminDialogShell({
           className="flex h-full min-h-0 flex-col sm:h-auto"
         >
           {/* 页头：低语分割线，Anthropic Clay 强调色 */}
-          <DialogHeader className="px-5 py-4 sm:px-8 sm:py-5 border-b border-border/60 flex flex-row items-center justify-between space-y-0 shrink-0">
-            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-              <div className="bg-[#d97757]/10 p-2.5 rounded-xl text-[#d97757]">
+          <DialogHeader
+            className={cn(
+              "px-5 py-4 sm:px-8 sm:py-5 border-b border-border/60 flex flex-row items-center justify-between space-y-0 shrink-0",
+              headerClassName
+            )}
+          >
+            <div className={cn("flex min-w-0 items-center", headerGap)}>
+              <div className={cn(headerIconClassName)}>
                 <HugeiconsIcon icon={Icon} size={22} />
               </div>
               <div className="min-w-0">

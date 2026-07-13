@@ -1,11 +1,5 @@
 import { useMemo, useState } from "react"
-import {
-  format,
-  eachMonthOfInterval,
-  startOfYear,
-  endOfYear,
-  getYear,
-} from "date-fns"
+import { format, eachMonthOfInterval, startOfYear, endOfYear, getYear } from "date-fns"
 import { cn } from "@/shared/lib/utils"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Share01Icon as Share } from "@hugeicons/core-free-icons"
@@ -58,7 +52,7 @@ export function YearlyStats({ stats, firstMemoDate }: YearlyStatsProps) {
 
   return (
     <motion.div
-      className="flex flex-col gap-12"
+      className="flex flex-col gap-6"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -72,13 +66,7 @@ export function YearlyStats({ stats, firstMemoDate }: YearlyStatsProps) {
   )
 }
 
-function YearlyStatsItem({
-  year,
-  stats,
-}: {
-  year: number
-  stats: Record<string, DayStats>
-}) {
+function YearlyStatsItem({ year, stats }: { year: number; stats: Record<string, DayStats> }) {
   const months = useMemo(() => {
     const start = startOfYear(new Date(year, 0, 1))
     const end = endOfYear(new Date(year, 0, 1))
@@ -121,17 +109,13 @@ function YearlyStatsItem({
   }, [monthlyData])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 rounded-2xl border border-border/70 bg-muted/45 p-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h2 className="sub-heading">{year}</h2>
         </div>
         <button className="p-2 hover:bg-secondary rounded-full transition-colors active:scale-95 outline-none focus-visible:ring-1 focus-visible:ring-ring">
-          <HugeiconsIcon
-            icon={Share}
-            size={16}
-            className="text-muted-foreground"
-          />
+          <HugeiconsIcon icon={Share} size={16} className="text-muted-foreground" />
         </button>
       </div>
 
@@ -228,9 +212,7 @@ function StatCard({
   return (
     <div className="bg-card rounded-lg p-6 border border-border flex flex-col gap-6 h-[280px] relative">
       <div className="flex items-baseline gap-1">
-        <span className="text-3xl font-bold tracking-tighter text-foreground">
-          {total}
-        </span>
+        <span className="text-3xl font-bold tracking-tighter text-foreground">{total}</span>
         <span className="caption font-semibold">{title}</span>
       </div>
 
@@ -243,10 +225,7 @@ function StatCard({
           {/* Y-axis Ticks Layer */}
           <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
             {ticks.map((tick) => (
-              <div
-                key={tick}
-                className="flex items-center w-full h-[1px] relative"
-              >
+              <div key={tick} className="flex items-center w-full h-[1px] relative">
                 <div className="flex-1" />
                 <span className="text-[10px] text-muted-foreground/30 font-sans font-medium absolute right-[-32px] w-[28px] text-left tabular-nums">
                   {tick}
@@ -274,9 +253,7 @@ function StatCard({
                     className={cn(
                       "w-[90%] rounded-[4px] relative z-10",
                       color,
-                      val === 0
-                        ? "opacity-0"
-                        : "opacity-80 group-hover:opacity-100"
+                      val === 0 ? "opacity-0" : "opacity-80 group-hover:opacity-100"
                     )}
                     initial={{ height: 0 }}
                     animate={{ height: `${height}%` }}
@@ -291,15 +268,10 @@ function StatCard({
           <div
             className={cn(
               "absolute top-[30%] -translate-x-1/2 -translate-y-full mb-2 bg-card rounded-sm p-3 border border-border z-30 min-w-[90px] pointer-events-none transition-all duration-300 ease-out",
-              hoveredIdx !== null
-                ? "opacity-100 scale-100"
-                : "opacity-0 scale-95"
+              hoveredIdx !== null ? "opacity-100 scale-100" : "opacity-0 scale-95"
             )}
             style={{
-              left:
-                hoveredIdx !== null
-                  ? `${((hoveredIdx + 0.5) / data.length) * 100}%`
-                  : "50%",
+              left: hoveredIdx !== null ? `${((hoveredIdx + 0.5) / data.length) * 100}%` : "50%",
             }}
           >
             <div className="badge-text mb-1 leading-none whitespace-nowrap">
@@ -319,9 +291,7 @@ function StatCard({
               <span
                 className={cn(
                   "text-[10px] font-sans font-medium transition-colors tabular-nums",
-                  hoveredIdx === i
-                    ? "text-foreground/70"
-                    : "text-muted-foreground/30"
+                  hoveredIdx === i ? "text-foreground/70" : "text-muted-foreground/30"
                 )}
               >
                 {label}

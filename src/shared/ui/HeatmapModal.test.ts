@@ -25,6 +25,7 @@ describe("HeatmapModal tooltip positioning regressions", () => {
   it("uses the shared admin dialog shell instead of a custom oversized canvas modal", () => {
     expect(source).toContain('from "@/shared/ui/AdminDialogShell"')
     expect(source).toContain("<AdminDialogShell")
+    expect(source).toContain('maxWidth="sm:max-w-[1100px]"')
     expect(source).not.toContain("max-w-6xl h-[90vh]")
   })
 

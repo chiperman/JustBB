@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const { importMemos } = vi.hoisted(() => ({ importMemos: vi.fn() }))
@@ -54,5 +54,48 @@ describe("ImportConfigDialog", () => {
     expect(statsGrid?.className).toContain("grid-cols-2")
     expect(statsGrid?.className).toContain("md:grid-cols-4")
     expect(duplicateLabel.className).toContain("whitespace-nowrap")
+  })
+
+  it("shows the processed count while importing", async () => {
+    let finishImport: (result: {
+      total: number
+      success: number
+      skipped: number
+      failed: number
+      errors: never[]
+    }) => void
+
+    importMemos.mockImplementation(
+      (_, onProgress) =>
+        new Promise((resolve) => {
+          finishImport = resolve
+          onProgress({ total: 317, success: 45, skipped: 3, failed: 2, errors: [] })
+        })
+    )
+
+    render(<ImportConfigDialog open onOpenChange={vi.fn()} />)
+    const input = document.querySelector('input[type="file"]')
+
+    fireEvent.change(input!, {
+      target: {
+        files: [
+          {
+            name: "backup.json",
+            text: async () =>
+              JSON.stringify([{ content: "测试记录", created_at: "2026-07-15T00:00:00.000Z" }]),
+          },
+        ],
+      },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "开始导入" }))
+
+    await waitFor(() => expect(screen.getByText("已处理 50 / 317 条")).toBeTruthy())
+    expect(screen.getByText("成功").parentElement?.textContent).toContain("45")
+    expect(screen.getByText("重复").parentElement?.textContent).toContain("3")
+    expect(screen.getByText("失败").parentElement?.textContent).toContain("2")
+
+    await act(async () => {
+      finishImport!({ total: 317, success: 317, skipped: 0, failed: 0, errors: [] })
+    })
   })
 })

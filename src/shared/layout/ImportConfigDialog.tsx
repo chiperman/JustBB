@@ -73,6 +73,13 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
       }
 
       setStatus("importing")
+      setResult({
+        total: parsedMemos.length,
+        success: 0,
+        skipped: 0,
+        failed: 0,
+        errors: [],
+      })
       const importResult = await importMemos(parsedMemos, (p) => {
         setProgress(Math.round(((p.success + p.skipped + p.failed) / p.total) * 100))
         setResult(p)
@@ -316,7 +323,10 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
                 </div>
                 <div>
                   <p className="body-large font-bold">正在导入记录...</p>
-                  <p className="caption opacity-60">请勿关闭弹窗或刷新页面</p>
+                  <p className="caption opacity-60">
+                    已处理 {result ? result.success + result.skipped + result.failed : 0} /{" "}
+                    {result?.total ?? 0} 条
+                  </p>
                 </div>
               </div>
               <span className="body-large font-mono font-bold text-primary">{progress}%</span>

@@ -17,6 +17,16 @@ export interface ImportResult {
 export type ImportProgressCallback = (result: ImportResult) => void
 
 const BATCH_SIZE = 50
+const EXISTING_MEMOS_PAGE_SIZE = 1_000
+
+function addMemoToDuplicateIndex(
+  duplicateIndex: Map<string, Set<string>>,
+  memo: Pick<ParsedMemo, "content" | "created_at">
+) {
+  const createdAtValues = duplicateIndex.get(memo.content) ?? new Set<string>()
+  createdAtValues.add(memo.created_at)
+  duplicateIndex.set(memo.content, createdAtValues)
+}
 
 /**
  * 执行数据导入
@@ -27,8 +37,7 @@ export async function importMemos(
 ): Promise<ImportResult> {
   // 按时间正序排列（从旧到新），确保数据库分配的 memo_number 也是按时间顺序的
   const sortedMemos = [...memos].sort(
-    (a, b) =>
-      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   )
 
   const result: ImportResult = {
@@ -45,60 +54,83 @@ export async function importMemos(
   } = await supabase.auth.getUser()
   if (!user) throw new Error("未登录，无法导入数据")
 
+  const existingIds = new Set<string>()
+  const idLookupFailed = new Set<string>()
+  const importedIds = sortedMemos.flatMap((memo) => (memo.id ? [memo.id] : []))
+
+  for (let i = 0; i < importedIds.length; i += BATCH_SIZE) {
+    const ids = importedIds.slice(i, i + BATCH_SIZE)
+    const { data, error } = await supabase.from("memos").select("id").in("id", ids)
+
+    if (error) {
+      ids.forEach((id) => idLookupFailed.add(id))
+    } else {
+      data?.forEach((memo) => existingIds.add(memo.id))
+    }
+  }
+
+  const existingMemos: Pick<ParsedMemo, "content" | "created_at">[] = []
+  let existingMemosError = false
+  const duplicateIndex = new Map<string, Set<string>>()
+  for (let from = 0; ; from += EXISTING_MEMOS_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("memos")
+      .select("content, created_at")
+      .eq("owner_id", user.id)
+      .range(from, from + EXISTING_MEMOS_PAGE_SIZE - 1)
+
+    if (error) {
+      existingMemosError = true
+      break
+    }
+
+    const page = data ?? []
+    existingMemos.push(...page)
+    if (page.length < EXISTING_MEMOS_PAGE_SIZE) break
+  }
+
+  if (!existingMemosError) {
+    for (const memo of existingMemos) {
+      addMemoToDuplicateIndex(duplicateIndex, memo)
+    }
+  }
+
   // 分批处理
   for (let i = 0; i < sortedMemos.length; i += BATCH_SIZE) {
     const batch = sortedMemos.slice(i, i + BATCH_SIZE)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const toInsert: any[] = []
+    const insertedMemos: ParsedMemo[] = []
 
     for (const memo of batch) {
-      try {
-        let isDuplicate = false
+      const idLookupError = memo.id && idLookupFailed.has(memo.id)
+      const isDuplicate = memo.id ? existingIds.has(memo.id) : false
 
-        // 1. 如果有 ID，检查 ID 是否冲突
-        if (memo.id) {
-          const { data } = await supabase
-            .from("memos")
-            .select("id")
-            .eq("id", memo.id)
-            .single()
-          if (data) isDuplicate = true
-        }
-
-        // 2. 检查内容和创建时间是否完全一致
-        if (!isDuplicate) {
-          const { data } = await supabase
-            .from("memos")
-            .select("id")
-            .eq("owner_id", user.id)
-            .eq("content", memo.content)
-            .eq("created_at", memo.created_at)
-            .maybeSingle()
-          if (data) isDuplicate = true
-        }
-
-        if (isDuplicate) {
-          result.skipped++
-        } else {
-          // 准备插入的数据，确保 owner_id 正确
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { memo_number, ...insertData } = memo as unknown as Record<
-            string,
-            unknown
-          >
-          toInsert.push({
-            ...insertData,
-            owner_id: user.id,
-          })
-        }
-      } catch (err) {
-        console.error("检查重复失败:", err)
-        // 如果查询失败，保守起见先标记为失败或跳过
+      if (idLookupError) {
         result.failed++
         result.errors.push({
           summary: memo.content.slice(0, 30),
           message: "检查重复数据时出错",
         })
+      } else if (isDuplicate) {
+        result.skipped++
+      } else if (existingMemosError) {
+        result.failed++
+        result.errors.push({
+          summary: memo.content.slice(0, 30),
+          message: "检查重复数据时出错",
+        })
+      } else if (duplicateIndex.get(memo.content)?.has(memo.created_at) === true) {
+        result.skipped++
+      } else {
+        // 准备插入的数据，确保 owner_id 正确
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { memo_number, ...insertData } = memo as unknown as Record<string, unknown>
+        toInsert.push({
+          ...insertData,
+          owner_id: user.id,
+        })
+        insertedMemos.push(memo)
       }
     }
 
@@ -114,6 +146,10 @@ export async function importMemos(
         })
       } else {
         result.success += toInsert.length
+        for (const memo of insertedMemos) {
+          addMemoToDuplicateIndex(duplicateIndex, memo)
+          if (memo.id) existingIds.add(memo.id)
+        }
       }
     }
 

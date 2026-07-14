@@ -1,6 +1,6 @@
 # JustMemo 架构参考
 
-> 最后更新：2026-06-10
+> 最后更新：2026-07-14
 > 状态：当前实现参考
 
 ## 1. 作用
@@ -20,7 +20,7 @@ JustMemo 当前基于：
 
 ## 3. 页面与状态层
 
-客户端布局统一由 `ClientLayoutProviders` 注入主要状态：
+`src/app/(main)/layout.tsx` 在服务端预取当前用户和标签；`ClientLayoutProviders` 负责客户端状态和交互层：
 
 | 状态层                  | 职责                     |
 | ----------------------- | ------------------------ |
@@ -33,6 +33,7 @@ JustMemo 当前基于：
 | `UIProvider`            | 多选与批量操作状态       |
 | `ExportProvider`        | 备份导出流程状态         |
 | `ConfirmProvider`       | 全局确认对话框状态       |
+| `ShortcutProvider`      | 全局快捷键注册与生命周期 |
 
 首页主界面由 `MainLayoutClient` 组织：
 
@@ -43,7 +44,7 @@ JustMemo 当前基于：
 
 ## 4. 数据加载与缓存
 
-- 服务端布局只预取用户信息、标签等轻量关键数据。
+- 服务端布局只预取用户信息和标签等轻量数据；统计数据由客户端按需加载。
 - 主列表 Memo 数据由客户端初始化后通过 Server Actions 拉取。
 - 筛选、搜索、分页和解锁后的刷新统一回到查询入口。
 - 主列表核心读取入口是 `getMemos`。
@@ -81,6 +82,10 @@ JustMemo 当前基于：
 ### 画廊
 
 画廊是同一批 Memo 的图片优先视图，不是独立数据模型。当前查询口径详见 [产品能力参考](./product.md)。
+
+### CLI
+
+`cli/` 是独立 npm 包，通过 `/api/cli/v1` 调用服务端，不直接访问 Supabase，也不调用 Server Actions。命令和发布边界见 [`cli/README.md`](../../cli/README.md)。
 
 ## 6. 组件组织
 

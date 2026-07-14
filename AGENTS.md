@@ -74,6 +74,7 @@
 ### 进入 Git
 
 - `docs/reference/` — 架构、数据隐私、产品能力、开发与测试参考
+- `docs/agents/` — Agent 的 issue tracker、分诊标签与领域文档约定
 - `docs/interface/` — 设计规范
 - `docs/README.md` — 文档导航入口
 - `README.md`、`CHANGELOG.md` — 项目入口与变更记录
@@ -88,3 +89,17 @@
 - `docs/generated/` — AI 生成文档
 
 判断标准：**三个月后、新开发者接手时，这条信息还有参考价值吗？** 如果是否，就不要 commit。
+
+## Agent skills
+
+### Issue tracker
+
+需求、缺陷和待办通过 GitHub Issues 追踪。详见 `docs/agents/issue-tracker.md`。
+
+### Triage labels
+
+使用五个默认分诊标签。详见 `docs/agents/triage-labels.md`。
+
+### Domain docs
+
+本仓库采用单一上下文文档布局。详见 `docs/agents/domain.md`。

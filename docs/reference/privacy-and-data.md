@@ -1,6 +1,6 @@
 # JustMemo 数据与隐私参考
 
-> 最后更新：2026-06-10
+> 最后更新：2026-07-14
 > 状态：当前实现参考
 
 ## 1. 作用
@@ -46,6 +46,8 @@ JustMemo 的 Memo 只有两种可见性：
 | `content`                   | 正文                              |
 | `tags`                      | 标签数组                          |
 | `locations`                 | 定位信息 JSONB                    |
+| `images`                    | 独立存储的图片 URL 数组           |
+| `image_metadata`            | 图片宽高元数据，用于稳定预留布局  |
 | `access_code_hash`          | 私密口令哈希                      |
 | `access_code_hint`          | 私密口令提示                      |
 | `is_private`                | 是否私密                          |
@@ -96,17 +98,20 @@ search_memos_secure(
 - `is_owner`
 - `word_count`
 - `locations` (JSONB)
+- `images` (TEXT[])
+- `image_metadata` (JSONB)
 
 可见性规则：
 
 - 公开 Memo：返回正文。
 - 作者本人：返回自己的私密 Memo 正文。
 - `unlocked_ids` 包含该 Memo：返回该条私密 Memo 正文。
-- 其他情况：按查询场景返回锁定占位或过滤掉。对于未解锁的他人私密 Memo：
-  - 若原本包含定位，保留 `locations` 字段，以正常画出灰色锁定的定位图钉，但 `content` 置为空字符串。
-  - 若原本包含图片，`content` 会被替换为模糊占位 Markdown `![Locked](/images/locked-placeholder.png)`，以便画廊可以展示锁定占位卡片，同时阻止原始图片的读取。
+- 其他情况：按查询场景返回锁定占位或完全过滤。对于未解锁的他人私密 Memo：
+  - `content` 为空，`tags` 为空数组，`word_count` 为 0。
+  - 若原本包含定位，保留 `locations`，用于显示锁定定位标记。
+  - 若原本包含图片，`images` 只返回 `/images/locked-placeholder.png`，`image_metadata` 只返回该占位图尺寸，绝不返回原图地址。
 
-锁定占位只允许用于浏览上下文，例如主列表、地图和画廊。搜索、标签过滤、导出、分享和 AI 摘要不能消费未解锁正文。
+锁定占位只允许用于浏览上下文，例如主列表、地图和画廊。关键词搜索和标签过滤只匹配公开、作者本人或已解锁 Memo。导出、分享和 AI 摘要不能消费未解锁正文。
 
 ## 7. Server Actions 边界
 
@@ -135,6 +140,7 @@ search_memos_secure(
 - `searchMemosForMention`
 - `getMemoByNumber`
 - `getMemosWithLocations`
+- `getGalleryMemos`
 - `getMemoStats`
 - `getTimelineStats`
 - `getAllTags`

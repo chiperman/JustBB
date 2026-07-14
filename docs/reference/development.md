@@ -1,6 +1,6 @@
 # JustMemo 开发参考
 
-> 最后更新：2026-06-10
+> 最后更新：2026-07-14
 > 状态：当前开发流程参考
 
 ## 1. 作用
@@ -11,7 +11,7 @@
 
 | 分类         | 技术                                                    |
 | ------------ | ------------------------------------------------------- |
-| 前端框架     | Next.js 16.1.6、React 19、TypeScript 5                  |
+| 前端框架     | Next.js 16、React 19、TypeScript 5                      |
 | 样式与动效   | Tailwind CSS 4、Framer Motion 12                        |
 | 图标         | Hugeicons 1.1.5                                         |
 | 编辑器       | Tiptap 3                                                |
@@ -34,6 +34,7 @@
 | `src/state/`    | 应用级全局状态                               |
 | `src/lib/`      | 基础工具，例如环境变量校验和 Supabase client |
 | `src/types/`    | 类型定义                                     |
+| `cli/`          | 独立发布的 `justmemo-cli` npm 包             |
 | `supabase/`     | 本地 Supabase 配置、迁移和 seed              |
 | `scripts/`      | 脚本型辅助文件                               |
 | `docs/`         | 项目文档                                     |
@@ -57,6 +58,7 @@ npm run dev
 | 本次改动格式化 | `npm run format:staged`    | 只处理已暂存文件             |
 | 提交前检查     | `npm run check`            | 构建和单元测试               |
 | 集成测试       | `npm run test:integration` | 涉及数据库语义时使用         |
+| CLI 完整校验   | `npm run check:cli`        | 构建、测试并检查 npm 包内容  |
 | 本地发版       | `npm run release`          | 仅发版时使用                 |
 | 数据库维护     | `npm run db:reset`         | 重放本地迁移和 seed          |
 
@@ -109,6 +111,10 @@ npm run dev
 ```text
 docs/
   README.md
+  agents/
+    domain.md
+    issue-tracker.md
+    triage-labels.md
   reference/
     architecture.md
     privacy-and-data.md
@@ -117,7 +123,6 @@ docs/
     testing.md
   interface/
     design.md
-    vercel-design-dark.md
 ```
 
 过程产物不进入 Git，并已通过 `.gitignore` 排除：
@@ -137,12 +142,11 @@ docs/
 
 ## 9. 什么时候更新哪篇文档
 
-| 变更类型                                 | 文档                                   |
-| ---------------------------------------- | -------------------------------------- |
-| 页面、Provider、缓存、Context、路由协同  | `docs/reference/architecture.md`       |
-| 私密 Memo、RLS、RPC、API、数据库规则     | `docs/reference/privacy-and-data.md`   |
-| 时间轴、地图、画廊、导出、备份、内容体验 | `docs/reference/product.md`            |
-| 技术栈、目录结构、开发规范、文档治理     | `docs/reference/development.md`        |
-| 测试命令、测试分层、回归策略             | `docs/reference/testing.md`            |
-| UI、视觉、交互一致性                     | `docs/interface/design.md`             |
-| 外部设计系统参考                         | `docs/interface/vercel-design-dark.md` |
+| 变更类型                                 | 文档                                 |
+| ---------------------------------------- | ------------------------------------ |
+| 页面、Provider、缓存、Context、路由协同  | `docs/reference/architecture.md`     |
+| 私密 Memo、RLS、RPC、API、数据库规则     | `docs/reference/privacy-and-data.md` |
+| 时间轴、地图、画廊、导出、备份、内容体验 | `docs/reference/product.md`          |
+| 技术栈、目录结构、开发规范、文档治理     | `docs/reference/development.md`      |
+| 测试命令、测试分层、回归策略             | `docs/reference/testing.md`          |
+| UI、视觉、交互一致性                     | `docs/interface/design.md`           |

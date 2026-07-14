@@ -1,6 +1,6 @@
 # JustMemo 文档中心
 
-> 最后更新：2026-07-11
+> 最后更新：2026-07-14
 > 状态：总入口
 
 这份文档是 `/docs` 的统一导航页。
@@ -25,7 +25,6 @@
 如果你更关心页面和交互，再继续看：
 
 - [设计系统](./interface/design.md)
-- [Vercel Geist 深色参考](./interface/vercel-design-dark.md)
 
 如果你要使用 CLI，再阅读：
 
@@ -50,7 +49,14 @@
 视觉系统与交互规则：
 
 - [设计系统](./interface/design.md)
-- [Vercel Geist 深色参考](./interface/vercel-design-dark.md)
+
+### `agents`
+
+供 Agent 协作时读取的约定：
+
+- [Issue tracker](./agents/issue-tracker.md)
+- [分诊标签](./agents/triage-labels.md)
+- [领域文档](./agents/domain.md)
 
 ## 3. docs 之外的项目文档
 
@@ -65,5 +71,6 @@
 
 - `docs/README.md` 永远只做入口，不堆实现细节。
 - 架构、数据、产品、开发和测试参考优先放进 `reference`。
+- Agent 协作约定放进 `agents`。
 - 视觉和交互约束优先放进 `interface`。
 - 过程产物不进入 Git，统一放入 `.gitignore` 已排除的目录。

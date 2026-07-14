@@ -1,6 +1,6 @@
 # JustMemo 测试参考
 
-> 最后更新：2026-06-10
+> 最后更新：2026-07-14
 > 状态：当前测试脚本参考
 
 ## 1. 作用
@@ -26,7 +26,6 @@
 典型文件：
 
 - `src/shared/lib/contentParser.test.ts`
-- `src/shared/lib/memo-cache.test.ts`
 - `src/lib/memos/parser.test.ts`
 - `src/features/memos/hooks/useMemoFeed.test.ts`
 
@@ -56,6 +55,10 @@ Action 层测试用于防止业务规则退化，例如：
 - `src/server/actions/memos/query.test.ts`
 - `src/server/actions/usage/index.test.ts`
 
+### CLI 测试
+
+CLI 在 `cli/src/` 内维护命令解析、HTTP 客户端、输出和交互流程测试。涉及 CLI 改动时，使用 `npm run check:cli`，它会构建 CLI、运行 CLI 测试并检查 npm 包内容。
+
 ## 3. 当前命令
 
 日常人工开发不需要记完整测试矩阵，通常只需要启动项目：
@@ -71,6 +74,7 @@ npm run check
 npm run build
 npm run test
 npm run test:integration
+npm run check:cli
 ```
 
 ## 4. 最小校验

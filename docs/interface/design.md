@@ -1,224 +1,71 @@
-# Design System: Humanistic Minimalism (Notion x Anthropic)
+# JustMemo 设计系统：人文扁平风格
 
-## 1. Visual Theme & Atmosphere
+> 最后更新：2026-07-14
+> 状态：当前界面规范
 
-JustBB embodies the philosophy of a high-quality physical notebook: a blank canvas that gets out of your way. The design system is built on **warm neutrals** rather than cold grays, creating a distinctly approachable minimalism that feels like **quality paper** rather than sterile glass. The page canvas is pure white (`#ffffff`) but the text isn't pure black -- it's a warm **Anthropic Black** (`#1d1d1b`) that softens the reading experience imperceptibly. The warm gray scale carries subtle yellow-brown undertones, giving the interface a tactile, almost analog warmth.
+JustMemo 是私密记录工具，界面应安静、温暖、易读。视觉上的新判断以现有组件和 `src/app/globals.css` 为准，不维护外部设计系统的本地副本。
 
-The custom font stack (Inter-based) is the backbone of the system. At display sizes (64px), it uses aggressive negative letter-spacing (-2.125px), creating headlines that feel compressed and precise. The weight range is broader than typical systems: 400 for body, 500 for UI elements, 600 for semi-bold labels, and 700 for display headings. OpenType features `"lnum"` (lining numerals) and `"locl"` (localized forms) are enabled on larger text, adding typographic sophistication.
+## 1. 基本原则
 
-What makes this visual language distinctive is its border philosophy. Rather than shadows, we use ultra-thin `1px solid rgba(29,29,27,0.1)` borders -- borders that exist as whispers, barely perceptible division lines that create structure without weight. We embrace a flat aesthetic where depth is defined by color alternation and these delicate boundaries.
+- 使用暖白、暖灰和 Clay 强调色，避免冷灰、强阴影和高饱和装饰色。
+- 页面、卡片和弹窗保持扁平，通过留白、背景层级和细边框区分区域。
+- 优先复用已有 `Button`、`Dialog`、输入框、标签和反馈组件，不为单个页面造新的视觉语言。
+- 私密、锁定、加载、空状态和错误状态要明确，但不要依赖颜色作为唯一提示。
 
-**Key Characteristics:**
+## 2. 颜色与层级
 
-- Inter-based typography with negative letter-spacing at display sizes (-2.125px at 64px)
-- Warm neutral palette: grays carry yellow-brown undertones (`#f6f5f4` warm white, `#31302e` warm dark)
-- Near-black text via **Anthropic Black** (`#1d1d1b`) -- creating micro-warmth and reducing eye strain
-- Ultra-thin borders: `1px solid rgba(29,29,27,0.1)` throughout -- whisper-weight division
-- **Flat Aesthetic**: No elevation shadows; hierarchy is achieved through layout and borders
-- **Anthropic Clay** (`#d97757`) as the singular accent color for CTAs and interactive elements
-- Pill badges (9999px radius) with tinted clay backgrounds for status indicators
-- 8px base spacing unit with an organic, non-rigid scale
+| 角色     | 浅色模式             | 深色模式                 | 用途                   |
+| -------- | -------------------- | ------------------------ | ---------------------- |
+| 页面背景 | `#ffffff`            | `#0d0d0b`                | 页面主画布             |
+| 卡片     | `#ffffff`            | `#1c1b18`                | 卡片、弹窗和浮层       |
+| 主文字   | `#1d1d1b`            | `#f3f1ee`                | 标题和正文             |
+| 次要文字 | `#6b6964`            | `#b3aea7`                | 时间、说明和辅助信息   |
+| 主强调色 | `#d97757`            | `#e08767`                | 主要操作、链接和选中态 |
+| 边框     | `rgba(29,29,27,0.1)` | `rgba(246,245,244,0.18)` | 分区与容器边界         |
 
-## 2. Color Palette & Roles
+- 成功使用绿色，错误和破坏性操作使用橙红色。
+- 标签背景使用低饱和 Clay，不把标签做成主要操作按钮。
+- 深色模式不使用纯黑背景，不叠加多层深色面板。
 
-### Dark Mode Adaptation
+## 3. 字体与内容层级
 
-JustBB's dark mode borrows a few principles from Vercel Geist's dark theme, documented in [Vercel Geist Dark Reference](./vercel-design-dark.md), but does not adopt the palette wholesale. Geist's near-black base, alpha borders, and clear text hierarchy are useful references; JustBB keeps its warmer notebook atmosphere and Anthropic Clay accent.
+- 字体使用项目已有的 Inter 优先字体栈。
+- 正文以 `16px` 和舒适行高为基线；标题随层级增大并适度收紧字距。
+- 页面标题、卡片标题、正文、辅助信息的层级应通过字号、字重和颜色共同表达。
+- 中文界面文案简短直接。按钮写动作，例如“保存”“删除”“导出”，避免抽象名词。
 
-Practical rules:
+## 4. 组件规则
 
-- Use a deeper warm canvas (`#141412`) instead of pure black to reduce glare without losing the paper-like warmth.
-- Keep content surfaces only one tonal step above the canvas (`#1f1e1c` for cards, `#252421` for muted areas); avoid stacking multiple dark panels.
-- Prefer translucent warm borders (`rgba(246,245,244,0.12)`) over shadows for separation.
-- Raise secondary text slightly in dark mode (`#b3aea7`) so metadata, captions, and placeholders remain readable.
-- Let Clay become a touch brighter in dark mode (`#e08767`) for links, CTAs, badges, and focus affordances.
-- Treat Vercel's blue focus/error/success scale as a reference for contrast discipline, not as a brand replacement.
+### 按钮与交互
 
-### Primary
+- 主要操作使用 Clay 实色按钮；次要操作使用低对比底色或边框。
+- 默认圆角为 `8px`，不要在同一视图混用尖角、药丸和大圆角。
+- 悬停和按下反馈保持轻量，优先使用颜色、透明度和 `transform`。
+- 所有可交互元素保留可见的 `:focus-visible` 状态。
 
-- **Anthropic Black** (`#1d1d1b`): Primary text, headings, body copy. The warm tone softens pure black without sacrificing readability.
-- **Pure White** (`#ffffff`): Page background, card surfaces, button text on accent colors.
-- **Anthropic Clay** (`#d97757`): Primary CTA, link color, interactive accent -- the only saturated color in the core UI chrome.
+### 卡片、输入与弹窗
 
-### Brand Secondary
+- 常规卡片使用 `12px` 圆角，弹窗使用 `16px` 圆角。
+- 卡片和分区使用细边框，不加投影。
+- 输入框保持清晰边界和聚焦态；错误信息紧邻对应输入项。
+- 移动端 Dialog 需限制最大高度并允许内容区滚动，关闭方式与桌面端保持一致。
 
-- **Claude Purple** (`#af8fef`): Secondary brand color, used sparingly for emphasis and specialized features.
-- **Active Clay** (`#c46648`): Button active/pressed state -- darker variant of Anthropic Clay.
+## 5. 布局与响应式
 
-### Warm Neutral Scale
+- 间距以 `8px` 为基础单位，常用层级为 `4 / 8 / 12 / 16 / 24 / 32 / 48 / 64px`。
+- 主要内容应有足够留白，但不能用空白掩盖信息层级问题。
+- 移动端优先保证可读性、触达范围和滚动连续性，不直接照搬桌面端的悬停交互。
+- 不要只靠屏幕宽度隐藏关键操作；需要收纳时使用既有菜单、抽屉或 Dialog 模式。
 
-- **Warm White** (`#f6f5f4`): Background surface tint, section alternation, subtle card fill. The yellow undertone is key.
-- **Warm Dark** (`#31302e`): Dark surface background, dark section text. Warmer than standard grays.
-- **Warm Gray 500** (`#6b6964`): Secondary text, descriptions, muted labels.
-- **Warm Gray 300** (`#a39e98`): Placeholder text, disabled states, caption text.
+## 6. 无障碍与动效
 
-### Semantic Accent Colors
+- 交互状态不能只用颜色表达，应配合图标、文字或位置变化。
+- 兼容 `prefers-reduced-motion`，避免持续循环和大范围位移动画。
+- 动画优先使用 `transform` 和 `opacity`，避免动画化布局属性。
+- 加载态应保留原有布局轮廓，减少内容到达后的跳动。
 
-- **Teal** (`#2a9d99`): Success states, positive indicators.
-- **Green** (`#1aae39`): Confirmation, completion badges.
-- **Orange** (`#dd5b00`): Warning states, attention indicators.
-- **Pink** (`#ff64c8`): Decorative accent, feature highlights.
+## 7. 修改界面前
 
-### Interactive
-
-- **Link Clay** (`#d97757`): Primary link color with underline-on-hover.
-- **Focus Clay** (`#d97757`): Focus ring on interactive elements.
-- **Badge Clay Bg** (`#fdf5f2`): Pill badge background, tinted clay surface.
-- **Badge Clay Text** (`#d97757`): Pill badge text, darker clay for readability.
-
-### Borders & Division
-
-- **Whisper Border** (`1px solid rgba(29,29,27,0.1)`): Standard division border -- cards, dividers, sections.
-- **Dark Whisper Border** (`1px solid rgba(246,245,244,0.12)`): Dark mode division border, slightly stronger than light mode so flat surfaces stay legible.
-- **Focus Clay** (`1px solid #d97757`): Active focus state ring.
-
-## 3. Typography Rules
-
-### Font Family
-
-- **Primary**: `Inter`, with fallbacks: `-apple-system, system-ui, Segoe UI, Helvetica, Apple Color Emoji, Arial, Segoe UI Emoji, Segoe UI Symbol`
-- **OpenType Features**: `"lnum"` (lining numerals) and `"locl"` (localized forms) enabled on display and heading text.
-
-### Hierarchy
-
-| Role              | Font  | Size           | Weight | Line Height  | Letter Spacing | Color           |
-| ----------------- | ----- | -------------- | ------ | ------------ | -------------- | --------------- |
-| Display Hero      | Inter | 64px (4.00rem) | 700    | 1.00 (tight) | -2.125px       | Anthropic Black |
-| Display Secondary | Inter | 54px (3.38rem) | 700    | 1.04 (tight) | -1.875px       | Anthropic Black |
-| Section Heading   | Inter | 48px (3.00rem) | 700    | 1.00 (tight) | -1.5px         | Anthropic Black |
-| Sub-heading Large | Inter | 40px (2.50rem) | 700    | 1.50         | normal         | Anthropic Black |
-| Sub-heading       | Inter | 26px (1.63rem) | 700    | 1.23 (tight) | -0.625px       | Anthropic Black |
-| Card Title        | Inter | 22px (1.38rem) | 700    | 1.27 (tight) | -0.25px        | Anthropic Black |
-| Body Large        | Inter | 20px (1.25rem) | 600    | 1.40         | -0.125px       | Anthropic Black |
-| Body              | Inter | 16px (1.00rem) | 400    | 1.60         | normal         | Anthropic Black |
-| Body Medium       | Inter | 16px (1.00rem) | 500    | 1.60         | normal         | Anthropic Black |
-| Body Semibold     | Inter | 16px (1.00rem) | 600    | 1.60         | normal         | Anthropic Black |
-| Body Bold         | Inter | 16px (1.00rem) | 700    | 1.60         | normal         | Anthropic Black |
-| Nav / Button      | Inter | 14px (0.88rem) | 500    | 1.33         | normal         | Anthropic Black |
-| Caption           | Inter | 14px (0.88rem) | 500    | 1.43         | normal         | Warm Gray 500   |
-| Caption Light     | Inter | 14px (0.88rem) | 400    | 1.43         | normal         | Warm Gray 500   |
-| Badge             | Inter | 12px (0.75rem) | 600    | 1.33         | 0.125px        | Anthropic Clay  |
-| Micro Label       | Inter | 12px (0.75rem) | 400    | 1.33         | 0.125px        | Warm Gray 500   |
-
-### Principles
-
-- **Compression at scale**: Inter at display sizes uses -2.125px letter-spacing at 64px, progressively relaxing to -0.625px at 26px and normal at 16px.
-- **Warm scaling**: Line height is kept at a comfortable `1.60` for body text to maintain an open, humanistic feel, but tightens as size increases for headings.
-- **Badge micro-tracking**: The 12px badge text uses positive letter-spacing (0.125px), creating wider, more legible small text.
-
-## 4. Component Stylings
-
-### Buttons
-
-**Primary Clay**
-
-- Background: `#d97757` (Anthropic Clay)
-- Text: `#ffffff`
-- Padding: 8px 16px
-- Radius: 8px
-- Border: `1px solid transparent`
-- Hover: background darkens to `#c46648`
-- Active: scale(0.95) transform
-- Use: Primary CTA
-
-**Secondary / Tertiary**
-
-- Background: `rgba(29,29,27,0.05)` (translucent warm gray)
-- Text: `#1d1d1b` (Anthropic Black)
-- Padding: 8px 16px
-- Radius: 8px
-- Hover: scale(1.02)
-- Active: scale(0.95) transform
-- Use: Secondary actions
-
-**Pill Badge Button**
-
-- Background: `#fdf5f2` (tinted clay)
-- Text: `#d97757`
-- Padding: 4px 8px
-- Radius: 9999px
-- Font: 12px weight 600
-
-### Cards & Containers
-
-- Background: `#ffffff`
-- Border: `1px solid rgba(29,29,27,0.1)` (whisper border)
-- Radius: 12px (standard cards), 16px (featured/modals)
-- Elevation: Completely flat, no shadows.
-
-### Inputs & Forms
-
-**Search & Filter Inputs (搜索与筛选输入框)**
-
-- Background: `#ffffff` (or alt theme states)
-- Text: `#1d1d1b`
-- Height: `36px`
-- Font Size: `text-sm` (14px)
-- Radius: `8px` (`rounded-md`) — to match standard inputs and tags, avoiding sharp styling tear
-- Focus: Soft clay outline ring (`focus-within:border-primary/30`)
-
-**Standard Form Fields (标准表单输入框)**
-
-- Background: `#ffffff`
-- Text: `#1d1d1b`
-- Radius: `8px` (`rounded-md`)
-- Focus: Soft clay outline ring
-
-## 5. Layout Principles
-
-### Spacing System
-
-- Base unit: 8px
-- Scale: 4px, 8px, 12px, 16px, 24px, 32px, 48px, 64px
-
-### Whitespace Philosophy
-
-- **Generous vertical rhythm**: 64-120px between major sections. Let content breathe.
-- **Warm alternation**: White sections alternate with warm white (`#f6f5f4`) sections.
-
-### Border Radius Scale
-
-- Micro (4px): Command items
-- Standard (8px): Buttons, standard form fields, Search & Filter inputs, inline tags & filter chips, navigation items, dropdown items
-- Comfortable (12px): Standard cards, popover containers, editor layout wrapper
-- Large (16px): Dialogs and Modals
-
-## 6. Layout Depth
-
-| Level             | Treatment                          | Use              |
-| ----------------- | ---------------------------------- | ---------------- |
-| Flat (Level 0)    | No shadow                          | Page background  |
-| Whisper (Level 1) | `1px solid rgba(29,29,27,0.1)`     | Standard borders |
-| Surface (Level 2) | Background alternation (`#f6f5f4`) | Secondary areas  |
-
-## 7. Responsive Behavior
-
-(Unchanged from original Notion specifications)
-
-## 8. Accessibility & States
-
-- **Focus System**: Soft clay indicator, generally 1px on base controls without a white offset halo.
-- **Interactive States**: scale(1.02) on hover, scale(0.95) on active.
-- **Color Contrast**: Anthropic Black on white exceeds 14:1 ratio.
-- **Cursor Interaction Guidelines**:
-  - **Standard Action / Nav (`cursor: pointer`)**: Applied to all interactive triggers where clicking performs an action, transitions pages, opens menus, toggles state, or closes dialogs. Examples: buttons, hyperlinks, custom clickable tags, dropdown menu items, tabs, and interactive card covers.
-  - **Text Editing / Entry (`cursor: text`)**: Applied to search inputs, rich-text editors, and editable textareas. Keeps the text-beam cursor to signify an input state rather than a simple click action.
-  - **Static / Read-only (`cursor: default`)**: Default arrow pointer for raw text copy, display-only info tags, and static components with hover tooltips only. Avoids tricking the user into clicking.
-  - **Disabled State (`cursor: not-allowed`)**: Combined with reduced opacity for any interactive elements temporarily locked or undergoing asynchronous loading.
-  - **Draggable Content (`cursor: grab` / `active:cursor-grabbing`)**: Used for draggable elements such as large image zoom detail panels or drag-and-drop sortable items.
-
-## 9. Agent Prompt Guide
-
-### Quick Color Reference
-
-- Primary CTA: Anthropic Clay (`#d97757`)
-- Background: Pure White (`#ffffff`)
-- Alt Background: Warm White (`#f6f5f4`)
-- Text: Anthropic Black (`#1d1d1b`)
-- Border: `1px solid rgba(29,29,27,0.1)`
-- Link: Anthropic Clay (`#d97757`)
-- Focus ring: Soft Clay (`#e7b8a8`)
-- Dark background: Deep Warm Canvas (`#141412`)
-- Dark card: Warm Ink Surface (`#1f1e1c`)
-- Dark text: Warm Paper (`#f3f1ee`)
-- Dark muted text: Warm Gray (`#b3aea7`)
+1. 先查看相邻 feature 或共享 UI 的既有实现。
+2. 涉及 Dialog、移动端、编辑器或私密内容时，同时确认对应交互和隐私约束。
+3. 新增颜色、圆角、阴影或动画前，先确认现有 token 是否已经覆盖。

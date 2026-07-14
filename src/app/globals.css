@@ -56,36 +56,36 @@
 }
 
 :root {
-  /* Warm Neutrals & Primary */
-  --background: #ffffff;
-  --foreground: #1d1d1b; /* Anthropic Black */
+  /* Neutral foundation with a restrained Clay accent */
+  --background: #f8f8f8;
+  --foreground: #181818;
   --card: #ffffff;
-  --card-foreground: #1d1d1b;
-  --popover: rgba(255, 255, 255, 0.9);
-  --popover-foreground: #1d1d1b;
-  --primary: #d97757; /* Anthropic Clay */
+  --card-foreground: #181818;
+  --popover: rgba(255, 255, 255, 0.94);
+  --popover-foreground: #181818;
+  --primary: #a5634f;
   --primary-foreground: #ffffff;
-  --secondary: rgba(29, 29, 27, 0.05);
-  --secondary-foreground: #1d1d1b;
-  --muted: #f6f5f4; /* Warm White */
-  --muted-foreground: #6b6964; /* Warm Gray 500 */
-  --accent: rgba(29, 29, 27, 0.05);
-  --accent-foreground: #1d1d1b;
+  --secondary: #f4f4f3;
+  --secondary-foreground: #181818;
+  --muted: #f5f5f4;
+  --muted-foreground: #696865;
+  --accent: #f3efed;
+  --accent-foreground: #181818;
   --destructive: #dd5b00; /* Semantic Orange/Red */
   --destructive-foreground: #ffffff;
-  --border: rgba(29, 29, 27, 0.1); /* Whisper Border */
-  --input: #dddddd;
-  --ring: #e7b8a8;
+  --border: rgba(24, 24, 24, 0.12);
+  --input: #dedede;
+  --ring: #c7b1a7;
   --radius: 12px;
 
-  --active-clay: #c46648;
-  --badge-clay-bg: #fdf5f2;
-  --badge-clay-text: #d97757;
-  --memo-tag-bg: rgba(196, 102, 72, 0.08);
-  --memo-tag-text: #a9573e;
-  --memo-tag-hover-bg: rgba(196, 102, 72, 0.14);
+  --active-clay: #8c5543;
+  --badge-clay-bg: #f7f1ee;
+  --badge-clay-text: #98604f;
+  --memo-tag-bg: #f3f3f2;
+  --memo-tag-text: #62615f;
+  --memo-tag-hover-bg: #eae9e7;
 
-  --chart-1: #d97757;
+  --chart-1: #a5634f;
   --chart-2: #2a9d99; /* Teal */
   --chart-3: #1aae39; /* Green */
   --chart-4: #dd5b00; /* Orange */
@@ -111,32 +111,32 @@
 .dark {
   color-scheme: dark;
 
-  --background: #0d0d0b;
-  --foreground: #f3f1ee;
-  --card: #1c1b18; /* Warm Dark */
-  --card-foreground: #f3f1ee;
-  --popover: rgba(31, 30, 28, 0.94);
-  --popover-foreground: #f3f1ee;
-  --primary: #e08767;
-  --primary-foreground: #ffffff;
-  --secondary: rgba(246, 245, 244, 0.07);
-  --secondary-foreground: #f3f1ee;
-  --muted: #252421;
-  --muted-foreground: #b3aea7; /* Warm Gray 300 */
-  --accent: rgba(246, 245, 244, 0.08);
-  --accent-foreground: #f3f1ee;
+  --background: #131211;
+  --foreground: #f3f3f1;
+  --card: #1d1b19;
+  --card-foreground: #f3f3f1;
+  --popover: rgba(29, 27, 25, 0.94);
+  --popover-foreground: #f3f3f1;
+  --primary: #d49a86;
+  --primary-foreground: #241c19;
+  --secondary: rgba(243, 239, 236, 0.07);
+  --secondary-foreground: #f3f3f1;
+  --muted: #272421;
+  --muted-foreground: #b9afa9;
+  --accent: #312d2a;
+  --accent-foreground: #f3f3f1;
   --destructive: #dd5b00;
   --destructive-foreground: #ffffff;
-  --border: rgba(246, 245, 244, 0.18);
-  --input: rgba(246, 245, 244, 0.16);
-  --ring: #d89a82;
+  --border: rgba(243, 243, 241, 0.16);
+  --input: #393330;
+  --ring: #8e6253;
 
-  --active-clay: #c96d4e;
-  --badge-clay-bg: rgba(224, 135, 103, 0.12);
-  --badge-clay-text: #d08a73;
-  --memo-tag-bg: rgba(201, 109, 78, 0.12);
-  --memo-tag-text: #c97859;
-  --memo-tag-hover-bg: rgba(201, 109, 78, 0.18);
+  --active-clay: #c98570;
+  --badge-clay-bg: #302522;
+  --badge-clay-text: #d6a18e;
+  --memo-tag-bg: #2a2826;
+  --memo-tag-text: #c7c1bb;
+  --memo-tag-hover-bg: #34312e;
 
   /* Heatmap Colors (Dark) */
   --heatmap-0: #34322e;
@@ -158,6 +158,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--background);
   color: var(--foreground);
+}
+
+/* Kami-style depth: cards stay still; hover only receives a whisper shadow. */
+@media (hover: hover) {
+  .memo-card:hover {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+  }
 }
 
 @keyframes cli-breathe {

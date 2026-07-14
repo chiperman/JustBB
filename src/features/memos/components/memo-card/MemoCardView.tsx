@@ -57,8 +57,7 @@ export function MemoCardView({
     <article
       onClick={handleCardClick}
       className={cn(
-        "relative bg-card rounded-lg p-6 transition-[background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-border hover:focus-within:ring-2 focus-within:ring-primary/10 group",
-        displayMemo.is_pinned && "bg-(--badge-clay-bg)/50 border-primary/20",
+        "memo-card relative bg-card rounded-lg border border-border p-6 transition-[background-color,border-color,box-shadow] duration-200 ease-out focus-within:ring-2 focus-within:ring-ring/30 motion-reduce:transition-none group",
         isSelectionMode && "cursor-pointer hover:border-primary/40 select-none",
         isSelectionMode && isSelected && "border-primary/35 bg-primary/[0.03]",
         isLastCreated && "animate-new-memo-highlight"

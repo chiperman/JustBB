@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { motion, Variants } from "framer-motion"
 import { Memo } from "@/types/memo"
 
@@ -18,6 +19,7 @@ export function FeedItemWrapper({
   variants,
   children,
 }: FeedItemWrapperProps) {
+  const [isHovered, setIsHovered] = useState(false)
   const utcDate = new Date(memo.created_at)
   const localDate = new Date(utcDate.getTime() + 8 * 60 * 60 * 1000)
   const currentDate = localDate.toISOString().split("T")[0]
@@ -47,10 +49,14 @@ export function FeedItemWrapper({
       animate="animate"
       exit="exit"
       custom={index % 20}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className="break-inside-avoid relative"
       style={{
         containIntrinsicSize: "0 260px",
-        contentVisibility: "auto",
+        // content-visibility creates paint containment and clips a child's shadow.
+        // Release it only while hovering so Kami's whisper shadow can render naturally.
+        contentVisibility: isHovered ? "visible" : "auto",
         overflowAnchor: "none",
       }}
     >

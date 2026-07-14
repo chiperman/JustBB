@@ -55,7 +55,7 @@ export function MemoCardHeader({
             className="h-4 w-4 rounded-[4px] border-border bg-background transition-all data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
           />
         )}
-        <span className="badge-text bg-(--badge-clay-bg) px-2 py-0.5 rounded-sm">
+        <span className="rounded-md bg-(--badge-clay-bg) px-1.5 py-0.5 text-[0.75rem] font-semibold leading-[1.33] tracking-[0.125px] text-(--badge-clay-text)">
           #{memo.memo_number}
         </span>
         <time className="caption tracking-tight">

@@ -1,7 +1,6 @@
 "use client"
 
 import { Suspense, useEffect, useSyncExternalStore } from "react"
-import { TagCloud } from "../ui/TagCloud"
 import { Heatmap } from "../ui/Heatmap"
 import { cn } from "@/shared/lib/utils"
 import { SidebarCollapseButton } from "./SidebarCollapseButton"
@@ -14,7 +13,6 @@ import { useSidebarNavigation } from "@/shared/hooks/useSidebarNavigation"
 import { useSidebarPagePrefetch } from "@/shared/hooks/useSidebarPagePrefetch"
 import { SidebarNavItem } from "./sidebar/SidebarNavItem"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
-import { useTags } from "@/state/TagsContext"
 import {
   LEFT_SIDEBAR_COOKIE_KEY,
   LEFT_SIDEBAR_STORAGE_EVENT,
@@ -37,7 +35,6 @@ const SIDEBAR_TRANSITION = {
   ease: [0.22, 1, 0.36, 1] as const,
 }
 const HEATMAP_SLOT_HEIGHT = 248
-const TAGS_SLOT_HEIGHT = "auto"
 
 export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarProps) {
   const isMobile = !!onClose
@@ -56,9 +53,6 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
 
   const { navItems, currentView, handleNavigate } = useSidebarNavigation()
   const { schedulePrefetch, cancelPrefetch } = useSidebarPagePrefetch()
-  const { tags } = useTags()
-  const shouldShowPopularTags = tags.length > 0
-
   useEffect(() => {
     syncLayoutPreferenceCookie(LEFT_SIDEBAR_STORAGE_KEY, LEFT_SIDEBAR_COOKIE_KEY)
   }, [])
@@ -222,44 +216,6 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
           />
         ))}
       </motion.nav>
-
-      {shouldShowPopularTags && (
-        <motion.div
-          initial={false}
-          className={cn("shrink-0 overflow-hidden", isMobile && "hidden sm:block")}
-          animate={{
-            height: effectiveIsCollapsed ? 0 : TAGS_SLOT_HEIGHT,
-            opacity: effectiveIsCollapsed ? 0 : 1,
-          }}
-          transition={{
-            height: SIDEBAR_TRANSITION,
-            opacity: SIDEBAR_TRANSITION,
-          }}
-        >
-          <div
-            className={cn(
-              "w-[264px] shrink-0 border-t border-border px-1 pt-4 pb-4",
-              isMobile &&
-                "mx-auto w-full max-w-[430px] px-0 sm:mx-0 sm:w-[264px] sm:max-w-none sm:px-1"
-            )}
-          >
-            <h3 className="mb-4 flex items-center gap-2 card-title">热门标签</h3>
-            <Suspense
-              fallback={
-                <div className="space-y-2">
-                  <div className="flex flex-wrap gap-2">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <div key={i} className="h-6 w-12 rounded-md bg-muted/20 animate-pulse" />
-                    ))}
-                  </div>
-                </div>
-              }
-            >
-              <TagCloud />
-            </Suspense>
-          </div>
-        </motion.div>
-      )}
 
       {/* Bottom Settings Area: 设置按钮移至此处，带 mt-auto 置底 */}
       <div

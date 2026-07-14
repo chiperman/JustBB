@@ -116,7 +116,7 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
       title="导入 Memos"
       subtitle="从备份文件或第三方平台迁移你的记录"
       icon={Upload}
-      maxWidth="max-w-[550px]"
+      maxWidth="max-w-[720px]"
       contentClassName="px-4 py-5 sm:px-8 sm:py-8"
       footer={
         <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
@@ -383,7 +383,7 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
               {[
                 {
                   label: "总数",
@@ -406,7 +406,9 @@ export function ImportConfigDialog({ open, onOpenChange }: ImportConfigDialogPro
                   key={item.label}
                   className="rounded-xl border border-border/50 bg-secondary p-3 text-center"
                 >
-                  <p className="micro-label uppercase opacity-50 mb-1">{item.label}</p>
+                  <p className="micro-label mb-1 whitespace-nowrap uppercase opacity-50">
+                    {item.label}
+                  </p>
                   <p className={cn("body-large font-bold", item.color)}>{item.value}</p>
                 </div>
               ))}

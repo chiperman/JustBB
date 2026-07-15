@@ -34,6 +34,16 @@ export async function POST(request: Request) {
     )
   }
 
+  const { data: userData, error: userError } = await getCliAuthClient().auth.getUser(
+    data.session.access_token
+  )
+  if (userError || userData.user?.app_metadata?.role !== "admin") {
+    return NextResponse.json(
+      { success: false, data: null, error: "CLI access is restricted to administrators." },
+      { status: 403 }
+    )
+  }
+
   return NextResponse.json({
     success: true,
     data: {

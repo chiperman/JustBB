@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { Json } from "@/types/database"
-import { getCliClient } from "@/server/services/cli/client"
+import { getCliReadClient } from "@/server/services/cli/client"
 
 const DEFAULT_LIMIT = 20
 const MAX_LIMIT = 100
@@ -47,7 +47,9 @@ export async function GET(request: Request) {
   if (tag) filters.tag = tag
   if (memoNumber) filters.num = memoNumber
 
-  const { data, error } = await getCliClient(request).rpc("search_memos_secure", {
+  const { data, error } = await (
+    await getCliReadClient(request)
+  ).rpc("search_memos_secure", {
     query_text: queryText,
     unlocked_ids: [],
     limit_val: limit,

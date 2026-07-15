@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { readSession, writeSession } = vi.hoisted(() => ({
+const { readSession, writeSession, clearSession } = vi.hoisted(() => ({
   readSession: vi.fn(),
   writeSession: vi.fn(),
+  clearSession: vi.fn(),
 }))
 
-vi.mock("./auth-store.js", () => ({ readSession, writeSession }))
+vi.mock("./auth-store.js", () => ({ readSession, writeSession, clearSession }))
 
 import { publishMemo, searchMemos } from "./client.js"
 
@@ -92,6 +93,37 @@ describe("CLI API client", () => {
     await expect(searchMemos({ query: "", limit: 20, page: 1, json: false })).rejects.toThrow(
       "授权码已过期"
     )
+  })
+
+  it("旧普通账号会话刷新被拒绝后，搜索退回匿名访问", async () => {
+    const expiredSession = {
+      access_token: `header.${Buffer.from(JSON.stringify({ exp: 1 })).toString("base64url")}.signature`,
+      refresh_token: "old-refresh-token",
+    }
+    readSession.mockResolvedValueOnce(expiredSession).mockResolvedValueOnce(expiredSession)
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        response(
+          {
+            success: false,
+            data: null,
+            error: "CLI access is restricted to administrators.",
+          },
+          403
+        )
+      )
+      .mockResolvedValueOnce(response({ success: true, data: [], error: null }))
+    vi.stubGlobal("fetch", fetchMock)
+
+    await expect(
+      searchMemos({ query: "", limit: 20, page: 1, json: false })
+    ).resolves.toMatchObject({
+      data: [],
+    })
+
+    expect(clearSession).toHaveBeenCalledOnce()
+    expect(new Headers(fetchMock.mock.calls[1][1]?.headers).get("Authorization")).toBeNull()
   })
 
   it("非 JSON 响应返回带状态码的统一错误", async () => {

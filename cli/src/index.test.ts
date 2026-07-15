@@ -317,4 +317,31 @@ describe("CLI 私密发布", () => {
 
     vi.useRealTimers()
   })
+
+  it("普通账号被拒绝时立即结束登录，不继续轮询", async () => {
+    vi.useFakeTimers()
+    promptEnter.mockResolvedValue(true)
+    openBrowser.mockReturnValue(true)
+    startDeviceAuth.mockResolvedValue({
+      success: true,
+      data: {
+        request_id: "request-1",
+        authorize_url: "https://example.com/cli/authorize?request=request-1",
+        code: "A7K2P9",
+        expires_at: new Date(Date.now() + 60_000).toISOString(),
+      },
+      error: null,
+    })
+    pollDeviceAuth.mockRejectedValue(new Error("CLI access is restricted to administrators."))
+    const stderr = vi.spyOn(process.stderr, "write").mockImplementation(() => true)
+
+    const promise = run(["login"])
+    await vi.advanceTimersByTimeAsync(1_000)
+
+    await expect(promise).resolves.toBe(1)
+    expect(pollDeviceAuth).toHaveBeenCalledTimes(1)
+    expect(stderr).toHaveBeenCalledWith("CLI access is restricted to administrators.\n")
+
+    vi.useRealTimers()
+  })
 })

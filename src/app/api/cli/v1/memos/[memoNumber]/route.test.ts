@@ -11,6 +11,7 @@ const { rpc, getUser, from, maybeSingle, single } = vi.hoisted(() => ({
 
 vi.mock("@/server/services/cli/client", () => ({
   getCliClient: vi.fn(() => ({ rpc, auth: { getUser }, from })),
+  getCliReadClient: vi.fn(async () => ({ rpc })),
 }))
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))

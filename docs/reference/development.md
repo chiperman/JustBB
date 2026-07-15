@@ -64,6 +64,18 @@ npm run dev
 
 提交时 Husky 会自动执行 `lint-staged`，只格式化和检查本次已暂存文件。全仓格式化只在刻意整理格式时使用：`npm run format:all`。
 
+### CLI npm 发布
+
+`cli/` 是独立 npm 包。正式发布由 `.github/workflows/publish-cli.yml` 处理：仅推送与 `cli/package.json` 版本一致的 `cli-vX.Y.Z` tag 时，GitHub Actions 才会发布到 npm。
+
+工作流通过 npm Trusted Publishing（OIDC）取得一次性发布凭证，不保存 `NPM_TOKEN`。第一次启用时，需要在 npm 的 `justmemo-cli` 包设置中绑定 `chiperman/JustBB` 与 `publish-cli.yml`；详见 npm Trusted Publishing 官方文档。
+
+发布顺序：
+
+1. 合并已验证的 CLI 版本提交到 `main`。
+2. 在 `main` 上创建并推送与 `cli/package.json` 完全一致的 `cli-vX.Y.Z` tag。
+3. GitHub Actions 完成校验并发布 npm；tag 推送即为发布授权，不能在未准备发布的版本上提前创建。
+
 复杂需求按以下顺序执行：
 
 1. 明确问题边界、目标和依赖。

@@ -1,6 +1,6 @@
 {
   "name": "just-memo",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "scripts": {
     "dev": "./scripts/dev-setup.sh && next dev -p 3000",

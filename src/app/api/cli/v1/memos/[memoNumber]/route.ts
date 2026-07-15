@@ -6,7 +6,7 @@ import type { Database } from "@/types/database"
 import { extractImagesFromContent } from "@/lib/memos/parser"
 import { buildMemoPayload } from "@/server/actions/memos/helpers"
 import { requireCliAdmin } from "@/server/services/cli/admin"
-import { getCliClient } from "@/server/services/cli/client"
+import { getCliClient, getCliReadClient } from "@/server/services/cli/client"
 
 type RouteContext = {
   params: Promise<{ memoNumber: string }>
@@ -96,7 +96,9 @@ export async function GET(request: Request, { params }: RouteContext) {
     return jsonResponse(false, null, "无效的 Memo 编号", 400)
   }
 
-  const { data, error } = await getCliClient(request).rpc("search_memos_secure", {
+  const { data, error } = await (
+    await getCliReadClient(request)
+  ).rpc("search_memos_secure", {
     query_text: "",
     unlocked_ids: [],
     limit_val: 1,

@@ -57,6 +57,13 @@ export async function POST(request: Request) {
     })
   }
 
+  if (device.status === "denied") {
+    return NextResponse.json(
+      { success: false, data: null, error: "CLI access is restricted to administrators." },
+      { status: 403 }
+    )
+  }
+
   if (device.status !== "approved" || !device.access_token || !device.refresh_token) {
     return NextResponse.json(
       { success: false, data: null, error: "授权请求不可用" },

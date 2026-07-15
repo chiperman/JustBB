@@ -7,7 +7,7 @@ import type {
   MemoSummary,
   SearchOptions,
 } from "./types.js"
-import { readSession, writeSession } from "./auth-store.js"
+import { clearSession, readSession, writeSession } from "./auth-store.js"
 
 export const DEFAULT_API_URL = "https://just-memo.vercel.app"
 
@@ -62,7 +62,12 @@ async function request<T>(
 ): Promise<CliResponse<T>> {
   let session = await readSession()
   if (session && refreshExpiredSession && isAccessTokenExpired(session.access_token)) {
-    session = await refreshSession(session)
+    try {
+      session = await refreshSession(session)
+    } catch {
+      await clearSession()
+      session = null
+    }
   }
   const headers = new Headers(init.headers)
   headers.set("Accept", "application/json")

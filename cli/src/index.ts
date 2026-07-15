@@ -172,6 +172,12 @@ export async function run(args: string[]) {
             return 0
           }
         } catch (pollError) {
+          if (
+            pollError instanceof Error &&
+            pollError.message === "CLI access is restricted to administrators."
+          ) {
+            throw pollError
+          }
           consecutiveErrors += 1
           if (consecutiveErrors >= 3) throw pollError
         }

@@ -43,7 +43,7 @@ CLI 是独立的 npm 包 `justmemo-cli`，命令名为 `justmemo`。它通过 Ju
 - CLI 发布包位于 `cli/`，与根项目的 Web 发布流程分开。
 - CLI 的命令、帮助、提示、成功和错误输出统一使用英文；网页的标题、说明、按钮等面向人的界面文案使用中文，命令字符串保持英文；其中的 `REAL CLI OUTPUT` 终端演示必须逐行展示英文 CLI 输出。
 
-主要使用场景是管理员在任意电脑登录后快速发布内容，也可以搜索和查看公开 Memo。普通用户或未登录用户无需登录即可浏览公开内容，但不能通过 CLI 绕过 Web 的权限模型。
+主要使用场景是管理员在任意电脑登录后快速发布内容，也可以搜索和查看公开 Memo。CLI 登录仅限管理员：普通账号在浏览器登录后会被拒绝授权，且不会获得 CLI 会话；普通用户或未登录用户无需登录即可浏览公开内容，但不能通过 CLI 绕过 Web 的权限模型。
 
 ## 5. CLI 登录与授权
 
@@ -54,6 +54,9 @@ CLI 是独立的 npm 包 `justmemo-cli`，命令名为 `justmemo`。它通过 Ju
 3. 用户可在当前电脑或手机浏览器打开授权链接，登录网页账号并确认设备。
 4. CLI 同时显示 6 位字母+数字授权码并轮询授权状态。
 5. 授权成功后 CLI 自动保存会话并继续工作。
+
+普通账号的授权请求会被标记为 `denied`，终端立即显示管理员限定错误并退出；历史普通账号本地会话在刷新被拒后会删除本地凭证，公开 `search`/`show` 自动退回匿名访问。
+即使普通账号保留了未过期的历史 bearer token，公开读取接口也会主动按匿名身份查询，不能借此扩大 Memo 可见范围。
 
 CLI 会先输出授权 URL 和六码，再提示 `Press ENTER to open in your browser...`；只有用户按下 Enter 才尝试打开本机浏览器。
 
@@ -228,6 +231,7 @@ R2 的配置保存在用户自己的配置记录中，服务端通过 S3-compati
 ```text
 POST /api/cli/v1/auth/device
 POST /api/cli/v1/auth/device/approve
+POST /api/cli/v1/auth/device/deny
 POST /api/cli/v1/auth/device/poll
 POST /api/cli/v1/auth/refresh
 GET  /api/cli/v1/auth/me

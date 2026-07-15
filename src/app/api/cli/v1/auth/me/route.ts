@@ -6,6 +6,12 @@ export async function GET(request: Request) {
   if (error || !data.user) {
     return NextResponse.json({ success: false, data: null, error: "未登录" }, { status: 401 })
   }
+  if (data.user.app_metadata?.role !== "admin") {
+    return NextResponse.json(
+      { success: false, data: null, error: "CLI access is restricted to administrators." },
+      { status: 403 }
+    )
+  }
 
   return NextResponse.json({
     success: true,

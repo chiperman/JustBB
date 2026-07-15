@@ -60,6 +60,26 @@ export async function POST(request: Request) {
     )
   }
 
+  if (userData.user.app_metadata?.role !== "admin") {
+    const { error: denialError } = await admin
+      .from("cli_device_sessions")
+      .update({ status: "denied" })
+      .eq("id", device.id)
+      .eq("status", "pending")
+
+    if (denialError) {
+      return NextResponse.json(
+        { success: false, data: null, error: "Authorization failed." },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json(
+      { success: false, data: null, error: "CLI access is restricted to administrators." },
+      { status: 403 }
+    )
+  }
+
   const { error } = await admin
     .from("cli_device_sessions")
     .update({

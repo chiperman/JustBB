@@ -1,6 +1,6 @@
 "use client"
 
-import { type FormEvent, type ReactNode, useState } from "react"
+import { type FormEvent, type ReactNode, useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { login } from "@/features/auth/actions"
@@ -11,11 +11,12 @@ type Props = {
   requestId: string
   initialCode: string
   userEmail: string | null
+  userRole: string
 }
 
 const DEVICE_CODE_PATTERN = /[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/g
 
-export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) {
+export function CliAuthorizePanel({ requestId, initialCode, userEmail, userRole }: Props) {
   const router = useRouter()
   const [code, setCode] = useState(initialCode)
   const [email, setEmail] = useState("")
@@ -23,6 +24,18 @@ export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) 
   const [error, setError] = useState<string | null>(null)
   const [approved, setApproved] = useState(false)
   const [isPending, setIsPending] = useState(false)
+
+  useEffect(() => {
+    if (!requestId || !userEmail || userRole === "admin") return
+
+    void fetch("/api/cli/v1/auth/device/deny", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ request_id: requestId }),
+    }).then((response) => {
+      if (!response.ok) setError("无法拒绝授权请求，请回到终端重新开始。")
+    })
+  }, [requestId, userEmail, userRole])
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -70,7 +83,7 @@ export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) 
     return (
       <Card eyebrow="步骤 01 / 登录" title="先在浏览器确认你的身份">
         <p className="mb-7 text-sm leading-7 text-[#b3aea7]">
-          登录后，CLI 会沿用你的 JustMemo 权限。普通用户只能浏览；管理员可以发布和管理自己的 Memo。
+          管理员登录后可以发布和管理自己的 Memo。未登录或普通用户仍可在终端浏览公开 Memo。
         </p>
         <form onSubmit={handleLogin} className="space-y-5">
           <label className="block space-y-2 text-sm font-medium" htmlFor="cli-email">
@@ -113,6 +126,22 @@ export function CliAuthorizePanel({ requestId, initialCode, userEmail }: Props) 
             {isPending ? "正在确认身份..." : "登录并继续"}
           </Button>
         </form>
+      </Card>
+    )
+  }
+
+  if (userRole !== "admin") {
+    return (
+      <Card eyebrow="CLI access" title="CLI 仅限管理员使用">
+        <p className="text-sm leading-7 text-[#b3aea7]">
+          当前账号已登录，但不能授权 JustMemo CLI。终端将自动结束本次登录；无需登录仍可浏览公开
+          Memo。
+        </p>
+        {error && (
+          <p className="mt-4 text-sm leading-6 text-[#ff9478]" role="alert">
+            {error}
+          </p>
+        )}
       </Card>
     )
   }

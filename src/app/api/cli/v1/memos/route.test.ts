@@ -5,6 +5,7 @@ const rpc = vi.fn()
 
 vi.mock("@/server/services/cli/client", () => ({
   getCliClient: vi.fn(() => ({ rpc })),
+  getCliReadClient: vi.fn(async () => ({ rpc })),
 }))
 
 describe("GET /api/cli/v1/memos", () => {

@@ -52,6 +52,7 @@ export default async function CliAuthorizePage({
               requestId={params.request || ""}
               initialCode={params.code || ""}
               userEmail={user?.email || null}
+              userRole={user?.role || "user"}
             />
           </section>
         </div>

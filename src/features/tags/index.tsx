@@ -3,8 +3,13 @@
 import { useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Cancel01Icon, Search01Icon, Tag01Icon as TagIcon } from "@hugeicons/core-free-icons"
-import { PencilEdit01Icon } from "@hugeicons/core-free-icons"
+import {
+  Cancel01Icon,
+  Loading01Icon,
+  PencilEdit01Icon,
+  Search01Icon,
+  Tag01Icon as TagIcon,
+} from "@hugeicons/core-free-icons"
 
 import { ContextPageHeader, ContextPageShell } from "@/shared/layout/ContextPageShell"
 import { cn } from "@/shared/lib/utils"
@@ -13,15 +18,21 @@ import { PageEmptyState } from "@/shared/ui/PageEmptyState"
 import { useTagGroups, TagData } from "./hooks/useTagGroups"
 import { TagCard } from "./components/TagCard"
 import { Button } from "@/shared/ui/button"
-import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/shared/ui/dialog"
 import { Input } from "@/shared/ui/input"
-import { useConfirm } from "@/state/ConfirmContext"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 import { useToast } from "@/shared/hooks/use-toast"
 import { renameTagForCurrentUser } from "@/server/actions/memos/mutate"
 import { dispatchMemoEvent } from "@/lib/memos/events"
 
 interface TagsPageContentProps {
   tags?: TagData[]
+}
+
+const MIN_RENAME_PROGRESS_DISPLAY_MS = 1_200
+
+function delay(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms))
 }
 
 export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
@@ -31,36 +42,52 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
   const [renameOpen, setRenameOpen] = useState(false)
   const [oldTag, setOldTag] = useState("")
   const [newTag, setNewTag] = useState("")
+  const [isConfirmingRename, setIsConfirmingRename] = useState(false)
   const [isRenaming, setIsRenaming] = useState(false)
-  const { confirm } = useConfirm()
+  const [renameProgress, setRenameProgress] = useState(0)
   const { toast } = useToast()
   const affectedCount = tags.find((tag) => tag.tag_name === oldTag)?.count ?? 0
   const openRename = () => {
     setOldTag(tags[0]?.tag_name ?? "")
     setNewTag("")
+    setIsConfirmingRename(false)
+    setRenameProgress(0)
     setRenameOpen(true)
   }
-  const submitRename = async () => {
+  const requestRename = () => {
     const next = newTag.trim()
     if (!oldTag || !next || next === oldTag) return
-    if (
-      !(await confirm({
-        title: "重命名标签？",
-        description: `将同步更新 ${affectedCount} 条 Memo 的标签和正文。`,
-        confirmLabel: "确认重命名",
-      }))
-    )
-      return
+    setIsConfirmingRename(true)
+  }
+  const confirmRename = async () => {
+    const next = newTag.trim()
+    const progressStartedAt = Date.now()
     setIsRenaming(true)
-    const result = await renameTagForCurrentUser(oldTag, next)
-    setIsRenaming(false)
+    setRenameProgress(0)
+    const renameResult = renameTagForCurrentUser(oldTag, next)
+    await delay(160)
+    setRenameProgress(30)
+    await delay(240)
+    setRenameProgress(65)
+    const result = await renameResult
     if (!result.success) {
+      setIsConfirmingRename(false)
+      setIsRenaming(false)
+      setRenameProgress(0)
       toast({ title: "重命名失败", description: result.error, variant: "destructive" })
       return
     }
-    dispatchMemoEvent({ type: "update", id: "tags", updates: { tags: [] } })
-    await refreshTags()
+    setRenameProgress(100)
+    const remainingDuration = MIN_RENAME_PROGRESS_DISPLAY_MS - (Date.now() - progressStartedAt)
+    if (remainingDuration > 0) await delay(remainingDuration)
+    await delay(240)
     setRenameOpen(false)
+    setOldTag("")
+    setNewTag("")
+    setIsConfirmingRename(false)
+    setIsRenaming(false)
+    dispatchMemoEvent({ type: "update", id: "tags", updates: { tags: [] } })
+    void refreshTags()
     toast({
       title: "标签已重命名",
       description: `已更新 ${result.data?.count ?? 0} 条 Memo`,
@@ -191,50 +218,103 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
         />
       }
     >
-      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
-        <DialogContent className="max-w-md">
-          <DialogTitle>重命名标签</DialogTitle>
-          <div className="space-y-4 pt-2">
-            <label className="block text-sm font-medium">
-              原标签
-              <select
-                value={oldTag}
-                onChange={(e) => setOldTag(e.target.value)}
-                className="mt-2 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
-                {tags.map((tag) => (
-                  <option key={tag.tag_name} value={tag.tag_name}>
-                    #{tag.tag_name}（{tag.count}）
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-sm font-medium">
-              新标签
-              <Input
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                placeholder="输入新标签名称"
-                className="mt-2"
-              />
-            </label>
-            <p className="text-xs text-muted-foreground">
-              将影响 {affectedCount} 条 Memo，并同步更新正文中的完整标签。
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setRenameOpen(false)}>
-                取消
-              </Button>
-              <Button
-                onClick={submitRename}
-                disabled={isRenaming || !newTag.trim() || newTag.trim() === oldTag}
-              >
-                {isRenaming ? "正在重命名…" : "重命名"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {renameOpen && (
+        <Dialog open onOpenChange={(open) => !open && !isRenaming && setRenameOpen(false)}>
+          <DialogContent className="max-w-md">
+            <DialogTitle>重命名标签</DialogTitle>
+            <DialogDescription>将标签名称同步更新到所属 Memo 的标签与正文。</DialogDescription>
+            {isRenaming ? (
+              <div className="space-y-5 py-8" role="status" aria-live="polite">
+                <div className="flex items-center gap-4">
+                  <div className="rounded-full bg-primary/10 p-3 text-primary">
+                    <HugeiconsIcon icon={Loading01Icon} size={28} className="animate-spin" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold">正在重命名标签...</p>
+                    <p className="text-sm text-muted-foreground">
+                      正在同步更新 {affectedCount} 条 Memo，请勿关闭页面。
+                    </p>
+                  </div>
+                </div>
+                <div
+                  className="h-2 overflow-hidden rounded-full bg-secondary"
+                  role="progressbar"
+                  aria-valuenow={renameProgress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-300"
+                    style={{ width: `${renameProgress}%` }}
+                  />
+                </div>
+              </div>
+            ) : isConfirmingRename ? (
+              <div className="space-y-5 pt-2">
+                <p className="text-sm text-muted-foreground">
+                  将把 <span className="font-medium text-foreground">#{oldTag}</span> 重命名为{" "}
+                  <span className="font-medium text-foreground">#{newTag.trim()}</span>，并同步更新{" "}
+                  {affectedCount} 条 Memo 的标签和正文。
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" onClick={() => setIsConfirmingRename(false)}>
+                    返回修改
+                  </Button>
+                  <Button onClick={confirmRename}>确认重命名</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4 pt-2">
+                <label className="block text-sm font-medium">
+                  原标签
+                  <Select value={oldTag} onValueChange={setOldTag}>
+                    <SelectTrigger className="mt-2 w-full">
+                      <SelectValue placeholder="选择标签" />
+                    </SelectTrigger>
+                    <SelectContent
+                      position="popper"
+                      side="bottom"
+                      align="start"
+                      sideOffset={6}
+                      className="z-[97] h-64 max-h-[var(--radix-select-content-available-height)] w-[var(--radix-select-trigger-width)]"
+                      viewportClassName="h-full"
+                    >
+                      {tags.map((tag) => (
+                        <SelectItem key={tag.tag_name} value={tag.tag_name}>
+                          #{tag.tag_name}（{tag.count}）
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </label>
+                <label className="block text-sm font-medium">
+                  新标签
+                  <Input
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    placeholder="输入新标签名称"
+                    className="mt-2"
+                  />
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  将影响 {affectedCount} 条 Memo，并同步更新正文中的完整标签。
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" onClick={() => setRenameOpen(false)}>
+                    取消
+                  </Button>
+                  <Button
+                    onClick={requestRename}
+                    disabled={!newTag.trim() || newTag.trim() === oldTag}
+                  >
+                    继续
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
       <div className={isEmpty ? "flex flex-1 min-h-0 flex-col" : "space-y-8"}>
         {isLoading ? (
           <div className="space-y-6">

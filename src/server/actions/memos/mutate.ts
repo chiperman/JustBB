@@ -36,6 +36,8 @@ type ValidationIssueLike = {
   message: string
 }
 
+const TAG_RENAME_BATCH_SIZE = 50
+
 function enrichViewerMemo(memo: Memo, viewerId: string): Memo {
   return (
     withViewerAccess(memo, viewerId) ?? {
@@ -399,22 +401,27 @@ export async function renameTagForCurrentUser(
     .eq("owner_id", viewerId)
     .contains("tags", [from])
   if (error) return { success: false, error: "获取标签记录失败" }
+  const updates = (memos ?? []).map((memo) => {
+    const content = renameTagInContent(memo.content ?? "", from, to)
+    const tags = Array.from(new Set((memo.tags ?? []).map((tag) => (tag === from ? to : tag))))
+    return {
+      id: memo.id,
+      owner_id: viewerId,
+      content,
+      tags,
+      word_count: calculateWordCount(content),
+      locations: extractLocations(content) as unknown as MemoInsert["locations"],
+      updated_at: new Date().toISOString(),
+    }
+  })
   const results = await Promise.all(
-    (memos ?? []).map((memo) => {
-      const content = renameTagInContent(memo.content ?? "", from, to)
-      const tags = Array.from(new Set((memo.tags ?? []).map((tag) => (tag === from ? to : tag))))
-      return supabase
+    Array.from({ length: Math.ceil(updates.length / TAG_RENAME_BATCH_SIZE) }, (_, index) =>
+      supabase
         .from("memos")
-        .update({
-          content,
-          tags,
-          word_count: calculateWordCount(content),
-          locations: extractLocations(content) as unknown as MemoInsert["locations"],
-          updated_at: new Date().toISOString(),
+        .upsert(updates.slice(index * TAG_RENAME_BATCH_SIZE, (index + 1) * TAG_RENAME_BATCH_SIZE), {
+          onConflict: "id",
         })
-        .eq("id", memo.id)
-        .eq("owner_id", viewerId)
-    })
+    )
   )
   if (results.some((result) => result.error)) return { success: false, error: "部分更新失败" }
   revalidatePath("/")

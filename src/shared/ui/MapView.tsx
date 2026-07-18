@@ -479,6 +479,27 @@ export function MapView({
       )}
     >
       <div ref={mapRef} className="w-full h-full z-0" />
+      <div
+        className="pointer-events-auto absolute bottom-[calc(5.75rem+env(safe-area-inset-bottom))] left-3 z-20 rounded-inner border border-border/40 bg-popover/90 px-2 py-1 text-[10px] leading-none text-muted-foreground shadow-sm backdrop-blur-xl md:bottom-3"
+        aria-label="地图版权归属"
+      >
+        <a
+          href="https://www.openstreetmap.org/copyright"
+          target="_blank"
+          rel="noreferrer"
+          className="underline-offset-2 hover:text-foreground hover:underline"
+        >
+          © OpenStreetMap contributors
+        </a>{" "}
+        <a
+          href="https://carto.com/attributions"
+          target="_blank"
+          rel="noreferrer"
+          className="underline-offset-2 hover:text-foreground hover:underline"
+        >
+          © CARTO
+        </a>
+      </div>
       {(mode === "full" || interactive) && (
         <>
           {mode === "full" ? (

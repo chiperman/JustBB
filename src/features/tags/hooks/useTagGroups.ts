@@ -56,5 +56,5 @@ export function useTagGroups(initialTags?: TagData[]) {
     )
   )
 
-  return { tags, isLoading }
+  return { tags, isLoading, refreshTags }
 }

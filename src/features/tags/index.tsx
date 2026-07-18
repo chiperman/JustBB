@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Cancel01Icon, Search01Icon, Tag01Icon as TagIcon } from "@hugeicons/core-free-icons"
+import { PencilEdit01Icon } from "@hugeicons/core-free-icons"
 
 import { ContextPageHeader, ContextPageShell } from "@/shared/layout/ContextPageShell"
 import { cn } from "@/shared/lib/utils"
@@ -11,6 +12,13 @@ import { PageEmptyState } from "@/shared/ui/PageEmptyState"
 
 import { useTagGroups, TagData } from "./hooks/useTagGroups"
 import { TagCard } from "./components/TagCard"
+import { Button } from "@/shared/ui/button"
+import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog"
+import { Input } from "@/shared/ui/input"
+import { useConfirm } from "@/state/ConfirmContext"
+import { useToast } from "@/shared/hooks/use-toast"
+import { renameTagForCurrentUser } from "@/server/actions/memos/mutate"
+import { dispatchMemoEvent } from "@/lib/memos/events"
 
 interface TagsPageContentProps {
   tags?: TagData[]
@@ -19,7 +27,46 @@ interface TagsPageContentProps {
 export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
   const [query, setQuery] = useState("")
   const [sortBy, setSortBy] = useState<"count" | "name">("count")
-  const { tags, isLoading } = useTagGroups(initialTags)
+  const { tags, isLoading, refreshTags } = useTagGroups(initialTags)
+  const [renameOpen, setRenameOpen] = useState(false)
+  const [oldTag, setOldTag] = useState("")
+  const [newTag, setNewTag] = useState("")
+  const [isRenaming, setIsRenaming] = useState(false)
+  const { confirm } = useConfirm()
+  const { toast } = useToast()
+  const affectedCount = tags.find((tag) => tag.tag_name === oldTag)?.count ?? 0
+  const openRename = () => {
+    setOldTag(tags[0]?.tag_name ?? "")
+    setNewTag("")
+    setRenameOpen(true)
+  }
+  const submitRename = async () => {
+    const next = newTag.trim()
+    if (!oldTag || !next || next === oldTag) return
+    if (
+      !(await confirm({
+        title: "重命名标签？",
+        description: `将同步更新 ${affectedCount} 条 Memo 的标签和正文。`,
+        confirmLabel: "确认重命名",
+      }))
+    )
+      return
+    setIsRenaming(true)
+    const result = await renameTagForCurrentUser(oldTag, next)
+    setIsRenaming(false)
+    if (!result.success) {
+      toast({ title: "重命名失败", description: result.error, variant: "destructive" })
+      return
+    }
+    dispatchMemoEvent({ type: "update", id: "tags", updates: { tags: [] } })
+    await refreshTags()
+    setRenameOpen(false)
+    toast({
+      title: "标签已重命名",
+      description: `已更新 ${result.data?.count ?? 0} 条 Memo`,
+      variant: "success",
+    })
+  }
 
   // 1. 获取全局最大计数，用于计算标准卡片百分比占比条
   const maxCount = useMemo(
@@ -56,6 +103,15 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
           title="标签"
           actions={
             <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openRename}
+                disabled={tags.length === 0}
+                className="shrink-0"
+              >
+                <HugeiconsIcon icon={PencilEdit01Icon} size={14} /> 重命名
+              </Button>
               {/* 排序切换 Tabs */}
               <div className="flex items-center rounded-md bg-secondary/80 p-0.5 whisper-border relative">
                 <button
@@ -135,6 +191,50 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
         />
       }
     >
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent className="max-w-md">
+          <DialogTitle>重命名标签</DialogTitle>
+          <div className="space-y-4 pt-2">
+            <label className="block text-sm font-medium">
+              原标签
+              <select
+                value={oldTag}
+                onChange={(e) => setOldTag(e.target.value)}
+                className="mt-2 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                {tags.map((tag) => (
+                  <option key={tag.tag_name} value={tag.tag_name}>
+                    #{tag.tag_name}（{tag.count}）
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-medium">
+              新标签
+              <Input
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                placeholder="输入新标签名称"
+                className="mt-2"
+              />
+            </label>
+            <p className="text-xs text-muted-foreground">
+              将影响 {affectedCount} 条 Memo，并同步更新正文中的完整标签。
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setRenameOpen(false)}>
+                取消
+              </Button>
+              <Button
+                onClick={submitRename}
+                disabled={isRenaming || !newTag.trim() || newTag.trim() === oldTag}
+              >
+                {isRenaming ? "正在重命名…" : "重命名"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       <div className={isEmpty ? "flex flex-1 min-h-0 flex-col" : "space-y-8"}>
         {isLoading ? (
           <div className="space-y-6">

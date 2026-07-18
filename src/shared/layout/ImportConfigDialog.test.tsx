@@ -45,15 +45,36 @@ describe("ImportConfigDialog", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "开始导入" }))
 
-    await waitFor(() => expect(screen.getByText("导入成功！")).toBeTruthy())
+    await waitFor(() => expect(screen.getByText("导入成功！")).toBeTruthy(), { timeout: 2_000 })
 
     const duplicateLabel = screen.getByText("重复跳过")
     const statsGrid = duplicateLabel.parentElement?.parentElement
 
-    expect(screen.getByRole("dialog").className).toContain("max-w-[720px]")
+    expect(screen.getByRole("dialog").className).toContain("max-w-[760px]")
     expect(statsGrid?.className).toContain("grid-cols-2")
     expect(statsGrid?.className).toContain("md:grid-cols-4")
     expect(duplicateLabel.className).toContain("whitespace-nowrap")
+  })
+
+  it("shows progress from zero before a small import completes", async () => {
+    render(<ImportConfigDialog open onOpenChange={vi.fn()} />)
+    const input = document.querySelector('input[type="file"]')
+
+    fireEvent.change(input!, {
+      target: {
+        files: [
+          {
+            name: "backup.json",
+            text: async () =>
+              JSON.stringify([{ content: "测试记录", created_at: "2026-07-15T00:00:00.000Z" }]),
+          },
+        ],
+      },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "开始导入" }))
+
+    await waitFor(() => expect(screen.getByText("正在导入记录...")).toBeTruthy())
+    await waitFor(() => expect(screen.getByText("导入成功！")).toBeTruthy(), { timeout: 2_000 })
   })
 
   it("shows the processed count while importing", async () => {
@@ -91,7 +112,7 @@ describe("ImportConfigDialog", () => {
 
     await waitFor(() => expect(screen.getByText("已处理 50 / 317 条")).toBeTruthy())
     expect(screen.getByText("成功").parentElement?.textContent).toContain("45")
-    expect(screen.getByText("重复").parentElement?.textContent).toContain("3")
+    expect(screen.getByText("重复跳过").parentElement?.textContent).toContain("3")
     expect(screen.getByText("失败").parentElement?.textContent).toContain("2")
 
     await act(async () => {

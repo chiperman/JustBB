@@ -12,6 +12,7 @@ import {
   extractLocations,
   mergeTagsIntoContent,
   removeTagsFromContent,
+  renameTagInContent,
 } from "@/lib/memos/parser"
 import { buildMemoPayload } from "./helpers"
 import { Database, Json } from "@/types/database"
@@ -378,6 +379,47 @@ export async function batchAddTagsToMemos(formData: FormData): Promise<ActionRes
 
   revalidatePath("/")
   return { success: true, data: updatedMemos, error: null }
+}
+
+export async function renameTagForCurrentUser(
+  oldTag: string,
+  newTag: string
+): Promise<ActionResponse<{ count: number }>> {
+  if (!(await isAdmin())) return { success: false, error: "权限不足，仅管理员可进行此操作" }
+  const viewerId = await getCurrentUserId()
+  const from = oldTag.trim()
+  const to = newTag.trim()
+  if (!viewerId) return { success: false, error: "请先登录" }
+  if (!from || !to) return { success: false, error: "标签不能为空" }
+  if (from === to) return { success: false, error: "新旧标签不能相同" }
+  const supabase = await getClient()
+  const { data: memos, error } = await supabase
+    .from("memos")
+    .select("id, content, tags")
+    .eq("owner_id", viewerId)
+    .contains("tags", [from])
+  if (error) return { success: false, error: "获取标签记录失败" }
+  const results = await Promise.all(
+    (memos ?? []).map((memo) => {
+      const content = renameTagInContent(memo.content ?? "", from, to)
+      const tags = Array.from(new Set((memo.tags ?? []).map((tag) => (tag === from ? to : tag))))
+      return supabase
+        .from("memos")
+        .update({
+          content,
+          tags,
+          word_count: calculateWordCount(content),
+          locations: extractLocations(content) as unknown as MemoInsert["locations"],
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", memo.id)
+        .eq("owner_id", viewerId)
+    })
+  )
+  if (results.some((result) => result.error)) return { success: false, error: "部分更新失败" }
+  revalidatePath("/")
+  revalidatePath("/tags")
+  return { success: true, data: { count: memos?.length ?? 0 }, error: null }
 }
 
 /**

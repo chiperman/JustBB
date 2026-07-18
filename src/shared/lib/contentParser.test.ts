@@ -26,6 +26,15 @@ describe("parseContentTokens", () => {
     expect(parseContentTokens(input)).toEqual(expected)
   })
 
+  it("should parse emoji tags imported from LeanCloud", () => {
+    const input = "原始正文 #💤梦"
+    const expected = [
+      { type: "text", value: "原始正文 " },
+      { type: "tag", value: "#💤梦" },
+    ]
+    expect(parseContentTokens(input)).toEqual(expected)
+  })
+
   it("should parse simple image urls as links", () => {
     const input = "https://example.com/image.png"
     const expected = [{ type: "link", value: "https://example.com/image.png" }]

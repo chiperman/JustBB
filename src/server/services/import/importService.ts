@@ -19,12 +19,17 @@ export type ImportProgressCallback = (result: ImportResult) => void
 const BATCH_SIZE = 50
 const EXISTING_MEMOS_PAGE_SIZE = 1_000
 
+function normalizeCreatedAt(createdAt: string) {
+  const timestamp = Date.parse(createdAt)
+  return Number.isNaN(timestamp) ? createdAt : new Date(timestamp).toISOString()
+}
+
 function addMemoToDuplicateIndex(
   duplicateIndex: Map<string, Set<string>>,
   memo: Pick<ParsedMemo, "content" | "created_at">
 ) {
   const createdAtValues = duplicateIndex.get(memo.content) ?? new Set<string>()
-  createdAtValues.add(memo.created_at)
+  createdAtValues.add(normalizeCreatedAt(memo.created_at))
   duplicateIndex.set(memo.content, createdAtValues)
 }
 
@@ -120,7 +125,9 @@ export async function importMemos(
           summary: memo.content.slice(0, 30),
           message: "检查重复数据时出错",
         })
-      } else if (duplicateIndex.get(memo.content)?.has(memo.created_at) === true) {
+      } else if (
+        duplicateIndex.get(memo.content)?.has(normalizeCreatedAt(memo.created_at)) === true
+      ) {
         result.skipped++
       } else {
         // 准备插入的数据，确保 owner_id 正确

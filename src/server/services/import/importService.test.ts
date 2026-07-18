@@ -112,6 +112,29 @@ describe("importMemos", () => {
     ])
   })
 
+  it("treats equivalent UTC timestamp formats as content-time duplicates", async () => {
+    const contentLookup = {
+      select: vi.fn(),
+      eq: vi.fn(),
+      range: vi.fn(),
+    }
+
+    contentLookup.select.mockReturnValue(contentLookup)
+    contentLookup.eq.mockReturnValue(contentLookup)
+    contentLookup.range.mockResolvedValue({
+      data: [{ content: "已有正文", created_at: "2026-01-02T00:00:00+00:00" }],
+      error: null,
+    })
+    authGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } })
+    from.mockReturnValue(contentLookup)
+
+    const result = await importMemos([
+      { content: "已有正文", created_at: "2026-01-02T00:00:00.000Z" },
+    ])
+
+    expect(result).toMatchObject({ total: 1, success: 0, skipped: 1, failed: 0 })
+  })
+
   it("does not index ID-conflict skips as content-time duplicates across batches", async () => {
     const idLookup = {
       select: vi.fn(),

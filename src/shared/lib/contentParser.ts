@@ -20,7 +20,7 @@ export function parseContentTokens(text: string): ContentToken[] {
   // 1. 代码块: ```lang ... ```
   // 2. 定位标记: 📍[地名](纬度,经度)
   // 3. 引用匹配: @数字
-  // 4. Tag匹配: #标签 (不含空格，中文或字母数字)
+  // 4. Tag匹配: #标签 (不含空格，支持中文、字母数字与 Emoji)
   // 5. Email匹配: test@example.com
   // 6. Markdown 图片: ![替代文本](图片链接)
   // 7. 标记链接: 🔗[名称](链接|显示模式)
@@ -37,7 +37,7 @@ export function parseContentTokens(text: string): ContentToken[] {
     codeBlock: /```(\w*)\n?([\s\S]*?)```/,
     location: /📍\[([^\]]+)\]\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)/,
     ref: /(@\d+)/,
-    tag: /(?<=^|\s|[^a-zA-Z0-9])(#[\w\u4e00-\u9fa5]+)/,
+    tag: /(?<=^|\s|[^a-zA-Z0-9])(#[\p{L}\p{N}_\p{Extended_Pictographic}\uFE0F\u200D]+)/u,
     email: /([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)/,
     markdownImage: /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/,
     markupLink: /🔗\[([^\]]+)\]\(([^\s\|]+)(?:\|(pill|card|image))?\)/,
@@ -49,7 +49,7 @@ export function parseContentTokens(text: string): ContentToken[] {
     Object.values(PATTERNS)
       .map((p) => p.source)
       .join("|"),
-    "g"
+    "gu"
   )
 
   const tokens: ContentToken[] = []

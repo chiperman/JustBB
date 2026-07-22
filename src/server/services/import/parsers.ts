@@ -50,8 +50,7 @@ export function parseMarkdown(content: string): ParsedMemo[] {
         ...metadata,
         content: cleanContent,
         created_at:
-          (metadata.created_at as string) ||
-          new Date(dateStr.replace(/\//g, "-")).toISOString(),
+          (metadata.created_at as string) || new Date(dateStr.replace(/\//g, "-")).toISOString(),
         is_private: (metadata.is_private as boolean) ?? false, // 默认设为公开，元数据中会有真实值
       } as ParsedMemo)
     }
@@ -83,10 +82,12 @@ export function parseLeanCloud(content: string): ParsedMemo[] {
           tags.push(...rawTags)
         }
 
+        const tagSuffix = tags.map((tag) => `#${tag}`).join(" ")
+        const memoContent = tagSuffix ? `${data.content.trimEnd()} ${tagSuffix}` : data.content
+
         memos.push({
-          content: data.content,
-          created_at:
-            data.createdAt || data.updatedAt || new Date().toISOString(),
+          content: memoContent,
+          created_at: data.createdAt || data.updatedAt || new Date().toISOString(),
           updated_at: data.updatedAt,
           tags: tags,
           is_private: false, // LeanCloud 默认公开，除非有特殊逻辑

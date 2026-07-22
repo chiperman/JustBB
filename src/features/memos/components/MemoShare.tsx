@@ -1,27 +1,30 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
-import { toBlob } from "html-to-image"
-import { QRCodeSVG } from "qrcode.react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  Download01Icon as Download,
-  Share01Icon as Share2,
   Copy01Icon as Copy,
+  Download01Icon as Download,
+  Share01Icon as Share,
+  Calendar03Icon as Calendar,
+  QrCodeIcon as QrCode,
+  Bookmark02Icon as Brand,
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/shared/ui/button"
-import { format } from "date-fns"
-import { zhCN } from "date-fns/locale"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/ui/dialog"
 import { Memo } from "@/types/memo"
 import { useToast } from "@/shared/hooks/use-toast"
-import { MemoContent } from "@/features/memos/components/MemoContent"
-import { AdminDialogShell } from "@/shared/ui/AdminDialogShell"
-
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
-import { getMemoShareUrl } from "@/shared/lib/share"
 import { POSTER_THEMES } from "@/shared/lib/export-themes"
 import { getExportFileName } from "@/shared/lib/export-utils"
 import { cn } from "@/shared/lib/utils"
+import { PosterDocument } from "./share-poster/PosterDocument"
 
 interface MemoShareProps {
   memo: Memo
@@ -29,6 +32,20 @@ interface MemoShareProps {
   open?: boolean
   onOpenChange?: (open: boolean) => void
   hideTrigger?: boolean
+}
+
+type PosterAction = "copy" | "download" | null
+
+async function waitForPosterImages(element: HTMLElement) {
+  await Promise.all(
+    Array.from(element.querySelectorAll("img")).map((image) => {
+      if (image.complete) return Promise.resolve()
+      return new Promise<void>((resolve) => {
+        image.addEventListener("load", () => resolve(), { once: true })
+        image.addEventListener("error", () => resolve(), { once: true })
+      })
+    })
+  )
 }
 
 export function MemoShare({
@@ -39,89 +56,78 @@ export function MemoShare({
   hideTrigger = false,
 }: MemoShareProps) {
   const [internalOpen, setInternalOpen] = useState(false)
-  const posterRef = useRef<HTMLDivElement>(null)
-  const [activeAction, setActiveAction] = useState<"copy" | "download" | null>(null)
-  const [activeThemeId, setActiveThemeId] = useState("classic")
+  const [activeAction, setActiveAction] = useState<PosterAction>(null)
+  const [activeThemeId, setActiveThemeId] = useState("zen")
   const [showDate, setShowDate] = useState(true)
   const [showQR, setShowQR] = useState(true)
   const [showBrand, setShowBrand] = useState(true)
-
+  const [isPosterReady, setIsPosterReady] = useState(false)
+  const posterRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
   const hasMounted = useHasMounted()
-  const shareUrl = getMemoShareUrl(memo.id)
   const open = controlledOpen ?? internalOpen
   const setOpen = onOpenChange ?? setInternalOpen
+  const activeTheme = POSTER_THEMES[activeThemeId] ?? POSTER_THEMES.zen
 
-  const activeTheme = POSTER_THEMES[activeThemeId] || POSTER_THEMES.classic
+  useEffect(() => {
+    if (!open) {
+      setIsPosterReady(false)
+      return
+    }
+    setIsPosterReady(Boolean(posterRef.current?.querySelector(".poster-document")))
+  }, [open])
 
-  const generateBlob = useCallback(async (pixelRatio: number) => {
-    if (!posterRef.current) throw new Error("Poster reference not found")
+  const handlePosterReady = useCallback(() => setIsPosterReady(true), [])
+
+  const generateBlob = useCallback(async () => {
+    if (!posterRef.current) throw new Error("海报预览尚未准备好")
 
     await document.fonts.ready
-    return await toBlob(posterRef.current, {
-      cacheBust: true,
-      pixelRatio,
-      style: {
-        transform: "none",
-        margin: "0",
-      },
+    await waitForPosterImages(posterRef.current)
+    const { toBlob } = await import("html-to-image")
+    const blob = await toBlob(posterRef.current, {
+      cacheBust: false,
+      pixelRatio: 2.5,
+      style: { margin: "0", transform: "none" },
     })
+    if (!blob) throw new Error("海报生成失败")
+    return blob
   }, [])
 
   const handleCopyToClipboard = useCallback(async () => {
-    if (!posterRef.current) return
+    setActiveAction("copy")
     try {
-      setActiveAction("copy")
-      await new Promise((resolve) => setTimeout(resolve, 150))
-
-      const blobPromise = generateBlob(2.5).then((blob) => {
-        if (!blob) throw new Error("Generated blob is null")
-        return blob
-      })
-
-      try {
-        await navigator.clipboard.write([new ClipboardItem({ "image/png": blobPromise })])
-      } catch (e) {
-        console.warn("ClipboardItem Promise rejected, trying fallback...", e)
-        const blob = await blobPromise
-        if (!blob) throw new Error("Blob generation yielded no data")
-
-        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })])
+      if (!window.isSecureContext || !navigator.clipboard?.write || !window.ClipboardItem) {
+        throw new Error("当前浏览器无法复制图片，请使用“保存海报”")
       }
 
-      toast({ title: "已复制到剪贴板" })
-    } catch (err) {
-      console.error("Copy failed full error:", err)
-      const errorMsg = err instanceof Error ? err.message : String(err)
-      toast({
-        title: "复制失败",
-        description: `错误: ${errorMsg}。请尝试“保存海报”或长按图片。`,
-        variant: "destructive",
-      })
+      const blobPromise = generateBlob()
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blobPromise })])
+      await blobPromise
+      toast({ title: "已复制图片", description: "现在可以粘贴到聊天或文档中。" })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "复制失败，请使用“保存海报”"
+      toast({ title: "未能复制图片", description: message, variant: "destructive" })
     } finally {
       setActiveAction(null)
     }
   }, [generateBlob, toast])
 
   const handleDownload = useCallback(async () => {
+    setActiveAction("download")
     try {
-      setActiveAction("download")
-      await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 50)))
-
-      const blob = await generateBlob(2.5)
-      if (!blob) return
-
+      const blob = await generateBlob()
       const fileName = getExportFileName(memo)
+      const url = URL.createObjectURL(blob)
       const link = document.createElement("a")
       link.download = `${fileName}.png`
-      link.href = URL.createObjectURL(blob)
+      link.href = url
       link.click()
-
-      setTimeout(() => URL.revokeObjectURL(link.href), 150)
+      window.setTimeout(() => URL.revokeObjectURL(url), 500)
       toast({ title: "海报已保存", description: fileName })
-    } catch (err) {
-      console.error("Save failed", err)
-      toast({ title: "保存失败", variant: "destructive" })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "保存失败，请稍后重试"
+      toast({ title: "未能保存海报", description: message, variant: "destructive" })
     } finally {
       setActiveAction(null)
     }
@@ -129,296 +135,162 @@ export function MemoShare({
 
   if (!hasMounted) return trigger || null
 
+  const displayToggles = [
+    { label: "显示品牌", icon: Brand, value: showBrand, setValue: setShowBrand },
+    { label: "显示日期", icon: Calendar, value: showDate, setValue: setShowDate },
+    { label: "显示二维码", icon: QrCode, value: showQR, setValue: setShowQR },
+  ]
+
   return (
     <>
       {!hideTrigger && (
         <div onClick={() => setOpen(true)} className="contents">
           {trigger || (
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <HugeiconsIcon icon={Share2} size={16} className="text-muted-foreground" />
+            <Button variant="ghost" size="icon" className="rounded-full" aria-label="生成分享海报">
+              <HugeiconsIcon icon={Share} size={16} className="text-muted-foreground" />
             </Button>
           )}
         </div>
       )}
 
-      <AdminDialogShell
-        open={open}
-        onOpenChange={setOpen}
-        title="分享预览"
-        subtitle="生成并下载精美海报"
-        icon={Share2}
-        maxWidth="max-w-md"
-        contentClassName="px-4 py-5 sm:px-8 sm:py-8"
-      >
-        <div className="flex flex-col items-center gap-3 sm:gap-4">
-          {/* 预览区域 */}
-          <div className="h-[min(44dvh,360px)] min-h-[280px] w-full overflow-y-auto rounded-xl border border-border/40 bg-accent/5 py-4 custom-scrollbar sm:h-[50vh] sm:min-h-[360px] sm:py-6">
-            <div
-              ref={posterRef}
-              className="relative mx-auto flex h-fit w-[min(340px,calc(100%_-_24px))] origin-top flex-col sm:w-[340px]"
-              style={{
-                backgroundColor: activeTheme.styles.container.backgroundColor,
-                color: activeTheme.styles.container.color,
-                padding: activeTheme.styles.container.padding,
-                borderRadius: activeTheme.styles.container.borderRadius,
-                border: activeTheme.styles.container.borderColor
-                  ? `1px solid ${activeTheme.styles.container.borderColor}`
-                  : "none",
-                fontVariantNumeric: "lining-nums",
-                fontFeatureSettings: '"lnum" 1',
-              }}
-            >
-              {/* 锯齿 - 顶部 */}
-              {activeTheme.styles.decorations?.paperEffect === "typewriter" && (
-                <div
-                  className="absolute top-0 left-0 right-0 flex pointer-events-none"
-                  style={{ transform: "translateY(-100%)" }}
-                >
-                  {[...Array(34)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-[10px] h-[8px]"
-                      style={{
-                        backgroundColor: activeTheme.styles.container.backgroundColor,
-                        clipPath: "polygon(0% 100%, 50% 0%, 100% 100%)",
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Header */}
-              {(showBrand || showDate) && (
-                <div
-                  className="flex justify-between items-center pb-4 mb-4"
-                  style={{
-                    borderBottom: activeTheme.styles.header.borderBottom,
-                  }}
-                >
-                  {showBrand ? (
-                    <span
-                      className="font-bold tracking-[0.2em] uppercase"
-                      style={{
-                        color: activeTheme.styles.header.brandColor,
-                        fontSize: activeTheme.styles.header.fontSize,
-                      }}
-                    >
-                      JustMemo
-                    </span>
-                  ) : (
-                    <div />
-                  )}
-                  {showDate && (
-                    <span
-                      className="font-mono opacity-60 text-[11px]"
-                      style={{ color: activeTheme.styles.header.dateColor }}
-                    >
-                      {format(new Date(memo.created_at), "yyyy.MM.dd", {
-                        locale: zhCN,
-                      })}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Content Area */}
-              <div className="py-2 mb-6">
-                <MemoContent
-                  content={memo.content}
-                  className={cn(
-                    "py-1",
-                    activeTheme.styles.content.fontFamily === "serif"
-                      ? "font-serif"
-                      : activeTheme.styles.content.fontFamily === "mono"
-                        ? "font-mono"
-                        : "font-sans"
-                  )}
-                  style={{
-                    fontSize: activeTheme.styles.content.fontSize,
-                    lineHeight: activeTheme.styles.content.lineHeight,
-                    color: activeTheme.styles.content.color,
-                  }}
-                />
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent
+          mobileDensity="flush"
+          onOpenAutoFocus={(event) => event.preventDefault()}
+          onRequestClose={() => setOpen(false)}
+          className="!flex h-[min(88dvh,calc(100dvh-16px))] max-h-[min(88dvh,calc(100dvh-16px))] w-full max-w-none !flex-col !overflow-hidden !rounded-t-xl !border !border-border !bg-background !p-0 sm:h-[88vh] sm:max-h-[88vh] sm:max-w-[1280px] sm:!rounded-xl"
+        >
+          <DialogHeader className="relative flex shrink-0 flex-row items-center justify-between space-y-0 border-b border-border/60 px-5 pb-4 pt-10 text-left md:px-8 md:py-5">
+            <div className="flex min-w-0 items-center gap-3 md:gap-4">
+              <div className="rounded-xl bg-[#d97757]/10 p-2.5 text-[#d97757]">
+                <HugeiconsIcon icon={Share} size={22} />
               </div>
-
-              {/* Footer */}
-              <div
-                className="pt-6 flex justify-between items-end"
-                style={{ borderTop: activeTheme.styles.footer.borderTop }}
-              >
-                <div className="flex flex-col gap-1">
-                  <span
-                    className="text-[10px] font-medium tracking-widest uppercase opacity-50"
-                    style={{ color: activeTheme.styles.footer.textColor }}
-                  >
-                    Captured via JustMemo
-                  </span>
-                  <span
-                    className="text-[9px] opacity-30"
-                    style={{ color: activeTheme.styles.footer.textColor }}
-                  >
-                    Minimalist Notes for Thinkers
-                  </span>
-                </div>
-                {showQR && (
-                  <div
-                    className="p-[5px] rounded-[10px]"
-                    style={{
-                      backgroundColor: activeTheme.styles.footer.qrBgColor,
-                    }}
-                  >
-                    <QRCodeSVG
-                      value={shareUrl}
-                      size={42}
-                      fgColor={activeTheme.styles.footer.qrFgColor}
-                      bgColor="transparent"
-                      className="rounded-[5px] overflow-hidden"
-                    />
+              <div className="min-w-0">
+                <DialogTitle className="text-[18px] font-bold tracking-tight text-foreground">
+                  分享预览
+                </DialogTitle>
+                <DialogDescription className="mt-0.5 text-[12px] font-medium text-muted-foreground">
+                  生成并下载精美海报
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-8 md:py-8">
+              <div className="grid gap-7 min-[900px]:grid-cols-[minmax(0,1fr)_320px] min-[900px]:items-start">
+                <section className="min-w-0">
+                  <div className="h-[min(44dvh,360px)] overflow-auto rounded-xl border border-border/60 bg-muted/30 p-4 min-[900px]:h-[min(60dvh,560px)] min-[900px]:p-8">
+                    <div className="flex min-h-full w-full items-center justify-center">
+                      <div className="shrink-0 [zoom:0.42] min-[900px]:[zoom:0.62] lg:[zoom:0.7]">
+                        <div ref={posterRef}>
+                          <PosterDocument
+                            memo={memo}
+                            theme={activeTheme}
+                            showBrand={showBrand}
+                            showDate={showDate}
+                            showQR={showQR}
+                            onReady={handlePosterReady}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
+                </section>
 
-              {/* 噪点纹理 */}
-              {activeTheme.styles.decorations?.paperEffect === "noise" && (
-                <div
-                  className="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-multiply"
-                  style={{
-                    backgroundImage: `radial-gradient(#000 10%, transparent 10%)`,
-                    backgroundSize: "2px 2px",
-                  }}
-                />
-              )}
+                <section className="space-y-6 border-t border-border/60 pt-5 min-[900px]:border-t-0 min-[900px]:border-l min-[900px]:pl-7 min-[900px]:pt-0">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">选择主题</h3>
+                    <div className="mt-3 grid grid-cols-3 gap-2" role="group" aria-label="海报主题">
+                      {Object.values(POSTER_THEMES).map((theme) => (
+                        <button
+                          key={theme.id}
+                          type="button"
+                          onClick={() => setActiveThemeId(theme.id)}
+                          aria-pressed={activeThemeId === theme.id}
+                          className={cn(
+                            "rounded-lg border p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                            activeThemeId === theme.id
+                              ? "border-primary bg-primary/[0.06]"
+                              : "border-border/70 hover:border-primary/40"
+                          )}
+                        >
+                          <span
+                            className="block h-11 rounded-md border border-black/5"
+                            style={{ backgroundColor: theme.styles.container.backgroundColor }}
+                          />
+                          <span className="mt-2 block text-center text-[11px] font-medium text-foreground">
+                            {theme.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* 纸张特效 */}
-              {activeTheme.styles.decorations?.paperEffect === "typewriter" && (
-                <>
-                  {activeTheme.styles.decorations?.showMarginLine && (
-                    <div className="absolute left-8 top-0 bottom-0 w-[1px] bg-red-400/20 pointer-events-none" />
-                  )}
-                  <div
-                    className="absolute bottom-0 left-0 right-0 flex pointer-events-none"
-                    style={{ transform: "translateY(100%)" }}
-                  >
-                    {[...Array(34)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-[10px] h-[8px]"
-                        style={{
-                          backgroundColor: activeTheme.styles.container.backgroundColor,
-                          clipPath: "polygon(0% 0%, 50% 100%, 100% 0%)",
-                        }}
-                      />
+                  <div className="grid grid-cols-3 gap-2 border-y border-border/60 py-3 md:block md:py-0">
+                    {displayToggles.map(({ label, icon, value, setValue }) => (
+                      <button
+                        key={label}
+                        type="button"
+                        role="switch"
+                        aria-label={label}
+                        aria-checked={value}
+                        onClick={() => setValue(!value)}
+                        className="flex min-w-0 items-center justify-start gap-2 px-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 md:w-full md:justify-between md:gap-3 md:border-b md:border-border/60 md:py-3.5 md:last:border-b-0"
+                      >
+                        <span className="flex min-w-0 items-center gap-1 text-xs font-medium text-foreground md:gap-2.5 md:text-sm">
+                          <HugeiconsIcon
+                            icon={icon}
+                            size={16}
+                            className="hidden text-primary md:block"
+                          />
+                          <span className="whitespace-nowrap">
+                            {label.replace("显示", "")}
+                            <span className="md:hidden">：</span>
+                          </span>
+                        </span>
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            "relative h-6 w-10 rounded-full transition-colors",
+                            value ? "bg-primary" : "bg-muted-foreground/25"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform",
+                              value ? "translate-x-5" : "translate-x-1"
+                            )}
+                          />
+                        </span>
+                      </button>
                     ))}
                   </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* 控制面板 */}
-          <div className="w-full space-y-3 px-1 sm:space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                风格
-              </span>
-              <div className="flex gap-1 overflow-x-auto rounded-full border border-border/50 bg-muted/50 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {Object.values(POSTER_THEMES).map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setActiveThemeId(t.id)}
-                    className={cn(
-                      "shrink-0 px-3 py-0.5 text-[11px] rounded-full",
-                      activeThemeId === t.id ? "bg-background font-medium" : "text-muted-foreground"
-                    )}
-                  >
-                    {t.name}
-                  </button>
-                ))}
+                </section>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 items-center gap-2 border-t border-border/40 py-2">
-              {[
-                { label: "品牌", state: showBrand, setter: setShowBrand },
-                { label: "日期", state: showDate, setter: setShowDate },
-                { label: "二维码", state: showQR, setter: setShowQR },
-              ].map((item) => (
-                <button
-                  key={item.label}
-                  onClick={() => item.setter(!item.state)}
-                  className="flex min-h-8 items-center justify-center gap-2 group"
-                >
-                  <div
-                    className={cn(
-                      "w-3 h-3 rounded-sm border",
-                      item.state
-                        ? "bg-primary border-primary-[0_0_8px_rgba(var(--primary),0.4)]"
-                        : "border-muted-foreground/30 bg-transparent"
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      "text-[12px]",
-                      item.state ? "text-foreground font-medium" : "text-muted-foreground"
-                    )}
-                  >
-                    {item.label}
-                  </span>
-                </button>
-              ))}
+            <div className="grid shrink-0 grid-cols-2 gap-2 border-t border-border/60 bg-background px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:px-8 md:py-5 md:pb-5">
+              <Button
+                variant="outline"
+                className="h-11 border-border/70 text-sm"
+                onClick={handleCopyToClipboard}
+                disabled={activeAction !== null || !isPosterReady}
+              >
+                <HugeiconsIcon icon={Copy} size={18} className="mr-2" />
+                {activeAction === "copy" ? "复制中…" : "复制图片"}
+              </Button>
+              <Button
+                className="h-11 text-sm"
+                onClick={handleDownload}
+                disabled={activeAction !== null || !isPosterReady}
+              >
+                <HugeiconsIcon icon={Download} size={18} className="mr-2" />
+                {activeAction === "download" ? "生成中…" : "保存海报"}
+              </Button>
             </div>
           </div>
-
-          <div className="flex w-full flex-col gap-2 sm:mt-2 sm:flex-row sm:gap-3">
-            <Button
-              variant="outline"
-              className="relative h-11 flex-1 overflow-hidden border-border/60 text-sm group/btn"
-              onClick={handleCopyToClipboard}
-              disabled={activeAction !== null}
-            >
-              <span
-                className={cn(
-                  "flex items-center justify-center gap-2 transition-opacity duration-200",
-                  activeAction === "copy" ? "opacity-0" : "opacity-100"
-                )}
-              >
-                <HugeiconsIcon icon={Copy} size={18} />
-                复制图片
-              </span>
-
-              {activeAction === "copy" && (
-                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-background/40 backdrop-blur-[2px] animate-in fade-in duration-200">
-                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin [will-change:transform]" />
-                  <span className="font-medium text-primary">处理中...</span>
-                </div>
-              )}
-            </Button>
-
-            <Button
-              className="relative h-11 flex-1 overflow-hidden text-sm font-medium group/btn"
-              onClick={handleDownload}
-              disabled={activeAction !== null}
-            >
-              <span
-                className={cn(
-                  "flex items-center justify-center gap-2 transition-opacity duration-200",
-                  activeAction === "download" ? "opacity-0" : "opacity-100"
-                )}
-              >
-                <HugeiconsIcon icon={Download} size={18} />
-                保存海报
-              </span>
-
-              {activeAction === "download" && (
-                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-primary/40 backdrop-blur-[2px] animate-in fade-in duration-200">
-                  <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin [will-change:transform]" />
-                  <span className="font-medium text-primary-foreground">生成中...</span>
-                </div>
-              )}
-            </Button>
-          </div>
-        </div>
-      </AdminDialogShell>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

@@ -176,6 +176,7 @@ export function MemoCardHeader({
               isPinned={memo.is_pinned}
               isPrivate={memo.is_private}
               content={memo.content}
+              images={memo.images}
               createdAt={memo.created_at}
               tags={memo.tags ?? []}
               onEdit={onEdit}

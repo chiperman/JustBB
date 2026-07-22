@@ -30,6 +30,7 @@ import { AccessCodeDialog } from "@/features/memos/components/AccessCodeDialog"
 import { useToast } from "@/shared/hooks/use-toast"
 import { MemoShare } from "@/features/memos/components/MemoShare"
 import { Memo } from "@/types/memo"
+import { canShareMemo } from "@/features/memos/lib/share-poster"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { useConfirm } from "@/state/ConfirmContext"
 import { cn } from "@/shared/lib/utils"
@@ -40,6 +41,7 @@ interface MemoActionsProps {
   isPinned?: boolean
   isPrivate?: boolean
   content?: string
+  images?: string[] | null
   createdAt?: string
   tags?: string[]
   onEdit?: () => void
@@ -55,6 +57,7 @@ export function MemoActions({
   isPinned = false,
   isPrivate = false,
   content = "",
+  images,
   createdAt = "",
   tags = [],
   onEdit,
@@ -336,27 +339,17 @@ export function MemoActions({
                   编辑
                 </DropdownMenuItem>
               )}
-              {!isPrivate && (
-                <MemoShare
-                  memo={
-                    {
-                      id,
-                      content,
-                      created_at: createdAt,
-                      tags,
-                      is_pinned: isPinned,
-                      is_private: isPrivate,
-                      memo_number: 0,
-                      owner_id: "",
-                    } as Memo
-                  }
-                  trigger={
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <HugeiconsIcon icon={Share01Icon} size={16} className="mr-2" />
-                      分享
-                    </DropdownMenuItem>
-                  }
-                />
+              {canShareMemo(isPrivate) && (
+                <DropdownMenuItem
+                  onSelect={(event) => {
+                    event.preventDefault()
+                    setIsDropdownOpen(false)
+                    setShareOpen(true)
+                  }}
+                >
+                  <HugeiconsIcon icon={Share01Icon} size={16} className="mr-2" />
+                  分享
+                </DropdownMenuItem>
               )}
             </>
           )}
@@ -513,12 +506,13 @@ export function MemoActions({
         </DialogContent>
       </Dialog>
 
-      {!isPrivate && (
+      {canShareMemo(isPrivate) && (
         <MemoShare
           memo={
             {
               id,
               content,
+              images,
               created_at: createdAt,
               tags,
               is_pinned: isPinned,

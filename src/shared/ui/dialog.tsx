@@ -44,7 +44,7 @@ const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     closeIcon?: React.ReactNode
-    mobileDensity?: "default" | "compact"
+    mobileDensity?: "default" | "compact" | "flush"
     onRequestClose?: () => void
   }
 >(
@@ -91,7 +91,9 @@ const DialogContent = React.forwardRef<
             className,
             mobileDensity === "compact"
               ? "max-sm:!gap-3 max-sm:!rounded-b-none max-sm:!rounded-t-xl max-sm:!pb-[calc(0.875rem+env(safe-area-inset-bottom))] max-sm:!pt-7"
-              : "max-sm:!rounded-b-none max-sm:!rounded-t-xl max-sm:!pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:!pt-9"
+              : mobileDensity === "flush"
+                ? "max-sm:!gap-0 max-sm:!rounded-b-none max-sm:!rounded-t-xl max-sm:!p-0"
+                : "max-sm:!rounded-b-none max-sm:!rounded-t-xl max-sm:!pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:!pt-9"
           )}
           onInteractOutside={(event) => {
             onInteractOutside?.(event)

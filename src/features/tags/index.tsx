@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { motion } from "framer-motion"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Cancel01Icon,
@@ -24,6 +24,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/shared/hooks/use-toast"
 import { renameTagForCurrentUser } from "@/server/actions/memos/mutate"
 import { dispatchMemoEvent } from "@/lib/memos/events"
+import { useDelayedLoadingVisibility } from "@/shared/hooks/useDelayedLoadingVisibility"
+import { TagsEmptyState } from "./components/TagsEmptyState"
 
 interface TagsPageContentProps {
   tags?: TagData[]
@@ -39,6 +41,10 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
   const [query, setQuery] = useState("")
   const [sortBy, setSortBy] = useState<"count" | "name">("count")
   const { tags, isLoading, refreshTags } = useTagGroups(initialTags)
+  const showInitialSkeleton = useDelayedLoadingVisibility(isLoading)
+  const shouldReduceMotion = useReducedMotion()
+  const canShowResolvedContent = !isLoading && !showInitialSkeleton
+  const transitionDuration = shouldReduceMotion ? 0 : 0.2
   const [renameOpen, setRenameOpen] = useState(false)
   const [oldTag, setOldTag] = useState("")
   const [newTag, setNewTag] = useState("")
@@ -117,7 +123,7 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
     if (!normalizedQuery) return sortedTags
     return sortedTags.filter((tag) => tag.tag_name.toLowerCase().includes(normalizedQuery))
   }, [normalizedQuery, sortedTags])
-  const isEmpty = !isLoading && (tags.length === 0 || visibleTags.length === 0)
+  const isEmpty = canShowResolvedContent && (tags.length === 0 || visibleTags.length === 0)
 
   return (
     <ContextPageShell
@@ -316,48 +322,80 @@ export function TagsPageContent({ tags: initialTags }: TagsPageContentProps) {
         </Dialog>
       )}
       <div className={isEmpty ? "flex flex-1 min-h-0 flex-col" : "space-y-8"}>
-        {isLoading ? (
-          <div className="space-y-6">
-            <div className="h-4 w-20 rounded bg-muted/20 animate-pulse" />
-            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-                <div
-                  key={item}
-                  className="h-11 rounded-card border border-border/40 bg-muted/10 animate-pulse"
-                />
-              ))}
-            </div>
-          </div>
-        ) : tags.length === 0 ? (
-          <PageEmptyState
-            icon={TagIcon}
-            title="暂无标签"
-            description="写下第一条带标签的 Memo 之后，这里会自动形成索引。"
-          />
-        ) : visibleTags.length === 0 ? (
-          <PageEmptyState
-            icon={Search01Icon}
-            title="没有找到匹配的标签"
-            description={`没有找到匹配 “${query.trim()}” 的标签。`}
-          />
-        ) : (
-          <section className="space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
-                {normalizedQuery ? "搜索结果" : "全部标签"}
-              </span>
-              <span className="text-xs text-muted-foreground/40 font-mono">
-                ({visibleTags.length})
-              </span>
-              <div className="h-px flex-1 bg-border/20" />
-            </div>
-            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
-              {visibleTags.map((tag) => (
-                <TagCard key={tag.tag_name} tag={tag} maxCount={maxCount} />
-              ))}
-            </div>
-          </section>
-        )}
+        <AnimatePresence mode="wait" initial={false}>
+          {showInitialSkeleton ? (
+            <motion.div
+              key="tags-skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: transitionDuration }}
+              className="space-y-6"
+            >
+              <div className="h-4 w-20 rounded bg-muted/20 animate-pulse motion-reduce:animate-none" />
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+                  <div
+                    key={item}
+                    className="h-11 rounded-card border border-border/40 bg-muted/10 animate-pulse motion-reduce:animate-none"
+                  />
+                ))}
+              </div>
+            </motion.div>
+          ) : isLoading ? (
+            <div key="tags-pending" className="min-h-[280px]" aria-hidden="true" />
+          ) : tags.length === 0 ? (
+            <motion.div
+              key="tags-empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: transitionDuration }}
+              className="flex flex-1"
+            >
+              <TagsEmptyState />
+            </motion.div>
+          ) : visibleTags.length === 0 ? (
+            <motion.div
+              key="tags-no-results"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: transitionDuration }}
+              className="flex flex-1"
+            >
+              <PageEmptyState
+                icon={Search01Icon}
+                title="没有找到匹配的标签"
+                description={`没有找到匹配 “${query.trim()}” 的标签。`}
+              />
+            </motion.div>
+          ) : (
+            <motion.section
+              key="tags-content"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: transitionDuration }}
+              className="space-y-4"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+                  {normalizedQuery ? "搜索结果" : "全部标签"}
+                </span>
+                <span className="text-xs text-muted-foreground/40 font-mono">
+                  ({visibleTags.length})
+                </span>
+                <div className="h-px flex-1 bg-border/20" />
+              </div>
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
+                {visibleTags.map((tag) => (
+                  <TagCard key={tag.tag_name} tag={tag} maxCount={maxCount} />
+                ))}
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
       </div>
     </ContextPageShell>
   )

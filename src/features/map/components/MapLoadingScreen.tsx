@@ -1,10 +1,12 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Location04Icon } from "@hugeicons/core-free-icons"
 
 export function MapLoadingScreen() {
+  const shouldReduceMotion = useReducedMotion()
+
   return (
     <motion.div
       key="loading"
@@ -22,9 +24,13 @@ export function MapLoadingScreen() {
                     opacity-[0.05]"
         />
         <motion.div
-          initial={{ translateY: "-100%" }}
-          animate={{ translateY: "200%" }}
-          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          initial={shouldReduceMotion ? false : { translateY: "-100%" }}
+          animate={shouldReduceMotion ? { translateY: "0%" } : { translateY: "200%" }}
+          transition={{
+            duration: shouldReduceMotion ? 0 : 3,
+            repeat: shouldReduceMotion ? 0 : Infinity,
+            ease: "linear",
+          }}
           className="absolute inset-x-0 h-[30vh] bg-gradient-to-b from-transparent via-primary/20 to-transparent blur-2xl pointer-events-none"
         />
       </div>
@@ -35,13 +41,17 @@ export function MapLoadingScreen() {
             <motion.div
               key={i}
               initial={{ scale: 0.8, opacity: 0 }}
-              animate={{
-                scale: [0.8, 1.2, 3],
-                opacity: [0, 0.6, 0],
-              }}
+              animate={
+                shouldReduceMotion
+                  ? { scale: 1, opacity: 0.25 }
+                  : {
+                      scale: [0.8, 1.2, 3],
+                      opacity: [0, 0.6, 0],
+                    }
+              }
               transition={{
-                duration: 3,
-                repeat: Infinity,
+                duration: shouldReduceMotion ? 0 : 3,
+                repeat: shouldReduceMotion ? 0 : Infinity,
                 delay: i * 1,
                 times: [0, 0.2, 1],
                 ease: "linear",
@@ -54,7 +64,7 @@ export function MapLoadingScreen() {
             <HugeiconsIcon
               icon={Location04Icon}
               size={40}
-              className="animate-pulse"
+              className="animate-pulse motion-reduce:animate-none"
             />
           </div>
         </div>
@@ -63,13 +73,13 @@ export function MapLoadingScreen() {
           <div className="px-4 py-1.5 bg-primary/5 border border-primary/10 rounded-full">
             <span className="text-[12px] font-medium text-primary/80 tracking-widest uppercase flex items-center gap-2">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="animate-ping motion-reduce:animate-none absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </span>
               Scanning Environment
             </span>
           </div>
-          <span className="text-xs text-muted-foreground/60 font-medium animate-pulse">
+          <span className="text-xs text-muted-foreground/60 font-medium animate-pulse motion-reduce:animate-none">
             正在同步空间信标数据...
           </span>
         </div>

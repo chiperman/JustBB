@@ -6,6 +6,8 @@ import { Memo } from "@/types/memo"
 import { usePageDataCache } from "@/state/PageDataCache"
 import { useToast } from "@/shared/hooks/use-toast"
 import { useMemoSync } from "@/lib/memos/events"
+import { getTrashCacheKey } from "@/shared/lib/page-cache-keys"
+import { useUser } from "@/state/UserContext"
 
 export function removeMemoFromTrash(memos: Memo[], id: string) {
   return memos.filter((memo) => memo.id !== id)
@@ -13,12 +15,22 @@ export function removeMemoFromTrash(memos: Memo[], id: string) {
 
 export function useTrashMemos() {
   const { getCache, setCache } = usePageDataCache()
-  const cached = getCache("/trash")
+  const { user } = useUser()
+  const cacheKey = getTrashCacheKey(user?.id)
+  const cached = getCache(cacheKey)
 
   const [memos, setMemos] = useState<Memo[]>(cached?.memos ?? [])
   const [isLoading, setIsLoading] = useState(!cached)
+  const [previousCacheKey, setPreviousCacheKey] = useState(cacheKey)
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
+
+  if (cacheKey !== previousCacheKey) {
+    const nextCached = getCache(cacheKey)
+    setPreviousCacheKey(cacheKey)
+    setMemos(nextCached?.memos ?? [])
+    setIsLoading(!nextCached)
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -29,7 +41,7 @@ export function useTrashMemos() {
         if (isMounted && res.success) {
           const result = res.data || []
           setMemos(result)
-          setCache("/trash", { memos: result })
+          setCache(cacheKey, { memos: result })
         }
       } catch (error) {
         console.error("[Trash Hook] Load failed:", error)
@@ -45,7 +57,7 @@ export function useTrashMemos() {
     return () => {
       isMounted = false
     }
-  }, [setCache])
+  }, [cacheKey, setCache])
 
   useMemoSync(
     useCallback(
@@ -55,12 +67,12 @@ export function useTrashMemos() {
         setMemos((prev) => {
           const next = removeMemoFromTrash(prev, payload.id)
           if (next.length !== prev.length) {
-            setCache("/trash", { memos: next })
+            setCache(cacheKey, { memos: next })
           }
           return next
         })
       },
-      [setCache]
+      [cacheKey, setCache]
     )
   )
 
@@ -74,7 +86,7 @@ export function useTrashMemos() {
           variant: "destructive",
         })
         setMemos([])
-        setCache("/trash", { memos: [] })
+        setCache(cacheKey, { memos: [] })
       } else {
         toast({
           title: "操作失败",
@@ -83,7 +95,7 @@ export function useTrashMemos() {
         })
       }
     })
-  }, [setCache, toast])
+  }, [cacheKey, setCache, toast])
 
   return {
     memos,

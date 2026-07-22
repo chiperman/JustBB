@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Memo } from "@/types/memo"
 import { AnimatePresence } from "framer-motion"
-import { ChatLock01Icon as LockIcon, Image01Icon as GalleryIcon } from "@hugeicons/core-free-icons"
+import { ChatLock01Icon as LockIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   IMAGE_STACK_RETURN_DURATION_MS,
@@ -11,8 +11,8 @@ import {
   ImageStackPreview,
   ImageStackThumbnail,
 } from "@/shared/ui/ImageStack"
-import { PageEmptyState } from "@/shared/ui/PageEmptyState"
 import { UnlockDialog } from "@/features/memos/components/UnlockDialog"
+import { GalleryEmptyState } from "./GalleryEmptyState"
 
 interface GalleryGridProps {
   memos: Memo[]
@@ -289,13 +289,7 @@ export function GalleryGrid({ memos }: GalleryGridProps) {
   }, [])
 
   if (!memos || memos.length === 0) {
-    return (
-      <PageEmptyState
-        icon={GalleryIcon}
-        title="暂无图片"
-        description="发布带图片的 Memo 后，影像会在这里汇集成你的私人画廊。"
-      />
-    )
+    return <GalleryEmptyState />
   }
 
   return (

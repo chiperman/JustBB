@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useEffect, useLayoutEffect, useState, useRef, useMemo } from "react"
-import { generateCacheKey, cn } from "@/shared/lib/utils"
-import { AnimatePresence, motion } from "framer-motion"
+import { cn } from "@/shared/lib/utils"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowUp01Icon } from "@hugeicons/core-free-icons"
 import { MemoEditor, MemoFeed } from "@/features/memos"
@@ -15,6 +15,8 @@ import { useSearchParams } from "next/navigation"
 import { useUser } from "@/state/UserContext"
 import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
 import { resolveMainLayoutScrollState } from "@/shared/layout/main-layout-scroll"
+import { getHomeCacheKey } from "@/shared/lib/page-cache-keys"
+import { useDelayedLoadingVisibility } from "@/shared/hooks/useDelayedLoadingVisibility"
 
 export function MainLayoutClient() {
   const searchParams = useSearchParams()
@@ -69,9 +71,7 @@ export function MainLayoutClient() {
     () => Object.fromEntries(new URLSearchParams(searchParamsKey).entries()),
     [searchParamsKey]
   )
-  const baseCacheKey = generateCacheKey(flattenedParams)
-  const viewerScope = user?.id ?? "anonymous"
-  const cacheKey = `${baseCacheKey}::viewer=${viewerScope}`
+  const cacheKey = getHomeCacheKey(flattenedParams, user?.id, unlockedMemoIds)
   const cachedData = getCache(cacheKey)
   const latestRequestIdRef = useRef(0)
 
@@ -79,6 +79,9 @@ export function MainLayoutClient() {
   const [memos, setMemos] = useState<Memo[]>(cachedData?.memos || [])
   const [isLoading, setIsLoading] = useState(!cachedData)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const showInitialSkeleton = useDelayedLoadingVisibility(isLoading)
+  const shouldReduceMotion = useReducedMotion()
+  const transitionDuration = shouldReduceMotion ? 0 : 0.2
 
   // 当 cacheKey 变动时，在渲染阶段立即同步调整状态，防止子组件以旧数据渲染
   if (cacheKey !== prevCacheKey) {
@@ -206,23 +209,28 @@ export function MainLayoutClient() {
           <div className="flex flex-1 flex-col px-6 pt-4 pb-20">
             <div className="relative flex min-h-[400px] flex-1 flex-col">
               <AnimatePresence mode="wait">
-                {isLoading ? (
+                {showInitialSkeleton ? (
                   <motion.div
                     key="skeleton"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
+                    transition={{ duration: transitionDuration }}
                     className="space-y-6"
                   >
                     {[1, 2, 3].map((i) => (
                       <MemoCardSkeleton key={i} />
                     ))}
                   </motion.div>
+                ) : isLoading ? (
+                  <div key="pending" className="min-h-[400px]" aria-hidden="true" />
                 ) : (
                   <motion.div
                     key="feed"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: transitionDuration }}
                     className="flex w-full flex-1 flex-col"
                   >
                     <MemoFeed

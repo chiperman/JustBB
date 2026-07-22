@@ -2,12 +2,13 @@
 
 import { useState, useEffect, ComponentType, useCallback } from "react"
 import { getMemosWithLocations } from "@/server/actions/memos/query"
-import { locationCache, type MapMarker } from "@/shared/lib/location-cache"
+import type { MapMarker } from "@/shared/lib/location-cache"
 import { groupMemosByLocation } from "@/shared/lib/map-markers"
 import { getMapCacheKey } from "@/shared/lib/page-cache-keys"
 import { usePageDataCache } from "@/state/PageDataCache"
 import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
 import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
+import { useUser } from "@/state/UserContext"
 
 // 模块级预加载
 const mapViewPromise = import("@/shared/ui/MapView")
@@ -22,13 +23,22 @@ interface MapViewProps {
 
 export function useMapMemos() {
   const { unlockedMemoIds } = useUnlockedMemos()
+  const { user } = useUser()
   const { getCache, setCache } = usePageDataCache()
-  const cacheKey = getMapCacheKey(unlockedMemoIds)
+  const cacheKey = getMapCacheKey(user?.id, unlockedMemoIds)
   const cached = getCache(cacheKey)
   const cachedMarkers = cached?.markers as MapMarker[] | undefined
   const [markers, setMarkers] = useState<MapMarker[]>(cachedMarkers ?? [])
   const [isLoading, setIsLoading] = useState(true)
   const [MapView, setMapView] = useState<ComponentType<MapViewProps> | null>(null)
+  const [previousCacheKey, setPreviousCacheKey] = useState(cacheKey)
+
+  if (cacheKey !== previousCacheKey) {
+    const nextCachedMarkers = getCache(cacheKey)?.markers as MapMarker[] | undefined
+    setPreviousCacheKey(cacheKey)
+    setMarkers(nextCachedMarkers ?? [])
+    setIsLoading(true)
+  }
 
   const refreshMapMemos = useCallback(
     async (isMounted: () => boolean = () => true) => {
@@ -44,7 +54,6 @@ export function useMapMemos() {
       if (result.success) {
         const data = result.data || []
         const allMarkers = groupMemosByLocation(data)
-        locationCache.setMarkers(allMarkers)
         setCache(cacheKey, { markers: allMarkers, memos: data })
         setMarkers(allMarkers)
       }
@@ -67,13 +76,8 @@ export function useMapMemos() {
 
         setMapView(() => mapModule.MapView)
         setIsLoading(false)
+        void refreshMapMemos(() => isMounted)
         return
-      }
-
-      const hasCache =
-        !cachedMarkers && locationCache.getInitialized() && unlockedMemoIds.length === 0
-      if (hasCache) {
-        setMarkers(locationCache.getMarkers())
       }
 
       await refreshMapMemos(() => isMounted)
@@ -83,7 +87,6 @@ export function useMapMemos() {
 
     return () => {
       isMounted = false
-      setIsLoading(true)
     }
   }, [cacheKey, getCache, refreshMapMemos, unlockedMemoIds])
 

@@ -212,6 +212,8 @@ export function LeftSidebar({ onClose, initialCollapsed = false }: LeftSidebarPr
             onClick={(href) => handleNavigate(href, isMobile, onClose)}
             onMouseEnter={schedulePrefetch}
             onMouseLeave={cancelPrefetch}
+            onFocus={schedulePrefetch}
+            onBlur={cancelPrefetch}
             isMobile={isMobile}
           />
         ))}

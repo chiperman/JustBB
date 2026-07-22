@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { motion, AnimatePresence, useDragControls } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -39,11 +39,12 @@ import { R2ConfigDialog } from "@/features/settings/components/R2ConfigDialog"
 import { supabase } from "@/lib/supabase"
 import { logout } from "@/features/auth/actions"
 import { DRAFT_CONTENT_KEY, DRAFT_IS_PRIVATE_KEY } from "@/features/memos/hooks/useMemoEditor"
+import { useSidebarNavigation } from "@/shared/hooks/useSidebarNavigation"
+import { useSidebarPagePrefetch } from "@/shared/hooks/useSidebarPagePrefetch"
 
 export function MobileNavbar() {
-  const pathname = usePathname()
   const router = useRouter()
-  const { user, setUser, isAdmin } = useUser()
+  const { user, setUser } = useUser()
   const { setViewMode } = useLayout()
   const { theme, setTheme } = useTheme()
 
@@ -55,6 +56,8 @@ export function MobileNavbar() {
   const [usageModalOpen, setUsageModalOpen] = React.useState(false)
   const [r2ConfigOpen, setR2ConfigOpen] = React.useState(false)
   const [loggingOut, setLoggingOut] = React.useState(false)
+  const { currentView, handleNavigate, pendingNavigationPath } = useSidebarNavigation()
+  const { prefetchPage } = useSidebarPagePrefetch()
 
   React.useEffect(() => {
     if (isDrawerOpen) {
@@ -69,8 +72,6 @@ export function MobileNavbar() {
 
   const canUseImportExport = Boolean(user)
   const canUseUsageMonitor = user?.role === "admin"
-  const currentView = pathname || "/"
-
   // 导航项定义
   const mainNavItems = React.useMemo(() => {
     return [
@@ -122,12 +123,18 @@ export function MobileNavbar() {
             <Link
               key={item.id}
               href={item.href}
-              onClick={() => {
-                setIsDrawerOpen(false)
-                if (currentView !== item.href || item.href === "/") {
-                  router.push(item.href)
-                }
+              prefetch={false}
+              onPointerDown={() => {
+                void prefetchPage(item.href)
               }}
+              onClick={(event) => {
+                if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+                event.preventDefault()
+                setIsDrawerOpen(false)
+                handleNavigate(item.href, true)
+              }}
+              aria-current={isActive ? "page" : undefined}
+              aria-busy={pendingNavigationPath === item.href || undefined}
               className="relative flex flex-col items-center justify-center flex-1 h-full py-1 rounded-full outline-none transition-colors group cursor-pointer"
             >
               {isActive && (

@@ -3,13 +3,16 @@
 import { useMemo } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { useUser } from "@/state/UserContext"
+import { useLayout } from "@/state/LayoutContext"
 import { NAVIGATION_CONFIG } from "@/config/navigation"
 
 export function useSidebarNavigation() {
   const pathname = usePathname()
   const router = useRouter()
   const { isAdmin, user } = useUser()
-  const currentView = pathname || "/"
+  const { pendingNavigationPath, beginNavigation, cancelNavigation } = useLayout()
+  const settledView = pathname || "/"
+  const currentView = pendingNavigationPath || settledView
 
   const navItems = useMemo(() => {
     return NAVIGATION_CONFIG.filter((item) => {
@@ -20,8 +23,16 @@ export function useSidebarNavigation() {
   }, [isAdmin, user])
 
   const handleNavigate = (href: string, isMobile: boolean, onClose?: () => void) => {
-    if (href !== currentView || href === "/") {
-      router.push(href)
+    if (href !== settledView || href === "/") {
+      beginNavigation(href)
+      try {
+        router.push(href)
+      } catch (error) {
+        cancelNavigation()
+        console.error("Navigation failed:", error)
+      }
+    } else {
+      cancelNavigation()
     }
     if (isMobile) onClose?.()
   }
@@ -29,6 +40,7 @@ export function useSidebarNavigation() {
   return {
     navItems,
     currentView,
+    pendingNavigationPath,
     handleNavigate,
   }
 }

@@ -15,7 +15,6 @@ import {
   DropdownMenuRadioItem,
 } from "@/shared/ui/dropdown-menu"
 import { Button } from "@/shared/ui/button"
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 import { SearchInput } from "./SearchInput"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -35,9 +34,14 @@ import { ShortcutHint } from "@/shared/shortcuts/ShortcutHint"
 interface FeedHeaderProps {
   isRefreshing?: boolean
   isCollapsed?: boolean
+  showSelectionState?: boolean
 }
 
-export function FeedHeader({ isRefreshing = false, isCollapsed = false }: FeedHeaderProps) {
+export function FeedHeader({
+  isRefreshing = false,
+  isCollapsed = false,
+  showSelectionState = true,
+}: FeedHeaderProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -60,6 +64,7 @@ export function FeedHeader({ isRefreshing = false, isCollapsed = false }: FeedHe
     searchParams?.get("num") ||
     (searchParams?.get("year") && searchParams?.get("month"))
   )
+  const displaySelectionState = showSelectionState && isSelectionMode
 
   return (
     <div
@@ -70,7 +75,7 @@ export function FeedHeader({ isRefreshing = false, isCollapsed = false }: FeedHe
         hasContext && isCollapsed && "mb-4"
       )}
     >
-      {isSelectionMode ? (
+      {displaySelectionState ? (
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-primary">{selectedIds.size} SELECTED</span>
@@ -170,7 +175,7 @@ export function FeedHeader({ isRefreshing = false, isCollapsed = false }: FeedHe
         </div>
       )}
 
-      {!isSelectionMode && (
+      {!displaySelectionState && (
         <div className="w-full sm:max-w-sm" data-search-shell="true">
           <SearchInput />
         </div>

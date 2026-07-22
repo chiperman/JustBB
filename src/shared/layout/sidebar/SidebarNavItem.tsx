@@ -14,6 +14,8 @@ interface SidebarNavItemProps {
   onClick: (href: string) => void
   onMouseEnter?: (href: string) => void
   onMouseLeave?: () => void
+  onFocus?: (href: string) => void
+  onBlur?: () => void
   isMobile?: boolean
 }
 
@@ -24,6 +26,8 @@ export function SidebarNavItem({
   onClick,
   onMouseEnter,
   onMouseLeave,
+  onFocus,
+  onBlur,
   isMobile = false,
 }: SidebarNavItemProps) {
   const labelTransition = {
@@ -35,12 +39,16 @@ export function SidebarNavItem({
   const linkElement = (
     <Link
       href={item.href}
+      prefetch={false}
       onClick={(event) => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
         event.preventDefault()
         onClick(item.href)
       }}
       onMouseEnter={() => onMouseEnter?.(item.href)}
       onMouseLeave={onMouseLeave}
+      onFocus={() => onFocus?.(item.href)}
+      onBlur={onBlur}
       className={cn(
         "group relative flex h-9 items-center rounded-md text-left transition-[background-color,color,box-shadow] duration-200 [@media(pointer:coarse)]:active:scale-95",
         isMobile && "h-14 rounded-2xl px-4 sm:h-9 sm:rounded-md sm:px-0",

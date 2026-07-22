@@ -126,3 +126,8 @@ export function removeTagsFromContent(
     tags: remainingTags,
   }
 }
+
+export function renameTagInContent(content: string, oldTag: string, newTag: string) {
+  const escaped = oldTag.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")
+  return content.replace(new RegExp(`(^|\\s)#${escaped}(?=\\s|$)`, "g"), `$1#${newTag}`)
+}

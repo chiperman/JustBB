@@ -1,6 +1,5 @@
- 
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { updateMemoState } from "./mutate"
+import { renameTagForCurrentUser, updateMemoState } from "./mutate"
 
 const MOCK_MEMO_ID = "11111111-1111-1111-1111-111111111111"
 const VIEWER_ID = "22222222-2222-2222-2222-222222222222"
@@ -114,6 +113,39 @@ describe("updateMemoState", () => {
     expect(mockClient.update).toHaveBeenCalledWith({
       is_pinned: false,
       pinned_at: null,
+    })
+  })
+})
+
+describe("renameTagForCurrentUser", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("按 50 条批量写入，避免为每条 Memo 单独发起更新请求", async () => {
+    const memos = Array.from({ length: 51 }, (_, index) =>
+      createMemoResult({
+        id: `11111111-1111-1111-1111-${String(index).padStart(12, "0")}`,
+        content: `#旧标签 第 ${index + 1} 条`,
+        tags: ["旧标签"],
+      })
+    )
+    const contains = vi.fn().mockResolvedValue({ data: memos, error: null })
+    const eq = vi.fn().mockReturnValue({ contains })
+    const select = vi.fn().mockReturnValue({ eq })
+    const upsert = vi.fn().mockResolvedValue({ error: null })
+    mockClient.from.mockReturnValueOnce({ select }).mockReturnValue({ upsert })
+
+    const result = await renameTagForCurrentUser("旧标签", "新标签")
+
+    expect(result).toEqual({ success: true, data: { count: 51 }, error: null })
+    expect(upsert).toHaveBeenCalledTimes(2)
+    expect(upsert.mock.calls[0][0]).toHaveLength(50)
+    expect(upsert.mock.calls[1][0]).toHaveLength(1)
+    expect(upsert.mock.calls[0][0][0]).toMatchObject({
+      owner_id: VIEWER_ID,
+      content: "#新标签 第 1 条",
+      tags: ["新标签"],
     })
   })
 })

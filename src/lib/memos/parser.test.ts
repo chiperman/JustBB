@@ -1,4 +1,15 @@
-import { extractImagesFromContent, mergeTagsIntoContent, removeTagsFromContent } from "./parser"
+import {
+  extractImagesFromContent,
+  mergeTagsIntoContent,
+  removeTagsFromContent,
+  renameTagInContent,
+} from "./parser"
+
+describe("renameTagInContent", () => {
+  it("仅重命名完整标签", () => {
+    expect(renameTagInContent("#工作 #工作日志", "工作", "职业")).toBe("#职业 #工作日志")
+  })
+})
 
 describe("mergeTagsIntoContent", () => {
   it("应该能向已有内容中添加新标签", () => {

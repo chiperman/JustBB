@@ -5,8 +5,11 @@ import { Toaster as SileoToaster } from "sileo"
 export function Toaster() {
   return (
     <SileoToaster
-      position="top-center"
-      offset={{ top: "calc(env(safe-area-inset-top) + 0.75rem)" }}
+      position="bottom-right"
+      offset={{
+        bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)",
+        right: "0.75rem",
+      }}
       theme="system"
       options={{
         duration: 6000,

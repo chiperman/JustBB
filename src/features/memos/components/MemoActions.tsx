@@ -336,12 +336,6 @@ export function MemoActions({
                   编辑
                 </DropdownMenuItem>
               )}
-              {onToggleBacklinks && (
-                <DropdownMenuItem onClick={onToggleBacklinks}>
-                  <HugeiconsIcon icon={Link02Icon} size={16} className="mr-2" />
-                  {showBacklinks ? "隐藏引用" : "查看引用"}
-                </DropdownMenuItem>
-              )}
               {!isPrivate && (
                 <MemoShare
                   memo={
@@ -442,7 +436,7 @@ export function MemoActions({
                 {onToggleBacklinks && (
                   <button
                     type="button"
-                    className={mobileActionButtonClass}
+                    className={cn(mobileActionButtonClass, "hidden max-[350px]:flex")}
                     onClick={() => {
                       handleDialogOpenChange(false)
                       onToggleBacklinks()

@@ -163,12 +163,12 @@ export function MemoCardHeader({
                     (showBacklinks || isMenuOpen) && "opacity-100"
                   )}
                   aria-expanded={showBacklinks}
-                  aria-label="查看引用"
+                  aria-label={showBacklinks ? "隐藏引用" : "查看引用"}
                 >
                   <HugeiconsIcon icon={Link02Icon} size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">查看引用</TooltipContent>
+              <TooltipContent side="top">{showBacklinks ? "隐藏引用" : "查看引用"}</TooltipContent>
             </Tooltip>
             <MemoActions
               id={memo.id}

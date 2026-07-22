@@ -1,4 +1,7 @@
+// @vitest-environment jsdom
+
 import { describe, expect, it, beforeEach, vi } from "vitest"
+import { render, screen, within } from "@testing-library/react"
 import type { Memo } from "@/types/memo"
 
 vi.mock("@/server/actions/memos/query", () => ({
@@ -61,11 +64,29 @@ describe("MemoSharePage metadata", () => {
     expect(metadata.robots).toMatchObject({ index: false, follow: false })
   })
 
-  it("私密 Memo 不生成可索引分享 metadata", async () => {
+  it.each([
+    ["私密", { is_private: true, is_owner: true }],
+    ["锁定", { is_locked: true }],
+  ])("%s Memo 不生成可索引分享 metadata", async (_label, overrides) => {
     vi.mocked(getMemoById).mockResolvedValue({
       success: true,
       error: null,
-      data: createMemo({ is_private: true, is_owner: true }),
+      data: createMemo(overrides),
+    })
+
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ id: memoId }),
+    })
+
+    expect(metadata.title).toBe("分享内容不可用")
+    expect(metadata.robots).toMatchObject({ index: false, follow: false })
+  })
+
+  it("不存在的 Memo 不生成可索引分享 metadata", async () => {
+    vi.mocked(getMemoById).mockResolvedValue({
+      success: true,
+      error: null,
+      data: null,
     })
 
     const metadata = await generateMetadata({
@@ -108,11 +129,44 @@ describe("MemoSharePage", () => {
     expect(getMemoById).not.toHaveBeenCalled()
   })
 
-  it("私密 Memo 直接返回 404", async () => {
+  it("公开 Memo 以正文为主体并保留品牌与产品入口", async () => {
     vi.mocked(getMemoById).mockResolvedValue({
       success: true,
       error: null,
-      data: createMemo({ is_private: true, is_owner: true }),
+      data: createMemo(),
+    })
+
+    render(await MemoSharePage({ params: Promise.resolve({ id: memoId }) }))
+
+    const article = screen.getByRole("article", { name: "Memo 正文" })
+    expect(within(article).getByText("公开 Memo 内容")).toBeTruthy()
+    expect(within(article).getByText("#12")).toBeTruthy()
+    expect(within(article).getByText("2026年7月8日")).toBeTruthy()
+    expect(within(article).getByText("#公开")).toBeTruthy()
+    expect(screen.getByRole("link", { name: "JustMemo" }).getAttribute("href")).toBe("/")
+    expect(screen.getByRole("link", { name: "返回 JustMemo" }).getAttribute("href")).toBe("/")
+  })
+
+  it.each([
+    ["私密", { is_private: true, is_owner: true }],
+    ["锁定", { is_locked: true }],
+  ])("%s Memo 直接返回 404", async (_label, overrides) => {
+    vi.mocked(getMemoById).mockResolvedValue({
+      success: true,
+      error: null,
+      data: createMemo(overrides),
+    })
+
+    await expect(MemoSharePage({ params: Promise.resolve({ id: memoId }) })).rejects.toThrow(
+      "NEXT_NOT_FOUND"
+    )
+  })
+
+  it("不存在的 Memo 直接返回 404", async () => {
+    vi.mocked(getMemoById).mockResolvedValue({
+      success: true,
+      error: null,
+      data: null,
     })
 
     await expect(MemoSharePage({ params: Promise.resolve({ id: memoId }) })).rejects.toThrow(

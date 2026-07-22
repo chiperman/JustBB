@@ -1,17 +1,17 @@
 "use client"
 
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useMapMemos } from "./hooks/useMapMemos"
 import { MapLoadingScreen } from "./components/MapLoadingScreen"
 import { MapErrorScreen } from "./components/MapErrorScreen"
-import {
-  ContextPageShell,
-  ContextPageHeader,
-} from "@/shared/layout/ContextPageShell"
+import { ContextPageShell, ContextPageHeader } from "@/shared/layout/ContextPageShell"
 import { Location04Icon } from "@hugeicons/core-free-icons"
+import { useDelayedLoadingVisibility } from "@/shared/hooks/useDelayedLoadingVisibility"
 
 export function MapPageContent() {
   const { markers, isLoading, MapView } = useMapMemos()
+  const showLoadingScreen = useDelayedLoadingVisibility(isLoading)
+  const shouldReduceMotion = useReducedMotion()
 
   return (
     <ContextPageShell
@@ -33,21 +33,19 @@ export function MapPageContent() {
       <div className="flex-1 min-h-0 relative">
         <div className="relative h-full w-full overflow-hidden rounded-inner bg-card ring-1 ring-border/70">
           <AnimatePresence mode="wait">
-            {isLoading ? (
+            {showLoadingScreen ? (
               <MapLoadingScreen />
+            ) : isLoading ? (
+              <div key="map-pending" className="absolute inset-0" aria-hidden="true" />
             ) : MapView ? (
               <motion.div
                 key="map"
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
+                transition={{ duration: shouldReduceMotion ? 0 : 0.35, ease: "easeOut" }}
                 className="w-full h-full"
               >
-                <MapView
-                  markers={markers}
-                  mode="full"
-                  className="w-full h-full min-h-[500px]"
-                />
+                <MapView markers={markers} mode="full" className="w-full h-full min-h-[500px]" />
               </motion.div>
             ) : (
               <MapErrorScreen />

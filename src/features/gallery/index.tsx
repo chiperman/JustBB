@@ -2,15 +2,18 @@
 
 import { useEffect, useState, useRef, useCallback } from "react"
 import { GalleryGrid } from "./components/GalleryGrid"
+import { GalleryLoadingGrid } from "./components/GalleryLoadingGrid"
 import { Memo } from "@/types/memo"
 import { getGalleryMemos } from "@/server/actions/memos/query"
 import { getGalleryCacheKey } from "@/shared/lib/page-cache-keys"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Image01Icon as GalleryIcon, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
-import { motion } from "framer-motion"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { ContextPageShell, ContextPageHeader } from "@/shared/layout/ContextPageShell"
 import { usePageDataCache } from "@/state/PageDataCache"
 import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
+import { useUser } from "@/state/UserContext"
+import { useDelayedLoadingVisibility } from "@/shared/hooks/useDelayedLoadingVisibility"
 
 interface GalleryPageContentProps {
   memos?: Memo[]
@@ -23,18 +26,38 @@ const LOAD_MORE_PAGE_SIZE = 30
 export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: GalleryPageContentProps) {
   const { getCache, setCache } = usePageDataCache()
   const { unlockedMemoIds } = useUnlockedMemos()
-  const cacheKey = getGalleryCacheKey(unlockedMemoIds)
+  const { user } = useUser()
+  const cacheKey = getGalleryCacheKey(user?.id, unlockedMemoIds)
   const cached = getCache(cacheKey)
   const bootMemos = initialMemos.length > 0 ? initialMemos : (cached?.memos as Memo[] | undefined)
   const [memos, setMemos] = useState<Memo[]>(bootMemos ?? EMPTY_MEMOS)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isInitialLoading, setIsInitialLoading] = useState(!bootMemos)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(
     typeof cached?.hasMore === "boolean"
       ? cached.hasMore
       : (bootMemos?.length ?? 0) >= INITIAL_PAGE_SIZE
   )
   const [offset, setOffset] = useState(bootMemos?.length ?? 0)
+  const [previousCacheKey, setPreviousCacheKey] = useState(cacheKey)
   const observerTarget = useRef<HTMLDivElement>(null)
+  const shouldReduceMotion = useReducedMotion()
+  const showInitialSkeleton = useDelayedLoadingVisibility(isInitialLoading)
+
+  if (cacheKey !== previousCacheKey) {
+    const nextCached = getCache(cacheKey)
+    const nextMemos = nextCached?.memos as Memo[] | undefined
+    setPreviousCacheKey(cacheKey)
+    setMemos(nextMemos ?? EMPTY_MEMOS)
+    setHasMore(
+      typeof nextCached?.hasMore === "boolean"
+        ? nextCached.hasMore
+        : (nextMemos?.length ?? 0) >= INITIAL_PAGE_SIZE
+    )
+    setOffset(nextMemos?.length ?? 0)
+    setIsInitialLoading(!nextMemos)
+    setIsLoadingMore(false)
+  }
 
   useEffect(() => {
     if (initialMemos.length === 0) return
@@ -46,7 +69,7 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
       memos: initialMemos,
       hasMore: initialMemos.length >= INITIAL_PAGE_SIZE,
     })
-    setIsLoading(false)
+    setIsInitialLoading(false)
   }, [cacheKey, initialMemos, setCache])
 
   useEffect(() => {
@@ -64,11 +87,11 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
             : cachedMemos.length >= INITIAL_PAGE_SIZE
         )
         setOffset(cachedMemos.length)
-        setIsLoading(false)
-        return
+        setIsInitialLoading(false)
+      } else {
+        setIsInitialLoading(true)
       }
 
-      setIsLoading(true)
       try {
         const res = await getGalleryMemos(INITIAL_PAGE_SIZE, 0, unlockedMemoIds)
         const nextMemos = res.success ? res.data || [] : []
@@ -87,7 +110,7 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
         }
       } finally {
         if (!cancelled) {
-          setIsLoading(false)
+          setIsInitialLoading(false)
         }
       }
     }
@@ -100,9 +123,9 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
   }, [cacheKey, getCache, setCache, unlockedMemoIds])
 
   const loadMore = useCallback(async () => {
-    if (isLoading || !hasMore) return
+    if (isInitialLoading || isLoadingMore || !hasMore) return
 
-    setIsLoading(true)
+    setIsLoadingMore(true)
     try {
       const res = await getGalleryMemos(LOAD_MORE_PAGE_SIZE, offset, unlockedMemoIds)
       const nextMemos = res.success ? res.data || [] : []
@@ -126,9 +149,9 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
       console.error("Failed to load more gallery memos:", err)
       setHasMore(false)
     } finally {
-      setIsLoading(false)
+      setIsLoadingMore(false)
     }
-  }, [cacheKey, isLoading, hasMore, offset, setCache, unlockedMemoIds])
+  }, [cacheKey, hasMore, isInitialLoading, isLoadingMore, offset, setCache, unlockedMemoIds])
 
   useEffect(() => {
     const target = observerTarget.current
@@ -136,7 +159,7 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !isLoading && hasMore) {
+        if (entries[0].isIntersecting && !isInitialLoading && !isLoadingMore && hasMore) {
           loadMore()
         }
       },
@@ -145,9 +168,12 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
 
     observer.observe(target)
     return () => observer.unobserve(target)
-  }, [loadMore, isLoading, hasMore])
+  }, [loadMore, isInitialLoading, isLoadingMore, hasMore])
 
-  const isEmpty = memos.length === 0
+  const canShowResolvedContent = !isInitialLoading && !showInitialSkeleton
+  const isEmpty = canShowResolvedContent && memos.length === 0
+  const hasVisibleMemos = canShowResolvedContent && memos.length > 0
+  const transitionDuration = shouldReduceMotion ? 0 : 0.2
 
   return (
     <ContextPageShell
@@ -160,15 +186,42 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
     >
       <div className={isEmpty ? "flex-1 min-h-0" : "space-y-12"}>
         <section className={isEmpty ? "flex h-full min-h-0 flex-col" : undefined}>
-          <GalleryGrid memos={memos} />
+          <AnimatePresence mode="wait" initial={false}>
+            {showInitialSkeleton ? (
+              <motion.div
+                key="gallery-skeleton"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: transitionDuration }}
+              >
+                <GalleryLoadingGrid />
+              </motion.div>
+            ) : isInitialLoading ? (
+              <div key="gallery-pending" aria-hidden="true">
+                <GalleryLoadingGrid visible={false} />
+              </div>
+            ) : (
+              <motion.div
+                key={isEmpty ? "gallery-empty" : "gallery-content"}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: transitionDuration }}
+                className={isEmpty ? "flex h-full min-h-0 flex-col" : undefined}
+              >
+                <GalleryGrid memos={memos} />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Bottom Sentry/Loader */}
-          {!isEmpty && (
+          {hasVisibleMemos && (
             <div
               ref={observerTarget}
               className="py-12 flex flex-col items-center justify-center min-h-[100px]"
             >
-              {isLoading ? (
+              {isLoadingMore ? (
                 <div className="flex items-center">
                   <motion.div
                     animate={{ rotate: 360 }}

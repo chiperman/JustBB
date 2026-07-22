@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/features/auth/actions"
 import { cookies } from "next/headers"
 import { LEFT_SIDEBAR_COOKIE_KEY } from "@/shared/lib/layout-preferences"
 import { SelectionToolbar } from "@/shared/ui/SelectionToolbar"
+import { NavigationPendingBoundary } from "@/shared/layout/NavigationPendingBoundary"
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies()
@@ -31,7 +32,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
           {/* 内容流区域 */}
           <main className="relative flex-1 min-w-0 bg-background h-full flex flex-col overflow-hidden">
-            {children}
+            <NavigationPendingBoundary>{children}</NavigationPendingBoundary>
             <SelectionToolbar />
           </main>
           {/* 时间轴功能暂时关闭：保留 RightSidebar 实现，后续需要时再恢复渲染。 */}

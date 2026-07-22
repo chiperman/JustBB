@@ -21,6 +21,10 @@ vi.mock("@/shared/hooks/use-toast", () => ({
   useToast: () => ({ toast: vi.fn() }),
 }))
 
+vi.mock("@/state/UserContext", () => ({
+  useUser: () => ({ user: { id: "user-1" } }),
+}))
+
 function createMemo(id: string): Memo {
   return {
     id,

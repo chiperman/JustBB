@@ -2,9 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
-import { motion, AnimatePresence, useDragControls } from "framer-motion"
+import { motion, AnimatePresence, useDragControls, useReducedMotion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Home01Icon,
@@ -31,6 +30,7 @@ import { cn } from "@/shared/lib/utils"
 import { useUser } from "@/state/UserContext"
 import { useLayout } from "@/state/LayoutContext"
 import { Heatmap } from "@/shared/ui/Heatmap"
+import { MOBILE_TAB_BAR_POSITION_CLASS } from "@/shared/layout/mobile-floating-layout"
 
 import { UsageModal } from "@/features/admin/components/UsageModal"
 import { ExportConfigDialog } from "./ExportConfigDialog"
@@ -43,12 +43,12 @@ import { useSidebarNavigation } from "@/shared/hooks/useSidebarNavigation"
 import { useSidebarPagePrefetch } from "@/shared/hooks/useSidebarPagePrefetch"
 
 export function MobileNavbar() {
-  const router = useRouter()
   const { user, setUser } = useUser()
   const { setViewMode } = useLayout()
   const { theme, setTheme } = useTheme()
 
   const dragControls = useDragControls()
+  const shouldReduceMotion = useReducedMotion()
 
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
   const [exportDialogOpen, setExportDialogOpen] = React.useState(false)
@@ -111,12 +111,37 @@ export function MobileNavbar() {
       item.href === "/" ? currentView === "/" : currentView.startsWith(item.href)
     )
     return matched ? matched.id : null
-  }, [currentView, mainNavItems, isDrawerOpen])
+  }, [currentView, isDrawerOpen, mainNavItems])
+
+  const activeTabIndex = React.useMemo(() => {
+    if (activeTabId === "more") return mainNavItems.length
+    const index = mainNavItems.findIndex((item) => item.id === activeTabId)
+    return index >= 0 ? index : 0
+  }, [activeTabId, mainNavItems])
 
   return (
     <>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] h-[72px] bg-gradient-to-t from-background/[0.62] to-transparent md:hidden"
+      />
       {/* 底部悬浮导航胶囊 */}
-      <div className="md:hidden fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 w-[92%] max-w-[390px] h-[58px] bg-background/88 backdrop-blur-lg border border-border/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] rounded-full flex items-center justify-around px-2.5 py-1 z-[70] transition-all duration-300">
+      <div
+        className={cn(
+          "md:hidden fixed left-1/2 -translate-x-1/2 w-[80%] max-w-[390px] h-14 bg-background border border-border/60 rounded-full flex items-center justify-around px-2.5 py-1 z-[70] transition-all duration-300",
+          MOBILE_TAB_BAR_POSITION_CLASS
+        )}
+      >
+        {/* 只移动 x 轴，避免 Safari 视觉视口变化被共享布局动画误判为纵向位移。 */}
+        <motion.div
+          aria-hidden="true"
+          initial={false}
+          animate={{ x: `${activeTabIndex * 100}%` }}
+          transition={
+            shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 30 }
+          }
+          className="pointer-events-none absolute inset-y-0.5 left-2.5 z-0 w-[calc((100%-1.25rem)/5)] rounded-full bg-primary/10"
+        />
         {mainNavItems.map((item) => {
           const isActive = activeTabId === item.id
           return (
@@ -137,13 +162,6 @@ export function MobileNavbar() {
               aria-busy={pendingNavigationPath === item.href || undefined}
               className="relative flex flex-col items-center justify-center flex-1 h-full py-1 rounded-full outline-none transition-colors group cursor-pointer"
             >
-              {isActive && (
-                <motion.div
-                  layoutId="mobileActiveTab"
-                  className="absolute inset-0.5 bg-primary/10 rounded-full z-0"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                />
-              )}
               <span
                 className={cn(
                   "relative z-10 flex flex-col items-center justify-center gap-0.5 transition-transform duration-200 active:scale-90",
@@ -162,13 +180,6 @@ export function MobileNavbar() {
           onClick={() => setIsDrawerOpen(!isDrawerOpen)}
           className="relative flex flex-col items-center justify-center flex-1 h-full py-1 rounded-full outline-none transition-colors group cursor-pointer"
         >
-          {isDrawerOpen && (
-            <motion.div
-              layoutId="mobileActiveTab"
-              className="absolute inset-0.5 bg-primary/10 rounded-full z-0"
-              transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            />
-          )}
           <span
             className={cn(
               "relative z-10 flex flex-col items-center justify-center gap-0.5 transition-transform duration-200 active:scale-90",

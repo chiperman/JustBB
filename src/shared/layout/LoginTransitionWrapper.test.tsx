@@ -44,4 +44,21 @@ describe("LoginTransitionWrapper", () => {
     expectSourceToContain('y: "100%"')
     expectSourceNotToContain('boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.15)"')
   })
+
+  it("uses the mobile safe area without rendering the desktop card border", () => {
+    expectSourceToContain("pt-[env(safe-area-inset-top)]")
+    expectSourceToContain("min-h-[100dvh] w-full flex-col border-0 pt-[env(safe-area-inset-top)]")
+    expectSourceToContain("flex-1 md:min-h-0 md:h-full")
+    expectSourceToContain("border-0 md:border md:border-border/60")
+  })
+
+  it("lets mobile Safari own document scrolling while keeping desktop app scrolling", () => {
+    expectSourceToContain("relative isolate min-h-[100dvh]")
+    expectSourceToContain("md:fixed md:inset-0")
+    expectSourceToContain('className="relative z-10 min-h-[100dvh]"')
+  })
+
+  it("uses one server and client initial layout before detecting the viewport", () => {
+    expectSourceToContain("const [isMobile, setIsMobile] = useState(false)")
+  })
 })

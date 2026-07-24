@@ -1,5 +1,8 @@
 "use client"
 
+import { useSyncExternalStore } from "react"
+import { createPortal } from "react-dom"
+
 import { MobileNavbar } from "./MobileNavbar"
 
 interface MobileLayoutWrapperProps {
@@ -7,9 +10,15 @@ interface MobileLayoutWrapperProps {
 }
 
 export function MobileLayoutWrapper({ children }: MobileLayoutWrapperProps) {
+  const isMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
+
   return (
     <>
-      <MobileNavbar />
+      {isMounted ? createPortal(<MobileNavbar />, document.body) : null}
       {children}
     </>
   )

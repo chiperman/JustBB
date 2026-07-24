@@ -21,8 +21,8 @@ export default async function MainLayout({ children }: { children: React.ReactNo
       initialStats={null}
       initialUser={user}
     >
-      <div className="flex h-screen w-full overflow-hidden">
-        <div className="flex w-full h-full">
+      <div className="flex min-h-[100dvh] w-full md:h-full md:overflow-hidden">
+        <div className="flex min-h-[100dvh] w-full md:h-full">
           {/* 左侧导航 - 移动端隐藏 */}
           <div className="hidden md:block h-full overflow-y-auto scrollbar-hide border-r border-border/40">
             <Suspense fallback={<div className="w-64" />}>
@@ -31,7 +31,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
           </div>
 
           {/* 内容流区域 */}
-          <main className="relative flex-1 min-w-0 bg-background h-full flex flex-col overflow-hidden">
+          <main className="relative flex min-h-[100dvh] min-w-0 flex-1 flex-col bg-background md:h-full md:overflow-hidden">
             <NavigationPendingBoundary>{children}</NavigationPendingBoundary>
             <SelectionToolbar />
           </main>

@@ -56,6 +56,8 @@
 }
 
 :root {
+  color-scheme: light;
+
   /* Neutral foundation with a restrained Clay accent */
   --background: #f8f8f8;
   --foreground: #181818;
@@ -152,6 +154,7 @@
   --toast-success-text: #4ade80;
 }
 
+html,
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;

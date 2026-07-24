@@ -4,8 +4,8 @@
   "description": "一个高私密性的个人碎片化生活记录系统。",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#f8f8f8",
+  "theme_color": "#f8f8f8",
   "icons": [
     {
       "src": "/brand-assets/icon-192.png",

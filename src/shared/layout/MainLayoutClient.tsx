@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useLayoutEffect, useState, useRef, useMemo } from "react"
+import { createPortal } from "react-dom"
 import { cn } from "@/shared/lib/utils"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -17,6 +18,10 @@ import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
 import { resolveMainLayoutScrollState } from "@/shared/layout/main-layout-scroll"
 import { getHomeCacheKey } from "@/shared/lib/page-cache-keys"
 import { useDelayedLoadingVisibility } from "@/shared/hooks/useDelayedLoadingVisibility"
+import {
+  MOBILE_CONTENT_BOTTOM_PADDING_CLASS,
+  MOBILE_SCROLL_TOP_POSITION_CLASS,
+} from "@/shared/layout/mobile-floating-layout"
 
 export function MainLayoutClient() {
   const searchParams = useSearchParams()
@@ -32,8 +37,18 @@ export function MainLayoutClient() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [editorForceCollapsed, setEditorForceCollapsed] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [isMobileViewport, setIsMobileViewport] = useState(false)
   const editorForceCollapsedRef = useRef(false)
   const lastScrollTop = useRef(0)
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)")
+    const syncViewport = () => setIsMobileViewport(mediaQuery.matches)
+
+    syncViewport()
+    mediaQuery.addEventListener("change", syncViewport)
+    return () => mediaQuery.removeEventListener("change", syncViewport)
+  }, [])
 
   // 监听滚动，实现迟滞触发逻辑 (Hysteresis Logic)
   useLayoutEffect(() => {
@@ -41,16 +56,17 @@ export function MainLayoutClient() {
     if (!container) return
 
     const syncCollapsedState = () => {
-      const scrollTop = container.scrollTop
-      const scrollHeight = container.scrollHeight
-      const clientHeight = container.clientHeight
+      const isMobile = isMobileViewport
+      const scrollTop = isMobile ? window.scrollY : container.scrollTop
+      const scrollHeight = isMobile ? document.documentElement.scrollHeight : container.scrollHeight
+      const clientHeight = isMobile ? window.innerHeight : container.clientHeight
       const scrollableHeight = scrollHeight - clientHeight
 
       const nextState = resolveMainLayoutScrollState({
         currentCollapsed: editorForceCollapsedRef.current,
         scrollTop,
         scrollableHeight,
-        isMobile: typeof window !== "undefined" && window.innerWidth < 768,
+        isMobile,
       })
 
       editorForceCollapsedRef.current = nextState.editorForceCollapsed
@@ -61,9 +77,10 @@ export function MainLayoutClient() {
     }
 
     syncCollapsedState()
-    container.addEventListener("scroll", syncCollapsedState, { passive: true })
-    return () => container.removeEventListener("scroll", syncCollapsedState)
-  }, [])
+    const scrollTarget: Window | HTMLDivElement = isMobileViewport ? window : container
+    scrollTarget.addEventListener("scroll", syncCollapsedState, { passive: true })
+    return () => scrollTarget.removeEventListener("scroll", syncCollapsedState)
+  }, [isMobileViewport])
 
   // 1. 初始化数据：优先从缓存中获取，确保 SPA 切换瞬间完成
   const searchParamsKey = searchParams?.toString() || ""
@@ -78,7 +95,7 @@ export function MainLayoutClient() {
   const [prevCacheKey, setPrevCacheKey] = useState(cacheKey)
   const [memos, setMemos] = useState<Memo[]>(cachedData?.memos || [])
   const [isLoading, setIsLoading] = useState(!cachedData)
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(true)
   const showInitialSkeleton = useDelayedLoadingVisibility(isLoading)
   const shouldReduceMotion = useReducedMotion()
   const transitionDuration = shouldReduceMotion ? 0 : 0.2
@@ -86,6 +103,7 @@ export function MainLayoutClient() {
   // 当 cacheKey 变动时，在渲染阶段立即同步调整状态，防止子组件以旧数据渲染
   if (cacheKey !== prevCacheKey) {
     setPrevCacheKey(cacheKey)
+    setIsRefreshing(true)
     const latestCachedData = getCache(cacheKey)
     if (!latestCachedData) {
       setIsLoading(true)
@@ -98,17 +116,6 @@ export function MainLayoutClient() {
 
   // 2. 路由/搜索变动时重置并刷新，只接受当前 query 的最新结果
   useEffect(() => {
-    const latestCachedData = getCache(cacheKey)
-
-    if (!latestCachedData) {
-      setIsLoading(true)
-      setMemos([])
-    } else {
-      setMemos(latestCachedData.memos || [])
-      setIsLoading(false)
-    }
-
-    setIsRefreshing(true)
     const requestId = ++latestRequestIdRef.current
     let cancelled = false
 
@@ -148,96 +155,85 @@ export function MainLayoutClient() {
     }
   }, [cacheKey, flattenedParams, getCache, setCache])
 
+  const scrollTopControl = (
+    <motion.button
+      initial={false}
+      animate={{
+        opacity: showScrollTop ? 1 : 0,
+        scale: showScrollTop ? 1 : 0.94,
+        y: showScrollTop ? 0 : 8,
+      }}
+      transition={{
+        duration: shouldReduceMotion ? 0 : 0.18,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      style={{ pointerEvents: showScrollTop ? "auto" : "none" }}
+      onClick={() => {
+        if (isMobileViewport) {
+          window.scrollTo({ top: 0, behavior: shouldReduceMotion ? "auto" : "smooth" })
+          return
+        }
+
+        containerRef.current?.scrollTo({
+          top: 0,
+          behavior: shouldReduceMotion ? "auto" : "smooth",
+        })
+      }}
+      className={cn(
+        "fixed z-[80] flex h-10 w-10 items-center justify-center rounded-md border border-border bg-card/90 text-muted-foreground shadow-sm backdrop-blur-sm will-change-transform transition-colors hover:text-foreground [@media(pointer:coarse)]:active:scale-95 md:absolute md:z-40",
+        MOBILE_SCROLL_TOP_POSITION_CLASS
+      )}
+      aria-label="回到顶部"
+      aria-hidden={!showScrollTop}
+      tabIndex={showScrollTop ? 0 : -1}
+    >
+      <HugeiconsIcon icon={ArrowUp01Icon} size={18} />
+    </motion.button>
+  )
+
   return (
-    <div className="relative flex flex-col h-full overflow-hidden bg-background">
-      {/* 1. 顶部固定区域 (Fixed Top Area) */}
-      <div
-        className={cn(
-          "flex-none z-30 transition-all duration-300 border-b",
-          editorForceCollapsed
-            ? "bg-background/80 backdrop-blur-md border-border/20"
-            : "bg-transparent border-border/0"
-        )}
-      >
-        <div className="max-w-screen-md mx-auto">
-          {/* Level 3: Visual Padding Area */}
-          <div className="px-6 py-5 flex flex-col">
-            {/* Feed 标题与过滤显示 (包含 Logo 和 SearchInput) */}
-            <FeedHeader isRefreshing={isRefreshing} isCollapsed={editorForceCollapsed} />
+    <>
+      <div className="relative flex min-h-[100dvh] flex-col bg-background md:h-full md:overflow-hidden">
+        {/* 1. 顶部固定区域 (Fixed Top Area) */}
+        <div
+          className={cn(
+            "flex-none z-30 transition-all duration-300 border-b",
+            editorForceCollapsed
+              ? "bg-background/80 backdrop-blur-md border-border/20"
+              : "bg-transparent border-border/0"
+          )}
+        >
+          <div className="max-w-screen-md mx-auto">
+            {/* Level 3: Visual Padding Area */}
+            <div className="px-6 py-5 flex flex-col">
+              {/* Feed 标题与过滤显示 (包含 Logo 和 SearchInput) */}
+              <FeedHeader isRefreshing={isRefreshing} isCollapsed={editorForceCollapsed} />
 
-            {/* 编辑器区域 */}
-            <AnimatePresence initial={false}>
-              {user && (
-                <motion.div
-                  key="memo-editor-wrapper"
-                  initial={{ opacity: 0 }}
-                  animate={{
-                    opacity: 1,
-                  }}
-                  exit={{
-                    height: 0,
-                    opacity: 0,
-                    marginTop: 0,
-                  }}
-                  transition={{
-                    opacity: { duration: 0.2 },
-                    height: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
-                    marginTop: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
-                  }}
-                  className="overflow-hidden mt-6"
-                >
-                  <MemoEditor
-                    mode="create"
-                    isCollapsed={true}
-                    scrollCollapsed={editorForceCollapsed}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. 底部滚动区域 (Scrollable Feed Area) */}
-      <div
-        ref={containerRef}
-        data-shortcut-scroll-root="true"
-        className="flex-1 overflow-y-auto scrollbar-stable-both"
-      >
-        <div className="max-w-screen-md mx-auto flex min-h-full flex-col">
-          {/* Level 3: Visual Padding Area */}
-          <div className="flex flex-1 flex-col px-6 pt-4 pb-20">
-            <div className="relative flex min-h-[400px] flex-1 flex-col">
-              <AnimatePresence mode="wait">
-                {showInitialSkeleton ? (
+              {/* 编辑器区域 */}
+              <AnimatePresence initial={false}>
+                {user && (
                   <motion.div
-                    key="skeleton"
+                    key="memo-editor-wrapper"
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: transitionDuration }}
-                    className="space-y-6"
+                    animate={{
+                      opacity: 1,
+                    }}
+                    exit={{
+                      height: 0,
+                      opacity: 0,
+                      marginTop: 0,
+                    }}
+                    transition={{
+                      opacity: { duration: 0.2 },
+                      height: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+                      marginTop: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+                    }}
+                    className="overflow-hidden mt-6"
                   >
-                    {[1, 2, 3].map((i) => (
-                      <MemoCardSkeleton key={i} />
-                    ))}
-                  </motion.div>
-                ) : isLoading ? (
-                  <div key="pending" className="min-h-[400px]" aria-hidden="true" />
-                ) : (
-                  <motion.div
-                    key="feed"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: transitionDuration }}
-                    className="flex w-full flex-1 flex-col"
-                  >
-                    <MemoFeed
-                      key={cacheKey}
-                      initialMemos={memos}
-                      searchParams={flattenedParams}
-                      scrollContainerRef={containerRef}
+                    <MemoEditor
+                      mode="create"
+                      isCollapsed={true}
+                      scrollCollapsed={editorForceCollapsed}
                     />
                   </motion.div>
                 )}
@@ -245,26 +241,63 @@ export function MainLayoutClient() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* 回到顶部按钮 */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            key="back-to-top"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => {
-              containerRef.current?.scrollTo({ top: 0, behavior: "smooth" })
-            }}
-            className="absolute bottom-6 right-6 z-40 flex h-10 w-10 items-center justify-center rounded-md border border-border bg-card/90 text-muted-foreground shadow-sm backdrop-blur-sm transition-all hover:text-foreground [@media(pointer:coarse)]:active:scale-95"
-            aria-label="回到顶部"
-          >
-            <HugeiconsIcon icon={ArrowUp01Icon} size={18} />
-          </motion.button>
-        )}
-      </AnimatePresence>
-    </div>
+        {/* 2. 底部滚动区域 (Scrollable Feed Area) */}
+        <div
+          ref={containerRef}
+          data-shortcut-scroll-root={isMobileViewport ? undefined : "true"}
+          className="overflow-visible scrollbar-stable-both md:flex-1 md:overflow-y-auto"
+        >
+          <div className="max-w-screen-md mx-auto flex min-h-full flex-col">
+            {/* Level 3: Visual Padding Area */}
+            <div
+              className={cn("flex flex-1 flex-col px-6 pt-4", MOBILE_CONTENT_BOTTOM_PADDING_CLASS)}
+            >
+              <div className="relative flex min-h-[400px] flex-1 flex-col">
+                <AnimatePresence mode="wait">
+                  {showInitialSkeleton ? (
+                    <motion.div
+                      key="skeleton"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: transitionDuration }}
+                      className="space-y-6"
+                    >
+                      {[1, 2, 3].map((i) => (
+                        <MemoCardSkeleton key={i} />
+                      ))}
+                    </motion.div>
+                  ) : isLoading ? (
+                    <div key="pending" className="min-h-[400px]" aria-hidden="true" />
+                  ) : (
+                    <motion.div
+                      key="feed"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: transitionDuration }}
+                      className="flex w-full flex-1 flex-col"
+                    >
+                      <MemoFeed
+                        key={cacheKey}
+                        initialMemos={memos}
+                        searchParams={flattenedParams}
+                        scrollContainerRef={isMobileViewport ? undefined : containerRef}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {!isMobileViewport && scrollTopControl}
+      </div>
+      {isMobileViewport && typeof document !== "undefined"
+        ? createPortal(scrollTopControl, document.body)
+        : null}
+    </>
   )
 }

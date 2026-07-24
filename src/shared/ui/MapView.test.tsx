@@ -41,6 +41,7 @@ const leafletHarness = vi.hoisted(() => ({
   markerRecords: [] as MarkerRecord[],
   clusterClick: undefined as ((event: ClusterClickEvent) => void) | undefined,
   operations: [] as string[],
+  popupBindings: [] as unknown[],
 }))
 
 vi.mock("next/navigation", () => ({
@@ -128,7 +129,10 @@ vi.mock("leaflet", () => {
           return marker
         },
         addTo: () => marker,
-        bindPopup: () => marker,
+        bindPopup: (content: unknown) => {
+          leafletHarness.popupBindings.push(content)
+          return marker
+        },
       }
       record.instance = marker
       leafletHarness.markerRecords.push(record)
@@ -141,7 +145,7 @@ vi.mock("leaflet", () => {
   return { default: fakeLeaflet }
 })
 
-import { MapView } from "./MapView"
+import { LeafletMapView } from "./MapView"
 
 function createMemo(id: string): Memo {
   return {
@@ -170,6 +174,7 @@ beforeEach(() => {
   leafletHarness.markerRecords.length = 0
   leafletHarness.clusterClick = undefined
   leafletHarness.operations.length = 0
+  leafletHarness.popupBindings.length = 0
   vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
     callback(0)
     return 1
@@ -181,7 +186,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe("MapView onMarkerClick", () => {
+describe("LeafletMapView 降级路径", () => {
   it("首次加载先定位地图，再显示标记", async () => {
     const marker: MapMarker = {
       name: "上海 · 外滩",
@@ -190,7 +195,7 @@ describe("MapView onMarkerClick", () => {
       items: [createMemo("memo-1")],
     }
 
-    render(<MapView markers={[marker]} mode="full" onMarkerClick={vi.fn()} />)
+    render(<LeafletMapView markers={[marker]} mode="full" onMarkerClick={vi.fn()} />)
 
     await waitFor(() => expect(leafletHarness.markerRecords).toHaveLength(1))
 
@@ -208,7 +213,7 @@ describe("MapView onMarkerClick", () => {
     }
     const onMarkerClick = vi.fn()
 
-    render(<MapView markers={[marker]} mode="full" onMarkerClick={onMarkerClick} />)
+    render(<LeafletMapView markers={[marker]} mode="full" onMarkerClick={onMarkerClick} />)
 
     await waitFor(() => {
       expect(leafletHarness.markerRecords).toHaveLength(1)
@@ -234,7 +239,11 @@ describe("MapView onMarkerClick", () => {
     const onMarkerClick = vi.fn()
 
     render(
-      <MapView markers={[firstMarker, secondMarker]} mode="full" onMarkerClick={onMarkerClick} />
+      <LeafletMapView
+        markers={[firstMarker, secondMarker]}
+        mode="full"
+        onMarkerClick={onMarkerClick}
+      />
     )
 
     await waitFor(() => {
@@ -259,5 +268,20 @@ describe("MapView onMarkerClick", () => {
       lng: 121.4905,
       items: [firstMarker.items[0], secondMarker.items[0]],
     })
+  })
+
+  it("全页降级路径不创建 Popup", async () => {
+    const marker: MapMarker = {
+      name: "上海 · 外滩",
+      lat: 31.2401,
+      lng: 121.4905,
+      items: [createMemo("memo-1")],
+    }
+
+    render(<LeafletMapView markers={[marker]} mode="full" />)
+
+    await waitFor(() => expect(leafletHarness.markerRecords).toHaveLength(1))
+
+    expect(leafletHarness.popupBindings).toHaveLength(0)
   })
 })

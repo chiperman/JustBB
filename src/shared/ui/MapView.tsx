@@ -16,18 +16,12 @@ import { Memo } from "@/types/memo"
 import { Add01Icon, MinusSignIcon } from "@hugeicons/core-free-icons"
 import { MapMemoPopupContent } from "./map/MapMemoPopupContent"
 import { UnlockedMemosProvider, useOptionalUnlockedMemos } from "@/state/UnlockedMemosContext"
+import { MapLibreMapView } from "./map/MapLibreMapView"
+import type { MapViewProps } from "./map/types"
 
-export interface MapViewProps {
-  markers: MapMarker[]
-  mode: "mini" | "full"
-  className?: string
-  interactive?: boolean
-  onMarkerClick?: (marker: MapMarker) => void
-  onMapClick?: (lat: number, lng: number) => void
-  onMarkerDragEnd?: (lat: number, lng: number) => void
-}
+export type { MapViewProps } from "./map/types"
 
-export function MapView({
+export function LeafletMapView({
   markers,
   mode,
   className,
@@ -271,8 +265,8 @@ export function MapView({
         const isSameLocation = bounds.getNorthEast().equals(bounds.getSouthWest(), 0.0001)
         const currentZoom = map.getZoom()
 
-        // 如果坐标重合，或者是已达最大缩放，则直接弹出该聚合下的所有 Memo 列表
-        if (isSameLocation || currentZoom >= 18) {
+        // 全页降级路径也必须交给页面级详情面板；mini-map 才保留原有聚合缩放/弹窗行为。
+        if (mode === "full" || isSameLocation || currentZoom >= 18) {
           const targetLatLng = cluster.getLatLng()
           const childMarkers = cluster.getAllChildMarkers() as Leaflet.Marker[]
           const allMemos = childMarkers.flatMap((m) => {
@@ -295,6 +289,8 @@ export function MapView({
             })
             return
           }
+
+          if (mode === "full") return
 
           const targetKey = `${targetLatLng.lat.toFixed(6)}-${targetLatLng.lng.toFixed(6)}`
 
@@ -461,7 +457,13 @@ export function MapView({
           return
         }
 
-        // 弹出层 (仅非编辑模式)
+        // mini-map 才允许使用弹出层；全页地图无论渲染器为何都使用页面级详情区域。
+        if (mode === "full") {
+          leafMarker.addTo(clusterLayer.current!)
+          return
+        }
+
+        // 弹出层 (仅非编辑 mini-map)
         const popupEl = document.createElement("div")
         popupEl.className = "w-[340px] max-h-[480px] overflow-hidden flex flex-col"
 
@@ -593,4 +595,18 @@ export function MapView({
       )}
     </div>
   )
+}
+
+export function MapView(props: MapViewProps) {
+  const [useLeafletFallback, setUseLeafletFallback] = React.useState(props.mode === "mini")
+
+  React.useEffect(() => {
+    setUseLeafletFallback(props.mode === "mini")
+  }, [props.mode])
+
+  if (props.mode === "mini" || useLeafletFallback) {
+    return <LeafletMapView {...props} />
+  }
+
+  return <MapLibreMapView {...props} onUnavailable={() => setUseLeafletFallback(true)} />
 }

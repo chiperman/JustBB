@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { motion, AnimatePresence, useDragControls, useReducedMotion } from "framer-motion"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -43,6 +44,7 @@ import { useSidebarNavigation } from "@/shared/hooks/useSidebarNavigation"
 import { useSidebarPagePrefetch } from "@/shared/hooks/useSidebarPagePrefetch"
 
 export function MobileNavbar() {
+  const router = useRouter()
   const { user, setUser } = useUser()
   const { setViewMode } = useLayout()
   const { theme, setTheme } = useTheme()

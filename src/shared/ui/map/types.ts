@@ -1,5 +1,7 @@
 import type { MapMarker } from "@/shared/lib/location-cache"
 
+export type MapProjection = "flat" | "globe"
+
 export interface MapViewProps {
   markers: MapMarker[]
   mode: "mini" | "full"

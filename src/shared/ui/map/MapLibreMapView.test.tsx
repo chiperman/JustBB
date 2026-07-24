@@ -32,12 +32,17 @@ const mapLibreHarness = vi.hoisted(() => {
     options: undefined as Record<string, unknown> | undefined,
     constructCount: 0,
     removeCount: 0,
+    setProjection: vi.fn(),
     throwOnConstruct: false,
   }
 })
 
+const themeHarness = vi.hoisted(() => ({
+  resolvedTheme: "dark" as "dark" | "light",
+}))
+
 vi.mock("next-themes", () => ({
-  useTheme: () => ({ resolvedTheme: "dark" }),
+  useTheme: () => ({ resolvedTheme: themeHarness.resolvedTheme }),
 }))
 
 vi.mock("maplibre-gl", () => ({
@@ -64,6 +69,18 @@ vi.mock("maplibre-gl", () => ({
 
     fitBounds() {
       mapLibreHarness.operations.push("fitBounds")
+    }
+
+    setProjection(projection: unknown) {
+      mapLibreHarness.setProjection(projection)
+    }
+
+    getCenter() {
+      return { lng: 121.4905, lat: 31.2401 }
+    }
+
+    getZoom() {
+      return 9
     }
 
     on(
@@ -120,7 +137,9 @@ beforeEach(() => {
   mapLibreHarness.sourceOptions = undefined
   mapLibreHarness.constructCount = 0
   mapLibreHarness.removeCount = 0
+  mapLibreHarness.setProjection.mockClear()
   mapLibreHarness.throwOnConstruct = false
+  themeHarness.resolvedTheme = "dark"
   vi.stubGlobal("WebGLRenderingContext", class WebGLRenderingContext {})
 })
 
@@ -143,6 +162,8 @@ describe("MapLibreMapView", () => {
         mode="full"
         onMarkerClick={vi.fn()}
         onUnavailable={vi.fn()}
+        projection="flat"
+        onProjectionChange={vi.fn()}
       />
     )
 
@@ -208,6 +229,8 @@ describe("MapLibreMapView", () => {
         mode="full"
         onMarkerClick={onMarkerClick}
         onUnavailable={vi.fn()}
+        projection="flat"
+        onProjectionChange={vi.fn()}
       />
     )
 
@@ -247,6 +270,8 @@ describe("MapLibreMapView", () => {
         mode="full"
         onMarkerClick={vi.fn()}
         onUnavailable={onUnavailable}
+        projection="flat"
+        onProjectionChange={vi.fn()}
       />
     )
 
@@ -269,6 +294,8 @@ describe("MapLibreMapView", () => {
         mode="full"
         onMarkerClick={vi.fn()}
         onUnavailable={vi.fn()}
+        projection="flat"
+        onProjectionChange={vi.fn()}
       />
     )
 
@@ -280,6 +307,8 @@ describe("MapLibreMapView", () => {
         mode="full"
         onMarkerClick={vi.fn()}
         onUnavailable={vi.fn()}
+        projection="flat"
+        onProjectionChange={vi.fn()}
       />
     )
 
@@ -297,9 +326,111 @@ describe("MapLibreMapView", () => {
         mode="full"
         onMarkerClick={vi.fn()}
         onUnavailable={onUnavailable}
+        projection="flat"
+        onProjectionChange={vi.fn()}
       />
     )
 
     await waitFor(() => expect(onUnavailable).toHaveBeenCalledTimes(1))
+  })
+
+  it("默认以平面投影显示，并可切换到地球", async () => {
+    const onProjectionChange = vi.fn()
+
+    render(
+      <MapLibreMapView
+        markers={[]}
+        mode="full"
+        onMarkerClick={vi.fn()}
+        onUnavailable={vi.fn()}
+        projection="flat"
+        onProjectionChange={onProjectionChange}
+      />
+    )
+
+    await waitFor(() => expect(mapLibreHarness.constructCount).toBe(1))
+
+    expect(screen.getByRole("button", { name: "平面" }).getAttribute("aria-pressed")).toBe("true")
+    expect(screen.getByRole("button", { name: "地球" }).getAttribute("aria-pressed")).toBe("false")
+    expect(
+      (mapLibreHarness.options?.style as { projection?: { type?: string } }).projection
+    ).toEqual({ type: "mercator" })
+
+    act(() => screen.getByRole("button", { name: "地球" }).click())
+
+    expect(onProjectionChange).toHaveBeenCalledWith("globe")
+  })
+
+  it("view=globe 对应地球投影，切换时复用地图和当前镜头", async () => {
+    const markers: MapMarker[] = []
+    const { rerender } = render(
+      <MapLibreMapView
+        markers={markers}
+        mode="full"
+        onMarkerClick={vi.fn()}
+        onUnavailable={vi.fn()}
+        projection="globe"
+        onProjectionChange={vi.fn()}
+      />
+    )
+
+    await waitFor(() => expect(mapLibreHarness.constructCount).toBe(1))
+
+    expect(
+      (mapLibreHarness.options?.style as { projection?: { type?: string } }).projection
+    ).toEqual({ type: "globe" })
+
+    rerender(
+      <MapLibreMapView
+        markers={markers}
+        mode="full"
+        onMarkerClick={vi.fn()}
+        onUnavailable={vi.fn()}
+        projection="flat"
+        onProjectionChange={vi.fn()}
+      />
+    )
+
+    expect(mapLibreHarness.constructCount).toBe(1)
+    expect(mapLibreHarness.removeCount).toBe(0)
+    expect(mapLibreHarness.setProjection).toHaveBeenCalledWith({ type: "mercator" })
+    expect(
+      mapLibreHarness.operations.filter((operation) => operation === "fitBounds")
+    ).toHaveLength(0)
+  })
+
+  it("主题切换重建底图时恢复当前镜头和投影", async () => {
+    const markers: MapMarker[] = []
+    const { rerender } = render(
+      <MapLibreMapView
+        markers={markers}
+        mode="full"
+        onMarkerClick={vi.fn()}
+        onUnavailable={vi.fn()}
+        projection="globe"
+        onProjectionChange={vi.fn()}
+      />
+    )
+
+    await waitFor(() => expect(mapLibreHarness.constructCount).toBe(1))
+    themeHarness.resolvedTheme = "light"
+
+    rerender(
+      <MapLibreMapView
+        markers={markers}
+        mode="full"
+        onMarkerClick={vi.fn()}
+        onUnavailable={vi.fn()}
+        projection="globe"
+        onProjectionChange={vi.fn()}
+      />
+    )
+
+    await waitFor(() => expect(mapLibreHarness.constructCount).toBe(2))
+    expect(mapLibreHarness.options?.center).toEqual([121.4905, 31.2401])
+    expect(mapLibreHarness.options?.zoom).toBe(9)
+    expect(
+      (mapLibreHarness.options?.style as { projection?: { type?: string } }).projection
+    ).toEqual({ type: "globe" })
   })
 })

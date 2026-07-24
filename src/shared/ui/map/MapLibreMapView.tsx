@@ -6,7 +6,7 @@ import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification } from "mapl
 
 import type { MapMarker } from "@/shared/lib/location-cache"
 import { cn } from "@/shared/lib/utils"
-import type { MapViewProps } from "./types"
+import type { MapProjection, MapViewProps } from "./types"
 
 const SOURCE_ID = "memo-markers"
 const CLUSTER_LAYER_ID = "memo-marker-clusters"
@@ -22,6 +22,8 @@ interface MapFeatureProperties {
 
 interface MapLibreMapViewProps extends MapViewProps {
   onUnavailable: () => void
+  projection: MapProjection
+  onProjectionChange: (projection: MapProjection) => void
 }
 
 function getTileUrls(theme: string | undefined) {
@@ -33,11 +35,11 @@ function getTileUrls(theme: string | undefined) {
   )
 }
 
-function createStyle(theme: string | undefined): StyleSpecification {
+function createStyle(theme: string | undefined, projection: MapProjection): StyleSpecification {
   return {
     version: 8,
     projection: {
-      type: "mercator",
+      type: projection === "globe" ? "globe" : "mercator",
     },
     sources: {
       carto: {
@@ -118,16 +120,21 @@ export function MapLibreMapView({
   className,
   onMarkerClick,
   onUnavailable,
+  projection,
+  onProjectionChange,
 }: MapLibreMapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
+  const cameraRef = useRef<{ center: [number, number]; zoom: number } | null>(null)
   const markerMapRef = useRef(new Map<string, MapMarker>())
   const markerClickRef = useRef(onMarkerClick)
   const unavailableRef = useRef(onUnavailable)
   const didPositionInitiallyRef = useRef(false)
+  const projectionRef = useRef(projection)
   const { resolvedTheme } = useTheme()
 
   const markerData = useMemo(() => createMarkerData(markers), [markers])
+  projectionRef.current = projection
 
   useEffect(() => {
     markerMapRef.current = new Map(markers.map((marker, index) => [String(index), marker]))
@@ -158,9 +165,9 @@ export function MapLibreMapView({
 
         map = new maplibre.Map({
           container: containerRef.current,
-          style: createStyle(resolvedTheme),
-          center: [108.9398, 34.3416],
-          zoom: 2,
+          style: createStyle(resolvedTheme, projectionRef.current),
+          center: cameraRef.current?.center ?? [108.9398, 34.3416],
+          zoom: cameraRef.current?.zoom ?? 2,
           minZoom: 0,
           maxZoom: 18,
           attributionControl: false,
@@ -295,14 +302,59 @@ export function MapLibreMapView({
 
     return () => {
       disposed = true
-      map?.remove()
+      if (map) {
+        const center = map.getCenter()
+        cameraRef.current = {
+          center: [center.lng, center.lat],
+          zoom: map.getZoom(),
+        }
+        map.remove()
+      }
       mapRef.current = null
     }
   }, [markerData, markers, resolvedTheme])
 
+  useEffect(() => {
+    mapRef.current?.setProjection({
+      type: projection === "globe" ? "globe" : "mercator",
+    })
+  }, [projection])
+
   return (
     <div className={cn("map-view map-view--full group relative h-full w-full", className)}>
       <div ref={containerRef} data-testid="maplibre-map" className="h-full w-full" />
+      <div
+        aria-label="地图视图"
+        className="pointer-events-auto absolute left-3 top-3 z-20 inline-flex overflow-hidden rounded-inner border border-border/40 bg-popover/90 p-0.5 text-xs shadow-sm backdrop-blur-xl"
+        role="group"
+      >
+        <button
+          type="button"
+          aria-pressed={projection === "flat"}
+          className={cn(
+            "rounded-[calc(var(--radius-inner)-2px)] px-2.5 py-1.5 transition-colors",
+            projection === "flat"
+              ? "bg-secondary text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={() => onProjectionChange("flat")}
+        >
+          平面
+        </button>
+        <button
+          type="button"
+          aria-pressed={projection === "globe"}
+          className={cn(
+            "rounded-[calc(var(--radius-inner)-2px)] px-2.5 py-1.5 transition-colors",
+            projection === "globe"
+              ? "bg-secondary text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={() => onProjectionChange("globe")}
+        >
+          地球
+        </button>
+      </div>
       <div
         aria-label="地图版权归属"
         className="pointer-events-auto absolute bottom-[calc(5.75rem+env(safe-area-inset-bottom))] left-3 z-20 rounded-inner border border-border/40 bg-popover/90 px-2 py-1 text-[10px] leading-none text-muted-foreground shadow-sm backdrop-blur-xl md:bottom-3"

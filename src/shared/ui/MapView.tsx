@@ -8,7 +8,7 @@ import type { MapMarker } from "@/shared/lib/location-cache"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Location04Icon } from "@hugeicons/core-free-icons"
 import { createRoot, Root } from "react-dom/client"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTheme } from "next-themes"
 import { motion, AnimatePresence } from "framer-motion"
 import { UIProvider } from "@/state/UIContext"
@@ -17,7 +17,7 @@ import { Add01Icon, MinusSignIcon } from "@hugeicons/core-free-icons"
 import { MapMemoPopupContent } from "./map/MapMemoPopupContent"
 import { UnlockedMemosProvider, useOptionalUnlockedMemos } from "@/state/UnlockedMemosContext"
 import { MapLibreMapView } from "./map/MapLibreMapView"
-import type { MapViewProps } from "./map/types"
+import type { MapProjection, MapViewProps } from "./map/types"
 
 export type { MapViewProps } from "./map/types"
 
@@ -599,14 +599,45 @@ export function LeafletMapView({
 
 export function MapView(props: MapViewProps) {
   const [useLeafletFallback, setUseLeafletFallback] = React.useState(props.mode === "mini")
+  const pathname = usePathname() || "/map"
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const projection: MapProjection = searchParams?.get("view") === "globe" ? "globe" : "flat"
 
   React.useEffect(() => {
     setUseLeafletFallback(props.mode === "mini")
   }, [props.mode])
 
+  const replaceProjection = React.useCallback(
+    (nextProjection: MapProjection) => {
+      const params = new URLSearchParams(searchParams?.toString() || "")
+      if (nextProjection === "globe") {
+        params.set("view", "globe")
+      } else {
+        params.delete("view")
+      }
+
+      const query = params.toString()
+      router.replace(query ? `${pathname}?${query}` : pathname)
+    },
+    [pathname, router, searchParams]
+  )
+
+  const handleUnavailable = React.useCallback(() => {
+    setUseLeafletFallback(true)
+    if (projection === "globe") replaceProjection("flat")
+  }, [projection, replaceProjection])
+
   if (props.mode === "mini" || useLeafletFallback) {
     return <LeafletMapView {...props} />
   }
 
-  return <MapLibreMapView {...props} onUnavailable={() => setUseLeafletFallback(true)} />
+  return (
+    <MapLibreMapView
+      {...props}
+      projection={projection}
+      onProjectionChange={replaceProjection}
+      onUnavailable={handleUnavailable}
+    />
+  )
 }

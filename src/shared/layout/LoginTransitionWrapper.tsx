@@ -115,10 +115,7 @@ export function LoginTransitionWrapper({
   const homeCardBackgroundColor = isSplitView ? "var(--card)" : "var(--background)"
   const draftOpacity = !user && isSplitView ? 0.025 : 0.05
   const creditOpacity = !user && isSplitView ? 0.012 : 0.03
-  const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window === "undefined") return false
-    return window.innerWidth < 768
-  })
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -130,7 +127,7 @@ export function LoginTransitionWrapper({
   const isMobileMode = isMobile
 
   return (
-    <div className="fixed inset-0 isolate overflow-hidden bg-background paper-texture">
+    <div className="relative isolate min-h-[100dvh] bg-background paper-texture md:fixed md:inset-0 md:min-h-0 md:overflow-hidden">
       {/* Background Decorative Text */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
         <motion.span
@@ -155,15 +152,20 @@ export function LoginTransitionWrapper({
             variants={HOME_TRANSITION_VARIANTS}
             initial="home"
             animate="home"
-            className="absolute inset-0 z-10"
+            className="relative z-10 min-h-[100dvh]"
           >
             <div
-              className="home-card-shell h-full w-full overflow-hidden border border-border/60"
+              className="home-card-shell box-border flex min-h-[100dvh] w-full flex-col border-0 pt-[env(safe-area-inset-top)] md:h-full md:overflow-hidden md:border md:border-border/60 md:pt-0"
               style={{
                 backgroundColor: homeCardBackgroundColor,
               }}
             >
-              <div className={cn("h-full", isSplitView && "pointer-events-none select-none")}>
+              <div
+                className={cn(
+                  "flex-1 md:min-h-0 md:h-full",
+                  isSplitView && "pointer-events-none select-none"
+                )}
+              >
                 {children}
               </div>
             </div>
@@ -217,7 +219,7 @@ export function LoginTransitionWrapper({
             )}
             <div
               className={cn(
-                "home-card-shell h-full w-full overflow-hidden border border-border/60",
+                "home-card-shell h-full w-full overflow-hidden border-0 md:border md:border-border/60",
                 isSplitView && "rounded-[24px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.12)]"
               )}
               style={{

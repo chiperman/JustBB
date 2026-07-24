@@ -1,7 +1,8 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { ThemeProvider } from "@/shared/providers/ThemeProvider"
 import { env } from "@/lib/env"
 import { noIndexRobots } from "@/shared/lib/page-metadata"
+import { APP_THEME_COLORS } from "@/shared/lib/theme-colors"
 import "sileo/styles.css"
 import "./globals.css"
 
@@ -42,6 +43,14 @@ export const metadata: Metadata = {
     description: "一款追求人文质感与极致隐私的碎片化记录工具。",
     images: ["/brand-assets/og-image.png"],
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: APP_THEME_COLORS.light },
+    { media: "(prefers-color-scheme: dark)", color: APP_THEME_COLORS.dark },
+  ],
+  viewportFit: "cover",
 }
 
 import { PWARegistration } from "@/shared/providers/PWARegistration"

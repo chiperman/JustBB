@@ -48,6 +48,7 @@ export function SidebarCollapseButton({
         )}
       >
         <motion.div
+          initial={false}
           animate={{
             rotate: showClose ? 0 : rotateAngle,
           }}

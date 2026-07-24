@@ -61,6 +61,14 @@ const animationHarness = vi.hoisted(() => ({
   nextId: 1,
 }))
 
+const containerSizeHarness = vi.hoisted(() => ({
+  width: 0,
+  height: 0,
+}))
+
+const originalClientWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "clientWidth")
+const originalClientHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "clientHeight")
+
 vi.mock("next-themes", () => ({
   useTheme: () => ({ resolvedTheme: themeHarness.resolvedTheme }),
 }))
@@ -209,6 +217,16 @@ beforeEach(() => {
   motionHarness.shouldReduceMotion = false
   animationHarness.callbacks.clear()
   animationHarness.nextId = 1
+  containerSizeHarness.width = 0
+  containerSizeHarness.height = 0
+  Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+    configurable: true,
+    get: () => containerSizeHarness.width,
+  })
+  Object.defineProperty(HTMLElement.prototype, "clientHeight", {
+    configurable: true,
+    get: () => containerSizeHarness.height,
+  })
   vi.stubGlobal("WebGLRenderingContext", class WebGLRenderingContext {})
   vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
     const id = animationHarness.nextId
@@ -222,6 +240,16 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  if (originalClientWidth) {
+    Object.defineProperty(HTMLElement.prototype, "clientWidth", originalClientWidth)
+  } else {
+    delete (HTMLElement.prototype as { clientWidth?: number }).clientWidth
+  }
+  if (originalClientHeight) {
+    Object.defineProperty(HTMLElement.prototype, "clientHeight", originalClientHeight)
+  } else {
+    delete (HTMLElement.prototype as { clientHeight?: number }).clientHeight
+  }
   vi.unstubAllGlobals()
 })
 
@@ -508,6 +536,8 @@ describe("MapLibreMapView", () => {
   })
 
   it("直达地球视图时以全球镜头显示地点，并启动自动旋转", async () => {
+    containerSizeHarness.width = 1440
+    containerSizeHarness.height = 900
     mapLibreHarness.currentZoom = 0.5
     const marker: MapMarker = {
       name: "上海 · 外滩",
@@ -529,7 +559,7 @@ describe("MapLibreMapView", () => {
 
     await waitFor(() => expect(mapLibreHarness.source.setData).toHaveBeenCalledTimes(1))
 
-    expect(mapLibreHarness.options?.zoom).toBe(0.5)
+    expect(mapLibreHarness.options?.zoom).toBeCloseTo(1.31, 2)
     expect(mapLibreHarness.operations).not.toContain("fitBounds")
     expect(animationHarness.callbacks.size).toBe(1)
   })

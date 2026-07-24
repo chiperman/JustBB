@@ -14,7 +14,9 @@ const CLUSTER_LAYER_ID = "memo-marker-clusters"
 const CLUSTER_COUNT_LAYER_ID = "memo-marker-cluster-count"
 const MARKER_LAYER_ID = "memo-markers"
 const MARKER_COUNT_LAYER_ID = "memo-marker-count"
-const INITIAL_GLOBE_ZOOM = 0.5
+const INITIAL_GLOBE_FALLBACK_ZOOM = 1.35
+const INITIAL_GLOBE_MIN_ZOOM = 0.75
+const INITIAL_GLOBE_MAX_ZOOM = 1.6
 const AUTO_ROTATE_MAX_ZOOM = 2
 const AUTO_ROTATE_DEGREES_PER_MILLISECOND = 0.0015
 const AUTO_ROTATE_MAX_FRAME_DURATION = 100
@@ -111,6 +113,17 @@ function getBounds(markers: MapMarker[]) {
   ] as [[number, number], [number, number]]
 }
 
+function getInitialGlobeZoom(container: HTMLElement) {
+  const shortestEdge = Math.min(container.clientWidth, container.clientHeight)
+
+  if (shortestEdge <= 0) return INITIAL_GLOBE_FALLBACK_ZOOM
+
+  return Math.min(
+    INITIAL_GLOBE_MAX_ZOOM,
+    Math.max(INITIAL_GLOBE_MIN_ZOOM, Math.log2(shortestEdge / 512) + 0.5)
+  )
+}
+
 function combineMarkers(markers: MapMarker[]): MapMarker | null {
   if (markers.length === 0) return null
 
@@ -183,7 +196,8 @@ export function MapLibreMapView({
           style: createStyle(resolvedTheme, projectionRef.current),
           center: cameraRef.current?.center ?? [108.9398, 34.3416],
           zoom:
-            cameraRef.current?.zoom ?? (projectionRef.current === "globe" ? INITIAL_GLOBE_ZOOM : 2),
+            cameraRef.current?.zoom ??
+            (projectionRef.current === "globe" ? getInitialGlobeZoom(containerRef.current) : 2),
           minZoom: 0,
           maxZoom: 18,
           attributionControl: false,

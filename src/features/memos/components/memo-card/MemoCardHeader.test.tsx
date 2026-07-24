@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 import type { Memo } from "@/types/memo"
@@ -8,6 +8,12 @@ import { TooltipProvider } from "@/shared/ui/tooltip"
 
 vi.mock("../MemoActions", () => ({
   MemoActions: () => null,
+}))
+
+const routerPush = vi.fn()
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: routerPush }),
 }))
 
 import { MemoCardHeader } from "./MemoCardHeader"
@@ -30,6 +36,28 @@ const memo = {
 } as Memo
 
 describe("MemoCardHeader", () => {
+  it("查看原文使用应用内跳转，保留当前页面的解锁状态", () => {
+    render(
+      <MemoCardHeader
+        memo={memo}
+        isSelectionMode={false}
+        isSelected={false}
+        onToggleSelection={vi.fn()}
+        showOriginalOnly
+        showBacklinks={false}
+        onToggleBacklinks={vi.fn()}
+        onEdit={vi.fn()}
+        onMenuOpenChange={vi.fn()}
+        isMenuOpen={false}
+        hasMounted
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "查看原文" }))
+
+    expect(routerPush).toHaveBeenCalledWith("/?num=42")
+  })
+
   it("将引用开关保留在卡片外层按钮", () => {
     render(
       <TooltipProvider>

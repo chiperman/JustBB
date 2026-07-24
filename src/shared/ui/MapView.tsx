@@ -22,6 +22,7 @@ export interface MapViewProps {
   mode: "mini" | "full"
   className?: string
   interactive?: boolean
+  onMarkerClick?: (marker: MapMarker) => void
   onMapClick?: (lat: number, lng: number) => void
   onMarkerDragEnd?: (lat: number, lng: number) => void
 }
@@ -31,6 +32,7 @@ export function MapView({
   mode,
   className,
   interactive = false,
+  onMarkerClick,
   onMapClick,
   onMarkerDragEnd,
 }: MapViewProps) {
@@ -272,17 +274,6 @@ export function MapView({
         // 如果坐标重合，或者是已达最大缩放，则直接弹出该聚合下的所有 Memo 列表
         if (isSameLocation || currentZoom >= 18) {
           const targetLatLng = cluster.getLatLng()
-          const targetKey = `${targetLatLng.lat.toFixed(6)}-${targetLatLng.lng.toFixed(6)}`
-
-          // --- Toggle Off：基于独立 ref 判断，不依赖 map._popup ---
-          // flyTo 会触发 markercluster 刷新导致旧 Popup 被销毁，
-          // 因此用 ref 记录上次打开的坐标 key 来可靠判断
-          if (lastClusterPopupKeyRef.current === targetKey) {
-            map.closePopup()
-            lastClusterPopupKeyRef.current = null
-            return // 物理中断
-          }
-
           const childMarkers = cluster.getAllChildMarkers() as Leaflet.Marker[]
           const allMemos = childMarkers.flatMap((m) => {
             const options = m.options as Leaflet.MarkerOptions & {
@@ -294,6 +285,27 @@ export function MapView({
             locationName?: string
           }
           const locationName = firstMarkerOptions?.locationName || "聚合地点"
+
+          if (onMarkerClick) {
+            onMarkerClick({
+              name: locationName,
+              lat: targetLatLng.lat,
+              lng: targetLatLng.lng,
+              items: allMemos,
+            })
+            return
+          }
+
+          const targetKey = `${targetLatLng.lat.toFixed(6)}-${targetLatLng.lng.toFixed(6)}`
+
+          // --- Toggle Off：基于独立 ref 判断，不依赖 map._popup ---
+          // flyTo 会触发 markercluster 刷新导致旧 Popup 被销毁，
+          // 因此用 ref 记录上次打开的坐标 key 来可靠判断
+          if (lastClusterPopupKeyRef.current === targetKey) {
+            map.closePopup()
+            lastClusterPopupKeyRef.current = null
+            return // 物理中断
+          }
 
           // 弹出聚合列表
           const popupEl = document.createElement("div")
@@ -350,14 +362,21 @@ export function MapView({
       map.remove()
       mapInstance.current = null
     }
-  }, [L, mode, interactive, onMapClick, resolvedTheme, getMinZoomForContainer, renderPopupContent]) // 监听主题变化
+  }, [
+    L,
+    mode,
+    interactive,
+    onMarkerClick,
+    onMapClick,
+    resolvedTheme,
+    getMinZoomForContainer,
+    renderPopupContent,
+  ]) // 监听主题变化
 
   useEffect(() => {
     if (!mapInstance.current || !clusterLayer.current || !L) return
 
     clusterLayer.current.clearLayers()
-
-    const bounds: Leaflet.LatLngExpression[] = []
 
     // 按时间顺序（从新到旧）排序 markers，以实现有序入场
     const sortedMarkers = [...markers].sort((a, b) => {
@@ -375,17 +394,30 @@ export function MapView({
       )
       return timeB - timeA // 逆序：从新到旧
     })
+    const bounds = sortedMarkers.map((marker): Leaflet.LatLngExpression => [marker.lat, marker.lng])
+    const isInitialFullLoad = mode === "full" && isFirstLoadRef.current && bounds.length > 0
+
+    // 先完成首次定位，再挂载标记，避免标记从默认世界视图漂移到真实位置。
+    if (isInitialFullLoad) {
+      mapInstance.current.fitBounds(L.latLngBounds(bounds), {
+        padding: [50, 50],
+        maxZoom: 15,
+        animate: false,
+      })
+      isFirstLoadRef.current = false
+    } else if (bounds.length > 0 && mode === "mini") {
+      mapInstance.current.setView(bounds[0], 13)
+    }
 
     // 动态计算错峰间隔：总时长控制在 1.5s 左右，营造一种从容的“溯源”入场感
     const staggerDelay = Math.max(5, Math.min(50, 1500 / (sortedMarkers.length || 1)))
 
     sortedMarkers.forEach((marker, index) => {
       const pos: Leaflet.LatLngExpression = [marker.lat, marker.lng]
-      bounds.push(pos)
 
       const isDraggable = mode === "mini" && interactive
       // 仅在首次加载的大图模式下应用错峰动画
-      const delay = isFirstLoadRef.current && mode === "full" ? index * staggerDelay : 0
+      const delay = isInitialFullLoad ? index * staggerDelay : 0
 
       const leafMarker = L.marker(pos, {
         draggable: isDraggable,
@@ -398,12 +430,12 @@ export function MapView({
           className: "custom-div-icon",
           html: `<div class="relative w-8 h-8 flex items-center justify-center shrink-0 aspect-square group">
                             ${
-                              isFirstLoadRef.current && mode === "full"
+                              isInitialFullLoad
                                 ? `<div class="animate-marker-ring shrink-0 aspect-square" style="animation-delay: ${delay}ms;"></div>`
                                 : ""
                             }
-                            <div class="w-8 h-8 bg-primary/20 backdrop-blur-sm border-2 border-primary rounded-full flex items-center justify-center text-primary transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/30 shrink-0 aspect-square ${isFirstLoadRef.current && mode === "full" ? "animate-marker-pop" : ""}" 
-                                style="${isFirstLoadRef.current && mode === "full" ? `animation-delay: ${delay}ms;` : ""}">
+                            <div class="w-8 h-8 bg-primary/20 backdrop-blur-sm border-2 border-primary rounded-full flex items-center justify-center text-primary transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/30 shrink-0 aspect-square ${isInitialFullLoad ? "animate-marker-pop" : ""}"
+                                style="${isInitialFullLoad ? `animation-delay: ${delay}ms;` : ""}">
                                 ${
                                   mode === "mini"
                                     ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="drop-"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`
@@ -423,6 +455,12 @@ export function MapView({
           onMarkerDragEnd?.(position.lat, position.lng)
         })
       } else if (marker.items.length > 0) {
+        if (onMarkerClick) {
+          leafMarker.on("click", () => onMarkerClick(marker))
+          leafMarker.addTo(clusterLayer.current!)
+          return
+        }
+
         // 弹出层 (仅非编辑模式)
         const popupEl = document.createElement("div")
         popupEl.className = "w-[340px] max-h-[480px] overflow-hidden flex flex-col"
@@ -443,30 +481,26 @@ export function MapView({
       leafMarker.addTo(clusterLayer.current!)
     })
 
-    if (bounds.length > 0 && mode === "full") {
-      const latLngBounds = L.latLngBounds(bounds)
-
-      if (isFirstLoadRef.current) {
-        // 首次加载：执行瞬时定位 (无动画)，确保初始视角在标记点中心且维持 Level 2 或自动适应
-        mapInstance.current.fitBounds(latLngBounds, {
-          padding: [50, 50],
-          animate: false, // 禁用入场动画
-        })
-        isFirstLoadRef.current = false
-      } else {
-        // 后续更新：使用 flyToBounds 实现“一次性精确跳转”设计 (同步为 2.5s)
-        mapInstance.current.flyToBounds(latLngBounds, {
-          padding: [50, 50],
-          maxZoom: 15,
-          duration: 2.5,
-        })
-      }
-    } else if (bounds.length > 0 && mode === "mini") {
-      mapInstance.current.setView(bounds[0], 13)
+    if (bounds.length > 0 && mode === "full" && !isInitialFullLoad) {
+      // 后续更新：使用 flyToBounds 实现“一次性精确跳转”设计 (同步为 2.5s)
+      mapInstance.current.flyToBounds(L.latLngBounds(bounds), {
+        padding: [50, 50],
+        maxZoom: 15,
+        duration: 2.5,
+      })
     }
 
     invalidateMapSize()
-  }, [L, markers, mode, interactive, onMarkerDragEnd, invalidateMapSize, renderPopupContent])
+  }, [
+    L,
+    markers,
+    mode,
+    interactive,
+    onMarkerClick,
+    onMarkerDragEnd,
+    invalidateMapSize,
+    renderPopupContent,
+  ])
 
   return (
     <div

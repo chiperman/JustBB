@@ -13,6 +13,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 import { Checkbox } from "@/shared/ui/checkbox"
 import { MemoActions } from "../MemoActions"
 import { Memo } from "@/types/memo"
+import { useRouter } from "next/navigation"
 
 interface MemoCardHeaderProps {
   memo: Memo
@@ -43,6 +44,8 @@ export function MemoCardHeader({
   hasMounted,
   showViewOriginal,
 }: MemoCardHeaderProps) {
+  const router = useRouter()
+
   return (
     <div className="flex items-center justify-between mb-4 min-h-[32px]">
       <div className="flex items-center gap-3">
@@ -137,7 +140,7 @@ export function MemoCardHeader({
             onClick={(e) => {
               e.stopPropagation()
               e.preventDefault()
-              window.location.assign(`/?num=${memo.memo_number}`)
+              router.push(`/?num=${memo.memo_number}`)
             }}
             className={cn(
               "h-7 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-all z-10 pointer-events-auto",

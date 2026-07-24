@@ -14,6 +14,7 @@ const CLUSTER_LAYER_ID = "memo-marker-clusters"
 const CLUSTER_COUNT_LAYER_ID = "memo-marker-cluster-count"
 const MARKER_LAYER_ID = "memo-markers"
 const MARKER_COUNT_LAYER_ID = "memo-marker-count"
+const INITIAL_GLOBE_ZOOM = 0.5
 const AUTO_ROTATE_MAX_ZOOM = 2
 const AUTO_ROTATE_DEGREES_PER_MILLISECOND = 0.0015
 const AUTO_ROTATE_MAX_FRAME_DURATION = 100
@@ -181,7 +182,8 @@ export function MapLibreMapView({
           container: containerRef.current,
           style: createStyle(resolvedTheme, projectionRef.current),
           center: cameraRef.current?.center ?? [108.9398, 34.3416],
-          zoom: cameraRef.current?.zoom ?? 2,
+          zoom:
+            cameraRef.current?.zoom ?? (projectionRef.current === "globe" ? INITIAL_GLOBE_ZOOM : 2),
           minZoom: 0,
           maxZoom: 18,
           attributionControl: false,
@@ -262,7 +264,7 @@ export function MapLibreMapView({
           const bounds = getBounds(markers)
 
           // 先同步相机，再写入 GeoJSON，避免首次加载时标记从世界视图漂移。
-          if (!didPositionInitiallyRef.current && bounds) {
+          if (!didPositionInitiallyRef.current && bounds && projectionRef.current === "flat") {
             map.fitBounds(bounds, {
               padding: 50,
               maxZoom: 15,

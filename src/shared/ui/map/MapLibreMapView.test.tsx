@@ -507,6 +507,33 @@ describe("MapLibreMapView", () => {
     expect(mapLibreHarness.source.setData).toHaveBeenCalledTimes(1)
   })
 
+  it("直达地球视图时以全球镜头显示地点，并启动自动旋转", async () => {
+    mapLibreHarness.currentZoom = 0.5
+    const marker: MapMarker = {
+      name: "上海 · 外滩",
+      lat: 31.2401,
+      lng: 121.4905,
+      items: [createMemo("memo-1")],
+    }
+
+    render(
+      <MapLibreMapView
+        markers={[marker]}
+        mode="full"
+        onMarkerClick={vi.fn()}
+        onUnavailable={vi.fn()}
+        projection="globe"
+        onProjectionChange={vi.fn()}
+      />
+    )
+
+    await waitFor(() => expect(mapLibreHarness.source.setData).toHaveBeenCalledTimes(1))
+
+    expect(mapLibreHarness.options?.zoom).toBe(0.5)
+    expect(mapLibreHarness.operations).not.toContain("fitBounds")
+    expect(animationHarness.callbacks.size).toBe(1)
+  })
+
   it("切回平面立即停止旋转，交互后再切回地球不会绕过停止状态", async () => {
     mapLibreHarness.currentZoom = 2
     const markers: MapMarker[] = []

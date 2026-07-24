@@ -35,7 +35,7 @@ async function readPublishContent(content: string) {
   if (!process.stdin.isTTY) {
     let input = ""
     for await (const chunk of process.stdin) input += chunk
-    if (input.trim()) return input
+    return input
   }
   return editText("")
 }

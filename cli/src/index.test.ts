@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { Readable } from "node:stream"
 
 const {
   deleteMemo,
@@ -83,6 +84,26 @@ describe("CLI 私密发布", () => {
     expect(publishMemo).toHaveBeenCalledWith(
       expect.objectContaining({ access_code: "secret", access_code_hint: "hint", is_private: true })
     )
+  })
+
+  it("空 stdin 发布直接报错且不打开编辑器", async () => {
+    const stdin = vi
+      .spyOn(process, "stdin", "get")
+      .mockReturnValue(Readable.from([]) as typeof process.stdin)
+    const stderr = vi.spyOn(process.stderr, "write").mockImplementation(() => true)
+    editText.mockResolvedValueOnce("")
+
+    try {
+      await expect(run(["publish"])).resolves.toBe(1)
+
+      expect(editText).not.toHaveBeenCalled()
+      expect(publishMemo).not.toHaveBeenCalled()
+      expect(stderr).toHaveBeenCalledWith("Content cannot be empty.\n")
+    } finally {
+      editText.mockReset()
+      stderr.mockRestore()
+      stdin.mockRestore()
+    }
   })
 
   it("等待确认后才打开浏览器授权页", async () => {

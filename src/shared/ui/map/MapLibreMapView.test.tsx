@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { MapMarker } from "@/shared/lib/location-cache"
 import type { Memo } from "@/types/memo"
+import { MapLibreMapView } from "./MapLibreMapView"
 
 interface MapEvent {
   features?: Array<{ properties?: Record<string, unknown> }>
@@ -12,6 +13,7 @@ interface MapEvent {
 
 const mapLibreHarness = vi.hoisted(() => {
   const clickHandlers = new Map<string, (event: MapEvent) => void | Promise<void>>()
+  const eventHandlers = new Map<string, Set<() => void>>()
   const operations: string[] = []
   const source = {
     setData: vi.fn((data: unknown) => {
@@ -26,14 +28,23 @@ const mapLibreHarness = vi.hoisted(() => {
 
   return {
     clickHandlers,
+    eventHandlers,
     operations,
     source,
     sourceOptions: undefined as Record<string, unknown> | undefined,
     options: undefined as Record<string, unknown> | undefined,
     constructCount: 0,
     removeCount: 0,
+    currentZoom: 9,
+    currentBearing: 0,
     setProjection: vi.fn(),
+    rotateTo: vi.fn((bearing: number) => {
+      mapLibreHarness.currentBearing = bearing
+    }),
     throwOnConstruct: false,
+    emit(event: string) {
+      eventHandlers.get(event)?.forEach((handler) => handler())
+    },
   }
 })
 
@@ -41,8 +52,21 @@ const themeHarness = vi.hoisted(() => ({
   resolvedTheme: "dark" as "dark" | "light",
 }))
 
+const motionHarness = vi.hoisted(() => ({
+  shouldReduceMotion: false,
+}))
+
+const animationHarness = vi.hoisted(() => ({
+  callbacks: new Map<number, FrameRequestCallback>(),
+  nextId: 1,
+}))
+
 vi.mock("next-themes", () => ({
   useTheme: () => ({ resolvedTheme: themeHarness.resolvedTheme }),
+}))
+
+vi.mock("framer-motion", () => ({
+  useReducedMotion: () => motionHarness.shouldReduceMotion,
 }))
 
 vi.mock("maplibre-gl", () => ({
@@ -80,7 +104,11 @@ vi.mock("maplibre-gl", () => ({
     }
 
     getZoom() {
-      return 9
+      return mapLibreHarness.currentZoom
+    }
+
+    getBearing() {
+      return mapLibreHarness.currentBearing
     }
 
     on(
@@ -90,7 +118,21 @@ vi.mock("maplibre-gl", () => ({
     ) {
       if (typeof layerOrHandler === "string" && maybeHandler && event === "click") {
         mapLibreHarness.clickHandlers.set(layerOrHandler, maybeHandler)
+        return
       }
+      if (typeof layerOrHandler === "function") {
+        const handlers = mapLibreHarness.eventHandlers.get(event) ?? new Set<() => void>()
+        handlers.add(layerOrHandler)
+        mapLibreHarness.eventHandlers.set(event, handlers)
+      }
+    }
+
+    off(event: string, handler: () => void) {
+      mapLibreHarness.eventHandlers.get(event)?.delete(handler)
+    }
+
+    rotateTo(bearing: number) {
+      mapLibreHarness.rotateTo(bearing)
     }
 
     getCanvas() {
@@ -103,7 +145,27 @@ vi.mock("maplibre-gl", () => ({
   },
 }))
 
-import { MapLibreMapView } from "./MapLibreMapView"
+function renderMap(projection: "flat" | "globe") {
+  return render(
+    <MapLibreMapView
+      markers={[]}
+      mode="full"
+      onMarkerClick={vi.fn()}
+      onUnavailable={vi.fn()}
+      projection={projection}
+      onProjectionChange={vi.fn()}
+    />
+  )
+}
+
+function runNextAnimationFrame(timestamp = 1000) {
+  const [id, callback] = animationHarness.callbacks.entries().next().value ?? []
+  if (id === undefined || !callback) {
+    throw new Error("没有待执行的动画帧")
+  }
+  animationHarness.callbacks.delete(id)
+  callback(timestamp)
+}
 
 function createMemo(id: string, locked = false): Memo {
   return {
@@ -130,6 +192,7 @@ function createMemo(id: string, locked = false): Memo {
 
 beforeEach(() => {
   mapLibreHarness.clickHandlers.clear()
+  mapLibreHarness.eventHandlers.clear()
   mapLibreHarness.operations.length = 0
   mapLibreHarness.source.setData.mockClear()
   mapLibreHarness.source.getClusterLeaves.mockClear()
@@ -137,10 +200,25 @@ beforeEach(() => {
   mapLibreHarness.sourceOptions = undefined
   mapLibreHarness.constructCount = 0
   mapLibreHarness.removeCount = 0
+  mapLibreHarness.currentZoom = 9
+  mapLibreHarness.currentBearing = 0
   mapLibreHarness.setProjection.mockClear()
+  mapLibreHarness.rotateTo.mockClear()
   mapLibreHarness.throwOnConstruct = false
   themeHarness.resolvedTheme = "dark"
+  motionHarness.shouldReduceMotion = false
+  animationHarness.callbacks.clear()
+  animationHarness.nextId = 1
   vi.stubGlobal("WebGLRenderingContext", class WebGLRenderingContext {})
+  vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+    const id = animationHarness.nextId
+    animationHarness.nextId += 1
+    animationHarness.callbacks.set(id, callback)
+    return id
+  })
+  vi.stubGlobal("cancelAnimationFrame", (id: number) => {
+    animationHarness.callbacks.delete(id)
+  })
 })
 
 afterEach(() => {
@@ -399,6 +477,137 @@ describe("MapLibreMapView", () => {
     ).toHaveLength(0)
   })
 
+  it("平面视图不创建自动旋转任务", async () => {
+    mapLibreHarness.currentZoom = 2
+
+    renderMap("flat")
+
+    await waitFor(() => expect(mapLibreHarness.constructCount).toBe(1))
+
+    expect(animationHarness.callbacks.size).toBe(0)
+    expect(mapLibreHarness.rotateTo).not.toHaveBeenCalled()
+  })
+
+  it("地球低缩放视图自动旋转，且不重建地图或重写 GeoJSON", async () => {
+    mapLibreHarness.currentZoom = 2
+
+    renderMap("globe")
+
+    await waitFor(() => expect(animationHarness.callbacks.size).toBe(1))
+    expect(mapLibreHarness.constructCount).toBe(1)
+    expect(mapLibreHarness.source.setData).toHaveBeenCalledTimes(1)
+
+    act(() => {
+      runNextAnimationFrame(1000)
+      runNextAnimationFrame(2000)
+    })
+
+    expect(mapLibreHarness.rotateTo).toHaveBeenCalledTimes(1)
+    expect(mapLibreHarness.constructCount).toBe(1)
+    expect(mapLibreHarness.source.setData).toHaveBeenCalledTimes(1)
+  })
+
+  it("切回平面立即停止旋转，交互后再切回地球不会绕过停止状态", async () => {
+    mapLibreHarness.currentZoom = 2
+    const markers: MapMarker[] = []
+    const { rerender } = render(
+      <MapLibreMapView
+        markers={markers}
+        mode="full"
+        onMarkerClick={vi.fn()}
+        onUnavailable={vi.fn()}
+        projection="globe"
+        onProjectionChange={vi.fn()}
+      />
+    )
+
+    await waitFor(() => expect(animationHarness.callbacks.size).toBe(1))
+
+    rerender(
+      <MapLibreMapView
+        markers={markers}
+        mode="full"
+        onMarkerClick={vi.fn()}
+        onUnavailable={vi.fn()}
+        projection="flat"
+        onProjectionChange={vi.fn()}
+      />
+    )
+    expect(animationHarness.callbacks.size).toBe(0)
+
+    rerender(
+      <MapLibreMapView
+        markers={markers}
+        mode="full"
+        onMarkerClick={vi.fn()}
+        onUnavailable={vi.fn()}
+        projection="globe"
+        onProjectionChange={vi.fn()}
+      />
+    )
+
+    await waitFor(() => expect(animationHarness.callbacks.size).toBe(1))
+    act(() => mapLibreHarness.emit("dragstart"))
+    expect(animationHarness.callbacks.size).toBe(0)
+
+    rerender(
+      <MapLibreMapView
+        markers={markers}
+        mode="full"
+        onMarkerClick={vi.fn()}
+        onUnavailable={vi.fn()}
+        projection="flat"
+        onProjectionChange={vi.fn()}
+      />
+    )
+    rerender(
+      <MapLibreMapView
+        markers={markers}
+        mode="full"
+        onMarkerClick={vi.fn()}
+        onUnavailable={vi.fn()}
+        projection="globe"
+        onProjectionChange={vi.fn()}
+      />
+    )
+    expect(animationHarness.callbacks.size).toBe(0)
+  })
+
+  it.each(["dragstart", "zoomstart", "touchstart", "keydown", "click"])(
+    "%s 地图交互会停止自动旋转且不会自行恢复",
+    async (event) => {
+      mapLibreHarness.currentZoom = 2
+      const { rerender } = renderMap("globe")
+
+      await waitFor(() => expect(animationHarness.callbacks.size).toBe(1))
+      act(() => mapLibreHarness.emit(event))
+      expect(animationHarness.callbacks.size).toBe(0)
+
+      rerender(
+        <MapLibreMapView
+          markers={[]}
+          mode="full"
+          onMarkerClick={vi.fn()}
+          onUnavailable={vi.fn()}
+          projection="globe"
+          onProjectionChange={vi.fn()}
+        />
+      )
+      expect(animationHarness.callbacks.size).toBe(0)
+    }
+  )
+
+  it("减少动态效果偏好时不启动自动旋转", async () => {
+    motionHarness.shouldReduceMotion = true
+    mapLibreHarness.currentZoom = 2
+
+    renderMap("globe")
+
+    await waitFor(() => expect(mapLibreHarness.constructCount).toBe(1))
+    expect(animationHarness.callbacks.size).toBe(0)
+    expect(mapLibreHarness.rotateTo).not.toHaveBeenCalled()
+  })
+
   it("主题切换重建底图时恢复当前镜头和投影", async () => {
     const markers: MapMarker[] = []
     const { rerender } = render(
@@ -432,5 +641,44 @@ describe("MapLibreMapView", () => {
     expect(
       (mapLibreHarness.options?.style as { projection?: { type?: string } }).projection
     ).toEqual({ type: "globe" })
+  })
+
+  it("主题重建后保留镜头、投影与已停止的旋转状态", async () => {
+    mapLibreHarness.currentZoom = 2
+    const markers: MapMarker[] = []
+    const { rerender } = render(
+      <MapLibreMapView
+        markers={markers}
+        mode="full"
+        onMarkerClick={vi.fn()}
+        onUnavailable={vi.fn()}
+        projection="globe"
+        onProjectionChange={vi.fn()}
+      />
+    )
+
+    await waitFor(() => expect(animationHarness.callbacks.size).toBe(1))
+    act(() => mapLibreHarness.emit("zoomstart"))
+    expect(animationHarness.callbacks.size).toBe(0)
+
+    themeHarness.resolvedTheme = "light"
+    rerender(
+      <MapLibreMapView
+        markers={markers}
+        mode="full"
+        onMarkerClick={vi.fn()}
+        onUnavailable={vi.fn()}
+        projection="globe"
+        onProjectionChange={vi.fn()}
+      />
+    )
+
+    await waitFor(() => expect(mapLibreHarness.constructCount).toBe(2))
+    expect(mapLibreHarness.options?.center).toEqual([121.4905, 31.2401])
+    expect(mapLibreHarness.options?.zoom).toBe(2)
+    expect(
+      (mapLibreHarness.options?.style as { projection?: { type?: string } }).projection
+    ).toEqual({ type: "globe" })
+    expect(animationHarness.callbacks.size).toBe(0)
   })
 })

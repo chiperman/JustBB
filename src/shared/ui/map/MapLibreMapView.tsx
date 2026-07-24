@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useReducedMotion } from "framer-motion"
 import { useTheme } from "next-themes"
 import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification } from "maplibre-gl"
 
@@ -13,6 +14,16 @@ const CLUSTER_LAYER_ID = "memo-marker-clusters"
 const CLUSTER_COUNT_LAYER_ID = "memo-marker-cluster-count"
 const MARKER_LAYER_ID = "memo-markers"
 const MARKER_COUNT_LAYER_ID = "memo-marker-count"
+const AUTO_ROTATE_MAX_ZOOM = 2
+const AUTO_ROTATE_DEGREES_PER_MILLISECOND = 0.0015
+const AUTO_ROTATE_MAX_FRAME_DURATION = 100
+const AUTO_ROTATE_INTERACTION_EVENTS = [
+  "dragstart",
+  "zoomstart",
+  "touchstart",
+  "keydown",
+  "click",
+] as const
 
 interface MapFeatureProperties {
   markerId: string
@@ -129,8 +140,11 @@ export function MapLibreMapView({
   const markerMapRef = useRef(new Map<string, MapMarker>())
   const markerClickRef = useRef(onMarkerClick)
   const unavailableRef = useRef(onUnavailable)
+  const userStoppedAutoRotateRef = useRef(false)
   const didPositionInitiallyRef = useRef(false)
   const projectionRef = useRef(projection)
+  const [readyMap, setReadyMap] = useState<MapLibreMap | null>(null)
+  const shouldReduceMotion = useReducedMotion()
   const { resolvedTheme } = useTheme()
 
   const markerData = useMemo(() => createMarkerData(markers), [markers])
@@ -257,6 +271,7 @@ export function MapLibreMapView({
             didPositionInitiallyRef.current = true
           }
           source.setData(markerData)
+          setReadyMap(map)
         })
 
         map.on("click", MARKER_LAYER_ID, (event) => {
@@ -310,7 +325,10 @@ export function MapLibreMapView({
         }
         map.remove()
       }
-      mapRef.current = null
+      if (mapRef.current === map) {
+        mapRef.current = null
+      }
+      setReadyMap((currentMap) => (currentMap === map ? null : currentMap))
     }
   }, [markerData, markers, resolvedTheme])
 
@@ -319,6 +337,68 @@ export function MapLibreMapView({
       type: projection === "globe" ? "globe" : "mercator",
     })
   }, [projection])
+
+  useEffect(() => {
+    if (!readyMap) return
+
+    let animationFrame: number | null = null
+    let previousFrameTime: number | null = null
+
+    const stopAutoRotate = () => {
+      if (animationFrame !== null) {
+        cancelAnimationFrame(animationFrame)
+        animationFrame = null
+      }
+      previousFrameTime = null
+    }
+
+    const stopForUserInteraction = () => {
+      userStoppedAutoRotateRef.current = true
+      stopAutoRotate()
+    }
+
+    AUTO_ROTATE_INTERACTION_EVENTS.forEach((event) => {
+      readyMap.on(event, stopForUserInteraction)
+    })
+
+    const canAutoRotate =
+      projection === "globe" &&
+      !shouldReduceMotion &&
+      !userStoppedAutoRotateRef.current &&
+      readyMap.getZoom() <= AUTO_ROTATE_MAX_ZOOM
+
+    if (canAutoRotate) {
+      const rotate = (timestamp: number) => {
+        if (
+          projectionRef.current !== "globe" ||
+          userStoppedAutoRotateRef.current ||
+          shouldReduceMotion
+        ) {
+          stopAutoRotate()
+          return
+        }
+
+        if (previousFrameTime !== null) {
+          const elapsed = Math.min(timestamp - previousFrameTime, AUTO_ROTATE_MAX_FRAME_DURATION)
+          readyMap.rotateTo(readyMap.getBearing() + elapsed * AUTO_ROTATE_DEGREES_PER_MILLISECOND, {
+            duration: 0,
+          })
+        }
+
+        previousFrameTime = timestamp
+        animationFrame = requestAnimationFrame(rotate)
+      }
+
+      animationFrame = requestAnimationFrame(rotate)
+    }
+
+    return () => {
+      stopAutoRotate()
+      AUTO_ROTATE_INTERACTION_EVENTS.forEach((event) => {
+        readyMap.off(event, stopForUserInteraction)
+      })
+    }
+  }, [projection, readyMap, shouldReduceMotion])
 
   return (
     <div className={cn("map-view map-view--full group relative h-full w-full", className)}>

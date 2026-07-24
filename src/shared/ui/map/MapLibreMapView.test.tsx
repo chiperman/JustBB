@@ -484,7 +484,10 @@ describe("MapLibreMapView", () => {
 
     expect(
       (mapLibreHarness.options?.style as { projection?: { type?: string } }).projection
-    ).toEqual({ type: "globe" })
+    ).toEqual({ type: "vertical-perspective" })
+    expect(mapLibreHarness.setProjection).toHaveBeenCalledWith({
+      type: "vertical-perspective",
+    })
 
     rerender(
       <MapLibreMapView
@@ -559,7 +562,10 @@ describe("MapLibreMapView", () => {
 
     await waitFor(() => expect(mapLibreHarness.source.setData).toHaveBeenCalledTimes(1))
 
-    expect(mapLibreHarness.options?.zoom).toBeCloseTo(1.31, 2)
+    expect(mapLibreHarness.options?.zoom).toBeCloseTo(1.96, 2)
+    expect(mapLibreHarness.setProjection).toHaveBeenCalledWith({
+      type: "vertical-perspective",
+    })
     expect(mapLibreHarness.operations).not.toContain("fitBounds")
     expect(animationHarness.callbacks.size).toBe(1)
   })
@@ -697,7 +703,7 @@ describe("MapLibreMapView", () => {
     expect(mapLibreHarness.options?.zoom).toBe(9)
     expect(
       (mapLibreHarness.options?.style as { projection?: { type?: string } }).projection
-    ).toEqual({ type: "globe" })
+    ).toEqual({ type: "vertical-perspective" })
   })
 
   it("主题重建后保留镜头、投影与已停止的旋转状态", async () => {
@@ -735,7 +741,7 @@ describe("MapLibreMapView", () => {
     expect(mapLibreHarness.options?.zoom).toBe(2)
     expect(
       (mapLibreHarness.options?.style as { projection?: { type?: string } }).projection
-    ).toEqual({ type: "globe" })
+    ).toEqual({ type: "vertical-perspective" })
     expect(animationHarness.callbacks.size).toBe(0)
   })
 })

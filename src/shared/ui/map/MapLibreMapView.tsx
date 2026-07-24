@@ -14,11 +14,13 @@ const CLUSTER_LAYER_ID = "memo-marker-clusters"
 const CLUSTER_COUNT_LAYER_ID = "memo-marker-cluster-count"
 const MARKER_LAYER_ID = "memo-markers"
 const MARKER_COUNT_LAYER_ID = "memo-marker-count"
-const INITIAL_GLOBE_FALLBACK_ZOOM = 1.35
-const INITIAL_GLOBE_MIN_ZOOM = 0.75
-const INITIAL_GLOBE_MAX_ZOOM = 1.6
-const AUTO_ROTATE_MAX_ZOOM = 2
-const AUTO_ROTATE_DEGREES_PER_MILLISECOND = 0.0015
+const MAPLIBRE_GLOBE_PROJECTION = "vertical-perspective"
+const INITIAL_GLOBE_FALLBACK_ZOOM = 1.65
+const INITIAL_GLOBE_MIN_ZOOM = 1.1
+const INITIAL_GLOBE_MAX_ZOOM = 2.3
+const INITIAL_GLOBE_SCREEN_FIT_ZOOM_OFFSET = 1.15
+const AUTO_ROTATE_MAX_ZOOM = 2.3
+const AUTO_ROTATE_DEGREES_PER_MILLISECOND = 0.003
 const AUTO_ROTATE_MAX_FRAME_DURATION = 100
 const AUTO_ROTATE_INTERACTION_EVENTS = [
   "dragstart",
@@ -53,7 +55,7 @@ function createStyle(theme: string | undefined, projection: MapProjection): Styl
   return {
     version: 8,
     projection: {
-      type: projection === "globe" ? "globe" : "mercator",
+      type: projection === "globe" ? MAPLIBRE_GLOBE_PROJECTION : "mercator",
     },
     sources: {
       carto: {
@@ -120,7 +122,10 @@ function getInitialGlobeZoom(container: HTMLElement) {
 
   return Math.min(
     INITIAL_GLOBE_MAX_ZOOM,
-    Math.max(INITIAL_GLOBE_MIN_ZOOM, Math.log2(shortestEdge / 512) + 0.5)
+    Math.max(
+      INITIAL_GLOBE_MIN_ZOOM,
+      Math.log2(shortestEdge / 512) + INITIAL_GLOBE_SCREEN_FIT_ZOOM_OFFSET
+    )
   )
 }
 
@@ -207,6 +212,10 @@ export function MapLibreMapView({
 
         map.once("load", () => {
           if (!map || disposed) return
+
+          if (projectionRef.current === "globe") {
+            map.setProjection({ type: MAPLIBRE_GLOBE_PROJECTION })
+          }
 
           map.addSource(SOURCE_ID, {
             type: "geojson",
@@ -350,7 +359,7 @@ export function MapLibreMapView({
 
   useEffect(() => {
     mapRef.current?.setProjection({
-      type: projection === "globe" ? "globe" : "mercator",
+      type: projection === "globe" ? MAPLIBRE_GLOBE_PROJECTION : "mercator",
     })
   }, [projection])
 

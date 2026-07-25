@@ -358,7 +358,10 @@ export function MapLibreMapView({
   }, [markerData, markers, resolvedTheme])
 
   useEffect(() => {
-    mapRef.current?.setProjection({
+    const map = mapRef.current
+    if (!map) return
+
+    map.setProjection({
       type: projection === "globe" ? MAPLIBRE_GLOBE_PROJECTION : "mercator",
     })
   }, [projection])
@@ -405,9 +408,11 @@ export function MapLibreMapView({
 
         if (previousFrameTime !== null) {
           const elapsed = Math.min(timestamp - previousFrameTime, AUTO_ROTATE_MAX_FRAME_DURATION)
-          readyMap.rotateTo(readyMap.getBearing() + elapsed * AUTO_ROTATE_DEGREES_PER_MILLISECOND, {
-            duration: 0,
-          })
+          const center = readyMap.getCenter()
+          readyMap.setCenter([
+            center.lng + elapsed * AUTO_ROTATE_DEGREES_PER_MILLISECOND,
+            center.lat,
+          ])
         }
 
         previousFrameTime = timestamp

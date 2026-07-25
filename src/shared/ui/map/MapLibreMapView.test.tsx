@@ -37,7 +37,11 @@ const mapLibreHarness = vi.hoisted(() => {
     removeCount: 0,
     currentZoom: 9,
     currentBearing: 0,
+    currentCenter: { lng: 121.4905, lat: 31.2401 },
     setProjection: vi.fn(),
+    setCenter: vi.fn((center: [number, number]) => {
+      mapLibreHarness.currentCenter = { lng: center[0], lat: center[1] }
+    }),
     rotateTo: vi.fn((bearing: number) => {
       mapLibreHarness.currentBearing = bearing
     }),
@@ -108,7 +112,7 @@ vi.mock("maplibre-gl", () => ({
     }
 
     getCenter() {
-      return { lng: 121.4905, lat: 31.2401 }
+      return mapLibreHarness.currentCenter
     }
 
     getZoom() {
@@ -141,6 +145,10 @@ vi.mock("maplibre-gl", () => ({
 
     rotateTo(bearing: number) {
       mapLibreHarness.rotateTo(bearing)
+    }
+
+    setCenter(center: [number, number]) {
+      mapLibreHarness.setCenter(center)
     }
 
     getCanvas() {
@@ -210,7 +218,9 @@ beforeEach(() => {
   mapLibreHarness.removeCount = 0
   mapLibreHarness.currentZoom = 9
   mapLibreHarness.currentBearing = 0
+  mapLibreHarness.currentCenter = { lng: 121.4905, lat: 31.2401 }
   mapLibreHarness.setProjection.mockClear()
+  mapLibreHarness.setCenter.mockClear()
   mapLibreHarness.rotateTo.mockClear()
   mapLibreHarness.throwOnConstruct = false
   themeHarness.resolvedTheme = "dark"
@@ -519,7 +529,7 @@ describe("MapLibreMapView", () => {
     expect(mapLibreHarness.rotateTo).not.toHaveBeenCalled()
   })
 
-  it("地球低缩放视图自动旋转，且不重建地图或重写 GeoJSON", async () => {
+  it("地球低缩放视图沿经度自转且保持北向，不重建地图或重写 GeoJSON", async () => {
     mapLibreHarness.currentZoom = 2
 
     renderMap("globe")
@@ -533,7 +543,9 @@ describe("MapLibreMapView", () => {
       runNextAnimationFrame(2000)
     })
 
-    expect(mapLibreHarness.rotateTo).toHaveBeenCalledTimes(1)
+    expect(mapLibreHarness.setCenter).toHaveBeenCalledWith([121.7905, 31.2401])
+    expect(mapLibreHarness.currentBearing).toBe(0)
+    expect(mapLibreHarness.rotateTo).not.toHaveBeenCalled()
     expect(mapLibreHarness.constructCount).toBe(1)
     expect(mapLibreHarness.source.setData).toHaveBeenCalledTimes(1)
   })
@@ -585,6 +597,12 @@ describe("MapLibreMapView", () => {
     )
 
     await waitFor(() => expect(animationHarness.callbacks.size).toBe(1))
+    act(() => {
+      runNextAnimationFrame(1000)
+      runNextAnimationFrame(2000)
+    })
+    expect(mapLibreHarness.currentCenter.lng).toBeGreaterThan(121.4905)
+    expect(mapLibreHarness.currentBearing).toBe(0)
 
     rerender(
       <MapLibreMapView
@@ -597,6 +615,7 @@ describe("MapLibreMapView", () => {
       />
     )
     expect(animationHarness.callbacks.size).toBe(0)
+    expect(mapLibreHarness.currentBearing).toBe(0)
 
     rerender(
       <MapLibreMapView

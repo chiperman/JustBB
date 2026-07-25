@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## Unreleased
 
+## 1.3.0 (2026-07-26)
+
+### 发布重点
+
+- 地图升级为 MapLibre，新增地球与平面视图、Memo 详情面板和自动旋转。
+- 标签页支持批量重命名，并同步优化空状态与数据刷新体验。
+- 重设计公开 Memo 分享页和分享弹窗，新增服务端海报图片生成链路。
+- 优化页面切换反馈、局部骨架屏与隐私安全的页面预取缓存。
+- 统一移动端系统区域与浮动导航布局，改善画廊、回收站和登录过渡体验。
+- 优化 LeanCloud 导入进度与重复判定，并补充地图底图版权归属。
+
+### CLI
+
+- 修复管道输入为空时仍尝试发布的问题。
+- 增加基于 npm Trusted Publishing 的自动发布流程。
+
 ## 1.2.0 (2026-07-15)
 
 ### CLI

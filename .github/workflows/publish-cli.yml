@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "cli-v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "需要恢复发布的 cli-v* Tag"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -19,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -32,11 +40,23 @@ jobs:
 
       - name: Verify CLI package
         run: npm run check:cli
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: "http://localhost:54321"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "mock_key"
+          SUPABASE_SERVICE_ROLE_KEY: "mock_key"
+          ADMIN_PASSWORD: "mock_password"
 
       - name: Verify release tag
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
+          case "$RELEASE_TAG" in
+            cli-v*) ;;
+            *) echo "Invalid CLI release tag: $RELEASE_TAG" >&2; exit 1 ;;
+          esac
+          git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"
           package_version="$(node -p \"require('./cli/package.json').version\")"
-          tag_version="${GITHUB_REF_NAME#cli-v}"
+          tag_version="${RELEASE_TAG#cli-v}"
           test "$tag_version" = "$package_version"
 
       - name: Publish to npm

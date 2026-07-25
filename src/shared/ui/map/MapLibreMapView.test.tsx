@@ -20,6 +20,10 @@ const mapLibreHarness = vi.hoisted(() => {
       operations.push("setData")
       return data
     }),
+    setTiles: vi.fn((tiles: string[]) => {
+      operations.push("setTiles")
+      return tiles
+    }),
     getClusterLeaves: vi.fn(async () => [
       { properties: { markerId: "0" } },
       { properties: { markerId: "1" } },
@@ -211,6 +215,7 @@ beforeEach(() => {
   mapLibreHarness.eventHandlers.clear()
   mapLibreHarness.operations.length = 0
   mapLibreHarness.source.setData.mockClear()
+  mapLibreHarness.source.setTiles.mockClear()
   mapLibreHarness.source.getClusterLeaves.mockClear()
   mapLibreHarness.options = undefined
   mapLibreHarness.sourceOptions = undefined
@@ -296,7 +301,7 @@ describe("MapLibreMapView", () => {
           sources: { carto: { tiles: string[] } }
         }
       ).sources.carto.tiles
-    ).toContain("https://a.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png")
+    ).toContain("https://a.basemaps.cartocdn.com/rastertiles/dark_nolabels/{z}/{x}/{y}@2x.png")
     expect(mapLibreHarness.sourceOptions?.clusterMaxZoom).toBe(17)
     expect(mapLibreHarness.sourceOptions?.clusterProperties).toEqual({
       memoCount: ["+", ["get", "count"]],
@@ -582,6 +587,20 @@ describe("MapLibreMapView", () => {
     expect(animationHarness.callbacks.size).toBe(1)
   })
 
+  it("拖动停止自转后，空闲一段时间自动恢复自转", async () => {
+    mapLibreHarness.currentZoom = 2
+
+    renderMap("globe")
+
+    await waitFor(() => expect(animationHarness.callbacks.size).toBe(1))
+
+    act(() => mapLibreHarness.emit("dragstart"))
+    expect(animationHarness.callbacks.size).toBe(0)
+
+    // 恢复计时器为真实 5 秒，放宽 waitFor 与测试超时等待其触发。
+    await waitFor(() => expect(animationHarness.callbacks.size).toBe(1), { timeout: 6000 })
+  }, 8000)
+
   it("切回平面立即停止旋转，交互后再切回地球不会绕过停止状态", async () => {
     mapLibreHarness.currentZoom = 2
     const markers: MapMarker[] = []
@@ -690,7 +709,7 @@ describe("MapLibreMapView", () => {
     expect(mapLibreHarness.rotateTo).not.toHaveBeenCalled()
   })
 
-  it("主题切换重建底图时恢复当前镜头和投影", async () => {
+  it("主题切换通过 setTiles 换底图，不重建地图", async () => {
     const markers: MapMarker[] = []
     const { rerender } = render(
       <MapLibreMapView
@@ -717,15 +736,17 @@ describe("MapLibreMapView", () => {
       />
     )
 
-    await waitFor(() => expect(mapLibreHarness.constructCount).toBe(2))
-    expect(mapLibreHarness.options?.center).toEqual([121.4905, 31.2401])
-    expect(mapLibreHarness.options?.zoom).toBe(9)
-    expect(
-      (mapLibreHarness.options?.style as { projection?: { type?: string } }).projection
-    ).toEqual({ type: "vertical-perspective" })
+    await waitFor(() => expect(mapLibreHarness.source.setTiles).toHaveBeenCalledTimes(1))
+    expect(mapLibreHarness.source.setTiles).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        "https://a.basemaps.cartocdn.com/rastertiles/light_nolabels/{z}/{x}/{y}@2x.png",
+      ])
+    )
+    expect(mapLibreHarness.constructCount).toBe(1)
+    expect(mapLibreHarness.removeCount).toBe(0)
   })
 
-  it("主题重建后保留镜头、投影与已停止的旋转状态", async () => {
+  it("主题切换后保留镜头与已停止的旋转状态", async () => {
     mapLibreHarness.currentZoom = 2
     const markers: MapMarker[] = []
     const { rerender } = render(
@@ -755,12 +776,9 @@ describe("MapLibreMapView", () => {
       />
     )
 
-    await waitFor(() => expect(mapLibreHarness.constructCount).toBe(2))
-    expect(mapLibreHarness.options?.center).toEqual([121.4905, 31.2401])
-    expect(mapLibreHarness.options?.zoom).toBe(2)
-    expect(
-      (mapLibreHarness.options?.style as { projection?: { type?: string } }).projection
-    ).toEqual({ type: "vertical-perspective" })
+    await waitFor(() => expect(mapLibreHarness.source.setTiles).toHaveBeenCalledTimes(1))
+    expect(mapLibreHarness.constructCount).toBe(1)
+    expect(mapLibreHarness.removeCount).toBe(0)
     expect(animationHarness.callbacks.size).toBe(0)
   })
 })

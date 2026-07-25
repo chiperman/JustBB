@@ -22,9 +22,12 @@ const INITIAL_GLOBE_SCREEN_FIT_ZOOM_OFFSET = 1.15
 const AUTO_ROTATE_MAX_ZOOM = 2.3
 const AUTO_ROTATE_DEGREES_PER_MILLISECOND = 0.003
 const AUTO_ROTATE_MAX_FRAME_DURATION = 100
+const AUTO_ROTATE_RESUME_DELAY_MS = 5000
+const GLOBE_PRELOAD_MAX_ZOOM = 2
 const AUTO_ROTATE_INTERACTION_EVENTS = [
   "dragstart",
   "zoomstart",
+  "mousedown",
   "touchstart",
   "keydown",
   "click",
@@ -43,12 +46,36 @@ interface MapLibreMapViewProps extends MapViewProps {
 }
 
 function getTileUrls(theme: string | undefined) {
-  const variant = theme === "dark" ? "dark_all" : "light_all"
+  // 无标签变体：CARTO 栅格瓦片的地名按各地本地语言烧制，中英阿混排很乱，
+  // 且无法改语言；无标签底图更干净，也契合人文扁平基调。
+  const variant = theme === "dark" ? "dark_nolabels" : "light_nolabels"
 
-  return ["a", "b", "c", "d"].map(
-    (subdomain) =>
-      `https://${subdomain}.basemaps.cartocdn.com/rastertiles/${variant}/{z}/{x}/{y}.png`
-  )
+  // 单域名：HTTP/2 下无并行度损失，且让低缩放瓦片预加载能精确命中浏览器缓存。
+  return [`https://a.basemaps.cartocdn.com/rastertiles/${variant}/{z}/{x}/{y}@2x.png`]
+}
+
+// 预加载 z0-z2 全球瓦片（共 21 张），覆盖地球自转的缩放范围，避免自转时瓦片突然弹出。
+function preloadLowZoomTiles(theme: string | undefined) {
+  const template = getTileUrls(theme)[0]
+  if (!template) return
+
+  for (let z = 0; z <= GLOBE_PRELOAD_MAX_ZOOM; z++) {
+    const size = 2 ** z
+    for (let x = 0; x < size; x++) {
+      for (let y = 0; y < size; y++) {
+        const image = new Image()
+        image.src = template
+          .replace("{z}", String(z))
+          .replace("{x}", String(x))
+          .replace("{y}", String(y))
+      }
+    }
+  }
+}
+
+function applyThemeTiles(map: MapLibreMap, theme: string | undefined) {
+  const source = map.getSource("carto") as { setTiles?: (tiles: string[]) => void } | undefined
+  source?.setTiles?.(getTileUrls(theme))
 }
 
 function createStyle(theme: string | undefined, projection: MapProjection): StyleSpecification {
@@ -61,7 +88,7 @@ function createStyle(theme: string | undefined, projection: MapProjection): Styl
       carto: {
         type: "raster",
         tiles: getTileUrls(theme),
-        tileSize: 256,
+        tileSize: 512,
         attribution:
           '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> © <a href="https://carto.com/attributions">CARTO</a>',
       },
@@ -71,6 +98,10 @@ function createStyle(theme: string | undefined, projection: MapProjection): Styl
         id: "carto",
         type: "raster",
         source: "carto",
+        paint: {
+          // 拉长淡入时间，瓦片加载完成时不再“啪”地弹出。
+          "raster-fade-duration": 600,
+        },
       },
     ],
   }
@@ -160,14 +191,25 @@ export function MapLibreMapView({
   const markerClickRef = useRef(onMarkerClick)
   const unavailableRef = useRef(onUnavailable)
   const userStoppedAutoRotateRef = useRef(false)
+  const rotateResumeTimerRef = useRef<number | null>(null)
   const didPositionInitiallyRef = useRef(false)
   const projectionRef = useRef(projection)
-  const [readyMap, setReadyMap] = useState<MapLibreMap | null>(null)
   const shouldReduceMotion = useReducedMotion()
   const { resolvedTheme } = useTheme()
+  const themeRef = useRef(resolvedTheme)
+  const appliedThemeRef = useRef<string | undefined>(undefined)
+  const [readyMap, setReadyMap] = useState<MapLibreMap | null>(null)
+  const [rotateResumeTick, setRotateResumeTick] = useState(0)
 
   const markerData = useMemo(() => createMarkerData(markers), [markers])
   projectionRef.current = projection
+  themeRef.current = resolvedTheme
+
+  const syncThemeTiles = (map: MapLibreMap) => {
+    if (appliedThemeRef.current === themeRef.current) return
+    appliedThemeRef.current = themeRef.current
+    applyThemeTiles(map, themeRef.current)
+  }
 
   useEffect(() => {
     markerMapRef.current = new Map(markers.map((marker, index) => [String(index), marker]))
@@ -196,15 +238,17 @@ export function MapLibreMapView({
         const maplibre = await import("maplibre-gl")
         if (disposed || !containerRef.current) return
 
+        appliedThemeRef.current = themeRef.current
         map = new maplibre.Map({
           container: containerRef.current,
-          style: createStyle(resolvedTheme, projectionRef.current),
+          style: createStyle(themeRef.current, projectionRef.current),
           center: cameraRef.current?.center ?? [108.9398, 34.3416],
           zoom:
             cameraRef.current?.zoom ??
             (projectionRef.current === "globe" ? getInitialGlobeZoom(containerRef.current) : 2),
           minZoom: 0,
           maxZoom: 18,
+          maxTileCacheSize: 1024,
           attributionControl: false,
           renderWorldCopies: false,
         })
@@ -283,19 +327,8 @@ export function MapLibreMapView({
             },
           })
 
-          const source = map.getSource(SOURCE_ID) as GeoJSONSource
-          const bounds = getBounds(markers)
-
-          // 先同步相机，再写入 GeoJSON，避免首次加载时标记从世界视图漂移。
-          if (!didPositionInitiallyRef.current && bounds && projectionRef.current === "flat") {
-            map.fitBounds(bounds, {
-              padding: 50,
-              maxZoom: 15,
-              animate: false,
-            })
-            didPositionInitiallyRef.current = true
-          }
-          source.setData(markerData)
+          // 加载期间主题可能已变化，这里补齐到底图瓦片。
+          if (map) syncThemeTiles(map)
           setReadyMap(map)
         })
 
@@ -355,7 +388,32 @@ export function MapLibreMapView({
       }
       setReadyMap((currentMap) => (currentMap === map ? null : currentMap))
     }
-  }, [markerData, markers, resolvedTheme])
+    // 地图只创建一次：markers 变化走 setData，主题变化走 setTiles，避免瓦片缓存被丢弃。
+  }, [])
+
+  useEffect(() => {
+    if (!readyMap) return
+
+    const source = readyMap.getSource(SOURCE_ID) as GeoJSONSource
+    const bounds = getBounds(markers)
+
+    // 先同步相机，再写入 GeoJSON，避免首次加载时标记从世界视图漂移。
+    if (!didPositionInitiallyRef.current && bounds && projectionRef.current === "flat") {
+      readyMap.fitBounds(bounds, {
+        padding: 50,
+        maxZoom: 15,
+        animate: false,
+      })
+      didPositionInitiallyRef.current = true
+    }
+    source.setData(markerData)
+  }, [readyMap, markers, markerData])
+
+  useEffect(() => {
+    if (!readyMap) return
+    syncThemeTiles(readyMap)
+    preloadLowZoomTiles(resolvedTheme)
+  }, [readyMap, resolvedTheme])
 
   useEffect(() => {
     const map = mapRef.current
@@ -383,6 +441,15 @@ export function MapLibreMapView({
     const stopForUserInteraction = () => {
       userStoppedAutoRotateRef.current = true
       stopAutoRotate()
+      // 用户操作停止一段时间后恢复自转；再次操作会重置计时。
+      if (rotateResumeTimerRef.current !== null) {
+        window.clearTimeout(rotateResumeTimerRef.current)
+      }
+      rotateResumeTimerRef.current = window.setTimeout(() => {
+        rotateResumeTimerRef.current = null
+        userStoppedAutoRotateRef.current = false
+        setRotateResumeTick((tick) => tick + 1)
+      }, AUTO_ROTATE_RESUME_DELAY_MS)
     }
 
     AUTO_ROTATE_INTERACTION_EVENTS.forEach((event) => {
@@ -428,7 +495,15 @@ export function MapLibreMapView({
         readyMap.off(event, stopForUserInteraction)
       })
     }
-  }, [projection, readyMap, shouldReduceMotion])
+  }, [projection, readyMap, shouldReduceMotion, rotateResumeTick])
+
+  useEffect(() => {
+    return () => {
+      if (rotateResumeTimerRef.current !== null) {
+        window.clearTimeout(rotateResumeTimerRef.current)
+      }
+    }
+  }, [])
 
   return (
     <div className={cn("map-view map-view--full group relative h-full w-full", className)}>

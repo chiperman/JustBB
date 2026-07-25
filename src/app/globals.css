@@ -413,6 +413,17 @@ body {
   border: 1px solid var(--border);
 }
 
+/* 地图画布背景：无背景图层时 MapLibre 画布透明，渐变会透出来，
+   主要作用于地球模式下球体四周的“太空”区域。暖色纸感径向渐变，保持人文扁平。
+   中心（球体后方）微亮、四角压暗形成暗角，让球体有悬浮感。 */
+.map-view {
+  background: radial-gradient(120% 120% at 50% 42%, #fbfbfb 0%, #f2f2f2 48%, #e8e8e8 100%);
+}
+
+.dark .map-view {
+  background: radial-gradient(120% 120% at 50% 42%, #212121 0%, #151515 48%, #0c0c0c 100%);
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

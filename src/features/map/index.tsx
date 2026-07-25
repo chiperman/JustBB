@@ -1,17 +1,22 @@
 "use client"
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
+import { useCallback, useState } from "react"
 import { useMapMemos } from "./hooks/useMapMemos"
 import { MapLoadingScreen } from "./components/MapLoadingScreen"
 import { MapErrorScreen } from "./components/MapErrorScreen"
+import { MapDetailPanel } from "./components/MapDetailPanel"
 import { ContextPageShell, ContextPageHeader } from "@/shared/layout/ContextPageShell"
 import { Location04Icon } from "@hugeicons/core-free-icons"
 import { useDelayedLoadingVisibility } from "@/shared/hooks/useDelayedLoadingVisibility"
+import type { MapMarker } from "@/shared/lib/location-cache"
 
 export function MapPageContent() {
   const { markers, isLoading, MapView } = useMapMemos()
   const showLoadingScreen = useDelayedLoadingVisibility(isLoading)
   const shouldReduceMotion = useReducedMotion()
+  const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null)
+  const handleMarkerClick = useCallback((marker: MapMarker) => setSelectedMarker(marker), [])
 
   return (
     <ContextPageShell
@@ -45,7 +50,23 @@ export function MapPageContent() {
                 transition={{ duration: shouldReduceMotion ? 0 : 0.35, ease: "easeOut" }}
                 className="w-full h-full"
               >
-                <MapView markers={markers} mode="full" className="w-full h-full min-h-[500px]" />
+                <>
+                  <MapView
+                    markers={markers}
+                    mode="full"
+                    className="w-full h-full min-h-[500px]"
+                    onMarkerClick={handleMarkerClick}
+                  />
+                  <AnimatePresence>
+                    {selectedMarker ? (
+                      <MapDetailPanel
+                        key={`${selectedMarker.lat}:${selectedMarker.lng}`}
+                        marker={selectedMarker}
+                        onClose={() => setSelectedMarker(null)}
+                      />
+                    ) : null}
+                  </AnimatePresence>
+                </>
               </motion.div>
             ) : (
               <MapErrorScreen />

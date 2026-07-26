@@ -16,7 +16,10 @@ describe("MainLayoutClient scroll-to-top control", () => {
   })
 
   it("保留隐私安全缓存和延迟骨架，同时让移动端使用页面滚动", () => {
-    expect(source).toContain("getHomeCacheKey(flattenedParams, user?.id, unlockedMemoIds)")
+    expect(source).toContain("const { cacheKey: viewerCacheKey, query } = useViewerQuery()")
+    expect(source).toContain('const cacheKey = viewerCacheKey("/", flattenedParams)')
+    expect(source).toContain("const res = await query(")
+    expect(source).toContain("getViewerFeedMemos,")
     expect(source).toContain("useDelayedLoadingVisibility(isLoading)")
     expect(source).toContain("showInitialSkeleton ?")
     expect(source).toContain("isMobileViewport ? window : container")

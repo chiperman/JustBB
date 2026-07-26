@@ -2,10 +2,10 @@
 
 import { startTransition, useState, useCallback, useEffect, useRef, useLayoutEffect } from "react"
 import { Memo } from "@/types/memo"
-import { getMemos } from "@/server/actions/memos/query"
 import { mergeMemos } from "@/shared/lib/streamUtils"
 import { useMemoSync, MemoEventPayload } from "@/lib/memos/events"
-import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
+import { useViewerQuery } from "@/shared/hooks/useViewerQuery"
+import { getViewerFeedMemos } from "@/shared/lib/viewer-memo-queries"
 import { useSelection } from "@/state/UIContext"
 
 interface UseMemoFeedProps {
@@ -62,7 +62,7 @@ export function reconcileUpdatedMemo(existingMemo: Memo, updatedMemo: Memo): Mem
 }
 
 export function useMemoFeed({ initialMemos, searchParams, scrollContainerRef }: UseMemoFeedProps) {
-  const { unlockedMemoIds } = useUnlockedMemos()
+  const { query } = useViewerQuery()
   const { registerMemos } = useSelection()
   const [memos, setMemos] = useState<Memo[]>(initialMemos)
   const [hasMoreOlder, setHasMoreOlder] = useState(initialMemos.length >= INITIAL_MEMO_PAGE_SIZE)
@@ -139,13 +139,12 @@ export function useMemoFeed({ initialMemos, searchParams, scrollContainerRef }: 
       const lastMemo =
         unpinnedMemos.length > 0 ? unpinnedMemos[unpinnedMemos.length - 1] : memos[memos.length - 1]
 
-      const res = await getMemos({
+      const res = await query(getViewerFeedMemos, {
         ...searchParams,
         limit,
         before_date: lastMemo?.created_at,
         excludePinned: true,
         sort: "newest",
-        unlockedMemoIds,
       })
 
       const nextMemos = res.data || []
@@ -167,7 +166,7 @@ export function useMemoFeed({ initialMemos, searchParams, scrollContainerRef }: 
       isLoadingOlderRef.current = false
       setIsLoadingOlder(false)
     }
-  }, [isLoadingOlder, hasMoreOlder, memos, searchParams, unlockedMemoIds])
+  }, [isLoadingOlder, hasMoreOlder, memos, searchParams, query])
 
   const updateMemoInList = useCallback((updatedMemo: Memo) => {
     setMemos((prev) =>

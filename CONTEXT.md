@@ -179,6 +179,7 @@ Next.js App Router 负责路由和页面；Server Components 负责用户与轻�
 缓存规则：
 
 - `PageDataCache` 的 key 必须区分 URL 参数、当前用户和已解锁 Memo 集合。
+- Memo 查询统一通过 `src/shared/hooks/useViewerQuery.ts` 注入当前页面内存中的解锁集合，并把查看者与解锁集合写入缓存 key；各查询域通过 `viewer-memo-queries.ts` 的薄 adapter 调用，消费方不得自行传递 `unlockedMemoIds`。
 - `memoCache` 只负责轻量索引、发布后的即时同步和页面预热，不是权限来源，也不是私密正文的长期存储层。
 - 搜索、标签、时间轴、地图和画廊如果改变可见性或筛选条件，必须回到统一查询入口，不能只在前端过滤一份可能已经脱敏的数据。
 

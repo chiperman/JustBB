@@ -4,15 +4,13 @@ import { useEffect, useState, useRef, useCallback } from "react"
 import { GalleryGrid } from "./components/GalleryGrid"
 import { GalleryLoadingGrid } from "./components/GalleryLoadingGrid"
 import { Memo } from "@/types/memo"
-import { getGalleryMemos } from "@/server/actions/memos/query"
-import { getGalleryCacheKey } from "@/shared/lib/page-cache-keys"
+import { useViewerQuery } from "@/shared/hooks/useViewerQuery"
+import { getViewerGalleryMemos } from "@/shared/lib/viewer-memo-queries"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Image01Icon as GalleryIcon, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { ContextPageShell, ContextPageHeader } from "@/shared/layout/ContextPageShell"
 import { usePageDataCache } from "@/state/PageDataCache"
-import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
-import { useUser } from "@/state/UserContext"
 import { useDelayedLoadingVisibility } from "@/shared/hooks/useDelayedLoadingVisibility"
 
 interface GalleryPageContentProps {
@@ -25,9 +23,8 @@ const LOAD_MORE_PAGE_SIZE = 30
 
 export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: GalleryPageContentProps) {
   const { getCache, setCache } = usePageDataCache()
-  const { unlockedMemoIds } = useUnlockedMemos()
-  const { user } = useUser()
-  const cacheKey = getGalleryCacheKey(user?.id, unlockedMemoIds)
+  const { cacheKey: viewerCacheKey, query } = useViewerQuery()
+  const cacheKey = viewerCacheKey("/gallery")
   const cached = getCache(cacheKey)
   const bootMemos = initialMemos.length > 0 ? initialMemos : (cached?.memos as Memo[] | undefined)
   const [memos, setMemos] = useState<Memo[]>(bootMemos ?? EMPTY_MEMOS)
@@ -93,7 +90,7 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
       }
 
       try {
-        const res = await getGalleryMemos(INITIAL_PAGE_SIZE, 0, unlockedMemoIds)
+        const res = await query(getViewerGalleryMemos, INITIAL_PAGE_SIZE, 0)
         const nextMemos = res.success ? res.data || [] : []
         const nextHasMore = nextMemos.length >= INITIAL_PAGE_SIZE
 
@@ -120,14 +117,14 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
     return () => {
       cancelled = true
     }
-  }, [cacheKey, getCache, setCache, unlockedMemoIds])
+  }, [cacheKey, getCache, query, setCache])
 
   const loadMore = useCallback(async () => {
     if (isInitialLoading || isLoadingMore || !hasMore) return
 
     setIsLoadingMore(true)
     try {
-      const res = await getGalleryMemos(LOAD_MORE_PAGE_SIZE, offset, unlockedMemoIds)
+      const res = await query(getViewerGalleryMemos, LOAD_MORE_PAGE_SIZE, offset)
       const nextMemos = res.success ? res.data || [] : []
       const nextHasMore = nextMemos.length >= LOAD_MORE_PAGE_SIZE
 
@@ -151,7 +148,7 @@ export function GalleryPageContent({ memos: initialMemos = EMPTY_MEMOS }: Galler
     } finally {
       setIsLoadingMore(false)
     }
-  }, [cacheKey, hasMore, isInitialLoading, isLoadingMore, offset, setCache, unlockedMemoIds])
+  }, [cacheKey, hasMore, isInitialLoading, isLoadingMore, offset, query, setCache])
 
   useEffect(() => {
     const target = observerTarget.current

@@ -8,7 +8,7 @@ function getViewerCacheKey(viewerId?: string | null) {
   return viewerId || "anonymous"
 }
 
-function withVisibilityScope(
+export function withVisibilityScope(
   path: string,
   viewerId: string | null | undefined,
   unlockedMemoIds: string[]

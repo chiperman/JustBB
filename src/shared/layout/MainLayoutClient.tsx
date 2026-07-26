@@ -11,12 +11,11 @@ import { FeedHeader } from "@/shared/ui/FeedHeader"
 import { MemoCardSkeleton } from "@/shared/ui/MemoCardSkeleton"
 import { Memo } from "@/types/memo"
 import { usePageDataCache } from "@/state/PageDataCache"
-import { getMemos } from "@/server/actions/memos/query"
 import { useSearchParams } from "next/navigation"
 import { useUser } from "@/state/UserContext"
-import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
+import { useViewerQuery } from "@/shared/hooks/useViewerQuery"
+import { getViewerFeedMemos } from "@/shared/lib/viewer-memo-queries"
 import { resolveMainLayoutScrollState } from "@/shared/layout/main-layout-scroll"
-import { getHomeCacheKey } from "@/shared/lib/page-cache-keys"
 import { useDelayedLoadingVisibility } from "@/shared/hooks/useDelayedLoadingVisibility"
 import {
   MOBILE_CONTENT_BOTTOM_PADDING_CLASS,
@@ -27,11 +26,7 @@ export function MainLayoutClient() {
   const searchParams = useSearchParams()
   const { getCache, setCache } = usePageDataCache()
   const { user } = useUser()
-  const { unlockedMemoIds } = useUnlockedMemos()
-  const unlockedMemoIdsRef = useRef(unlockedMemoIds)
-  useEffect(() => {
-    unlockedMemoIdsRef.current = unlockedMemoIds
-  }, [unlockedMemoIds])
+  const { cacheKey: viewerCacheKey, query } = useViewerQuery()
 
   // 滚动与吸顶状态管理
   const containerRef = useRef<HTMLDivElement>(null)
@@ -88,7 +83,7 @@ export function MainLayoutClient() {
     () => Object.fromEntries(new URLSearchParams(searchParamsKey).entries()),
     [searchParamsKey]
   )
-  const cacheKey = getHomeCacheKey(flattenedParams, user?.id, unlockedMemoIds)
+  const cacheKey = viewerCacheKey("/", flattenedParams)
   const cachedData = getCache(cacheKey)
   const latestRequestIdRef = useRef(0)
 
@@ -121,10 +116,9 @@ export function MainLayoutClient() {
 
     const refreshMemos = async () => {
       try {
-        const res = await getMemos({
+        const res = await query(getViewerFeedMemos, {
           ...flattenedParams,
           limit: 30,
-          unlockedMemoIds: unlockedMemoIdsRef.current,
         })
 
         if (cancelled || latestRequestIdRef.current !== requestId) {
@@ -153,7 +147,7 @@ export function MainLayoutClient() {
     return () => {
       cancelled = true
     }
-  }, [cacheKey, flattenedParams, getCache, setCache])
+  }, [cacheKey, flattenedParams, getCache, query, setCache])
 
   const scrollTopControl = (
     <motion.button

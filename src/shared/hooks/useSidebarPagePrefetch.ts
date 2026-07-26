@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { getGalleryMemos, getMemosWithLocations } from "@/server/actions/memos/query"
 import { getAllTags } from "@/server/actions/memos/analytics"
 import { groupMemosByLocation } from "@/shared/lib/map-markers"
-import { getGalleryCacheKey, getMapCacheKey, getTagsCacheKey } from "@/shared/lib/page-cache-keys"
+import { getTagsCacheKey } from "@/shared/lib/page-cache-keys"
+import { useViewerQuery } from "@/shared/hooks/useViewerQuery"
+import { getViewerGalleryMemos, getViewerMapMemos } from "@/shared/lib/viewer-memo-queries"
 import { usePageDataCache } from "@/state/PageDataCache"
-import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
 import { useUser } from "@/state/UserContext"
 
 const HOVER_PREFETCH_DELAY_MS = 150
@@ -33,7 +33,7 @@ export function shouldSkipNavigationPrefetch() {
 export function useSidebarPagePrefetch() {
   const router = useRouter()
   const { getCache, setCache } = usePageDataCache()
-  const { unlockedMemoIds } = useUnlockedMemos()
+  const { cacheKey: viewerCacheKey, query } = useViewerQuery()
   const { user } = useUser()
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingRef = useRef<Set<string>>(new Set())
@@ -57,12 +57,12 @@ export function useSidebarPagePrefetch() {
       }
 
       if (href === "/gallery") {
-        const cacheKey = getGalleryCacheKey(user?.id, unlockedMemoIds)
+        const cacheKey = viewerCacheKey("/gallery")
         if (getCache(cacheKey)?.memos || pendingRef.current.has(cacheKey)) return
 
         pendingRef.current.add(cacheKey)
         try {
-          const res = await getGalleryMemos(GALLERY_INITIAL_PAGE_SIZE, 0, unlockedMemoIds)
+          const res = await query(getViewerGalleryMemos, GALLERY_INITIAL_PAGE_SIZE, 0)
           if (res.success) {
             const memos = res.data || []
             setCache(cacheKey, { memos, hasMore: memos.length >= GALLERY_INITIAL_PAGE_SIZE })
@@ -94,12 +94,12 @@ export function useSidebarPagePrefetch() {
       }
 
       if (href === "/map") {
-        const cacheKey = getMapCacheKey(user?.id, unlockedMemoIds)
+        const cacheKey = viewerCacheKey("/map")
         if (getCache(cacheKey)?.markers || pendingRef.current.has(cacheKey)) return
 
         pendingRef.current.add(cacheKey)
         try {
-          const res = await getMemosWithLocations(unlockedMemoIds)
+          const res = await query(getViewerMapMemos)
           if (res.success) {
             const memos = res.data || []
             const markers = groupMemosByLocation(memos)
@@ -112,7 +112,7 @@ export function useSidebarPagePrefetch() {
         }
       }
     },
-    [getCache, router, setCache, unlockedMemoIds, user?.id]
+    [getCache, query, router, setCache, user?.id, viewerCacheKey]
   )
 
   const schedulePrefetch = useCallback(

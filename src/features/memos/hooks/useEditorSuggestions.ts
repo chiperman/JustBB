@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Editor } from "@tiptap/react"
 import { SuggestionProps } from "@tiptap/suggestion"
-import { searchMemosForMention } from "@/server/actions/memos/query"
-import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
+import { useViewerQuery } from "@/shared/hooks/useViewerQuery"
+import { getViewerMentionMemos } from "@/shared/lib/viewer-memo-queries"
 
 export interface SuggestionItem {
   id: string
@@ -48,7 +48,7 @@ export function useEditorSuggestions({
 }: {
   setShowSuggestions: (show: boolean) => void
 }) {
-  const { unlockedMemoIds } = useUnlockedMemos()
+  const { cacheKey: viewerCacheKey, query: viewerQuery } = useViewerQuery()
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [mentionQuery, setMentionQuery] = useState("")
@@ -104,9 +104,7 @@ export function useEditorSuggestions({
       if (currentVersion === requestVersionRef.current) {
         setSuggestions(filtered)
         // 如果缓存没过期，就不显示加载动画，但仍会在后台更新
-        const isFresh =
-          Date.now() - SUGGESTION_CACHE.tags.timestamp <
-          SUGGESTION_CACHE.CACHE_TTL
+        const isFresh = Date.now() - SUGGESTION_CACHE.tags.timestamp < SUGGESTION_CACHE.CACHE_TTL
         if (!isFresh) setIsLoading(true)
         hasValidCache = true
       }
@@ -140,9 +138,7 @@ export function useEditorSuggestions({
             .filter((t) => t.id.toLowerCase().includes(lowerQuery))
             .sort((a, b) => (b.count || 0) - (a.count || 0))
 
-          const exactMatch = freshFiltered.find(
-            (f) => f.id.toLowerCase() === lowerQuery
-          )
+          const exactMatch = freshFiltered.find((f) => f.id.toLowerCase() === lowerQuery)
           if (!exactMatch && query.trim()) {
             freshFiltered.unshift({ id: query, label: `#${query}`, count: 0 })
           }
@@ -173,11 +169,13 @@ export function useEditorSuggestions({
         setMentionQuery(query)
 
         // 1. 尝试渲染缓存 (Stale)
-        const cached = SUGGESTION_CACHE.mentions.get(query)
+        const mentionCacheKey = viewerCacheKey(
+          `/editor-suggestions?query=${encodeURIComponent(query)}`
+        )
+        const cached = SUGGESTION_CACHE.mentions.get(mentionCacheKey)
         if (cached) {
           setSuggestions(cached.data)
-          const isFresh =
-            Date.now() - cached.timestamp < SUGGESTION_CACHE.CACHE_TTL
+          const isFresh = Date.now() - cached.timestamp < SUGGESTION_CACHE.CACHE_TTL
           if (isFresh) {
             setIsLoading(false)
           } else {
@@ -194,12 +192,7 @@ export function useEditorSuggestions({
       const performFetch = async () => {
         if (!isInitial) setIsLoading(true)
         try {
-          const res = await searchMemosForMention(
-            query,
-            offset,
-            20,
-            unlockedMemoIds
-          )
+          const res = await viewerQuery(getViewerMentionMemos, query, offset, 20)
           if (currentVersion !== requestVersionRef.current) return
 
           const results = res.success ? res.data || [] : []
@@ -215,9 +208,7 @@ export function useEditorSuggestions({
             ? items
             : [
                 ...suggestionsRef.current,
-                ...items.filter(
-                  (it) => !suggestionsRef.current.find((p) => p.id === it.id)
-                ),
+                ...items.filter((it) => !suggestionsRef.current.find((p) => p.id === it.id)),
               ]
 
           setSuggestions(newSuggestions)
@@ -225,15 +216,17 @@ export function useEditorSuggestions({
 
           // 2. 更新缓存 (Revalidate)
           if (isInitial) {
-            SUGGESTION_CACHE.mentions.set(query, {
+            const mentionCacheKey = viewerCacheKey(
+              `/editor-suggestions?query=${encodeURIComponent(query)}`
+            )
+            SUGGESTION_CACHE.mentions.set(mentionCacheKey, {
               data: items,
               timestamp: Date.now(),
             })
             // 保持 LRU 策略，避免 Map 过大
             if (SUGGESTION_CACHE.mentions.size > 50) {
               const firstKey = SUGGESTION_CACHE.mentions.keys().next().value
-              if (firstKey !== undefined)
-                SUGGESTION_CACHE.mentions.delete(firstKey)
+              if (firstKey !== undefined) SUGGESTION_CACHE.mentions.delete(firstKey)
             }
           }
         } catch (err) {
@@ -252,74 +245,59 @@ export function useEditorSuggestions({
         performFetch()
       }
     },
-    [unlockedMemoIds]
+    [viewerCacheKey, viewerQuery]
   )
 
-  const updateSuggestionPosition = useCallback(
-    (props: CustomSuggestionProps) => {
-      const rect = props.clientRect?.()
-      if (rect) {
-        let left = rect.left
-        let top = rect.bottom + 4
-        const viewportWidth = window.innerWidth
-        const viewportHeight = window.innerHeight
-        const menuWidth = 350
-        const menuHeight = 400
+  const updateSuggestionPosition = useCallback((props: CustomSuggestionProps) => {
+    const rect = props.clientRect?.()
+    if (rect) {
+      let left = rect.left
+      let top = rect.bottom + 4
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
+      const menuWidth = 350
+      const menuHeight = 400
 
-        if (left + menuWidth > viewportWidth - 20) {
-          left = viewportWidth - menuWidth - 20
-        }
-        if (left < 20) left = 20
-
-        if (top + menuHeight > viewportHeight - 20 && rect.top > menuHeight) {
-          top = rect.top - menuHeight - 4
-        }
-
-        setSuggestionPosition({ top, left })
+      if (left + menuWidth > viewportWidth - 20) {
+        left = viewportWidth - menuWidth - 20
       }
-    },
-    []
-  )
+      if (left < 20) left = 20
 
-  const handleSelectSuggestion = useCallback(
-    (item: SuggestionItem, editor: Editor | null) => {
-      if (!editor || !suggestionPropsRef.current) return
-
-      const rawLabel = item.label
-      let label = rawLabel
-      if (rawLabel.startsWith("@") || rawLabel.startsWith("#")) {
-        label = rawLabel.slice(1)
+      if (top + menuHeight > viewportHeight - 20 && rect.top > menuHeight) {
+        top = rect.top - menuHeight - 4
       }
 
-      suggestionPropsRef.current.command({
-        id: label,
-        label: label,
-      })
+      setSuggestionPosition({ top, left })
+    }
+  }, [])
 
-      setShowSuggestions(false)
-      setSelectedIndex(0)
-      setMentionQuery("")
-    },
-    []
-  )
+  const handleSelectSuggestion = useCallback((item: SuggestionItem, editor: Editor | null) => {
+    if (!editor || !suggestionPropsRef.current) return
+
+    const rawLabel = item.label
+    let label = rawLabel
+    if (rawLabel.startsWith("@") || rawLabel.startsWith("#")) {
+      label = rawLabel.slice(1)
+    }
+
+    suggestionPropsRef.current.command({
+      id: label,
+      label: label,
+    })
+
+    setShowSuggestions(false)
+    setSelectedIndex(0)
+    setMentionQuery("")
+  }, [])
 
   const handleSuggestionScroll = useCallback(
     async (e: React.UIEvent<HTMLUListElement>) => {
       const target = e.currentTarget
-      const isNearBottom =
-        target.scrollHeight - target.scrollTop - target.clientHeight < 150
+      const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 150
 
-      if (
-        isNearBottom &&
-        !isLoading &&
-        hasMoreMentions &&
-        !isFetchingMoreRef.current
-      ) {
+      if (isNearBottom && !isLoading && hasMoreMentions && !isFetchingMoreRef.current) {
         isFetchingMoreRef.current = true
-        fetchMentionSuggestions(
-          mentionQueryRef.current,
-          suggestionsRef.current.length
-        )
+        fetchMentionSuggestions(mentionQueryRef.current, suggestionsRef.current.length)
       }
     },
     [isLoading, hasMoreMentions, fetchMentionSuggestions]

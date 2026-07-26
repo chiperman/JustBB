@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react"
 import { getAllTags as fetchAllTagsAction } from "@/server/actions/memos/analytics"
-import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
+import { useMemoDerivedRefresh } from "@/lib/memos/refresh-policy"
 
 export interface TagData {
   tag_name: string
@@ -43,16 +43,7 @@ export function TagsProvider({
     }
   }, [])
 
-  useMemoSync(
-    useCallback(
-      (payload) => {
-        if (shouldRefreshMemoDerivedData(payload)) {
-          void refreshTags()
-        }
-      },
-      [refreshTags]
-    )
-  )
+  useMemoDerivedRefresh("tags", refreshTags)
 
   useEffect(() => {
     setIsMounted(true)

@@ -1,13 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import {
-  getMemos,
-  getGalleryMemos,
-  getArchivedMemos,
-  getOnThisDayMemos,
-  getBacklinks,
-  getMemoById,
-} from "./query"
+import { getMemos, getGalleryMemos, getOnThisDayMemos, getBacklinks, getMemoById } from "./query"
 import { getAdminClient, getClient } from "@/lib/supabase"
 import { getCurrentUserId } from "@/features/auth/actions"
 
@@ -212,32 +205,8 @@ describe("Derivative Memo Queries TDD", () => {
     })
   })
 
-  describe("getArchivedMemos", () => {
-    it("should query date range and structure is_locked for owner", async () => {
-      const mockMemos = [
-        { id: "1", owner_id: "user-1", is_private: false },
-        { id: "2", owner_id: "user-2", is_private: true },
-      ]
-
-      const mockQuery = makeMockQuery(mockMemos)
-      mockSelect.mockReturnValue(mockQuery)
-      vi.mocked(getCurrentUserId).mockResolvedValue("user-1")
-
-      const result = await getArchivedMemos(2026, 6)
-      expect(result.success).toBe(true)
-      expect(mockQuery.gte).toHaveBeenCalled()
-      expect(mockQuery.lte).toHaveBeenCalled()
-
-      const memo1 = result.data.find((m) => m.id === "1")
-      const memo2 = result.data.find((m) => m.id === "2")
-
-      expect(memo1?.is_locked).toBe(false)
-      expect(memo2?.is_locked).toBe(true)
-    })
-  })
-
   describe("getOnThisDayMemos", () => {
-    it("should filter lookback years and dynamically lock", async () => {
+    it("should filter lookback years from the secure RPC result", async () => {
       const today = new Date()
       const sameDayLastYear = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate())
       const differentDay = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate() + 1)
@@ -248,6 +217,7 @@ describe("Derivative Memo Queries TDD", () => {
           created_at: sameDayLastYear.toISOString(),
           owner_id: "user-1",
           is_private: true,
+          is_locked: true,
         },
         {
           id: "2",
@@ -257,9 +227,7 @@ describe("Derivative Memo Queries TDD", () => {
         },
       ]
 
-      const mockQuery = makeMockQuery(mockMemos)
-      mockSelect.mockReturnValue(mockQuery)
-      vi.mocked(getCurrentUserId).mockResolvedValue("user-2") // 模拟不同用户登录
+      mockRpc.mockResolvedValue({ data: mockMemos, error: null })
 
       const result = await getOnThisDayMemos()
       expect(result.success).toBe(true)
@@ -268,7 +236,11 @@ describe("Derivative Memo Queries TDD", () => {
 
       const memo1 = result.data[0]
       expect(memo1.id).toBe("1")
-      expect(memo1.is_locked).toBe(true) // 别人拥有的私密记录，被锁定
+      expect(memo1.is_locked).toBe(true)
+      expect(mockRpc).toHaveBeenCalledWith(
+        "search_memos_secure",
+        expect.objectContaining({ limit_val: 100, offset_val: 0 })
+      )
     })
   })
 
@@ -295,14 +267,53 @@ describe("Derivative Memo Queries TDD", () => {
         },
       ]
 
-      const mockQuery = makeMockQuery(mockMemos)
-      mockSelect.mockReturnValue(mockQuery)
+      mockRpc.mockResolvedValue({ data: mockMemos, error: null })
 
       const result = await getBacklinks(42)
       expect(result.success).toBe(true)
       // 应该只保留精准匹配了 @42(非数字结尾) 的 memo-1，过滤掉 memo-3 和 memo-2
       expect(result.data).toHaveLength(1)
       expect(result.data[0].id).toBe("1")
+    })
+
+    it("does not reveal another owner's private memo through backlinks", async () => {
+      const mockMemos = [
+        {
+          id: "public",
+          content: "Public reference @42",
+          owner_id: "user-2",
+          is_private: false,
+        },
+        {
+          id: "owned-private",
+          content: "My private reference @42",
+          owner_id: "user-1",
+          is_private: true,
+        },
+        {
+          id: "foreign-private",
+          content: "SECRET_BACKLINK_CONTENT @42",
+          owner_id: "user-2",
+          is_private: true,
+        },
+      ]
+      const mockQuery = makeMockQuery(mockMemos)
+      mockSelect.mockReturnValue(mockQuery)
+      mockRpc.mockResolvedValue({
+        data: mockMemos.filter((memo) => memo.id !== "foreign-private"),
+        error: null,
+      })
+      vi.mocked(getCurrentUserId).mockResolvedValue("user-1")
+
+      const result = await getBacklinks(42)
+
+      expect(result.success).toBe(true)
+      expect(result.data.map((memo) => memo.id)).toEqual(["public", "owned-private"])
+      expect(result.data.map((memo) => memo.content)).not.toContain("SECRET_BACKLINK_CONTENT @42")
+      expect(mockRpc).toHaveBeenCalledWith(
+        "search_memos_secure",
+        expect.objectContaining({ query_text: "@42" })
+      )
     })
   })
 })

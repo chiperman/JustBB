@@ -113,6 +113,8 @@ search_memos_secure(
 
 锁定占位只允许用于浏览上下文，例如主列表、地图和画廊。关键词搜索和标签过滤只匹配公开、作者本人或已解锁 Memo。导出、分享和 AI 摘要不能消费未解锁正文。
 
+正文派生查询（包括反向引用和“那年今日”）也必须通过 `search_memos_secure`，并携带当前页面内存中的已解锁 Memo id；不能先直接读取 `public.memos.content` 再在 JavaScript 中补可见性判断。直接表查询只保留给安全 RPC 无法表达的特殊 seam，例如按 UUID 生成公开分享、读取操作者自己的回收站、为真实公开 Memo 代理海报图片；这些查询必须同时依赖 RLS 和排除 `access_code_hash` 等认证材料的安全字段投影。
+
 ## 7. Server Actions 边界
 
 统一响应契约：

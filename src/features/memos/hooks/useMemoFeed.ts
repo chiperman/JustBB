@@ -1,243 +1,164 @@
 "use client"
 
-import { startTransition, useState, useCallback, useEffect, useRef, useLayoutEffect } from "react"
-import { Memo } from "@/types/memo"
-import { getMemos } from "@/server/actions/memos/query"
-import { mergeMemos } from "@/shared/lib/streamUtils"
-import { useMemoSync, MemoEventPayload } from "@/lib/memos/events"
-import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react"
+import type { Memo } from "@/types/memo"
+import { useMemoSync, type MemoEventPayload } from "@/lib/memos/events"
+import { useViewerQuery } from "@/shared/hooks/useViewerQuery"
+import { getViewerFeedMemos } from "@/shared/lib/viewer-memo-queries"
 import { useSelection } from "@/state/UIContext"
+import {
+  createMemoFeedWindow,
+  MEMO_FEED_PAGE_SIZE,
+  reduceMemoFeedWindow,
+  type MemoFeedSearchParams,
+} from "@/features/memos/lib/memo-feed-reconciler"
 
 interface UseMemoFeedProps {
   initialMemos: Memo[]
-  searchParams: {
-    query?: string
-    tag?: string
-    year?: string
-    month?: string
-    date?: string
-    sort?: string
-    tagMode?: "and" | "or"
-  }
+  searchParams: MemoFeedSearchParams
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>
 }
 
-const INITIAL_MEMO_PAGE_SIZE = 30
-
-export function reconcileInitialMemoWindow(
-  currentMemos: Memo[],
-  previousInitialIds: Set<string>,
-  nextInitialMemos: Memo[]
-) {
-  const alignedNextInitialMemos = nextInitialMemos.map((nextMemo) => {
-    const existing = currentMemos.find((m) => m.id === nextMemo.id)
-    if (existing && !existing.is_locked && nextMemo.is_locked) {
-      return existing
-    }
-    return nextMemo
-  })
-
-  const olderMemos = currentMemos.filter((memo) => !previousInitialIds.has(memo.id))
-  return mergeMemos(olderMemos, alignedNextInitialMemos)
-}
-
-export function reconcileHasMoreOlder(currentHasMoreOlder: boolean, nextInitialMemos: Memo[]) {
-  return currentHasMoreOlder && nextInitialMemos.length >= INITIAL_MEMO_PAGE_SIZE
-}
-
-export function appendOlderMemoPage(currentMemos: Memo[], olderMemos: Memo[]) {
-  const existingIds = new Set(currentMemos.map((memo) => memo.id))
-  const uniqueOlderMemos = olderMemos.filter((memo) => !existingIds.has(memo.id))
-
-  return uniqueOlderMemos.length > 0 ? [...currentMemos, ...uniqueOlderMemos] : currentMemos
-}
-
-export function reconcileUpdatedMemo(existingMemo: Memo, updatedMemo: Memo): Memo {
-  return {
-    ...existingMemo,
-    ...updatedMemo,
-    is_owner: updatedMemo.is_owner ?? existingMemo.is_owner,
-    is_locked: updatedMemo.is_locked ?? existingMemo.is_locked,
-  }
-}
-
 export function useMemoFeed({ initialMemos, searchParams, scrollContainerRef }: UseMemoFeedProps) {
-  const { unlockedMemoIds } = useUnlockedMemos()
+  const { query } = useViewerQuery()
   const { registerMemos } = useSelection()
-  const [memos, setMemos] = useState<Memo[]>(initialMemos)
-  const [hasMoreOlder, setHasMoreOlder] = useState(initialMemos.length >= INITIAL_MEMO_PAGE_SIZE)
+  const stableSearchParams = useMemo<MemoFeedSearchParams>(
+    () => ({
+      query: searchParams.query,
+      tag: searchParams.tag,
+      year: searchParams.year,
+      month: searchParams.month,
+      date: searchParams.date,
+      sort: searchParams.sort,
+      tagMode: searchParams.tagMode,
+    }),
+    [
+      searchParams.date,
+      searchParams.month,
+      searchParams.query,
+      searchParams.sort,
+      searchParams.tag,
+      searchParams.tagMode,
+      searchParams.year,
+    ]
+  )
+  const [windowState, dispatchWindow] = useReducer(
+    reduceMemoFeedWindow,
+    createMemoFeedWindow(initialMemos, stableSearchParams)
+  )
   const [isLoadingOlder, setIsLoadingOlder] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [lastCreatedId, setLastCreatedId] = useState<string | null>(null)
-  const previousInitialIdsRef = useRef(new Set(initialMemos.map((memo) => memo.id)))
-  const lastSearchParamsRef = useRef(searchParams)
   const isLoadingOlderRef = useRef(false)
 
-  // 置顶/取消置顶时的滚动位置恢复
+  // 置顶/取消置顶时的滚动位置恢复属于 DOM 接线，不进入纯 reconciler。
   const pendingScrollRestoreRef = useRef<number | null>(null)
-  // 标记当前是否处于 pin 重排中，供外部跳过动画
-  const [isPinReordering, setIsPinReordering] = useState(false)
   const pinReorderTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // 组件卸载时清理定时器
   useEffect(() => {
     return () => {
-      if (pinReorderTimeoutRef.current) {
-        clearTimeout(pinReorderTimeoutRef.current)
-      }
+      if (pinReorderTimeoutRef.current) clearTimeout(pinReorderTimeoutRef.current)
     }
   }, [])
 
-  // 在 DOM 更新后、浏览器绘制前恢复滚动位置
   useLayoutEffect(() => {
-    if (pendingScrollRestoreRef.current != null) {
-      const container = scrollContainerRef?.current
-      if (container) {
-        container.scrollTop = pendingScrollRestoreRef.current
-      }
-      // 注意：不要在此处清空 pendingScrollRestoreRef.current，
-      // 因为接下来的 revalidatePath 引起的 initialMemos 变更还会触发一轮 layoutEffect。
-      // 我们在 800ms 后才由定时器完全重置和解锁。
-    }
-  }, [memos, scrollContainerRef])
+    if (pendingScrollRestoreRef.current == null) return
+    const container = scrollContainerRef?.current
+    if (container) container.scrollTop = pendingScrollRestoreRef.current
+    // revalidatePath 可能再触发一轮首屏对齐；800ms 后统一释放滚动锁。
+  }, [scrollContainerRef, windowState.memos])
 
   useEffect(() => {
-    registerMemos(memos)
-  }, [memos, registerMemos])
+    registerMemos(windowState.memos)
+  }, [registerMemos, windowState.memos])
 
   useEffect(() => {
-    const paramsChanged =
-      searchParams.query !== lastSearchParamsRef.current.query ||
-      searchParams.tag !== lastSearchParamsRef.current.tag ||
-      searchParams.year !== lastSearchParamsRef.current.year ||
-      searchParams.month !== lastSearchParamsRef.current.month ||
-      searchParams.date !== lastSearchParamsRef.current.date ||
-      searchParams.tagMode !== lastSearchParamsRef.current.tagMode ||
-      searchParams.sort !== lastSearchParamsRef.current.sort
-
-    if (paramsChanged) {
-      setMemos(initialMemos)
-      setHasMoreOlder(initialMemos.length >= INITIAL_MEMO_PAGE_SIZE)
-      previousInitialIdsRef.current = new Set(initialMemos.map((memo) => memo.id))
-      lastSearchParamsRef.current = searchParams
-    } else {
-      const prevInitialIds = previousInitialIdsRef.current
-      setMemos((prev) => reconcileInitialMemoWindow(prev, prevInitialIds, initialMemos))
-      setHasMoreOlder((prev) => reconcileHasMoreOlder(prev, initialMemos))
-      previousInitialIdsRef.current = new Set(initialMemos.map((memo) => memo.id))
-    }
-  }, [initialMemos, searchParams])
+    dispatchWindow({
+      type: "receive-initial",
+      memos: initialMemos,
+      searchParams: stableSearchParams,
+    })
+  }, [initialMemos, stableSearchParams])
 
   const fetchOlderMemos = useCallback(async () => {
-    if (isLoadingOlderRef.current || isLoadingOlder || !hasMoreOlder) return
+    if (isLoadingOlderRef.current || isLoadingOlder || !windowState.hasMoreOlder) return
 
     isLoadingOlderRef.current = true
     setIsLoadingOlder(true)
     try {
-      const limit = INITIAL_MEMO_PAGE_SIZE
-      const unpinnedMemos = memos.filter((m) => !m.is_pinned)
+      const unpinnedMemos = windowState.memos.filter((memo) => !memo.is_pinned)
       const lastMemo =
-        unpinnedMemos.length > 0 ? unpinnedMemos[unpinnedMemos.length - 1] : memos[memos.length - 1]
+        unpinnedMemos.length > 0
+          ? unpinnedMemos[unpinnedMemos.length - 1]
+          : windowState.memos[windowState.memos.length - 1]
 
-      const res = await getMemos({
-        ...searchParams,
-        limit,
+      const result = await query(getViewerFeedMemos, {
+        ...stableSearchParams,
+        limit: MEMO_FEED_PAGE_SIZE,
         before_date: lastMemo?.created_at,
         excludePinned: true,
         sort: "newest",
-        unlockedMemoIds,
       })
 
-      const nextMemos = res.data || []
-      const validNewMemos = nextMemos.filter((nm) => !memos.find((m) => m.id === nm.id))
-
-      if (nextMemos.length < limit || validNewMemos.length === 0) {
-        setHasMoreOlder(false)
-      }
-
-      if (validNewMemos.length > 0) {
-        startTransition(() => {
-          setMemos((prev) => appendOlderMemoPage(prev, nextMemos))
-        })
-      }
-    } catch (err) {
-      console.error("[Feed Hook] Failed to load older memos:", err)
-      setHasMoreOlder(false)
+      startTransition(() => dispatchWindow({ type: "append-older-page", memos: result.data || [] }))
+    } catch (error) {
+      console.error("[Feed Hook] Failed to load older memos:", error)
+      dispatchWindow({ type: "older-page-failed" })
     } finally {
       isLoadingOlderRef.current = false
       setIsLoadingOlder(false)
     }
-  }, [isLoadingOlder, hasMoreOlder, memos, searchParams, unlockedMemoIds])
+  }, [isLoadingOlder, query, stableSearchParams, windowState.hasMoreOlder, windowState.memos])
 
-  const updateMemoInList = useCallback((updatedMemo: Memo) => {
-    setMemos((prev) =>
-      prev.map((m) => (m.id === updatedMemo.id ? reconcileUpdatedMemo(m, updatedMemo) : m))
-    )
+  const updateMemoInList = useCallback((memo: Memo) => {
+    dispatchWindow({ type: "replace-memo", memo })
   }, [])
 
   const clearLastCreatedId = useCallback(() => {
-    setLastCreatedId(null)
+    dispatchWindow({ type: "clear-last-created" })
   }, [])
 
   useMemoSync(
-    useCallback((payload: MemoEventPayload) => {
-      // 置顶/取消置顶时，在 state 更新前记录滚动位置，并在 800ms 内强制锁定
-      if (payload.type === "update" && payload.updates && "is_pinned" in payload.updates) {
-        if (typeof window !== "undefined" && document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur()
-        }
-        const container = scrollContainerRef?.current
-        if (container) {
-          pendingScrollRestoreRef.current = container.scrollTop
-        }
-
-        setIsPinReordering(true)
-        if (pinReorderTimeoutRef.current) {
-          clearTimeout(pinReorderTimeoutRef.current)
-        }
-        pinReorderTimeoutRef.current = setTimeout(() => {
-          pendingScrollRestoreRef.current = null
-          setIsPinReordering(false)
-        }, 800)
-
-        setMemos((prev) => {
-          const updated = prev.map((m) => (m.id === payload.id ? { ...m, ...payload.updates } : m))
-          return mergeMemos([], updated)
-        })
-        return
-      }
-
-      setMemos((prev) => {
-        switch (payload.type) {
-          case "create":
-            if (prev.some((m) => m.id === payload.memo.id)) return prev
-            setLastCreatedId(payload.memo.id)
-            return mergeMemos(prev, [payload.memo])
-          case "update": {
-            const updated = prev.map((m) =>
-              m.id === payload.id ? { ...m, ...payload.updates } : m
-            )
-            return updated
+    useCallback(
+      (event: MemoEventPayload) => {
+        if (event.type === "update" && "is_pinned" in event.updates) {
+          if (typeof window !== "undefined" && document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur()
           }
-          case "delete":
-            return prev.filter((m) => m.id !== payload.id)
-          default:
-            return prev
+          const container = scrollContainerRef?.current
+          if (container) pendingScrollRestoreRef.current = container.scrollTop
+
+          if (pinReorderTimeoutRef.current) clearTimeout(pinReorderTimeoutRef.current)
+          pinReorderTimeoutRef.current = setTimeout(() => {
+            pendingScrollRestoreRef.current = null
+            dispatchWindow({ type: "finish-pin-reorder" })
+          }, 800)
         }
-      })
-    }, [])
+
+        dispatchWindow({ type: "memo-event", event })
+      },
+      [scrollContainerRef]
+    )
   )
 
   return {
-    memos,
+    memos: windowState.memos,
     isLoadingOlder,
-    hasMoreOlder,
+    hasMoreOlder: windowState.hasMoreOlder,
     editingId,
     setEditingId,
     fetchOlderMemos,
     updateMemoInList,
-    lastCreatedId,
+    lastCreatedId: windowState.lastCreatedId,
     clearLastCreatedId,
-    isPinReordering,
+    isPinReordering: windowState.isPinReordering,
   }
 }

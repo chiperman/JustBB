@@ -1,15 +1,12 @@
-import { NextResponse } from "next/server"
 import { getAdminClient, getClient } from "@/lib/supabase"
+import { CLI_ERROR_CODES, cliError, cliOk } from "@/server/services/cli/http"
 
 export async function POST(request: Request) {
   let body: unknown
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json(
-      { success: false, data: null, error: "请求体必须是 JSON" },
-      { status: 400 }
-    )
+    return cliError("请求体必须是 JSON", 400, CLI_ERROR_CODES.INVALID_JSON)
   }
 
   const requestId =
@@ -17,24 +14,15 @@ export async function POST(request: Request) {
       ? (body as { request_id?: unknown }).request_id
       : undefined
   if (typeof requestId !== "string") {
-    return NextResponse.json(
-      { success: false, data: null, error: "授权请求参数不完整" },
-      { status: 400 }
-    )
+    return cliError("授权请求参数不完整", 400, CLI_ERROR_CODES.INVALID_PARAMS)
   }
 
   const { data: userData } = await (await getClient()).auth.getUser()
   if (!userData.user) {
-    return NextResponse.json(
-      { success: false, data: null, error: "请先登录 JustMemo" },
-      { status: 401 }
-    )
+    return cliError("请先登录 JustMemo", 401, CLI_ERROR_CODES.UNAUTHORIZED)
   }
   if (userData.user.app_metadata?.role === "admin") {
-    return NextResponse.json(
-      { success: false, data: null, error: "管理员不能拒绝 CLI 授权请求" },
-      { status: 403 }
-    )
+    return cliError("管理员不能拒绝 CLI 授权请求", 403, CLI_ERROR_CODES.FORBIDDEN)
   }
 
   const { error } = await getAdminClient()
@@ -44,8 +32,8 @@ export async function POST(request: Request) {
     .eq("status", "pending")
 
   if (error) {
-    return NextResponse.json({ success: false, data: null, error: "拒绝授权失败" }, { status: 500 })
+    return cliError("拒绝授权失败", 500, CLI_ERROR_CODES.INTERNAL)
   }
 
-  return NextResponse.json({ success: true, data: { status: "denied" }, error: null })
+  return cliOk({ status: "denied" })
 }

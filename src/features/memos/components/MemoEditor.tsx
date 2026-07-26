@@ -13,6 +13,7 @@ import {
 import { TextSelection } from "@tiptap/pm/state"
 
 import { MemoEditorLayout } from "@/features/memos/components/MemoEditorLayout"
+import { EditorUIProvider, useEditorUI } from "@/features/memos/components/editor/EditorUIContext"
 import { useState } from "react"
 
 import { useMemoEditor, DRAFT_CONTENT_KEY } from "@/features/memos/hooks/useMemoEditor"
@@ -92,7 +93,15 @@ function getPendingLinkDeleteTo(doc: Editor["state"]["doc"], pos: number) {
   return doc.textBetween(to, to + 1) === " " ? to + 1 : to
 }
 
-export function MemoEditor({
+export function MemoEditor(props: MemoEditorProps) {
+  return (
+    <EditorUIProvider>
+      <MemoEditorInner {...props} />
+    </EditorUIProvider>
+  )
+}
+
+function MemoEditorInner({
   mode = "create",
   memo,
   onCancel,
@@ -127,26 +136,22 @@ export function MemoEditor({
     setIsPinned,
     error,
     setError,
-    showPrivateDialog,
-    setShowPrivateDialog,
-    isFocused,
-    setIsFocused,
-    isAnimating,
-    setIsAnimating,
-    showLocationPicker,
-    setShowLocationPicker,
-    showLinkPicker,
-    setShowLinkPicker,
-    isAnyDialogOpen,
-    setIsMenuOpen,
-    showSuggestions,
-    setShowSuggestions,
-    pasteMenuPosition,
-    setPasteMenuPosition,
     handleTogglePrivate,
     performPublish,
     handleCancel,
   } = useMemoEditor({ mode, initialMemo: memo, onSuccess, onCancel })
+
+  const {
+    isFocused,
+    setIsFocused,
+    setShowPrivateDialog,
+    setShowLocationPicker,
+    setShowLinkPicker,
+    setIsMenuOpen,
+    setShowSuggestions,
+    setPasteMenuPosition,
+    isAnyDialogOpen,
+  } = useEditorUI()
 
   const {
     queuedImages,
@@ -267,10 +272,11 @@ export function MemoEditor({
     setPendingPasteUrl(null)
     setPendingPastePos(null)
     setFetchedMeta(null)
-  }, [])
+  }, [setPasteMenuPosition])
 
   const handlePublishWithQueuedImages = useCallback(async () => {
     const currentEditor = editorRef.current
+    setShowPrivateDialog(false)
     resolvePendingLink(currentEditor?.view)
     const uploaded = await uploadQueuedImages()
     if (!uploaded) return
@@ -293,6 +299,7 @@ export function MemoEditor({
     uploadQueuedImages,
     mode,
     setIsFocused,
+    setShowPrivateDialog,
   ])
 
   useEffect(() => {
@@ -812,7 +819,7 @@ export function MemoEditor({
     return () => {
       editor.off("update", syncPendingPasteMenu)
     }
-  }, [editor, pendingPastePos, pendingPasteUrl])
+  }, [editor, pendingPastePos, pendingPasteUrl, setPasteMenuPosition])
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -856,7 +863,7 @@ export function MemoEditor({
       clearEditorUiState()
       editor.commands.blur()
     }
-  }, [editor, setIsFocused, setShowSuggestions, suggestionPropsRef])
+  }, [editor, setIsFocused, setShowSuggestions, setPasteMenuPosition, suggestionPropsRef])
 
   const handleToolbarCancel = () => {
     if (mode === "create") {
@@ -864,6 +871,9 @@ export function MemoEditor({
       editor?.commands.focus("end")
       setShowPlaceholder(true)
     }
+    setShowPrivateDialog(false)
+    setShowLocationPicker(false)
+    setShowLinkPicker(false)
     clearImageSessionState()
     handleCancel()
   }
@@ -872,7 +882,6 @@ export function MemoEditor({
     <MemoEditorLayout
       isActuallyCollapsed={isActuallyCollapsed}
       shouldAnimateCollapse={shouldAnimateCollapse}
-      isFocused={isFocused}
       isPrivate={isPrivate}
       isPinned={isPinned}
       isPending={isPending || isPublishingQueuedImages}
@@ -889,14 +898,10 @@ export function MemoEditor({
       onAttachmentInteract={handleAttachmentInteract}
       mode={mode}
       showPlaceholder={showPlaceholder}
-      showSuggestions={showSuggestions}
-      showPrivateDialog={showPrivateDialog}
       accessCode={accessCode}
       setAccessCode={setAccessCode}
       accessHint={accessHint}
       setAccessHint={setAccessHint}
-      showLocationPicker={showLocationPicker}
-      showLinkPicker={showLinkPicker}
       error={error}
       suggestions={suggestions}
       selectedIndex={selectedIndex}
@@ -904,7 +909,6 @@ export function MemoEditor({
       hasMoreMentions={hasMoreMentions}
       mentionQuery={mentionQuery}
       suggestionPosition={suggestionPosition}
-      pasteMenuPosition={pasteMenuPosition}
       pendingPasteUrl={pendingPasteUrl}
       isPendingPasteImageUrl={pendingPasteUrl ? isImageUrl(pendingPasteUrl) : false}
       fetchedMeta={fetchedMeta}

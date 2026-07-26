@@ -3,17 +3,13 @@ import bcrypt from "bcryptjs"
 import { revalidatePath } from "next/cache"
 import { Json } from "@/types/database"
 import type { Database } from "@/types/database"
-import { extractImagesFromContent } from "@/lib/memos/parser"
-import { buildMemoPayload } from "@/server/actions/memos/helpers"
 import { requireCliAdmin } from "@/server/services/cli/admin"
 import { getCliClient, getCliReadClient } from "@/server/services/cli/client"
+import { CLI_ERROR_CODES, cliError, cliOk, isValidMemoNumber } from "@/server/services/cli/http"
+import { updateMemoContentRecord } from "@/server/services/memos/write"
 
 type RouteContext = {
   params: Promise<{ memoNumber: string }>
-}
-
-function jsonResponse<T>(success: boolean, data: T, error: string | null, status = 200) {
-  return NextResponse.json({ success, data, error }, { status })
 }
 
 const MEMO_SELECT =
@@ -21,8 +17,37 @@ const MEMO_SELECT =
 
 type MemoUpdate = Database["public"]["Tables"]["memos"]["Update"]
 
-function retainImageMetadata(images: string[], metadata: Record<string, unknown>) {
-  return Object.fromEntries(images.map((url) => [url, metadata[url]]).filter(([, value]) => value))
+type MemoRow = Database["public"]["Tables"]["memos"]["Row"]
+
+/** 深 module 返回完整行，CLI 响应保持既有字段子集。 */
+function projectMemo(memo: MemoRow | Record<string, unknown> | null) {
+  if (!memo) return memo
+  const {
+    id,
+    memo_number,
+    content,
+    images,
+    image_metadata,
+    is_private,
+    is_pinned,
+    access_code_hint,
+    tags,
+    created_at,
+    word_count,
+  } = memo as MemoRow
+  return {
+    id,
+    memo_number,
+    content,
+    images,
+    image_metadata,
+    is_private,
+    is_pinned,
+    access_code_hint,
+    tags,
+    created_at,
+    word_count,
+  }
 }
 
 async function requireAdmin(request: Request) {
@@ -30,12 +55,14 @@ async function requireAdmin(request: Request) {
   return {
     supabase: auth.supabase,
     user: auth.user,
-    response: auth.user ? null : jsonResponse(false, null, auth.error, auth.status),
+    response: auth.user
+      ? null
+      : cliError(
+          auth.error ?? "请先执行 justmemo login",
+          auth.status,
+          auth.code ?? CLI_ERROR_CODES.UNAUTHORIZED
+        ),
   }
-}
-
-function validMemoNumber(value: string) {
-  return /^\d+$/.test(value) && Number(value) >= 1
 }
 
 async function findActiveOwnedMemo(
@@ -70,7 +97,7 @@ async function findActiveOwnedMemo(
 
   if (error || !data) {
     return {
-      response: jsonResponse(false, null, `没有找到 Memo #${memoNumber}`, 404),
+      response: cliError(`没有找到 Memo #${memoNumber}`, 404, CLI_ERROR_CODES.MEMO_NOT_FOUND),
       memo: null,
       supabase: auth.supabase,
       userId: null,
@@ -92,8 +119,8 @@ async function findActiveOwnedMemo(
 export async function GET(request: Request, { params }: RouteContext) {
   const { memoNumber } = await params
 
-  if (!validMemoNumber(memoNumber)) {
-    return jsonResponse(false, null, "无效的 Memo 编号", 400)
+  if (!isValidMemoNumber(memoNumber)) {
+    return cliError("无效的 Memo 编号", 400, CLI_ERROR_CODES.INVALID_MEMO_NUMBER)
   }
 
   const { data, error } = await (
@@ -109,29 +136,30 @@ export async function GET(request: Request, { params }: RouteContext) {
 
   if (error) {
     console.error("CLI memo lookup failed:", error)
-    return jsonResponse(false, null, "查询失败", 500)
+    return cliError("查询失败", 500, CLI_ERROR_CODES.INTERNAL)
   }
 
   const memo = data?.[0]
   if (!memo) {
-    return jsonResponse(false, null, `没有找到 Memo #${memoNumber}`, 404)
+    return cliError(`没有找到 Memo #${memoNumber}`, 404, CLI_ERROR_CODES.MEMO_NOT_FOUND)
   }
 
-  return jsonResponse(true, memo, null)
+  return cliOk(memo)
 }
 
 export async function PATCH(request: Request, { params }: RouteContext) {
   const { memoNumber } = await params
-  if (!validMemoNumber(memoNumber)) return jsonResponse(false, null, "无效的 Memo 编号", 400)
+  if (!isValidMemoNumber(memoNumber))
+    return cliError("无效的 Memo 编号", 400, CLI_ERROR_CODES.INVALID_MEMO_NUMBER)
 
   let body: unknown
   try {
     body = await request.json()
   } catch {
-    return jsonResponse(false, null, "请求体必须是 JSON", 400)
+    return cliError("请求体必须是 JSON", 400, CLI_ERROR_CODES.INVALID_JSON)
   }
   if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse(false, null, "请求体必须是对象", 400)
+    return cliError("请求体必须是对象", 400, CLI_ERROR_CODES.INVALID_PARAMS)
   }
 
   const input = body as Record<string, unknown>
@@ -144,53 +172,62 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     "access_code_hint",
   ]
   if (Object.keys(input).some((key) => !allowedKeys.includes(key))) {
-    return jsonResponse(false, null, "包含不支持的更新字段", 400)
+    return cliError("包含不支持的更新字段", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
   }
-  if (Object.keys(input).length === 0) return jsonResponse(false, null, "没有可更新的字段", 400)
+  if (Object.keys(input).length === 0)
+    return cliError("没有可更新的字段", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
   if (input.content !== undefined && typeof input.content !== "string") {
-    return jsonResponse(false, null, "content 必须是字符串", 400)
+    return cliError("content 必须是字符串", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
   }
   if (
     input.images !== undefined &&
     (!Array.isArray(input.images) || input.images.some((item) => typeof item !== "string"))
   ) {
-    return jsonResponse(false, null, "images 必须是字符串数组", 400)
+    return cliError("images 必须是字符串数组", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
   }
   if (input.is_pinned !== undefined && typeof input.is_pinned !== "boolean") {
-    return jsonResponse(false, null, "is_pinned 必须是布尔值", 400)
+    return cliError("is_pinned 必须是布尔值", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
   }
   if (input.is_private !== undefined && typeof input.is_private !== "boolean") {
-    return jsonResponse(false, null, "is_private 必须是布尔值", 400)
+    return cliError("is_private 必须是布尔值", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
   }
   if (input.access_code !== undefined && typeof input.access_code !== "string") {
-    return jsonResponse(false, null, "access_code 必须是字符串", 400)
+    return cliError("access_code 必须是字符串", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
   }
   if (input.access_code_hint !== undefined && typeof input.access_code_hint !== "string") {
-    return jsonResponse(false, null, "access_code_hint 必须是字符串", 400)
+    return cliError("access_code_hint 必须是字符串", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
   }
   if (input.is_private === true && (!input.access_code || typeof input.access_code !== "string")) {
-    return jsonResponse(false, null, "私密 Memo 必须设置访问口令", 400)
+    return cliError("私密 Memo 必须设置访问口令", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
   }
 
   const found = await findActiveOwnedMemo(request, memoNumber)
   if (found.response || !found.memo) return found.response as NextResponse
 
-  const update: MemoUpdate = { updated_at: new Date().toISOString() }
-  if (input.content !== undefined) {
-    const images = (input.images as string[] | undefined) || found.memo.images
-    const normalized = extractImagesFromContent(input.content as string, images)
-    if (!normalized.content.trim() && normalized.images.length === 0) {
-      return jsonResponse(false, null, "内容不能为空", 400)
-    }
-    Object.assign(update, buildMemoPayload(normalized.content), {
-      images: normalized.images,
-      image_metadata: retainImageMetadata(normalized.images, found.memo.image_metadata),
+  // 内容与图片更新收口到共享深 module；状态字段（置顶/私密）仍在下方处理。
+  let memo: Record<string, unknown> | null = null
+  if (input.content !== undefined || input.images !== undefined) {
+    const result = await updateMemoContentRecord(found.supabase, found.userId, {
+      id: found.memo.id,
+      content: input.content as string | undefined,
+      images: input.images as string[] | undefined,
     })
-  } else if (input.images !== undefined) {
-    update.images = input.images as string[]
-    update.image_metadata = retainImageMetadata(input.images as string[], found.memo.image_metadata)
+    if (!result.success) {
+      if (result.reason === "empty_content") {
+        return cliError("内容不能为空", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
+      }
+      console.error("CLI memo update failed:", result.dbError)
+      return cliError("更新 Memo 失败", 500, CLI_ERROR_CODES.INTERNAL)
+    }
+    memo = result.data
   }
 
+  const hasStateChanges = input.is_pinned !== undefined || input.is_private !== undefined
+  if (!hasStateChanges) {
+    return cliOk(projectMemo(memo))
+  }
+
+  const update: MemoUpdate = { updated_at: new Date().toISOString() }
   if (input.is_pinned !== undefined) {
     update.is_pinned = input.is_pinned as boolean
     update.pinned_at = input.is_pinned ? new Date().toISOString() : null
@@ -218,17 +255,18 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   if (error || !data) {
     console.error("CLI memo update failed:", error)
-    return jsonResponse(false, null, "更新 Memo 失败", 500)
+    return cliError("更新 Memo 失败", 500, CLI_ERROR_CODES.INTERNAL)
   }
 
   revalidatePath("/")
   revalidatePath("/gallery")
-  return jsonResponse(true, data, null)
+  return cliOk(data)
 }
 
 export async function DELETE(request: Request, { params }: RouteContext) {
   const { memoNumber } = await params
-  if (!validMemoNumber(memoNumber)) return jsonResponse(false, null, "无效的 Memo 编号", 400)
+  if (!isValidMemoNumber(memoNumber))
+    return cliError("无效的 Memo 编号", 400, CLI_ERROR_CODES.INVALID_MEMO_NUMBER)
 
   const found = await findActiveOwnedMemo(request, memoNumber)
   if (found.response || !found.memo) return found.response as NextResponse
@@ -241,10 +279,10 @@ export async function DELETE(request: Request, { params }: RouteContext) {
 
   if (error) {
     console.error("CLI memo delete failed:", error)
-    return jsonResponse(false, null, "删除 Memo 失败", 500)
+    return cliError("删除 Memo 失败", 500, CLI_ERROR_CODES.INTERNAL)
   }
 
   revalidatePath("/")
   revalidatePath("/trash")
-  return jsonResponse(true, { memo_number: Number(memoNumber) }, null)
+  return cliOk({ memo_number: Number(memoNumber) })
 }

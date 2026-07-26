@@ -122,6 +122,28 @@ describe("useMemoEditor", () => {
 
       expect(result.current.error).toBe("正在提交，请稍候。")
     })
+
+    it("should publish a typed object instead of FormData", async () => {
+      mockCreateMemo.mockResolvedValueOnce({ success: true, data: null })
+      const { result } = renderHook(() => useMemoEditor({ mode: "create" }))
+
+      act(() => result.current.setContent("typed payload"))
+      await act(async () => {
+        await result.current.performPublish(null, ["https://example.com/photo.jpg"], {
+          "https://example.com/photo.jpg": { width: 100, height: 80 },
+        })
+      })
+
+      expect(mockCreateMemo).toHaveBeenCalledWith({
+        content: "typed payload",
+        is_private: false,
+        is_pinned: false,
+        images: ["https://example.com/photo.jpg"],
+        image_metadata: {
+          "https://example.com/photo.jpg": { width: 100, height: 80 },
+        },
+      })
+    })
   })
 
   describe("edit mode", () => {
@@ -166,6 +188,32 @@ describe("useMemoEditor", () => {
       })
 
       expect(result.current.content).toBe("keep this")
+    })
+
+    it("should update with the same typed payload plus memo id", async () => {
+      mockUpdateMemoContent.mockResolvedValueOnce({ success: true, data: null })
+      const memo = {
+        id: "12345678-1234-1234-1234-123456789012",
+        content: "existing content",
+        images: [],
+        image_metadata: {},
+        is_private: false,
+        is_pinned: false,
+      } as any
+      const { result } = renderHook(() => useMemoEditor({ mode: "edit", initialMemo: memo }))
+
+      await act(async () => {
+        await result.current.performPublish(null)
+      })
+
+      expect(mockUpdateMemoContent).toHaveBeenCalledWith({
+        id: memo.id,
+        content: "existing content",
+        is_private: false,
+        is_pinned: false,
+        images: [],
+        image_metadata: {},
+      })
     })
   })
 })

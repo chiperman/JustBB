@@ -8,21 +8,26 @@ import { Memo } from "@/types/memo"
 import { getCurrentUserId, isAdmin } from "@/features/auth/actions"
 import {
   calculateWordCount,
-  extractImagesFromContent,
   extractLocations,
   mergeTagsIntoContent,
   removeTagsFromContent,
   renameTagInContent,
 } from "@/lib/memos/parser"
-import { buildMemoPayload } from "./helpers"
-import { Database, Json } from "@/types/database"
+import { Database } from "@/types/database"
 import {
   createMemoSchema,
   updateMemoContentSchema,
+  type CreateMemoInput,
+  type UpdateMemoContentInput,
   updateMemoStateSchema,
   batchAddTagsSchema,
 } from "@/lib/memos/schemas"
 import { withViewerAccess } from "@/lib/memos/visibility"
+import {
+  createMemoRecord,
+  updateMemoContentRecord,
+  type WriteMemoResult,
+} from "@/server/services/memos/write"
 
 type MemoInsert = Database["public"]["Tables"]["memos"]["Insert"]
 type ActionErrorLike = {
@@ -76,7 +81,7 @@ function logValidationFailure(
   action: string,
   viewerId: string,
   issue: ValidationIssueLike,
-  rawData: Record<string, FormDataEntryValue>
+  rawData: Record<string, unknown>
 ) {
   const context: Record<string, unknown> = {
     viewerId,
@@ -92,40 +97,31 @@ function logValidationFailure(
   console.error(action, context)
 }
 
-function normalizeImageMetadata(
-  images: string[],
-  metadata: Record<string, { width: number; height: number }>
-): Json {
-  return Object.fromEntries(
-    images
-      .map((url) => {
-        const item = metadata[url]
-        if (!item) return null
-
-        return [
-          url,
-          {
-            width: item.width,
-            height: item.height,
-          },
-        ]
-      })
-      .filter((entry): entry is [string, { width: number; height: number }] => Boolean(entry))
-  ) as Json
+function mapWriteFailure(result: WriteMemoResult, dbPrefix: string): string {
+  if (result.success) return dbPrefix
+  switch (result.reason) {
+    case "empty_content":
+      return "内容不能为空"
+    case "private_requires_code":
+      return "私密 Memo 必须设置访问口令"
+    case "not_found":
+      return formatActionError(dbPrefix, { code: "PGRST116" })
+    default:
+      return formatActionError(dbPrefix, "dbError" in result ? result.dbError : null)
+  }
 }
 
 /**
  * 创建新笔记
  */
-export async function createMemo(formData: FormData): Promise<ActionResponse<Memo>> {
+export async function createMemo(input: CreateMemoInput): Promise<ActionResponse<Memo>> {
   if (!(await isAdmin())) {
     return { success: false, error: "权限不足，仅管理员可进行此操作" }
   }
   const viewerId = await getCurrentUserId()
   if (!viewerId) return { success: false, error: "请先登录" }
 
-  const rawData = Object.fromEntries(formData.entries())
-  const validation = createMemoSchema.safeParse(rawData)
+  const validation = createMemoSchema.safeParse(input)
 
   if (!validation.success) {
     return { success: false, error: validation.error.issues[0].message }
@@ -133,55 +129,48 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
 
   const { content, is_private, is_pinned, access_code, access_code_hint, images, image_metadata } =
     validation.data
-  const normalizedMemo = extractImagesFromContent(content, images)
   const supabase = await getClient()
 
-  const payload: Partial<MemoInsert> = {
-    owner_id: viewerId,
-    is_private,
-    images: normalizedMemo.images,
-    image_metadata: normalizeImageMetadata(normalizedMemo.images, image_metadata),
-    ...buildMemoPayload(normalizedMemo.content, { isPinned: is_pinned }),
+  const result = await createMemoRecord(supabase, viewerId, {
+    content,
+    images,
+    imageMetadata: image_metadata,
+    isPrivate: is_private,
+    isPinned: is_pinned,
+    accessCode: access_code,
+    accessCodeHint: access_code_hint,
+  })
+
+  if (!result.success) {
+    if (result.reason === "db")
+      logDatabaseError("Error creating memo", { viewerId }, result.dbError)
+    return { success: false, error: mapWriteFailure(result, "发布失败") }
   }
 
-  if (is_private && access_code) {
-    const salt = await bcrypt.genSalt(10)
-    payload.access_code_hash = await bcrypt.hash(access_code, salt)
-    payload.access_code_hint = access_code_hint || null
-  }
-
-  const { data, error } = await supabase
-    .from("memos")
-    .insert(payload as MemoInsert)
-    .select()
-    .single()
-
-  if (error) {
-    logDatabaseError("Error creating memo", { viewerId }, error)
-    return { success: false, error: formatActionError("发布失败", error) }
-  }
-
-  revalidatePath("/")
-  revalidatePath("/gallery")
   return {
     success: true,
     error: null,
-    data: enrichViewerMemo(data as Memo, viewerId),
+    data: enrichViewerMemo(result.data as Memo, viewerId),
   }
 }
 
 /**
  * 更新笔记内容 (含内容解析)
  */
-export async function updateMemoContent(formData: FormData): Promise<ActionResponse<Memo>> {
+export async function updateMemoContent(
+  input: UpdateMemoContentInput
+): Promise<ActionResponse<Memo>> {
   if (!(await isAdmin())) {
     return { success: false, error: "权限不足，仅管理员可进行此操作" }
   }
   const viewerId = await getCurrentUserId()
   if (!viewerId) return { success: false, error: "请先登录" }
 
-  const rawData = Object.fromEntries(formData.entries())
-  const validation = updateMemoContentSchema.safeParse(rawData)
+  const rawData =
+    input && typeof input === "object" && !Array.isArray(input)
+      ? (input as Record<string, unknown>)
+      : {}
+  const validation = updateMemoContentSchema.safeParse(input)
 
   if (!validation.success) {
     const issue = validation.error.issues[0]
@@ -194,42 +183,27 @@ export async function updateMemoContent(formData: FormData): Promise<ActionRespo
   }
 
   const { id, content, images, image_metadata } = validation.data
-  const normalizedMemo = extractImagesFromContent(content, images)
   const supabase = await getClient()
 
-  const { data, error } = await supabase
-    .from("memos")
-    .update({
-      ...buildMemoPayload(normalizedMemo.content),
-      images: normalizedMemo.images,
-      image_metadata: normalizeImageMetadata(normalizedMemo.images, image_metadata),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .eq("owner_id", viewerId)
-    .select()
-    .single()
+  const result = await updateMemoContentRecord(supabase, viewerId, {
+    id,
+    content,
+    images,
+    imageMetadata: image_metadata,
+  })
 
-  if (error) {
-    logDatabaseError("Error updating memo content", { viewerId, memoId: id }, error)
-    return { success: false, error: formatActionError("保存失败", error) }
+  if (!result.success) {
+    if (result.reason === "db")
+      logDatabaseError("Error updating memo content", { viewerId, memoId: id }, result.dbError)
+    if (result.reason === "not_found")
+      console.error("Error updating memo content: no row returned", { viewerId, memoId: id })
+    return { success: false, error: mapWriteFailure(result, "保存失败") }
   }
 
-  if (!data) {
-    const noDataError = "保存失败：数据库没有返回更新后的记录，可能这条 memo 不属于当前账号。"
-    console.error("Error updating memo content: no row returned", {
-      viewerId,
-      memoId: id,
-    })
-    return { success: false, error: noDataError }
-  }
-
-  revalidatePath("/")
-  revalidatePath("/gallery")
   return {
     success: true,
     error: null,
-    data: enrichViewerMemo(data as Memo, viewerId),
+    data: enrichViewerMemo(result.data as Memo, viewerId),
   }
 }
 

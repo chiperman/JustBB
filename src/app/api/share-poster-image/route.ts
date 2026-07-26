@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getPosterImageSource } from "@/features/memos/lib/share-poster"
-import { getMemosQuery, MemoFilters } from "@/lib/memos/query-builder"
+import { getClient } from "@/lib/supabase"
 import { fetchPosterImage } from "@/server/services/share-poster-image"
 
 export const runtime = "nodejs"
@@ -9,8 +9,12 @@ export async function GET(request: NextRequest) {
   const memoId = request.nextUrl.searchParams.get("memoId")
   if (!memoId) return NextResponse.json({ error: "缺少 Memo 标识" }, { status: 400 })
 
-  const { query: queryBuilder } = await getMemosQuery()
-  const { data: memo, error } = await MemoFilters.publicOnly(MemoFilters.active(queryBuilder))
+  const supabase = await getClient()
+  const { data: memo, error } = await supabase
+    .from("memos")
+    .select("content, images")
+    .is("deleted_at", null)
+    .eq("is_private", false)
     .eq("id", memoId)
     .single()
 

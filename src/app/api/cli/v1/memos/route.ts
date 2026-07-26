@@ -1,42 +1,29 @@
-import { NextResponse } from "next/server"
 import { Json } from "@/types/database"
 import { getCliReadClient } from "@/server/services/cli/client"
-
-const DEFAULT_LIMIT = 20
-const MAX_LIMIT = 100
-const DEFAULT_PAGE = 1
-const MAX_PAGE = 10000
-
-function jsonResponse<T>(success: boolean, data: T, error: string | null, status = 200) {
-  return NextResponse.json({ success, data, error }, { status })
-}
-
-function parseLimit(value: string | null) {
-  if (value === null || value === "") return DEFAULT_LIMIT
-
-  const parsed = Number(value)
-  if (!Number.isInteger(parsed) || parsed < 1 || parsed > MAX_LIMIT) return null
-  return parsed
-}
-
-function parsePage(value: string | null) {
-  if (value === null || value === "") return DEFAULT_PAGE
-
-  const parsed = Number(value)
-  if (!Number.isInteger(parsed) || parsed < 1 || parsed > MAX_PAGE) return null
-  return parsed
-}
+import {
+  CLI_ERROR_CODES,
+  CLI_MAX_LIMIT,
+  CLI_MAX_PAGE,
+  cliError,
+  cliOk,
+  parseCliLimit,
+  parseCliPage,
+} from "@/server/services/cli/http"
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
-  const limit = parseLimit(url.searchParams.get("limit"))
-  const page = parsePage(url.searchParams.get("page"))
+  const limit = parseCliLimit(url.searchParams.get("limit"))
+  const page = parseCliPage(url.searchParams.get("page"))
 
   if (limit === null) {
-    return jsonResponse(false, null, `limit 必须是 1-${MAX_LIMIT} 之间的整数`, 400)
+    return cliError(
+      `limit 必须是 1-${CLI_MAX_LIMIT} 之间的整数`,
+      400,
+      CLI_ERROR_CODES.INVALID_PARAMS
+    )
   }
   if (page === null) {
-    return jsonResponse(false, null, `page 必须是 1-${MAX_PAGE} 之间的整数`, 400)
+    return cliError(`page 必须是 1-${CLI_MAX_PAGE} 之间的整数`, 400, CLI_ERROR_CODES.INVALID_PARAMS)
   }
 
   const queryText = url.searchParams.get("q") || ""
@@ -60,8 +47,8 @@ export async function GET(request: Request) {
 
   if (error) {
     console.error("CLI memo search failed:", error)
-    return jsonResponse(false, null, "查询失败", 500)
+    return cliError("查询失败", 500, CLI_ERROR_CODES.INTERNAL)
   }
 
-  return jsonResponse(true, data || [], null)
+  return cliOk(data || [])
 }

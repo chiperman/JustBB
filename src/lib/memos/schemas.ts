@@ -4,11 +4,6 @@ const postgresUuidSchema = z
   .string()
   .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "无效的 ID")
 
-const booleanPreprocessor = (val: unknown) => {
-  if (typeof val === "string") return val.toLowerCase() === "true"
-  return Boolean(val)
-}
-
 const optionalBooleanPreprocessor = (val: unknown) => {
   if (val === undefined || val === null || val === "") return undefined
   if (typeof val === "string") return val.toLowerCase() === "true"
@@ -33,19 +28,6 @@ const arrayPreprocessor = (val: unknown) => {
   return []
 }
 
-const imageMetadataPreprocessor = (val: unknown) => {
-  if (typeof val === "string") {
-    if (val.trim() === "") return {}
-    try {
-      return JSON.parse(val)
-    } catch {
-      return {}
-    }
-  }
-  if (val && typeof val === "object" && !Array.isArray(val)) return val
-  return {}
-}
-
 const imageMetadataSchema = z.record(
   z.string(),
   z.object({
@@ -60,16 +42,14 @@ const imageMetadataSchema = z.record(
 export const memoContentSchema = z
   .object({
     content: z.string(),
-    is_pinned: z.preprocess(booleanPreprocessor, z.boolean().default(false)),
-    is_private: z.preprocess(booleanPreprocessor, z.boolean().default(false)),
+    is_pinned: z.boolean().default(false),
+    is_private: z.boolean().default(false),
     access_code_hint: z.string().optional().nullable(),
     access_code: z.string().optional().nullable(),
-    images: z.preprocess(arrayPreprocessor, z.array(z.string()).optional().default([])),
-    image_metadata: z.preprocess(
-      imageMetadataPreprocessor,
-      imageMetadataSchema.optional().default({})
-    ),
+    images: z.array(z.string()).default([]),
+    image_metadata: imageMetadataSchema.default({}),
   })
+  .strict()
   .superRefine((data, ctx) => {
     if (data.content.trim() || data.images.length > 0) return
 

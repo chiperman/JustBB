@@ -1,15 +1,12 @@
-import { NextResponse } from "next/server"
 import { getCliAuthClient } from "@/server/services/cli/client"
+import { CLI_ERROR_CODES, cliError, cliOk } from "@/server/services/cli/http"
 
 export async function POST(request: Request) {
   let body: unknown
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json(
-      { success: false, data: null, error: "请求体必须是 JSON" },
-      { status: 400 }
-    )
+    return cliError("请求体必须是 JSON", 400, CLI_ERROR_CODES.INVALID_JSON)
   }
 
   const refreshToken =
@@ -18,39 +15,26 @@ export async function POST(request: Request) {
       : undefined
 
   if (typeof refreshToken !== "string" || refreshToken.length === 0) {
-    return NextResponse.json(
-      { success: false, data: null, error: "缺少 refresh_token" },
-      { status: 400 }
-    )
+    return cliError("缺少 refresh_token", 400, CLI_ERROR_CODES.INVALID_PARAMS)
   }
 
   const { data, error } = await getCliAuthClient().auth.refreshSession({
     refresh_token: refreshToken,
   })
   if (error || !data.session) {
-    return NextResponse.json(
-      { success: false, data: null, error: "登录已失效，请重新登录" },
-      { status: 401 }
-    )
+    return cliError("登录已失效，请重新登录", 401, CLI_ERROR_CODES.UNAUTHORIZED)
   }
 
   const { data: userData, error: userError } = await getCliAuthClient().auth.getUser(
     data.session.access_token
   )
   if (userError || userData.user?.app_metadata?.role !== "admin") {
-    return NextResponse.json(
-      { success: false, data: null, error: "CLI access is restricted to administrators." },
-      { status: 403 }
-    )
+    return cliError("CLI access is restricted to administrators.", 403, CLI_ERROR_CODES.ADMIN_ONLY)
   }
 
-  return NextResponse.json({
-    success: true,
-    data: {
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-      expires_at: data.session.expires_at,
-    },
-    error: null,
+  return cliOk({
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
+    expires_at: data.session.expires_at,
   })
 }

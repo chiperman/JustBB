@@ -1,14 +1,12 @@
 "use client"
 
 import { useState, useEffect, ComponentType, useCallback } from "react"
-import { getMemosWithLocations } from "@/server/actions/memos/query"
 import type { MapMarker } from "@/shared/lib/location-cache"
 import { groupMemosByLocation } from "@/shared/lib/map-markers"
-import { getMapCacheKey } from "@/shared/lib/page-cache-keys"
+import { useViewerQuery } from "@/shared/hooks/useViewerQuery"
+import { getViewerMapMemos } from "@/shared/lib/viewer-memo-queries"
 import { usePageDataCache } from "@/state/PageDataCache"
-import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
-import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
-import { useUser } from "@/state/UserContext"
+import { useMemoDerivedRefresh } from "@/lib/memos/refresh-policy"
 
 // 模块级预加载
 const mapViewPromise = import("@/shared/ui/MapView")
@@ -22,10 +20,9 @@ interface MapViewProps {
 }
 
 export function useMapMemos() {
-  const { unlockedMemoIds } = useUnlockedMemos()
-  const { user } = useUser()
+  const { cacheKey: viewerCacheKey, query } = useViewerQuery()
   const { getCache, setCache } = usePageDataCache()
-  const cacheKey = getMapCacheKey(user?.id, unlockedMemoIds)
+  const cacheKey = viewerCacheKey("/map")
   const cached = getCache(cacheKey)
   const cachedMarkers = cached?.markers as MapMarker[] | undefined
   const [markers, setMarkers] = useState<MapMarker[]>(cachedMarkers ?? [])
@@ -42,10 +39,7 @@ export function useMapMemos() {
 
   const refreshMapMemos = useCallback(
     async (isMounted: () => boolean = () => true) => {
-      const [result, mapModule] = await Promise.all([
-        getMemosWithLocations(unlockedMemoIds),
-        mapViewPromise,
-      ])
+      const [result, mapModule] = await Promise.all([query(getViewerMapMemos), mapViewPromise])
 
       if (!isMounted()) return
 
@@ -60,7 +54,7 @@ export function useMapMemos() {
 
       setIsLoading(false)
     },
-    [cacheKey, setCache, unlockedMemoIds]
+    [cacheKey, query, setCache]
   )
 
   useEffect(() => {
@@ -88,18 +82,9 @@ export function useMapMemos() {
     return () => {
       isMounted = false
     }
-  }, [cacheKey, getCache, refreshMapMemos, unlockedMemoIds])
+  }, [cacheKey, getCache, refreshMapMemos])
 
-  useMemoSync(
-    useCallback(
-      (payload) => {
-        if (shouldRefreshMemoDerivedData(payload)) {
-          void refreshMapMemos()
-        }
-      },
-      [refreshMapMemos]
-    )
-  )
+  useMemoDerivedRefresh("map", refreshMapMemos)
 
   return { markers, isLoading, MapView }
 }

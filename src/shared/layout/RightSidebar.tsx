@@ -19,7 +19,7 @@ import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { cn } from "@/shared/lib/utils"
 import { getTimelineStats } from "@/server/actions/memos/analytics"
 import { SidebarCollapseButton } from "./SidebarCollapseButton"
-import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
+import { useMemoDerivedRefresh } from "@/lib/memos/refresh-policy"
 import {
   RIGHT_SIDEBAR_COOKIE_KEY,
   RIGHT_SIDEBAR_STORAGE_EVENT,
@@ -122,16 +122,7 @@ export function RightSidebar({
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useMemoSync(
-    useCallback(
-      (payload) => {
-        if (shouldRefreshMemoDerivedData(payload)) {
-          void refreshTimelineStats()
-        }
-      },
-      [refreshTimelineStats]
-    )
-  )
+  useMemoDerivedRefresh("timeline", refreshTimelineStats)
 
   // 构建时间轴数据结构（始终基于全量数据）
   const fullTimeline = useMemo(() => {

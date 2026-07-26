@@ -57,6 +57,7 @@ describe("GET /api/cli/v1/memos/:memoNumber", () => {
       success: false,
       data: null,
       error: "无效的 Memo 编号",
+      code: "INVALID_MEMO_NUMBER",
     })
     expect(rpc).not.toHaveBeenCalled()
   })

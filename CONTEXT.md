@@ -179,6 +179,7 @@ Next.js App Router 负责路由和页面；Server Components 负责用户与轻�
 缓存规则：
 
 - `PageDataCache` 的 key 必须区分 URL 参数、当前用户和已解锁 Memo 集合。
+- Memo 查询统一通过 `src/shared/hooks/useViewerQuery.ts` 注入当前页面内存中的解锁集合，并把查看者与解锁集合写入缓存 key；各查询域通过 `viewer-memo-queries.ts` 的薄 adapter 调用，消费方不得自行传递 `unlockedMemoIds`。
 - `memoCache` 只负责轻量索引、发布后的即时同步和页面预热，不是权限来源，也不是私密正文的长期存储层。
 - 搜索、标签、时间轴、地图和画廊如果改变可见性或筛选条件，必须回到统一查询入口，不能只在前端过滤一份可能已经脱敏的数据。
 
@@ -213,6 +214,7 @@ Next.js App Router 负责路由和页面；Server Components 负责用户与轻�
 
 - 查询：`getMemos`、`getMemoByNumber`、`getMemosWithLocations`、`getMemoStats`、`getTimelineStats`、`getAllTags`。
 - 写入：`createMemo`、`updateMemoContent`、`updateMemoState`、批量标签和批量状态操作。
+- 「创建/更新一条 memo」的业务实现（normalize、派生字段、口令哈希、落库、缓存失效）唯一收口在 `src/server/services/memos/write.ts`；Web server action（FormData）和 CLI route（JSON）只是入口 adapter，传入已绑定身份的 supabase client 和 owner_id。新增写路径必须复用它，不能再写第三份实现。
 - 隐私：`verifyUnlockCode` 只验证一条 Memo；成功后的正文仍只能存在当前页面内存。
 - 回收站：软删除、恢复、永久删除、清空和批量操作都要求操作者权限，并按 `owner_id` 限定数据。
 - 导出：只导出当前作者自己的 Memo，支持 Markdown 和 JSON 两种网页导出路径。
@@ -256,6 +258,8 @@ DELETE /api/cli/v1/trash/:memoNumber
 ```
 
 API 使用 Supabase access token/refresh token，但 token 只由 CLI 通过 HTTP Bearer 发送；服务端 `getCliClient` 负责把请求绑定到当前用户。发布接口再次检查登录状态和 `app_metadata.role === "admin"`，不能只信 CLI 前端的菜单。
+
+响应契约由 `src/server/services/cli/http.ts` 统一定义：所有端点共用 `cliOk` / `cliError` 响应封装、分页与 Memo 编号校验。错误响应除 `error` 文案外还带机器可读 `code` 字段（如 `ADMIN_ONLY`、`INVALID_PARAMS`）；`error` 文案是事实上的线上契约，野外旧版本 CLI 按文案匹配错误，文案不能改，新增机器判定一律走 `code`。CLI 客户端优先读 `code`，无 `code` 时回退文案匹配。
 
 CLI 当前实际已经支持：
 

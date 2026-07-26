@@ -5,7 +5,7 @@ import { Json, Database } from "@/types/database"
 import { Memo, Location } from "@/types/memo"
 import { ActionResponse } from "../shared/types"
 import { fetchMemosSchema, FetchMemosInput } from "@/lib/memos/schemas"
-import { BASE_MEMO_SELECT, getMemosQuery, MemoFilters } from "@/lib/memos/query-builder"
+import { MEMO_SAFE_SELECT } from "@/lib/memos/select"
 import { getCurrentUserId } from "@/features/auth/actions"
 import { withViewerAccess } from "@/lib/memos/visibility"
 import { isUuid } from "@/shared/lib/ids"
@@ -103,24 +103,6 @@ export async function searchMemosForMention(
 }
 
 /**
- * 获取笔记轻量索引
- */
-export async function getMemoIndex(): Promise<ActionResponse<Partial<Memo>[]>> {
-  const { query: qBuilder } = await getMemosQuery()
-  const q = MemoFilters.active(qBuilder).order("created_at", {
-    ascending: false,
-  })
-
-  const { data, error } = await q
-  if (error) return { success: false, error: error.message, data: [] }
-  return {
-    success: true,
-    error: null,
-    data: (data || []) as unknown as Partial<Memo>[],
-  }
-}
-
-/**
  * 获取画廊笔记 (带图片的)
  */
 export async function getGalleryMemos(
@@ -165,39 +147,6 @@ export async function getGalleryMemos(
   })
 
   return { success: true, error: null, data: memos }
-}
-
-/**
- * 获取归档笔记 (按年月)
- */
-export async function getArchivedMemos(
-  year: number,
-  month: number
-): Promise<ActionResponse<Memo[]>> {
-  const viewerId = await getCurrentUserId()
-  const startDate = new Date(year, month - 1, 1, 0, 0, 0).toISOString()
-  const endDate = new Date(year, month, 0, 23, 59, 59).toISOString()
-
-  const { query: qBuilder } = await getMemosQuery()
-  let q = MemoFilters.active(qBuilder)
-  q = MemoFilters.dateRange(q, startDate, endDate)
-  q = q.order("created_at", { ascending: false })
-
-  const { data, error } = await q
-  if (error) {
-    console.error("Error fetching archived memos:", error)
-    return { success: false, error: error.message, data: [] }
-  }
-
-  return {
-    success: true,
-    error: null,
-    data: ((data || []) as Memo[]).map((memo) => ({
-      ...memo,
-      is_owner: memo.owner_id === viewerId,
-      is_locked: memo.is_private && memo.owner_id !== viewerId,
-    })),
-  }
 }
 
 /**
@@ -247,7 +196,7 @@ export async function getMemoById(
   const supabase = getAdminClient()
   const { data, error } = await supabase
     .from("memos")
-    .select(BASE_MEMO_SELECT)
+    .select(MEMO_SAFE_SELECT)
     .eq("id", memoId)
     .is("deleted_at", null)
     .single()
@@ -272,19 +221,22 @@ export async function getMemoById(
 /**
  * 获取反向引用 (Backlinks)
  */
-export async function getBacklinks(memoNumber: number): Promise<ActionResponse<Memo[]>> {
+export async function getBacklinks(
+  memoNumber: number,
+  unlockedMemoIds: string[] = []
+): Promise<ActionResponse<Memo[]>> {
   if (!memoNumber) return { success: true, error: null, data: [] }
 
-  const { query: qBuilder } = await getMemosQuery()
-  let q = MemoFilters.active(qBuilder)
-  q = q.ilike("content", `%@${memoNumber}%`).order("created_at", { ascending: false })
+  const result = await getMemos({
+    query: `@${memoNumber}`,
+    limit: 100,
+    unlockedMemoIds,
+  })
+  if (!result.success) return { success: false, error: result.error, data: [] }
 
-  const { data, error } = await q
-  if (error || !data) return { success: false, error: error?.message || "未知错误", data: [] }
-
-  const filteredMemos = (data as unknown as Memo[]).filter((m) => {
+  const filteredMemos = (result.data || []).filter((m) => {
     const regex = new RegExp(`@${memoNumber}(?!\\d)`)
-    return regex.test(m.content || "")
+    return !m.is_locked && regex.test(m.content || "")
   })
 
   return { success: true, error: null, data: filteredMemos }
@@ -338,8 +290,9 @@ const ON_THIS_DAY_LOOKBACK_YEARS = 5
 /**
  * 获取“那年今日”笔记
  */
-export async function getOnThisDayMemos(): Promise<ActionResponse<Memo[]>> {
-  const viewerId = await getCurrentUserId()
+export async function getOnThisDayMemos(
+  unlockedMemoIds: string[] = []
+): Promise<ActionResponse<Memo[]>> {
   const today = new Date()
   const month = today.getMonth() + 1
   const day = today.getDate()
@@ -355,26 +308,27 @@ export async function getOnThisDayMemos(): Promise<ActionResponse<Memo[]>> {
   ).toISOString()
   const endDate = new Date(currentYear - 1, month - 1, day, 23, 59, 59).toISOString()
 
-  const { query: qBuilder } = await getMemosQuery()
-  let q = MemoFilters.active(qBuilder)
-  q = MemoFilters.dateRange(q, startDate, endDate)
-  q = q.order("created_at", { ascending: false })
+  const pageSize = 100
+  const memos: Memo[] = []
+  for (let offset = 0; ; offset += pageSize) {
+    const result = await getMemos({
+      limit: pageSize,
+      offset,
+      after_date: startDate,
+      before_date: endDate,
+      sort: "newest",
+      unlockedMemoIds,
+    })
+    if (!result.success) return { success: false, error: result.error, data: [] }
+    const page = result.data || []
+    memos.push(...page)
+    if (page.length < pageSize) break
+  }
 
-  const { data, error } = await q
-  if (error || !data) return { success: false, error: error?.message || "查询失败", data: [] }
-
-  const filteredMemos = (data as unknown as Memo[]).filter((memo) => {
+  const filteredMemos = memos.filter((memo) => {
     const d = new Date(memo.created_at)
     return d.getMonth() + 1 === month && d.getDate() === day
   })
 
-  return {
-    success: true,
-    error: null,
-    data: filteredMemos.map((memo) => ({
-      ...memo,
-      is_owner: memo.owner_id === viewerId,
-      is_locked: memo.is_private && memo.owner_id !== viewerId,
-    })),
-  }
+  return { success: true, error: null, data: filteredMemos }
 }

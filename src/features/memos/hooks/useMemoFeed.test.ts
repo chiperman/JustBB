@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest"
-import { Memo } from "@/types/memo"
+import type { Memo } from "@/types/memo"
 import {
-  appendOlderMemoPage,
-  reconcileHasMoreOlder,
-  reconcileInitialMemoWindow,
-  reconcileUpdatedMemo,
-} from "./useMemoFeed"
+  createMemoFeedWindow,
+  MEMO_FEED_PAGE_SIZE,
+  reduceMemoFeedWindow,
+} from "@/features/memos/lib/memo-feed-reconciler"
 
 function createMemo(id: string, createdAt: string, overrides: Partial<Memo> = {}): Memo {
   return {
@@ -27,120 +26,123 @@ function createMemo(id: string, createdAt: string, overrides: Partial<Memo> = {}
   }
 }
 
-describe("reconcileInitialMemoWindow", () => {
-  it("preserves older loaded memos while replacing the refreshed first page window", () => {
-    const staleTopMemo = createMemo("memo-1", "2026-04-03T00:00:00.000Z", {
-      content: "stale top",
+describe("memo feed reconciler", () => {
+  it("首屏刷新替换窗口，同时保留已经加载的旧页", () => {
+    const first = createMemo("memo-1", "2026-04-03T00:00:00.000Z", { content: "stale" })
+    const second = createMemo("memo-2", "2026-04-02T00:00:00.000Z")
+    const older = createMemo("memo-3", "2026-03-25T00:00:00.000Z")
+    let state = createMemoFeedWindow([first, second], {})
+    state = { ...state, memos: [first, second, older] }
+
+    state = reduceMemoFeedWindow(state, {
+      type: "receive-initial",
+      memos: [
+        createMemo("memo-1", "2026-04-03T00:00:00.000Z", { content: "fresh" }),
+        createMemo("memo-4", "2026-04-01T00:00:00.000Z"),
+      ],
+      searchParams: {},
     })
-    const staleSecondMemo = createMemo("memo-2", "2026-04-02T00:00:00.000Z")
-    const olderLoadedMemo = createMemo("memo-3", "2026-03-25T00:00:00.000Z")
 
-    const nextInitialMemos = [
-      createMemo("memo-1", "2026-04-03T00:00:00.000Z", {
-        content: "fresh top",
-      }),
-      createMemo("memo-4", "2026-04-01T00:00:00.000Z"),
-    ]
-
-    const reconciled = reconcileInitialMemoWindow(
-      [staleTopMemo, staleSecondMemo, olderLoadedMemo],
-      new Set(["memo-1", "memo-2"]),
-      nextInitialMemos
-    )
-
-    expect(reconciled.map((memo) => memo.id)).toEqual(["memo-1", "memo-4", "memo-3"])
-    expect(reconciled[0].content).toBe("fresh top")
+    expect(state.memos.map((memo) => memo.id)).toEqual(["memo-1", "memo-4", "memo-3"])
+    expect(state.memos[0].content).toBe("fresh")
   })
 
-  it("preserves locally unlocked status and content when merging fresh locked top memos", () => {
-    const staleTopMemo = createMemo("memo-1", "2026-04-03T00:00:00.000Z", {
+  it("首屏刷新不会用锁定占位覆盖本地已解锁正文", () => {
+    const unlocked = createMemo("memo-1", "2026-04-03T00:00:00.000Z", {
       is_private: true,
       is_locked: false,
       content: "unlocked content",
     })
-    const staleSecondMemo = createMemo("memo-2", "2026-04-02T00:00:00.000Z")
+    const state = reduceMemoFeedWindow(createMemoFeedWindow([unlocked], {}), {
+      type: "receive-initial",
+      memos: [
+        createMemo("memo-1", "2026-04-03T00:00:00.000Z", {
+          is_private: true,
+          is_locked: true,
+          content: "",
+        }),
+      ],
+      searchParams: {},
+    })
 
-    const nextInitialMemos = [
-      createMemo("memo-1", "2026-04-03T00:00:00.000Z", {
-        is_private: true,
-        is_locked: true,
-        content: "",
-      }),
-      createMemo("memo-4", "2026-04-01T00:00:00.000Z"),
-    ]
-
-    const reconciled = reconcileInitialMemoWindow(
-      [staleTopMemo, staleSecondMemo],
-      new Set(["memo-1", "memo-2"]),
-      nextInitialMemos
-    )
-
-    const memo1 = reconciled.find((m) => m.id === "memo-1")
-    expect(memo1?.is_locked).toBe(false)
-    expect(memo1?.content).toBe("unlocked content")
+    expect(state.memos[0].is_locked).toBe(false)
+    expect(state.memos[0].content).toBe("unlocked content")
   })
-})
 
-describe("reconcileHasMoreOlder", () => {
-  it("does not reopen pagination once the older feed has been exhausted", () => {
-    const nextInitialMemos = Array.from({ length: 30 }, (_, index) =>
+  it("筛选条件变化时完整重置窗口和分页状态", () => {
+    const initial = Array.from({ length: MEMO_FEED_PAGE_SIZE }, (_, index) =>
       createMemo(
         `memo-${index + 1}`,
         `2026-04-${String(30 - index).padStart(2, "0")}T00:00:00.000Z`
       )
     )
-
-    expect(reconcileHasMoreOlder(false, nextInitialMemos)).toBe(false)
-  })
-
-  it("closes pagination when the refreshed first page is shorter than one page", () => {
-    const nextInitialMemos = Array.from({ length: 12 }, (_, index) =>
-      createMemo(
-        `memo-${index + 1}`,
-        `2026-04-${String(12 - index).padStart(2, "0")}T00:00:00.000Z`
-      )
-    )
-
-    expect(reconcileHasMoreOlder(true, nextInitialMemos)).toBe(false)
-  })
-})
-
-describe("appendOlderMemoPage", () => {
-  it("追加旧页 Memo 时保留现有顺序，只做去重", () => {
-    const pinnedMemo = createMemo("memo-1", "2026-04-03T00:00:00.000Z", {
-      is_pinned: true,
-      pinned_at: "2026-04-04T00:00:00.000Z",
+    const next = [createMemo("memo-99", "2026-05-01T00:00:00.000Z")]
+    const state = reduceMemoFeedWindow(createMemoFeedWindow(initial, { tag: "旧" }), {
+      type: "receive-initial",
+      memos: next,
+      searchParams: { tag: "新" },
     })
-    const topMemo = createMemo("memo-2", "2026-04-02T00:00:00.000Z")
-    const duplicateMemo = createMemo("memo-2", "2026-04-02T00:00:00.000Z", {
-      content: "duplicate should be ignored",
-    })
-    const olderMemo = createMemo("memo-3", "2026-03-25T00:00:00.000Z")
 
-    const merged = appendOlderMemoPage([pinnedMemo, topMemo], [duplicateMemo, olderMemo])
-
-    expect(merged.map((memo) => memo.id)).toEqual(["memo-1", "memo-2", "memo-3"])
-    expect(merged[1].content).toBe("memo-memo-2")
+    expect(state.memos).toEqual(next)
+    expect(state.hasMoreOlder).toBe(false)
   })
-})
 
-describe("reconcileUpdatedMemo", () => {
-  it("preserves viewer-scoped flags when the update payload omits derived fields", () => {
-    const existingMemo = createMemo("memo-1", "2026-04-03T00:00:00.000Z", {
+  it("分页追加去重，并在短页或无新数据时关闭分页", () => {
+    const current = [
+      createMemo("memo-1", "2026-04-03T00:00:00.000Z"),
+      createMemo("memo-2", "2026-04-02T00:00:00.000Z"),
+    ]
+    let state = { ...createMemoFeedWindow(current, {}), hasMoreOlder: true }
+    state = reduceMemoFeedWindow(state, {
+      type: "append-older-page",
+      memos: [
+        createMemo("memo-2", "2026-04-02T00:00:00.000Z"),
+        createMemo("memo-3", "2026-03-25T00:00:00.000Z"),
+      ],
+    })
+
+    expect(state.memos.map((memo) => memo.id)).toEqual(["memo-1", "memo-2", "memo-3"])
+    expect(state.hasMoreOlder).toBe(false)
+  })
+
+  it("替换 Memo 时保留调用结果缺失的查看者字段", () => {
+    const existing = createMemo("memo-1", "2026-04-03T00:00:00.000Z", {
       is_owner: true,
       is_locked: false,
       content: "before",
     })
-    const updatedMemo = createMemo("memo-1", "2026-04-03T00:00:00.000Z", {
-      content: "after",
+    const updated = createMemo("memo-1", "2026-04-03T00:00:00.000Z", { content: "after" })
+    delete (updated as Partial<Memo>).is_owner
+    delete (updated as Partial<Memo>).is_locked
+
+    const state = reduceMemoFeedWindow(createMemoFeedWindow([existing], {}), {
+      type: "replace-memo",
+      memo: updated,
     })
-    delete (updatedMemo as Partial<Memo>).is_owner
-    delete (updatedMemo as Partial<Memo>).is_locked
 
-    const reconciled = reconcileUpdatedMemo(existingMemo, updatedMemo)
+    expect(state.memos[0]).toMatchObject({
+      content: "after",
+      is_owner: true,
+      is_locked: false,
+    })
+  })
 
-    expect(reconciled.content).toBe("after")
-    expect(reconciled.is_owner).toBe(true)
-    expect(reconciled.is_locked).toBe(false)
+  it("置顶事件负责重排窗口，并由显式动作结束重排状态", () => {
+    const first = createMemo("memo-1", "2026-04-03T00:00:00.000Z")
+    const second = createMemo("memo-2", "2026-04-02T00:00:00.000Z")
+    let state = reduceMemoFeedWindow(createMemoFeedWindow([first, second], {}), {
+      type: "memo-event",
+      event: {
+        type: "update",
+        id: "memo-2",
+        updates: { is_pinned: true, pinned_at: "2026-04-04T00:00:00.000Z" },
+      },
+    })
+
+    expect(state.memos.map((memo) => memo.id)).toEqual(["memo-2", "memo-1"])
+    expect(state.isPinReordering).toBe(true)
+
+    state = reduceMemoFeedWindow(state, { type: "finish-pin-reorder" })
+    expect(state.isPinReordering).toBe(false)
   })
 })

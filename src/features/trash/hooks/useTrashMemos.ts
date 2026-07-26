@@ -62,7 +62,7 @@ export function useTrashMemos() {
   useMemoSync(
     useCallback(
       (payload) => {
-        if (payload.type !== "delete") return
+        if (payload.type !== "delete" && payload.type !== "restore") return
 
         setMemos((prev) => {
           const next = removeMemoFromTrash(prev, payload.id)

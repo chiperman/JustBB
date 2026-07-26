@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useCallback, useRef, ReactNode } from "react"
 import { Memo } from "@/types/memo"
-import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
+import { useMemoDerivedRefresh } from "@/lib/memos/refresh-policy"
 
 interface PageData {
   memos?: Memo[]
@@ -69,11 +69,11 @@ export function PageDataCacheProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  useMemoSync((payload) => {
-    if (!shouldRefreshMemoDerivedData(payload)) return
-
+  const invalidateMemoCaches = useCallback(() => {
     invalidateCache((path) => path.startsWith("/"))
-  })
+  }, [invalidateCache])
+
+  useMemoDerivedRefresh("cache", invalidateMemoCaches)
 
   return (
     <PageDataCacheContext.Provider value={{ getCache, setCache, invalidateCache }}>

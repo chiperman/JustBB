@@ -6,7 +6,7 @@ import { groupMemosByLocation } from "@/shared/lib/map-markers"
 import { useViewerQuery } from "@/shared/hooks/useViewerQuery"
 import { getViewerMapMemos } from "@/shared/lib/viewer-memo-queries"
 import { usePageDataCache } from "@/state/PageDataCache"
-import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
+import { useMemoDerivedRefresh } from "@/lib/memos/refresh-policy"
 
 // 模块级预加载
 const mapViewPromise = import("@/shared/ui/MapView")
@@ -84,16 +84,7 @@ export function useMapMemos() {
     }
   }, [cacheKey, getCache, refreshMapMemos])
 
-  useMemoSync(
-    useCallback(
-      (payload) => {
-        if (shouldRefreshMemoDerivedData(payload)) {
-          void refreshMapMemos()
-        }
-      },
-      [refreshMapMemos]
-    )
-  )
+  useMemoDerivedRefresh("map", refreshMapMemos)
 
   return { markers, isLoading, MapView }
 }

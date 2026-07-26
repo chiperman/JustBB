@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useSelection } from "@/state/UIContext"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { AnimatePresence } from "framer-motion"
 import { Button } from "@/shared/ui/button"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
@@ -16,7 +16,6 @@ import {
   Loading01Icon as Loader2,
   AlertCircleIcon as ShieldAlert,
 } from "@hugeicons/core-free-icons"
-import { useToast } from "@/shared/hooks/use-toast"
 import {
   batchDeleteMemos,
   batchRestoreMemos,
@@ -24,25 +23,17 @@ import {
 } from "@/server/actions/memos/trash"
 import { batchAddTagsToMemos } from "@/server/actions/memos/mutate"
 import { TagSelectDialog, TagState } from "./TagSelectDialog"
-import { useTags } from "@/state/TagsContext"
-import { useStats } from "@/state/StatsContext"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { BaseFloatingCapsule } from "./BaseFloatingCapsule"
-import { useConfirm } from "@/state/ConfirmContext"
-import { dispatchMemoEvent } from "@/lib/memos/events"
 import { ShortcutHint } from "@/shared/shortcuts/ShortcutHint"
+import { useBatchMemoOperation } from "@/shared/hooks/useBatchMemoOperation"
 
 export function SelectionToolbar() {
   const pathname = usePathname()
-  const router = useRouter()
   const { isSelectionMode, selectedIds, clearSelection, toggleSelectionMode, getSelectedMemos } =
     useSelection()
-  const { refreshTags } = useTags()
-  const { refreshStats } = useStats()
-  const { toast } = useToast()
-  const { confirm } = useConfirm()
+  const { run: runBatchOperation, isPending } = useBatchMemoOperation()
   const [isTagDialogOpen, setIsTagDialogOpen] = useState(false)
-  const [isPending, setIsPending] = useState(false)
   const hasMounted = useHasMounted()
 
   const isTrashPage = pathname === "/trash"
@@ -51,108 +42,52 @@ export function SelectionToolbar() {
   if (!hasMounted || !isSelectionMode) return null
 
   const handleBatchDelete = async () => {
-    if (!hasSelection) return
-    const ok = await confirm({
-      title: "移至回收站？",
-      description: `将选中的 ${selectedIds.size} 条笔记移至回收站？`,
-      confirmLabel: "删除",
-      variant: "destructive",
+    await runBatchOperation({
+      confirmation: {
+        title: "移至回收站？",
+        description: `将选中的 ${selectedIds.size} 条笔记移至回收站？`,
+        confirmLabel: "删除",
+        variant: "destructive",
+      },
+      action: batchDeleteMemos,
+      successToast: (count) => ({
+        title: "已批量删除",
+        description: `成功删除 ${count} 条笔记`,
+      }),
+      failureTitle: "删除失败",
+      events: (ids) => ids.map((id) => ({ type: "delete" as const, id })),
     })
-    if (!ok) return
-
-    setIsPending(true)
-    try {
-      const res = await batchDeleteMemos(Array.from(selectedIds))
-      if (res.success) {
-        toast({
-          title: "已批量删除",
-          description: `成功删除 ${selectedIds.size} 条笔记`,
-        })
-        Array.from(selectedIds).forEach((id) => {
-          dispatchMemoEvent({ type: "delete", id })
-        })
-        clearSelection()
-        refreshTags()
-        refreshStats()
-        router.refresh()
-      } else {
-        toast({
-          title: "删除失败",
-          description: res.error,
-          variant: "destructive",
-        })
-      }
-    } finally {
-      setIsPending(false)
-    }
   }
 
   const handleBatchRestore = async () => {
-    if (!hasSelection) return
-
-    setIsPending(true)
-    try {
-      const res = await batchRestoreMemos(Array.from(selectedIds))
-      if (res.success) {
-        toast({
-          title: "已恢复",
-          description: `成功恢复 ${selectedIds.size} 条笔记`,
-        })
-        Array.from(selectedIds).forEach((id) => {
-          dispatchMemoEvent({ type: "delete", id })
-        })
-        clearSelection()
-        refreshTags()
-        refreshStats()
-        router.refresh()
-      } else {
-        toast({
-          title: "操作失败",
-          description: res.error,
-          variant: "destructive",
-        })
-      }
-    } finally {
-      setIsPending(false)
-    }
+    await runBatchOperation({
+      action: batchRestoreMemos,
+      successToast: (count) => ({
+        title: "已恢复",
+        description: `成功恢复 ${count} 条笔记`,
+      }),
+      failureTitle: "操作失败",
+      events: (ids) => ids.map((id) => ({ type: "restore" as const, id })),
+    })
   }
 
   const handleBatchPermanentDelete = async () => {
-    if (!hasSelection) return
-    const ok = await confirm({
-      title: "彻底删除？",
-      description: `彻底删除选中的 ${selectedIds.size} 条笔记？此操作不可恢复。`,
-      confirmLabel: "彻底删除",
-      variant: "destructive",
+    await runBatchOperation({
+      confirmation: {
+        title: "彻底删除？",
+        description: `彻底删除选中的 ${selectedIds.size} 条笔记？此操作不可恢复。`,
+        confirmLabel: "彻底删除",
+        variant: "destructive",
+      },
+      action: batchPermanentDeleteMemos,
+      successToast: (count) => ({
+        title: "已彻底删除",
+        description: `成功删除 ${count} 条笔记`,
+        variant: "destructive",
+      }),
+      failureTitle: "操作失败",
+      events: (ids) => ids.map((id) => ({ type: "delete" as const, id })),
     })
-    if (!ok) return
-
-    setIsPending(true)
-    try {
-      const res = await batchPermanentDeleteMemos(Array.from(selectedIds))
-      if (res.success) {
-        toast({
-          title: "已彻底删除",
-          description: `成功删除 ${selectedIds.size} 条笔记`,
-          variant: "destructive",
-        })
-        Array.from(selectedIds).forEach((id) => {
-          dispatchMemoEvent({ type: "delete", id })
-        })
-        clearSelection()
-        refreshTags()
-        refreshStats()
-        router.refresh()
-      } else {
-        toast({
-          title: "操作失败",
-          description: res.error,
-          variant: "destructive",
-        })
-      }
-    } finally {
-      setIsPending(false)
-    }
   }
 
   const getInitialTagStates = () => {
@@ -185,44 +120,27 @@ export function SelectionToolbar() {
     formData.append("tags", addTags.join(","))
     formData.append("removeTags", removeTags.join(","))
 
-    setIsPending(true)
-    try {
-      const res = await batchAddTagsToMemos(formData)
-      if (res.success) {
-        toast({
-          title: "已更新标签",
-          description: `成功修改了 ${selectedIds.size} 条笔记的标签`,
-        })
-        if (res.data) {
-          res.data.forEach((updatedMemo) => {
-            dispatchMemoEvent({
-              type: "update",
-              id: updatedMemo.id,
-              updates: {
-                tags: updatedMemo.tags,
-                content: updatedMemo.content,
-                word_count: updatedMemo.word_count,
-                locations: updatedMemo.locations,
-                updated_at: updatedMemo.updated_at,
-              },
-            })
-          })
-        }
-        clearSelection()
-        refreshTags()
-        refreshStats()
-        router.refresh()
-      } else {
-        toast({
-          title: "更新失败",
-          description: res.error,
-          variant: "destructive",
-        })
-      }
-    } finally {
-      setIsPending(false)
-      setIsTagDialogOpen(false)
-    }
+    await runBatchOperation({
+      action: () => batchAddTagsToMemos(formData),
+      successToast: (count) => ({
+        title: "已更新标签",
+        description: `成功修改了 ${count} 条笔记的标签`,
+      }),
+      failureTitle: "更新失败",
+      events: (_ids, memos) =>
+        (memos || []).map((updatedMemo) => ({
+          type: "update" as const,
+          id: updatedMemo.id,
+          updates: {
+            tags: updatedMemo.tags,
+            content: updatedMemo.content,
+            word_count: updatedMemo.word_count,
+            locations: updatedMemo.locations,
+            updated_at: updatedMemo.updated_at,
+          },
+        })),
+      onSettled: () => setIsTagDialogOpen(false),
+    })
   }
 
   return (

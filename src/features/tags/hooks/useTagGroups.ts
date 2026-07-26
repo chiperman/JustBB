@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { usePageDataCache } from "@/state/PageDataCache"
 import { getAllTags } from "@/server/actions/memos/analytics"
-import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
+import { useMemoDerivedRefresh } from "@/lib/memos/refresh-policy"
 import { getTagsCacheKey } from "@/shared/lib/page-cache-keys"
 import { useUser } from "@/state/UserContext"
 
@@ -56,16 +56,7 @@ export function useTagGroups(initialTags?: TagData[]) {
     }
   }, [cacheKey, initialTags, setCache])
 
-  useMemoSync(
-    useCallback(
-      (payload) => {
-        if (shouldRefreshMemoDerivedData(payload)) {
-          void refreshTags()
-        }
-      },
-      [refreshTags]
-    )
-  )
+  useMemoDerivedRefresh("tags", refreshTags)
 
   return { tags, isLoading, refreshTags }
 }

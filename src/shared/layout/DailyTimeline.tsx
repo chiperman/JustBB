@@ -15,7 +15,7 @@ import {
 import { Skeleton } from "@/shared/ui/skeleton"
 import { motion } from "framer-motion"
 import { useUnlockedMemos } from "@/state/UnlockedMemosContext"
-import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
+import { useMemoDerivedRefresh } from "@/lib/memos/refresh-policy"
 
 interface DailyTimelineProps {
   date: string
@@ -45,16 +45,7 @@ export function DailyTimeline({ date }: DailyTimelineProps) {
     void fetchDailyMemos()
   }, [fetchDailyMemos])
 
-  useMemoSync(
-    useCallback(
-      (payload) => {
-        if (shouldRefreshMemoDerivedData(payload)) {
-          void fetchDailyMemos()
-        }
-      },
-      [fetchDailyMemos]
-    )
-  )
+  useMemoDerivedRefresh("daily", fetchDailyMemos)
 
   const handleMemoClick = (e: React.MouseEvent, memoId: string) => {
     e.preventDefault()

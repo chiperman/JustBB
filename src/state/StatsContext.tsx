@@ -1,15 +1,8 @@
 "use client"
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useEffect,
-  useMemo,
-} from "react"
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react"
 import { getMemoStats } from "@/server/actions/memos/analytics"
-import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
+import { useMemoDerivedRefresh } from "@/lib/memos/refresh-policy"
 import { HeatmapStats } from "@/types/stats"
 
 interface StatsContextType {
@@ -53,16 +46,7 @@ export function StatsProvider({
     }
   }, [])
 
-  useMemoSync(
-    useCallback(
-      (payload) => {
-        if (shouldRefreshMemoDerivedData(payload)) {
-          void refreshStats()
-        }
-      },
-      [refreshStats]
-    )
-  )
+  useMemoDerivedRefresh("stats", refreshStats)
 
   useEffect(() => {
     setIsMounted(true)
@@ -83,11 +67,7 @@ export function StatsProvider({
     [stats, isLoading, isMounted, refreshStats]
   )
 
-  return (
-    <StatsContext.Provider value={contextValue}>
-      {children}
-    </StatsContext.Provider>
-  )
+  return <StatsContext.Provider value={contextValue}>{children}</StatsContext.Provider>
 }
 
 export function useStats() {

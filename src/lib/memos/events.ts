@@ -4,24 +4,8 @@ import { Memo } from "@/types/memo"
 export type MemoEventPayload =
   | { type: "create"; memo: Memo }
   | { type: "update"; id: string; updates: Partial<Memo> }
+  | { type: "restore"; id: string }
   | { type: "delete"; id: string }
-
-export function shouldRefreshMemoDerivedData(payload: MemoEventPayload) {
-  if (payload.type !== "update") {
-    return true
-  }
-
-  return (
-    payload.updates.content !== undefined ||
-    payload.updates.tags !== undefined ||
-    payload.updates.word_count !== undefined ||
-    payload.updates.created_at !== undefined ||
-    payload.updates.deleted_at !== undefined ||
-    payload.updates.images !== undefined ||
-    payload.updates.image_metadata !== undefined ||
-    payload.updates.is_private !== undefined
-  )
-}
 
 const MEMO_EVENT_NAME = "justbb-memo-sync"
 

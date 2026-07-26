@@ -3,11 +3,10 @@ import bcrypt from "bcryptjs"
 import { revalidatePath } from "next/cache"
 import { Json } from "@/types/database"
 import type { Database } from "@/types/database"
-import { extractImagesFromContent } from "@/lib/memos/parser"
-import { buildMemoPayload } from "@/server/actions/memos/helpers"
 import { requireCliAdmin } from "@/server/services/cli/admin"
 import { getCliClient, getCliReadClient } from "@/server/services/cli/client"
 import { CLI_ERROR_CODES, cliError, cliOk, isValidMemoNumber } from "@/server/services/cli/http"
+import { updateMemoContentRecord } from "@/server/services/memos/write"
 
 type RouteContext = {
   params: Promise<{ memoNumber: string }>
@@ -18,8 +17,37 @@ const MEMO_SELECT =
 
 type MemoUpdate = Database["public"]["Tables"]["memos"]["Update"]
 
-function retainImageMetadata(images: string[], metadata: Record<string, unknown>) {
-  return Object.fromEntries(images.map((url) => [url, metadata[url]]).filter(([, value]) => value))
+type MemoRow = Database["public"]["Tables"]["memos"]["Row"]
+
+/** 深 module 返回完整行，CLI 响应保持既有字段子集。 */
+function projectMemo(memo: MemoRow | Record<string, unknown> | null) {
+  if (!memo) return memo
+  const {
+    id,
+    memo_number,
+    content,
+    images,
+    image_metadata,
+    is_private,
+    is_pinned,
+    access_code_hint,
+    tags,
+    created_at,
+    word_count,
+  } = memo as MemoRow
+  return {
+    id,
+    memo_number,
+    content,
+    images,
+    image_metadata,
+    is_private,
+    is_pinned,
+    access_code_hint,
+    tags,
+    created_at,
+    word_count,
+  }
 }
 
 async function requireAdmin(request: Request) {
@@ -176,22 +204,30 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const found = await findActiveOwnedMemo(request, memoNumber)
   if (found.response || !found.memo) return found.response as NextResponse
 
-  const update: MemoUpdate = { updated_at: new Date().toISOString() }
-  if (input.content !== undefined) {
-    const images = (input.images as string[] | undefined) || found.memo.images
-    const normalized = extractImagesFromContent(input.content as string, images)
-    if (!normalized.content.trim() && normalized.images.length === 0) {
-      return cliError("内容不能为空", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
-    }
-    Object.assign(update, buildMemoPayload(normalized.content), {
-      images: normalized.images,
-      image_metadata: retainImageMetadata(normalized.images, found.memo.image_metadata),
+  // 内容与图片更新收口到共享深 module；状态字段（置顶/私密）仍在下方处理。
+  let memo: Record<string, unknown> | null = null
+  if (input.content !== undefined || input.images !== undefined) {
+    const result = await updateMemoContentRecord(found.supabase, found.userId, {
+      id: found.memo.id,
+      content: input.content as string | undefined,
+      images: input.images as string[] | undefined,
     })
-  } else if (input.images !== undefined) {
-    update.images = input.images as string[]
-    update.image_metadata = retainImageMetadata(input.images as string[], found.memo.image_metadata)
+    if (!result.success) {
+      if (result.reason === "empty_content") {
+        return cliError("内容不能为空", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
+      }
+      console.error("CLI memo update failed:", result.dbError)
+      return cliError("更新 Memo 失败", 500, CLI_ERROR_CODES.INTERNAL)
+    }
+    memo = result.data
   }
 
+  const hasStateChanges = input.is_pinned !== undefined || input.is_private !== undefined
+  if (!hasStateChanges) {
+    return cliOk(projectMemo(memo))
+  }
+
+  const update: MemoUpdate = { updated_at: new Date().toISOString() }
   if (input.is_pinned !== undefined) {
     update.is_pinned = input.is_pinned as boolean
     update.pinned_at = input.is_pinned ? new Date().toISOString() : null

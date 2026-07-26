@@ -1,13 +1,7 @@
-import bcrypt from "bcryptjs"
-import { revalidatePath } from "next/cache"
 import { createMemoSchema } from "@/lib/memos/schemas"
-import { extractImagesFromContent } from "@/lib/memos/parser"
-import { buildMemoPayload } from "@/server/actions/memos/helpers"
 import { getCliClient } from "@/server/services/cli/client"
 import { CLI_ERROR_CODES, cliError, cliOk } from "@/server/services/cli/http"
-import type { Database } from "@/types/database"
-
-type MemoInsert = Database["public"]["Tables"]["memos"]["Insert"]
+import { createMemoRecord } from "@/server/services/memos/write"
 
 export async function POST(request: Request) {
   const supabase = getCliClient(request)
@@ -38,38 +32,50 @@ export async function POST(request: Request) {
 
   const { content, images, image_metadata, is_private, is_pinned, access_code, access_code_hint } =
     parsed.data
-  if (is_private && !access_code) {
-    return cliError("私密 Memo 必须设置访问口令", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
-  }
-  const normalized = extractImagesFromContent(content, images)
-  const payload: MemoInsert = {
-    owner_id: authData.user.id,
-    is_private,
-    is_pinned,
-    images: normalized.images,
-    image_metadata,
-    ...buildMemoPayload(normalized.content, { isPinned: is_pinned }),
-  }
 
-  if (is_private && access_code) {
-    payload.access_code_hash = await bcrypt.hash(access_code, await bcrypt.genSalt(10))
-    payload.access_code_hint = access_code_hint || null
-  }
+  const result = await createMemoRecord(supabase, authData.user.id, {
+    content,
+    images,
+    imageMetadata: image_metadata,
+    isPrivate: is_private,
+    isPinned: is_pinned,
+    accessCode: access_code,
+    accessCodeHint: access_code_hint,
+  })
 
-  const { data, error } = await supabase
-    .from("memos")
-    .insert(payload)
-    .select(
-      "id, memo_number, content, tags, created_at, is_private, is_pinned, access_code_hint, word_count, images"
-    )
-    .single()
-
-  if (error || !data) {
-    console.error("CLI memo publish failed:", error)
+  if (!result.success) {
+    if (result.reason === "private_requires_code") {
+      return cliError("私密 Memo 必须设置访问口令", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
+    }
+    if (result.reason === "empty_content") {
+      return cliError("内容不能为空", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
+    }
+    console.error("CLI memo publish failed:", result.dbError)
     return cliError("发布失败", 500, CLI_ERROR_CODES.INTERNAL)
   }
 
-  revalidatePath("/")
-  revalidatePath("/gallery")
-  return cliOk(data)
+  const {
+    id,
+    memo_number,
+    content: memoContent,
+    tags,
+    created_at,
+    is_private: memoIsPrivate,
+    is_pinned: memoIsPinned,
+    access_code_hint: memoAccessCodeHint,
+    word_count,
+    images: memoImages,
+  } = result.data
+  return cliOk({
+    id,
+    memo_number,
+    content: memoContent,
+    tags,
+    created_at,
+    is_private: memoIsPrivate,
+    is_pinned: memoIsPinned,
+    access_code_hint: memoAccessCodeHint,
+    word_count,
+    images: memoImages,
+  })
 }

@@ -213,6 +213,7 @@ Next.js App Router 负责路由和页面；Server Components 负责用户与轻�
 
 - 查询：`getMemos`、`getMemoByNumber`、`getMemosWithLocations`、`getMemoStats`、`getTimelineStats`、`getAllTags`。
 - 写入：`createMemo`、`updateMemoContent`、`updateMemoState`、批量标签和批量状态操作。
+- 「创建/更新一条 memo」的业务实现（normalize、派生字段、口令哈希、落库、缓存失效）唯一收口在 `src/server/services/memos/write.ts`；Web server action（FormData）和 CLI route（JSON）只是入口 adapter，传入已绑定身份的 supabase client 和 owner_id。新增写路径必须复用它，不能再写第三份实现。
 - 隐私：`verifyUnlockCode` 只验证一条 Memo；成功后的正文仍只能存在当前页面内存。
 - 回收站：软删除、恢复、永久删除、清空和批量操作都要求操作者权限，并按 `owner_id` 限定数据。
 - 导出：只导出当前作者自己的 Memo，支持 Markdown 和 JSON 两种网页导出路径。

@@ -9,6 +9,11 @@ import { useTags } from "@/state/TagsContext"
 import { useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Skeleton } from "@/shared/ui/skeleton"
+import {
+  memoFilterHref,
+  readMemoFilterValues,
+  updateMemoFilterParams,
+} from "@/shared/lib/memo-filter-params"
 
 interface TagCloudProps {
   onTagClick?: () => void
@@ -18,41 +23,22 @@ export const TagCloud = memo(function TagCloud({ onTagClick }: TagCloudProps = {
   const { tags, isLoading, isMounted } = useTags()
   const searchParams = useSearchParams()
   const router = useRouter()
-  const currentTag = searchParams.get("tag")
 
   const activeTags = useMemo(() => {
-    return currentTag
-      ? currentTag
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean)
-      : []
-  }, [currentTag])
+    return readMemoFilterValues(searchParams, "tag")
+  }, [searchParams])
 
   const topTags = useMemo(() => {
     return [...tags].sort((a, b) => b.count - a.count).slice(0, 6)
   }, [tags])
 
   const handleTagClick = (tag: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    const currentTagVal = params.get("tag") || ""
-    const activeTagsList = currentTagVal
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean)
-
-    if (activeTagsList.includes(tag)) {
-      const filtered = activeTagsList.filter((t) => t !== tag)
-      if (filtered.length > 0) {
-        params.set("tag", filtered.join(","))
-      } else {
-        params.delete("tag")
-      }
-    } else {
-      const merged = [...activeTagsList, tag]
-      params.set("tag", merged.join(","))
-    }
-    router.push(`/?${params.toString()}`)
+    const params = updateMemoFilterParams(searchParams, {
+      type: "toggle-value",
+      key: "tag",
+      value: tag,
+    })
+    router.push(memoFilterHref(params))
     onTagClick?.()
   }
 

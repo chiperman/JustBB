@@ -30,6 +30,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
 import { ShortcutHint } from "@/shared/shortcuts/ShortcutHint"
+import { memoFilterHref, updateMemoFilterParams } from "@/shared/lib/memo-filter-params"
 
 interface FeedHeaderProps {
   isRefreshing?: boolean
@@ -53,9 +54,8 @@ export function FeedHeader({
   const hasMounted = useHasMounted()
 
   const handleSortChange = (value: string) => {
-    const params = new URLSearchParams(searchParams?.toString() || "")
-    params.set("sort", value)
-    router.push(`?${params.toString()}`)
+    const params = updateMemoFilterParams(searchParams, { type: "set-sort", value })
+    router.push(memoFilterHref(params))
   }
 
   const hasContext = !!(

@@ -15,12 +15,12 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui/tooltip"
 import { ShortcutHint } from "@/shared/shortcuts/ShortcutHint"
 import { useShortcut } from "@/shared/shortcuts/useShortcut"
-
-interface ActiveChip {
-  type: "tag" | "num" | "date" | "year-month"
-  value: string
-  label: string
-}
+import {
+  memoFilterHref,
+  readMemoFilterValues,
+  updateMemoFilterParams,
+  type MemoFilterChip,
+} from "@/shared/lib/memo-filter-params"
 
 export function SearchInput() {
   const searchParams = useSearchParams()
@@ -34,7 +34,7 @@ export function SearchInput() {
   const tagMode = searchParams.get("tagMode") || "and"
 
   const [value, setValue] = useState(q)
-  const [activeChips, setActiveChips] = useState<ActiveChip[]>([])
+  const [activeChips, setActiveChips] = useState<MemoFilterChip[]>([])
 
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -62,23 +62,13 @@ export function SearchInput() {
 
   useEffect(() => {
     setActiveChips((prev) => {
-      const currentChips: ActiveChip[] = []
-      if (tag) {
-        tag.split(",").forEach((t) => {
-          const trimmed = t.trim()
-          if (trimmed) {
-            currentChips.push({ type: "tag", value: trimmed, label: trimmed })
-          }
-        })
-      }
-      if (num) {
-        num.split(",").forEach((n) => {
-          const trimmed = n.trim()
-          if (trimmed) {
-            currentChips.push({ type: "num", value: trimmed, label: trimmed })
-          }
-        })
-      }
+      const currentChips: MemoFilterChip[] = []
+      readMemoFilterValues(searchParams, "tag").forEach((value) =>
+        currentChips.push({ type: "tag", value, label: value })
+      )
+      readMemoFilterValues(searchParams, "num").forEach((value) =>
+        currentChips.push({ type: "num", value, label: value })
+      )
       if (date) currentChips.push({ type: "date", value: date, label: date })
       if (year && month) {
         currentChips.push({
@@ -98,109 +88,27 @@ export function SearchInput() {
     })
   }, [searchParams, tag, num, date, year, month])
 
-  const removeChip = (chip: ActiveChip) => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (chip.type === "year-month") {
-      params.delete("year")
-      params.delete("month")
-    } else if (chip.type === "tag" || chip.type === "num") {
-      const existing = params.get(chip.type) || ""
-      const list = existing
-        .split(",")
-        .map((x) => x.trim())
-        .filter(Boolean)
-      const filtered = list.filter((item) => item !== chip.value)
-      if (filtered.length > 0) {
-        params.set(chip.type, filtered.join(","))
-      } else {
-        params.delete(chip.type)
-      }
-    } else {
-      params.delete(chip.type)
-    }
-    replace(`/?${params.toString()}`)
+  const removeChip = (chip: MemoFilterChip) => {
+    const params = updateMemoFilterParams(searchParams, { type: "remove-chip", chip })
+    replace(memoFilterHref(params))
     inputRef.current?.focus()
   }
 
   const clearAllChips = () => {
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete("tag")
-    params.delete("num")
-    params.delete("date")
-    params.delete("year")
-    params.delete("month")
-    params.delete("tagMode")
-    replace(`/?${params.toString()}`)
+    const params = updateMemoFilterParams(searchParams, { type: "clear-context" })
+    replace(memoFilterHref(params))
     inputRef.current?.focus()
   }
 
   const toggleTagMode = () => {
-    const params = new URLSearchParams(searchParams.toString())
-    const nextMode = tagMode === "and" ? "or" : "and"
-    if (nextMode === "or") {
-      params.set("tagMode", "or")
-    } else {
-      params.delete("tagMode")
-    }
-    replace(`/?${params.toString()}`)
+    const params = updateMemoFilterParams(searchParams, { type: "toggle-tag-mode" })
+    replace(memoFilterHref(params))
   }
 
   const performSearch = (term: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    const trimmedTerm = term.trim()
-
-    if (!trimmedTerm) {
-      params.delete("query")
-      setValue("")
-      replace(`/?${params.toString()}`)
-      return
-    }
-
-    const tokens = trimmedTerm.split(/\s+/)
-    const newTags: string[] = []
-    const newNums: string[] = []
-    const remainingWords: string[] = []
-
-    for (const token of tokens) {
-      const tagMatch = token.match(/^(?:tag|t):(.+)$/i)
-      const numMatch = token.match(/^(?:num|n|id):(\d+)$/i)
-
-      if (tagMatch) {
-        const val = tagMatch[1].trim()
-        if (val) newTags.push(val)
-      } else if (numMatch) {
-        const val = numMatch[1].trim()
-        if (val) newNums.push(val)
-      } else {
-        remainingWords.push(token)
-      }
-    }
-
-    if (newTags.length > 0) {
-      const existing = params.get("tag") ? params.get("tag")!.split(",") : []
-      const merged = [...new Set([...existing, ...newTags])].map((x) => x.trim()).filter(Boolean)
-      if (merged.length > 0) {
-        params.set("tag", merged.join(","))
-      }
-    }
-    if (newNums.length > 0) {
-      const existing = params.get("num") ? params.get("num")!.split(",") : []
-      const merged = [...new Set([...existing, ...newNums])].map((x) => x.trim()).filter(Boolean)
-      if (merged.length > 0) {
-        params.set("num", merged.join(","))
-      }
-    }
-
-    const finalQuery = remainingWords.join(" ").trim()
-    if (finalQuery) {
-      params.set("query", finalQuery)
-      setValue(finalQuery)
-    } else {
-      params.delete("query")
-      setValue("")
-    }
-
-    replace(`/?${params.toString()}`)
+    const params = updateMemoFilterParams(searchParams, { type: "apply-search", term })
+    setValue(params.get("query") || "")
+    replace(memoFilterHref(params))
   }
 
   const handleClear = () => {

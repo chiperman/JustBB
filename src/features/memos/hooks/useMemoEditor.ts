@@ -38,26 +38,6 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
   const [isPinned, setIsPinned] = useState(initialMemo?.is_pinned || false)
   const [error, setError] = useState<string | null>(null)
 
-  // UI States that should stay in Hook for consistency
-  const [showPrivateDialog, setShowPrivateDialog] = useState(false)
-  const [isFocused, setIsFocused] = useState(false)
-  const [isAnimating, setIsAnimating] = useState(false)
-  const [showLocationPicker, setShowLocationPicker] = useState(false)
-  const [showLinkPicker, setShowLinkPicker] = useState(false)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const [pasteMenuPosition, setPasteMenuPosition] = useState<{
-    top: number
-    left: number
-  } | null>(null)
-  const isAnyDialogOpen =
-    showPrivateDialog ||
-    showLocationPicker ||
-    showLinkPicker ||
-    isMenuOpen ||
-    showSuggestions ||
-    !!pasteMenuPosition
-
   // Draft Loading Effect
   useEffect(() => {
     if (mode === "create" && !initialMemo && typeof window !== "undefined") {
@@ -106,7 +86,6 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
 
     setIsPending(true)
     setError(null)
-    setShowPrivateDialog(false)
 
     const formData = new FormData()
     formData.append("content", textContent)
@@ -210,9 +189,6 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
       setImages([])
       setImageMetadata({})
       setError(null)
-      setShowPrivateDialog(false)
-      setShowLocationPicker(false)
-      setShowLinkPicker(false)
     }
   }, [mode, onCancel])
 
@@ -235,23 +211,6 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
     setIsPinned,
     error,
     setError,
-    showPrivateDialog,
-    setShowPrivateDialog,
-    isFocused,
-    setIsFocused,
-    isAnimating,
-    setIsAnimating,
-    showLocationPicker,
-    setShowLocationPicker,
-    showLinkPicker,
-    setShowLinkPicker,
-    isMenuOpen,
-    setIsMenuOpen,
-    showSuggestions,
-    setShowSuggestions,
-    pasteMenuPosition,
-    setPasteMenuPosition,
-    isAnyDialogOpen,
     handleTogglePrivate,
     performPublish,
     handleCancel,

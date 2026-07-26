@@ -12,6 +12,7 @@ import { LocationPickerDialog } from "@/features/memos/components/LocationPicker
 import { LinkPickerDialog } from "@/features/memos/components/LinkPickerDialog"
 import { EditorToolbar } from "@/features/memos/components/editor/EditorToolbar"
 import { LinkPasteMenu } from "@/features/memos/components/editor/LinkPasteMenu"
+import { useEditorUI } from "@/features/memos/components/editor/EditorUIContext"
 import type { LinkRenderMode } from "@/features/memos/components/editor/smartLink"
 import { PLACEHOLDER_TEXT } from "@/features/memos/components/MemoEditor"
 import { ImageZoom } from "@/shared/ui/ImageZoom"
@@ -27,7 +28,6 @@ export interface MemoEditorLayoutProps {
   // State
   isActuallyCollapsed: boolean
   shouldAnimateCollapse: boolean
-  isFocused: boolean
   isPrivate: boolean
   isPinned: boolean
   isPending: boolean
@@ -35,14 +35,10 @@ export interface MemoEditorLayoutProps {
   content: string
   mode: "create" | "edit"
   showPlaceholder: boolean
-  showSuggestions: boolean
-  showPrivateDialog: boolean
   accessCode: string
   setAccessCode: (code: string) => void
   accessHint: string
   setAccessHint: (hint: string) => void
-  showLocationPicker: boolean
-  showLinkPicker: boolean
   error: string | null
   isDraggingImages: boolean
   suggestions: SuggestionItem[]
@@ -51,7 +47,6 @@ export interface MemoEditorLayoutProps {
   hasMoreMentions: boolean
   mentionQuery: string
   suggestionPosition: { top: number; left: number } | null
-  pasteMenuPosition: { top: number; left: number } | null
   pendingPasteUrl: string | null
   isPendingPasteImageUrl: boolean
   fetchedMeta: { title: string | null; domain: string | null } | null
@@ -110,7 +105,6 @@ export interface MemoEditorLayoutProps {
 export function MemoEditorLayout({
   isActuallyCollapsed,
   shouldAnimateCollapse,
-  isFocused,
   isPrivate,
   isPinned,
   isPending,
@@ -118,14 +112,10 @@ export function MemoEditorLayout({
   content,
   mode,
   showPlaceholder,
-  showSuggestions,
-  showPrivateDialog,
   accessCode,
   setAccessCode,
   accessHint,
   setAccessHint,
-  showLocationPicker,
-  showLinkPicker,
   error,
   isDraggingImages,
   suggestions,
@@ -134,7 +124,6 @@ export function MemoEditorLayout({
   hasMoreMentions,
   mentionQuery,
   suggestionPosition,
-  pasteMenuPosition,
   pendingPasteUrl,
   isPendingPasteImageUrl,
   fetchedMeta,
@@ -172,6 +161,13 @@ export function MemoEditorLayout({
   onRemoveImage,
   onRemoveQueuedImage,
 }: MemoEditorLayoutProps) {
+  const {
+    showSuggestions,
+    pasteMenuPosition,
+    showPrivateDialog,
+    showLocationPicker,
+    showLinkPicker,
+  } = useEditorUI()
   const attachmentStripRef = React.useRef<HTMLDivElement>(null)
   const hasImageAttachments =
     Boolean(uploadedImages?.length) ||

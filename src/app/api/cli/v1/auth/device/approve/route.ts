@@ -1,16 +1,13 @@
-import { NextResponse } from "next/server"
 import { getClient, getAdminClient } from "@/lib/supabase"
 import { encryptDeviceToken, hashDeviceCode } from "@/server/services/cli/device"
+import { CLI_ERROR_CODES, cliError, cliOk } from "@/server/services/cli/http"
 
 export async function POST(request: Request) {
   let body: unknown
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json(
-      { success: false, data: null, error: "请求体必须是 JSON" },
-      { status: 400 }
-    )
+    return cliError("请求体必须是 JSON", 400, CLI_ERROR_CODES.INVALID_JSON)
   }
 
   const requestId =
@@ -23,10 +20,7 @@ export async function POST(request: Request) {
       : undefined
 
   if (typeof requestId !== "string" || typeof code !== "string") {
-    return NextResponse.json(
-      { success: false, data: null, error: "授权请求参数不完整" },
-      { status: 400 }
-    )
+    return cliError("授权请求参数不完整", 400, CLI_ERROR_CODES.INVALID_PARAMS)
   }
 
   const supabase = await getClient()
@@ -36,10 +30,7 @@ export async function POST(request: Request) {
   ])
 
   if (!userData.user || !sessionData.session) {
-    return NextResponse.json(
-      { success: false, data: null, error: "请先登录 JustMemo" },
-      { status: 401 }
-    )
+    return cliError("请先登录 JustMemo", 401, CLI_ERROR_CODES.UNAUTHORIZED)
   }
 
   const admin = getAdminClient()
@@ -51,13 +42,10 @@ export async function POST(request: Request) {
     .maybeSingle()
 
   if (lookupError || !device) {
-    return NextResponse.json({ success: false, data: null, error: "授权码无效" }, { status: 400 })
+    return cliError("授权码无效", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
   }
   if (device.status !== "pending" || new Date(device.expires_at).getTime() <= Date.now()) {
-    return NextResponse.json(
-      { success: false, data: null, error: "授权码已过期或已使用" },
-      { status: 400 }
-    )
+    return cliError("授权码已过期或已使用", 400, CLI_ERROR_CODES.EXPIRED)
   }
 
   if (userData.user.app_metadata?.role !== "admin") {
@@ -68,16 +56,10 @@ export async function POST(request: Request) {
       .eq("status", "pending")
 
     if (denialError) {
-      return NextResponse.json(
-        { success: false, data: null, error: "Authorization failed." },
-        { status: 500 }
-      )
+      return cliError("Authorization failed.", 500, CLI_ERROR_CODES.INTERNAL)
     }
 
-    return NextResponse.json(
-      { success: false, data: null, error: "CLI access is restricted to administrators." },
-      { status: 403 }
-    )
+    return cliError("CLI access is restricted to administrators.", 403, CLI_ERROR_CODES.ADMIN_ONLY)
   }
 
   const { error } = await admin
@@ -93,8 +75,8 @@ export async function POST(request: Request) {
     .eq("status", "pending")
 
   if (error) {
-    return NextResponse.json({ success: false, data: null, error: "授权失败" }, { status: 500 })
+    return cliError("授权失败", 500, CLI_ERROR_CODES.INTERNAL)
   }
 
-  return NextResponse.json({ success: true, data: { status: "approved" }, error: null })
+  return cliOk({ status: "approved" })
 }

@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { revalidatePath } from "next/cache"
 import { createMemoSchema } from "@/lib/memos/schemas"
 import { extractImagesFromContent } from "@/lib/memos/parser"
 import { buildMemoPayload } from "@/server/actions/memos/helpers"
 import { getCliClient } from "@/server/services/cli/client"
+import { CLI_ERROR_CODES, cliError, cliOk } from "@/server/services/cli/http"
 import type { Database } from "@/types/database"
 
 type MemoInsert = Database["public"]["Tables"]["memos"]["Insert"]
@@ -14,43 +14,32 @@ export async function POST(request: Request) {
   const { data: authData, error: authError } = await supabase.auth.getUser()
 
   if (authError || !authData.user) {
-    return NextResponse.json(
-      { success: false, data: null, error: "请先执行 justmemo login" },
-      { status: 401 }
-    )
+    return cliError("请先执行 justmemo login", 401, CLI_ERROR_CODES.UNAUTHORIZED)
   }
   if (authData.user.app_metadata?.role !== "admin") {
-    return NextResponse.json(
-      { success: false, data: null, error: "权限不足，仅管理员可发布" },
-      { status: 403 }
-    )
+    return cliError("权限不足，仅管理员可发布", 403, CLI_ERROR_CODES.ADMIN_ONLY)
   }
 
   let body: unknown
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json(
-      { success: false, data: null, error: "请求体必须是 JSON" },
-      { status: 400 }
-    )
+    return cliError("请求体必须是 JSON", 400, CLI_ERROR_CODES.INVALID_JSON)
   }
 
   const parsed = createMemoSchema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json(
-      { success: false, data: null, error: parsed.error.issues[0]?.message || "内容无效" },
-      { status: 400 }
+    return cliError(
+      parsed.error.issues[0]?.message || "内容无效",
+      400,
+      CLI_ERROR_CODES.VALIDATION_FAILED
     )
   }
 
   const { content, images, image_metadata, is_private, is_pinned, access_code, access_code_hint } =
     parsed.data
   if (is_private && !access_code) {
-    return NextResponse.json(
-      { success: false, data: null, error: "私密 Memo 必须设置访问口令" },
-      { status: 400 }
-    )
+    return cliError("私密 Memo 必须设置访问口令", 400, CLI_ERROR_CODES.VALIDATION_FAILED)
   }
   const normalized = extractImagesFromContent(content, images)
   const payload: MemoInsert = {
@@ -77,10 +66,10 @@ export async function POST(request: Request) {
 
   if (error || !data) {
     console.error("CLI memo publish failed:", error)
-    return NextResponse.json({ success: false, data: null, error: "发布失败" }, { status: 500 })
+    return cliError("发布失败", 500, CLI_ERROR_CODES.INTERNAL)
   }
 
   revalidatePath("/")
   revalidatePath("/gallery")
-  return NextResponse.json({ success: true, data, error: null })
+  return cliOk(data)
 }

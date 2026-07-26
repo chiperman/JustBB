@@ -365,4 +365,34 @@ describe("CLI 私密发布", () => {
 
     vi.useRealTimers()
   })
+
+  it("拒绝响应带 ADMIN_ONLY 错误码时，即使文案不同也立即结束登录", async () => {
+    vi.useFakeTimers()
+    promptEnter.mockResolvedValue(true)
+    openBrowser.mockReturnValue(true)
+    startDeviceAuth.mockResolvedValue({
+      success: true,
+      data: {
+        request_id: "request-1",
+        authorize_url: "https://example.com/cli/authorize?request=request-1",
+        code: "A7K2P9",
+        expires_at: new Date(Date.now() + 60_000).toISOString(),
+      },
+      error: null,
+    })
+    const denied = Object.assign(new Error("Some rewritten server message."), {
+      code: "ADMIN_ONLY",
+    })
+    pollDeviceAuth.mockRejectedValue(denied)
+    const stderr = vi.spyOn(process.stderr, "write").mockImplementation(() => true)
+
+    const promise = run(["login"])
+    await vi.advanceTimersByTimeAsync(1_000)
+
+    await expect(promise).resolves.toBe(1)
+    expect(pollDeviceAuth).toHaveBeenCalledTimes(1)
+    expect(stderr).toHaveBeenCalledWith("Some rewritten server message.\n")
+
+    vi.useRealTimers()
+  })
 })

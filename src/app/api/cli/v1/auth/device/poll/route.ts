@@ -1,16 +1,13 @@
-import { NextResponse } from "next/server"
 import { getAdminClient } from "@/lib/supabase"
 import { decryptDeviceToken, hashDeviceCode } from "@/server/services/cli/device"
+import { CLI_ERROR_CODES, cliError, cliOk } from "@/server/services/cli/http"
 
 export async function POST(request: Request) {
   let body: unknown
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json(
-      { success: false, data: null, error: "请求体必须是 JSON" },
-      { status: 400 }
-    )
+    return cliError("请求体必须是 JSON", 400, CLI_ERROR_CODES.INVALID_JSON)
   }
 
   const requestId =
@@ -23,10 +20,7 @@ export async function POST(request: Request) {
       : undefined
 
   if (typeof requestId !== "string" || typeof code !== "string") {
-    return NextResponse.json(
-      { success: false, data: null, error: "授权请求参数不完整" },
-      { status: 400 }
-    )
+    return cliError("授权请求参数不完整", 400, CLI_ERROR_CODES.INVALID_PARAMS)
   }
 
   const admin = getAdminClient()
@@ -38,37 +32,24 @@ export async function POST(request: Request) {
     .maybeSingle()
 
   if (error || !device) {
-    return NextResponse.json(
-      { success: false, data: null, error: "授权请求不存在" },
-      { status: 404 }
-    )
+    return cliError("授权请求不存在", 404, CLI_ERROR_CODES.NOT_FOUND)
   }
 
   if (device.status === "pending" && new Date(device.expires_at).getTime() <= Date.now()) {
     await admin.from("cli_device_sessions").update({ status: "expired" }).eq("id", requestId)
-    return NextResponse.json({ success: false, data: null, error: "授权码已过期" }, { status: 410 })
+    return cliError("授权码已过期", 410, CLI_ERROR_CODES.EXPIRED)
   }
 
   if (device.status === "pending") {
-    return NextResponse.json({
-      success: true,
-      data: { status: "pending", expires_at: device.expires_at },
-      error: null,
-    })
+    return cliOk({ status: "pending", expires_at: device.expires_at })
   }
 
   if (device.status === "denied") {
-    return NextResponse.json(
-      { success: false, data: null, error: "CLI access is restricted to administrators." },
-      { status: 403 }
-    )
+    return cliError("CLI access is restricted to administrators.", 403, CLI_ERROR_CODES.ADMIN_ONLY)
   }
 
   if (device.status !== "approved" || !device.access_token || !device.refresh_token) {
-    return NextResponse.json(
-      { success: false, data: null, error: "授权请求不可用" },
-      { status: 409 }
-    )
+    return cliError("授权请求不可用", 409, CLI_ERROR_CODES.CONFLICT)
   }
 
   const { data: consumed } = await admin
@@ -80,24 +61,17 @@ export async function POST(request: Request) {
     .maybeSingle()
 
   if (!consumed?.access_token || !consumed.refresh_token) {
-    return NextResponse.json(
-      { success: false, data: null, error: "授权请求已被领取" },
-      { status: 409 }
-    )
+    return cliError("授权请求已被领取", 409, CLI_ERROR_CODES.CONFLICT)
   }
 
   try {
-    return NextResponse.json({
-      success: true,
-      data: {
-        status: "approved",
-        access_token: decryptDeviceToken(consumed.access_token),
-        refresh_token: decryptDeviceToken(consumed.refresh_token),
-      },
-      error: null,
+    return cliOk({
+      status: "approved",
+      access_token: decryptDeviceToken(consumed.access_token),
+      refresh_token: decryptDeviceToken(consumed.refresh_token),
     })
   } catch (decryptError) {
     console.error("CLI device token decryption failed:", decryptError)
-    return NextResponse.json({ success: false, data: null, error: "授权令牌无效" }, { status: 500 })
+    return cliError("授权令牌无效", 500, CLI_ERROR_CODES.INTERNAL)
   }
 }

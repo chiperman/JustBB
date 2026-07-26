@@ -257,6 +257,8 @@ DELETE /api/cli/v1/trash/:memoNumber
 
 API 使用 Supabase access token/refresh token，但 token 只由 CLI 通过 HTTP Bearer 发送；服务端 `getCliClient` 负责把请求绑定到当前用户。发布接口再次检查登录状态和 `app_metadata.role === "admin"`，不能只信 CLI 前端的菜单。
 
+响应契约由 `src/server/services/cli/http.ts` 统一定义：所有端点共用 `cliOk` / `cliError` 响应封装、分页与 Memo 编号校验。错误响应除 `error` 文案外还带机器可读 `code` 字段（如 `ADMIN_ONLY`、`INVALID_PARAMS`）；`error` 文案是事实上的线上契约，野外旧版本 CLI 按文案匹配错误，文案不能改，新增机器判定一律走 `code`。CLI 客户端优先读 `code`，无 `code` 时回退文案匹配。
+
 CLI 当前实际已经支持：
 
 - `login`、`logout`、`whoami`。

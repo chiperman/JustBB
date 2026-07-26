@@ -140,4 +140,24 @@ describe("CLI API client", () => {
       "Request failed (502)."
     )
   })
+
+  it("错误响应携带 code 时，抛出的错误带上相同 code", async () => {
+    readSession.mockResolvedValue(null)
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        response(
+          { success: false, data: null, error: "权限不足，仅管理员可发布", code: "ADMIN_ONLY" },
+          403
+        )
+      )
+    vi.stubGlobal("fetch", fetchMock)
+
+    await expect(searchMemos({ query: "", limit: 20, page: 1, json: false })).rejects.toMatchObject(
+      {
+        message: "权限不足，仅管理员可发布",
+        code: "ADMIN_ONLY",
+      }
+    )
+  })
 })

@@ -172,9 +172,11 @@ export async function run(args: string[]) {
             return 0
           }
         } catch (pollError) {
+          // 优先认服务端错误码；老版本服务端没有 code 时回退到文案匹配。
           if (
             pollError instanceof Error &&
-            pollError.message === "CLI access is restricted to administrators."
+            ((pollError as { code?: string }).code === "ADMIN_ONLY" ||
+              pollError.message === "CLI access is restricted to administrators.")
           ) {
             throw pollError
           }

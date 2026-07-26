@@ -11,6 +11,17 @@ import { clearSession, readSession, writeSession } from "./auth-store.js"
 
 export const DEFAULT_API_URL = "https://just-memo.vercel.app"
 
+/** API 错误。code 来自服务端错误码契约；老版本服务端没有 code 时为 undefined。 */
+export class CliApiError extends Error {
+  code?: string
+
+  constructor(message: string, code?: string | null) {
+    super(message)
+    this.name = "CliApiError"
+    if (code) this.code = code
+  }
+}
+
 type RequestOptions = {
   retry?: boolean
   refreshOnUnauthorized?: boolean
@@ -92,7 +103,7 @@ async function request<T>(
   }
 
   if (!response.ok || !payload.success) {
-    throw new Error(payload.error || `Request failed (${response.status}).`)
+    throw new CliApiError(payload.error || `Request failed (${response.status}).`, payload.code)
   }
 
   return payload

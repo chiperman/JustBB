@@ -1,21 +1,22 @@
-import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
 import { requireCliAdmin } from "@/server/services/cli/admin"
+import { CLI_ERROR_CODES, cliError, cliOk, isValidMemoNumber } from "@/server/services/cli/http"
 
 type RouteContext = { params: Promise<{ memoNumber: string }> }
 
-function jsonResponse<T>(success: boolean, data: T, error: string | null, status = 200) {
-  return NextResponse.json({ success, data, error }, { status })
-}
-
 export async function POST(request: Request, { params }: RouteContext) {
   const { memoNumber } = await params
-  if (!/^\d+$/.test(memoNumber) || Number(memoNumber) < 1) {
-    return jsonResponse(false, null, "无效的 Memo 编号", 400)
+  if (!isValidMemoNumber(memoNumber)) {
+    return cliError("无效的 Memo 编号", 400, CLI_ERROR_CODES.INVALID_MEMO_NUMBER)
   }
 
   const auth = await requireCliAdmin(request)
-  if (!auth.user) return jsonResponse(false, null, auth.error, auth.status)
+  if (!auth.user)
+    return cliError(
+      auth.error ?? "请先执行 justmemo login",
+      auth.status,
+      auth.code ?? CLI_ERROR_CODES.UNAUTHORIZED
+    )
 
   const { data, error } = await auth.supabase
     .from("memos")
@@ -28,10 +29,11 @@ export async function POST(request: Request, { params }: RouteContext) {
     )
     .maybeSingle()
 
-  if (error) return jsonResponse(false, null, "恢复 Memo 失败", 500)
-  if (!data) return jsonResponse(false, null, `没有找到回收站 Memo #${memoNumber}`, 404)
+  if (error) return cliError("恢复 Memo 失败", 500, CLI_ERROR_CODES.INTERNAL)
+  if (!data)
+    return cliError(`没有找到回收站 Memo #${memoNumber}`, 404, CLI_ERROR_CODES.MEMO_NOT_FOUND)
 
   revalidatePath("/")
   revalidatePath("/trash")
-  return jsonResponse(true, data, null)
+  return cliOk(data)
 }

@@ -2,15 +2,17 @@
 
 import { useCallback, useEffect, useState, memo } from "react"
 import { useHasMounted } from "@/shared/hooks/useHasMounted"
-import { getOnThisDayMemos } from "@/server/actions/memos/query"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Clock01Icon as History } from "@hugeicons/core-free-icons"
 import { Memo } from "@/types/memo"
 import { cn } from "@/shared/lib/utils"
 import { useReducedMotion } from "framer-motion"
-import { shouldRefreshMemoDerivedData, useMemoSync } from "@/lib/memos/events"
+import { useMemoDerivedRefresh } from "@/lib/memos/refresh-policy"
+import { useViewerQuery } from "@/shared/hooks/useViewerQuery"
+import { getViewerOnThisDayMemos } from "@/shared/lib/viewer-memo-queries"
 
 export const OnThisDay = memo(function OnThisDay({ initialMemos }: { initialMemos?: Memo[] }) {
+  const { query } = useViewerQuery()
   const [memos, setMemos] = useState<Memo[]>(initialMemos || [])
   const [loading, setLoading] = useState(!initialMemos?.length) // If we have intial data, not loading (unless length 0, but layout sends empty array if none)
   // Layout fetches data, so if it's passed, we trust it.
@@ -23,30 +25,21 @@ export const OnThisDay = memo(function OnThisDay({ initialMemos }: { initialMemo
   const hasMounted = useHasMounted()
 
   const refreshMemos = useCallback(async () => {
-    const res = await getOnThisDayMemos()
+    const res = await query(getViewerOnThisDayMemos)
     setMemos(res.success ? res.data || [] : [])
     setLoading(false)
-  }, [])
+  }, [query])
 
   useEffect(() => {
     if (!isInitialLoaded) {
-      getOnThisDayMemos().then((res) => {
+      query(getViewerOnThisDayMemos).then((res) => {
         setMemos(res.success ? res.data || [] : [])
         setLoading(false)
       })
     }
-  }, [isInitialLoaded])
+  }, [isInitialLoaded, query])
 
-  useMemoSync(
-    useCallback(
-      (payload) => {
-        if (shouldRefreshMemoDerivedData(payload)) {
-          void refreshMemos()
-        }
-      },
-      [refreshMemos]
-    )
-  )
+  useMemoDerivedRefresh("on-this-day", refreshMemos)
 
   if (!hasMounted) return null
   if ((!isInitialLoaded && loading) || memos.length === 0) return null

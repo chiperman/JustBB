@@ -3,6 +3,8 @@ import {
   getGalleryMemos,
   getMemos,
   getMemosWithLocations,
+  getBacklinks,
+  getOnThisDayMemos,
   searchMemosForMention,
 } from "@/server/actions/memos/query"
 
@@ -32,4 +34,12 @@ export function getViewerMentionMemos(
   unlockedMemoIds: string[]
 ) {
   return searchMemosForMention(searchText, offset, limit, unlockedMemoIds)
+}
+
+export function getViewerBacklinks(memoNumber: number, unlockedMemoIds: string[]) {
+  return getBacklinks(memoNumber, unlockedMemoIds)
+}
+
+export function getViewerOnThisDayMemos(unlockedMemoIds: string[]) {
+  return getOnThisDayMemos(unlockedMemoIds)
 }

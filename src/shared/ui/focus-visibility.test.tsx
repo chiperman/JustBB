@@ -35,6 +35,10 @@ vi.mock("@/state/UserContext", () => ({
   }),
 }))
 
+vi.mock("@/state/UnlockedMemosContext", () => ({
+  useUnlockedMemos: () => ({ unlockedMemoIds: [] }),
+}))
+
 vi.mock("@/state/TagsContext", () => ({
   useTags: () => ({
     tags: [

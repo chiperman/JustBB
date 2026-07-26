@@ -6,7 +6,7 @@ import { deleteImagesFromR2 } from "@/server/services/r2"
 import { ActionResponse } from "../shared/types"
 import { getCurrentUserId, isAdmin } from "@/features/auth/actions"
 import { Memo } from "@/types/memo"
-import { getMemosQuery, MemoFilters } from "@/lib/memos/query-builder"
+import { MEMO_SAFE_SELECT } from "@/lib/memos/select"
 
 const TRASH_PERMISSION_ERROR = "权限不足，仅操作者可操作回收站"
 
@@ -134,9 +134,11 @@ export async function emptyTrash(): Promise<ActionResponse> {
   }
 
   // 2. 执行物理删除
-  const { error } = await MemoFilters.trashedOnly(
-    supabase.from("memos").delete().eq("owner_id", viewerId)
-  )
+  const { error } = await supabase
+    .from("memos")
+    .delete()
+    .eq("owner_id", viewerId)
+    .not("deleted_at", "is", null)
 
   if (error) {
     console.error("Error emptying trash:", error)
@@ -157,8 +159,11 @@ export async function getTrashMemos(): Promise<ActionResponse<Memo[]>> {
   const viewerId = await getCurrentUserId()
   if (!viewerId) return { success: false, error: "请先登录", data: [] }
 
-  const { query: qBuilder } = await getMemosQuery()
-  const q = MemoFilters.trashedOnly(qBuilder)
+  const supabase = await getClient()
+  const q = supabase
+    .from("memos")
+    .select(MEMO_SAFE_SELECT)
+    .not("deleted_at", "is", null)
     .eq("owner_id", viewerId)
     .order("deleted_at", { ascending: false })
 

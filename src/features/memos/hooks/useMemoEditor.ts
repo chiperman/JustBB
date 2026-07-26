@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { ImageMetadata, Memo } from "@/types/memo"
 import { createMemo, updateMemoContent } from "@/server/actions/memos/mutate"
+import type { CreateMemoInput } from "@/lib/memos/schemas"
 import { dispatchMemoEvent } from "@/lib/memos/events"
 import { useTags } from "@/state/TagsContext"
 import { useStats } from "@/state/StatsContext"
@@ -87,16 +88,13 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
     setIsPending(true)
     setError(null)
 
-    const formData = new FormData()
-    formData.append("content", textContent)
-    formData.append("is_private", String(isPrivate))
-    formData.append("is_pinned", String(isPinned))
-    formData.append("images", JSON.stringify(imageUrls))
-    formData.append("image_metadata", JSON.stringify(metadata))
-
-    if (isPrivate && accessCode) {
-      formData.append("access_code", accessCode)
-      formData.append("access_code_hint", accessHint)
+    const payload: CreateMemoInput = {
+      content: textContent,
+      is_private: isPrivate,
+      is_pinned: isPinned,
+      images: imageUrls,
+      image_metadata: metadata,
+      ...(isPrivate && accessCode ? { access_code: accessCode, access_code_hint: accessHint } : {}),
     }
 
     try {
@@ -112,10 +110,9 @@ export function useMemoEditor({ mode, initialMemo, onSuccess, onCancel }: UseMem
           })
           return false
         }
-        formData.append("id", initialMemo.id)
-        result = await updateMemoContent(formData)
+        result = await updateMemoContent({ ...payload, id: initialMemo.id })
       } else {
-        result = await createMemo(formData)
+        result = await createMemo(payload)
       }
 
       if (result.success) {

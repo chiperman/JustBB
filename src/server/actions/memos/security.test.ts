@@ -187,13 +187,17 @@ describe("Security & RLS (Integrated)", () => {
   it("写操作管理员校验测试：匿名访客和普通登录用户调用写操作 Action 一律被拒绝", async () => {
     if (!canRun) return
 
-    const formData = new FormData()
-    formData.append("content", "New Memo content")
-    formData.append("is_private", "false")
+    const writeInput = {
+      content: "New Memo content",
+      is_private: false,
+      is_pinned: false,
+      images: [],
+      image_metadata: {},
+    }
 
     // 1. 匿名访客测试
     setClient(anonClient)
-    const resCreateAnon = await createMemo(formData)
+    const resCreateAnon = await createMemo(writeInput)
     expect(resCreateAnon.success).toBe(false)
     expect(resCreateAnon.error).toMatch(/登录|权限/)
 
@@ -205,16 +209,21 @@ describe("Security & RLS (Integrated)", () => {
     expect(loginError).toBeNull()
 
     setClient(userClient)
-    const resCreateUser = await createMemo(formData)
+    const resCreateUser = await createMemo(writeInput)
     expect(resCreateUser.success).toBe(false)
     expect(resCreateUser.error).toMatch(/权限/)
 
-    formData.append("id", testMemoWithFeaturesId)
-    const resUpdateUser = await updateMemoContent(formData)
+    const resUpdateUser = await updateMemoContent({
+      ...writeInput,
+      id: testMemoWithFeaturesId,
+    })
     expect(resUpdateUser.success).toBe(false)
     expect(resUpdateUser.error).toMatch(/权限/)
 
-    const resStateUser = await updateMemoState(formData)
+    const stateFormData = new FormData()
+    stateFormData.append("id", testMemoWithFeaturesId)
+    stateFormData.append("is_private", "false")
+    const resStateUser = await updateMemoState(stateFormData)
     expect(resStateUser.success).toBe(false)
     expect(resStateUser.error).toMatch(/权限/)
 

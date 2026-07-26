@@ -17,6 +17,8 @@ import { Database } from "@/types/database"
 import {
   createMemoSchema,
   updateMemoContentSchema,
+  type CreateMemoInput,
+  type UpdateMemoContentInput,
   updateMemoStateSchema,
   batchAddTagsSchema,
 } from "@/lib/memos/schemas"
@@ -79,7 +81,7 @@ function logValidationFailure(
   action: string,
   viewerId: string,
   issue: ValidationIssueLike,
-  rawData: Record<string, FormDataEntryValue>
+  rawData: Record<string, unknown>
 ) {
   const context: Record<string, unknown> = {
     viewerId,
@@ -112,15 +114,14 @@ function mapWriteFailure(result: WriteMemoResult, dbPrefix: string): string {
 /**
  * 创建新笔记
  */
-export async function createMemo(formData: FormData): Promise<ActionResponse<Memo>> {
+export async function createMemo(input: CreateMemoInput): Promise<ActionResponse<Memo>> {
   if (!(await isAdmin())) {
     return { success: false, error: "权限不足，仅管理员可进行此操作" }
   }
   const viewerId = await getCurrentUserId()
   if (!viewerId) return { success: false, error: "请先登录" }
 
-  const rawData = Object.fromEntries(formData.entries())
-  const validation = createMemoSchema.safeParse(rawData)
+  const validation = createMemoSchema.safeParse(input)
 
   if (!validation.success) {
     return { success: false, error: validation.error.issues[0].message }
@@ -156,15 +157,20 @@ export async function createMemo(formData: FormData): Promise<ActionResponse<Mem
 /**
  * 更新笔记内容 (含内容解析)
  */
-export async function updateMemoContent(formData: FormData): Promise<ActionResponse<Memo>> {
+export async function updateMemoContent(
+  input: UpdateMemoContentInput
+): Promise<ActionResponse<Memo>> {
   if (!(await isAdmin())) {
     return { success: false, error: "权限不足，仅管理员可进行此操作" }
   }
   const viewerId = await getCurrentUserId()
   if (!viewerId) return { success: false, error: "请先登录" }
 
-  const rawData = Object.fromEntries(formData.entries())
-  const validation = updateMemoContentSchema.safeParse(rawData)
+  const rawData =
+    input && typeof input === "object" && !Array.isArray(input)
+      ? (input as Record<string, unknown>)
+      : {}
+  const validation = updateMemoContentSchema.safeParse(input)
 
   if (!validation.success) {
     const issue = validation.error.issues[0]

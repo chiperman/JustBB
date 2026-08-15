@@ -105,6 +105,24 @@ describe("memo feed reconciler", () => {
     expect(state.hasMoreOlder).toBe(false)
   })
 
+  it("完整重复页不误判为列表到底", () => {
+    const current = Array.from({ length: MEMO_FEED_PAGE_SIZE }, (_, index) =>
+      createMemo(
+        `memo-${index + 1}`,
+        `2026-04-${String(30 - index).padStart(2, "0")}T00:00:00.000Z`
+      )
+    )
+    let state = { ...createMemoFeedWindow(current, {}), hasMoreOlder: true }
+
+    state = reduceMemoFeedWindow(state, {
+      type: "append-older-page",
+      memos: current,
+    })
+
+    expect(state.memos).toEqual(current)
+    expect(state.hasMoreOlder).toBe(true)
+  })
+
   it("替换 Memo 时保留调用结果缺失的查看者字段", () => {
     const existing = createMemo("memo-1", "2026-04-03T00:00:00.000Z", {
       is_owner: true,

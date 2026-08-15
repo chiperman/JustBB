@@ -112,6 +112,36 @@ describe("importMemos", () => {
     ])
   })
 
+  it("writes the displayed content word count during import", async () => {
+    const contentLookup = {
+      select: vi.fn(),
+      eq: vi.fn(),
+      range: vi.fn(),
+    }
+    const insert = vi.fn().mockResolvedValue({ error: null })
+
+    contentLookup.select.mockReturnValue(contentLookup)
+    contentLookup.eq.mockReturnValue(contentLookup)
+    contentLookup.range.mockResolvedValue({ data: [], error: null })
+    authGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } })
+    from.mockReturnValueOnce(contentLookup).mockReturnValueOnce({ insert })
+
+    await importMemos([
+      {
+        content: "原始正文 #单独标签",
+        created_at: "2026-01-03T00:00:00.000Z",
+      },
+    ])
+
+    expect(insert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        content: "原始正文 #单独标签",
+        word_count: 10,
+        owner_id: "user-1",
+      }),
+    ])
+  })
+
   it("treats equivalent UTC timestamp formats as content-time duplicates", async () => {
     const contentLookup = {
       select: vi.fn(),

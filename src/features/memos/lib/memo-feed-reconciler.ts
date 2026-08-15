@@ -107,8 +107,7 @@ export function reduceMemoFeedWindow(
       return {
         ...state,
         memos: unique.length > 0 ? [...state.memos, ...unique] : state.memos,
-        hasMoreOlder:
-          state.hasMoreOlder && action.memos.length >= MEMO_FEED_PAGE_SIZE && unique.length > 0,
+        hasMoreOlder: state.hasMoreOlder && action.memos.length >= MEMO_FEED_PAGE_SIZE,
       }
     }
     case "older-page-failed":

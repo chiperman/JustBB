@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  startTransition,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -26,6 +25,12 @@ interface UseMemoFeedProps {
   initialMemos: Memo[]
   searchParams: MemoFeedSearchParams
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>
+}
+
+function getOldestMemoCursor(memos: Memo[]) {
+  const unpinnedMemos = memos.filter((memo) => !memo.is_pinned)
+  const oldestMemo = unpinnedMemos[unpinnedMemos.length - 1] ?? memos[memos.length - 1]
+  return oldestMemo?.created_at
 }
 
 export function useMemoFeed({ initialMemos, searchParams, scrollContainerRef }: UseMemoFeedProps) {
@@ -58,6 +63,8 @@ export function useMemoFeed({ initialMemos, searchParams, scrollContainerRef }: 
   const [isLoadingOlder, setIsLoadingOlder] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const isLoadingOlderRef = useRef(false)
+  const olderCursorRef = useRef<string | undefined>(getOldestMemoCursor(initialMemos))
+  const previousSearchParamsRef = useRef(stableSearchParams)
 
   // 置顶/取消置顶时的滚动位置恢复属于 DOM 接线，不进入纯 reconciler。
   const pendingScrollRestoreRef = useRef<number | null>(null)
@@ -81,6 +88,10 @@ export function useMemoFeed({ initialMemos, searchParams, scrollContainerRef }: 
   }, [registerMemos, windowState.memos])
 
   useEffect(() => {
+    if (previousSearchParamsRef.current !== stableSearchParams) {
+      olderCursorRef.current = getOldestMemoCursor(initialMemos)
+      previousSearchParamsRef.current = stableSearchParams
+    }
     dispatchWindow({
       type: "receive-initial",
       memos: initialMemos,
@@ -94,21 +105,23 @@ export function useMemoFeed({ initialMemos, searchParams, scrollContainerRef }: 
     isLoadingOlderRef.current = true
     setIsLoadingOlder(true)
     try {
-      const unpinnedMemos = windowState.memos.filter((memo) => !memo.is_pinned)
-      const lastMemo =
-        unpinnedMemos.length > 0
-          ? unpinnedMemos[unpinnedMemos.length - 1]
-          : windowState.memos[windowState.memos.length - 1]
-
       const result = await query(getViewerFeedMemos, {
         ...stableSearchParams,
         limit: MEMO_FEED_PAGE_SIZE,
-        before_date: lastMemo?.created_at,
+        before_date: olderCursorRef.current ?? getOldestMemoCursor(windowState.memos),
         excludePinned: true,
         sort: "newest",
       })
 
-      startTransition(() => dispatchWindow({ type: "append-older-page", memos: result.data || [] }))
+      if (!result.success) {
+        throw new Error(result.error || "加载更早记录失败")
+      }
+
+      const olderPage = result.data || []
+      const nextCursor = getOldestMemoCursor(olderPage)
+      if (nextCursor) olderCursorRef.current = nextCursor
+
+      dispatchWindow({ type: "append-older-page", memos: olderPage })
     } catch (error) {
       console.error("[Feed Hook] Failed to load older memos:", error)
       dispatchWindow({ type: "older-page-failed" })

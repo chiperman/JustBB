@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase"
+import { calculateWordCount } from "@/lib/memos/parser"
 import { ParsedMemo } from "./parsers"
 
 export interface ImportError {
@@ -136,6 +137,7 @@ export async function importMemos(
         toInsert.push({
           ...insertData,
           owner_id: user.id,
+          word_count: calculateWordCount(memo.content),
         })
         insertedMemos.push(memo)
       }

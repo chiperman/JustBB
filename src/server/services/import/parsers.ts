@@ -83,7 +83,11 @@ export function parseLeanCloud(content: string): ParsedMemo[] {
         }
 
         const tagSuffix = tags.map((tag) => `#${tag}`).join(" ")
-        const memoContent = tagSuffix ? `${data.content.trimEnd()} ${tagSuffix}` : data.content
+        const trimmedContent = data.content.trimEnd()
+        const memoContent =
+          tagSuffix && !trimmedContent.endsWith(tagSuffix)
+            ? `${trimmedContent} ${tagSuffix}`
+            : data.content
 
         memos.push({
           content: memoContent,

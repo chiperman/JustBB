@@ -1,6 +1,6 @@
 # JustMemo 开发参考
 
-> 最后更新：2026-07-14
+> 最后更新：2026-10-15
 > 状态：当前开发流程参考
 
 ## 1. 作用
@@ -15,7 +15,7 @@
 | 样式与动效   | Tailwind CSS 4、Framer Motion 12                        |
 | 图标         | Hugeicons 1.1.5                                         |
 | 编辑器       | Tiptap 3                                                |
-| 地图         | Leaflet 1.9、react-leaflet 5                            |
+| 地图         | MapLibre GL 5、Leaflet 1.9                              |
 | 后端         | Supabase 2                                              |
 | 校验         | Zod 4                                                   |
 | 私密口令哈希 | bcryptjs 3                                              |

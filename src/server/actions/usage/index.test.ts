@@ -1,46 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { getMemoStats, exportMemos } from "../memos/analytics"
+import { getMemoStats } from "../memos/analytics"
 import { getSupabaseUsageStats } from "./index"
 import { getAdminClient } from "@/lib/supabase"
-import {
-  getCurrentUser,
-  getCurrentUserId,
-  isAdmin,
-} from "@/features/auth/actions"
+import { getCurrentUser, getCurrentUserId, isAdmin } from "@/features/auth/actions"
 
 // Mock Supabase Instance
 const mockSupabase = {
   from: vi.fn().mockReturnThis(),
   select: vi.fn().mockReturnThis(),
-  is: vi.fn().mockResolvedValue({
-    data: [
-      {
-        created_at: "2024-01-01T00:00:00.000Z",
-        word_count: 10,
-        tags: ["tag-a", "tag-b"],
-        is_private: false,
-        owner_id: "user-1",
-      },
-      {
-        created_at: "2024-01-02T00:00:00.000Z",
-        word_count: 20,
-        tags: ["tag-c"],
-        is_private: true,
-        owner_id: "user-1",
-      },
-      {
-        created_at: "2024-01-03T00:00:00.000Z",
-        word_count: 30,
-        tags: ["tag-d"],
-        is_private: true,
-        owner_id: "other-user",
-      },
-    ],
-    error: null,
-  }),
-  order: vi.fn().mockResolvedValue({ data: [], error: null }),
-  eq: vi.fn().mockReturnThis(),
-  single: vi.fn().mockResolvedValue({ data: null, error: null }),
   rpc: vi.fn().mockImplementation((name) => {
     if (name === "get_memo_stats_v2") {
       return {
@@ -127,52 +94,16 @@ describe("getMemoStats", () => {
   })
 
   it("当数据库报错时应该返回零值对象", async () => {
-    mockSupabase.rpc = vi
-      .fn()
-      .mockResolvedValueOnce({
-        data: null,
-        error: { message: "Database failure" },
-      })
+    mockSupabase.rpc = vi.fn().mockResolvedValueOnce({
+      data: null,
+      error: { message: "Database failure" },
+    })
 
     const result = await getMemoStats()
 
     expect(result.success).toBe(false)
     expect(result.data?.totalMemos).toBe(0)
     expect(result.error).toBe("Database failure")
-  })
-
-  it("当未登录时应该拒绝导出", async () => {
-    vi.mocked(getCurrentUserId).mockResolvedValueOnce(null)
-
-    const result = await exportMemos("markdown")
-
-    expect(result.success).toBe(false)
-    expect(result.error).toBe("未登录，无法导出数据")
-    expect(result.data).toBe("")
-    expect(mockSupabase.from).not.toHaveBeenCalled()
-  })
-
-  it("当管理员导出时应该返回格式化数据", async () => {
-    mockSupabase.from.mockReturnThis()
-    mockSupabase.select.mockReturnThis()
-    mockSupabase.is = vi.fn().mockReturnThis()
-    mockSupabase.eq = vi.fn().mockReturnThis()
-    mockSupabase.order = vi.fn().mockResolvedValue({
-      data: [
-        {
-          content: "测试内容",
-          created_at: "2024-01-01T00:00:00.000Z",
-          tags: ["tag-a"],
-        },
-      ],
-      error: null,
-    })
-
-    const result = await exportMemos("json")
-
-    expect(result.success).toBe(true)
-    expect(result.error).toBeNull()
-    expect(result.data).toContain("测试内容")
   })
 
   it("应该在 fallback 模式下返回完整的 Supabase 用量结构", async () => {
@@ -204,21 +135,20 @@ describe("getMemoStats", () => {
     process.env.SUPABASE_PROJECT_REF = ""
 
     // 模拟 get_database_size RPC 失败
-    vi.mocked(getAdminClient).mockImplementationOnce(() => ({
-      ...mockSupabase,
-      rpc: vi
-        .fn()
-        .mockResolvedValue({ data: null, error: new Error("rpc failed") }),
-    }))
+    vi.mocked(getAdminClient).mockImplementationOnce(
+      () =>
+        ({
+          ...mockSupabase,
+          rpc: vi.fn().mockResolvedValue({ data: null, error: new Error("rpc failed") }),
+        }) as never
+    )
 
     const result = await getSupabaseUsageStats()
 
     expect(result.success).toBe(true)
     // 不应有 .from("memos").select("content, tags, ...") 全表扫描
     const fromCalls = mockSupabase.from.mock.calls
-    const memoScanCalls = fromCalls.filter(
-      (call) => Array.isArray(call) && call[0] === "memos"
-    )
+    const memoScanCalls = fromCalls.filter((call) => Array.isArray(call) && call[0] === "memos")
     const selectContentCalls = mockSupabase.select.mock.calls.filter(
       (call) => Array.isArray(call) && call.includes("content")
     )

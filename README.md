@@ -62,7 +62,7 @@ CLI 支持登录、退出登录、查看当前用户、发布、搜索、查看�
 | 应用   | Next.js 16、React 19、TypeScript             |
 | UI     | Tailwind CSS 4、Framer Motion、Hugeicons     |
 | 编辑器 | Tiptap 3                                     |
-| 地图   | Leaflet、react-leaflet                       |
+| 地图   | MapLibre GL、Leaflet                         |
 | 后端   | Supabase Auth、Postgres、RLS、RPC、Storage   |
 | 测试   | Vitest、React Testing Library、本地 Supabase |
 

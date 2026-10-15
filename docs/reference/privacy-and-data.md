@@ -146,7 +146,6 @@ search_memos_secure(
 - `getMemoStats`
 - `getTimelineStats`
 - `getAllTags`
-- `exportMemos`
 
 `verifyUnlockCode` 只验证单条 Memo，成功后返回该条可读数据，不写任何持久化凭证。`clearUnlockCode` 只是兼容旧调用链的空操作。
 

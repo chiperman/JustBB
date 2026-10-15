@@ -179,17 +179,6 @@ export function parseKeyStroke(value: string): NormalizedKeyStroke {
   return stroke
 }
 
-export function formatKeyStroke(stroke: NormalizedKeyStroke): string {
-  const modifiers = [
-    stroke.meta ? "meta" : null,
-    stroke.ctrl ? "ctrl" : null,
-    stroke.alt ? "alt" : null,
-    stroke.shift ? "shift" : null,
-  ].filter(Boolean)
-
-  return [...modifiers, stroke.key].join("+")
-}
-
 export function keyStrokesEqual(
   eventStroke: NormalizedKeyStroke,
   bindingStroke: NormalizedKeyStroke

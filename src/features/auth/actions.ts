@@ -9,9 +9,7 @@ import { ActionResponse } from "@/server/actions/shared/types"
 import { UserInfo, UserRole } from "@/types/auth"
 import { loginSchema, signupSchema, verifyOtpSchema } from "./schemas"
 
-export async function login(
-  formData: FormData
-): Promise<ActionResponse<{ user: UserInfo }>> {
+export async function login(formData: FormData): Promise<ActionResponse<{ user: UserInfo }>> {
   const rawData = Object.fromEntries(formData.entries())
   const validation = loginSchema.safeParse(rawData)
 
@@ -130,9 +128,7 @@ export async function verifyOtp(
   return { success: true, error: null, data: { user: userInfo } }
 }
 
-export async function signInWithOAuth(
-  provider: Provider
-): Promise<ActionResponse> {
+export async function signInWithOAuth(provider: Provider): Promise<ActionResponse> {
   const supabase = await getClient()
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
@@ -179,18 +175,12 @@ export async function getCurrentUserId(): Promise<string | null> {
   return user?.id ?? null
 }
 
-export async function isAuthenticated() {
-  return (await getCurrentUserId()) !== null
-}
-
 export async function isAdmin() {
   const user = await getCurrentUser()
   return user?.role === "admin"
 }
 
-export async function sendPasswordResetEmail(
-  email: string
-): Promise<ActionResponse> {
+export async function sendPasswordResetEmail(email: string): Promise<ActionResponse> {
   const supabase = await getClient()
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${env.NEXT_PUBLIC_SITE_URL}/reset-password`,
@@ -204,9 +194,7 @@ export async function sendPasswordResetEmail(
   return { success: true, error: null }
 }
 
-export async function updatePassword(
-  password: string
-): Promise<ActionResponse> {
+export async function updatePassword(password: string): Promise<ActionResponse> {
   const failed = validatePassword(password)
   if (failed.length > 0) {
     return {
